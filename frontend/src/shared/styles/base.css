@@ -1,0 +1,56 @@
+/* Base y utilidades de pantalla (de screens.css del prototipo GARWEB) */
+:root {
+  --ease-out: cubic-bezier(.23, 1, .32, 1);
+  --dur-1: 160ms;
+  --dur-2: 240ms;
+  --radius-card: 18px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+body { margin: 0; font-family: var(--font-sans); color: var(--ink); background: var(--bg); font-feature-settings: "cv11", "ss01", "ss03"; }
+h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0.022em; text-wrap: balance; }
+p { margin: 0; text-wrap: pretty; }
+a { color: var(--primary); }
+
+.muted { color: var(--ink-muted); }
+.audit { font-size: 12px; color: var(--ink-muted); }
+.row { display: flex; align-items: center; gap: 12px; }
+.between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.card {
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+}
+.card h2 { letter-spacing: -0.015em; }
+
+/* Utilidades de pantalla (screens.css del prototipo) */
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 20px; }
+.crumb { font-size: 13px; font-weight: 500; color: var(--ink-muted); margin-bottom: 4px; }
+.ov { font-size: 11px; line-height: 16px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); }
+.stitch { border: 0; border-top: 1.5px dashed var(--line-strong); margin: 0; width: 100%; }
+.kv { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.kv span:first-child { color: var(--ink-muted); }
+.kv b { text-align: right; font-feature-settings: "tnum", "cv11"; }
+.opt { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--surface); text-decoration: none; color: var(--ink); text-align: left; font: inherit; cursor: pointer; width: 100%; }
+.opt .ic { width: 40px; height: 40px; border-radius: 10px; flex: none; display: grid; place-items: center; background: var(--primary-soft); color: var(--primary); }
+.opt b { display: block; font-size: 15px; }
+.opt small { color: var(--ink-muted); font-size: 13px; line-height: 18px; }
+.opt.on { border-color: var(--primary); background: var(--primary-soft); box-shadow: 0 0 0 3px #2563EB26; }
+.opt.on .ic { background: var(--primary); color: var(--on-primary); }
+.opt:active, .gw-btn:active:not(:disabled) { transform: scale(.97); }
+.opt:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.map { height: 120px; border-radius: 12px; position: relative; overflow: hidden; background: repeating-linear-gradient(0deg, transparent 0 22px, #2563EB14 22px 23px), repeating-linear-gradient(90deg, transparent 0 22px, #2563EB14 22px 23px), var(--primary-soft); }
+select.gw-input { padding-right: 32px; }
+.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "cv11"; }
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 9999px; background: var(--neutral-soft); color: var(--neutral-ink); font-size: 12.5px; font-weight: 600; }
+/* Imágenes de muebles y telas: textura de tejido */
+.thumb { position: relative; overflow: hidden; isolation: isolate; border-radius: 10px; flex: none; display: grid; place-items: center; color: #FFFFFFCC; background: linear-gradient(135deg, var(--blue-900), var(--blue-500)); }
+.thumb.b { background: linear-gradient(135deg, var(--navy-950), var(--blue-700)); }
+.thumb.c { background: linear-gradient(135deg, var(--blue-700), var(--sky-400)); }
+.thumb::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: .2; background: repeating-linear-gradient(45deg, #FFFFFF 0 1px, transparent 1px 7px), repeating-linear-gradient(-45deg, #FFFFFF 0 1px, transparent 1px 7px); }
+.thumb::after { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(80% 60% at 30% 20%, #FFFFFF33 0%, #FFFFFF00 60%); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

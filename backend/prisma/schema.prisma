@@ -1,0 +1,332 @@
+// Esquema de GARWEB — Seguridad (CU-S01, S02), Cliente (CU-H01) y Solicitud de cotización (CU-C01).
+// Convención de la tesis: tablas y columnas en snake_case y en español (@@map / @map).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// DATABASE_URL: conexión de la app (en Supabase, el pooler en el puerto 6543).
+// DIRECT_URL: conexión directa para migraciones (en Supabase, el puerto 5432). En Docker ambas son iguales.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Rol {
+  id       Int       @id @default(autoincrement())
+  nombre   String    @unique @db.VarChar(40)
+  permisos Json      @default("[]")
+  usuarios Usuario[]
+
+  @@map("rol")
+}
+
+model Usuario {
+  id               Int                 @id @default(autoincrement())
+  clienteId        Int?                @unique @map("cliente_id")
+  rolId            Int                 @map("rol_id")
+  nombreUsuario    String              @unique @map("nombre_usuario") @db.VarChar(120)
+  // No está en el modelo de la tesis: el personal también necesita un correo para recuperar su contraseña (CU-S02).
+  email            String              @unique @db.VarChar(160)
+  contrasenaHash   String              @map("contrasena_hash")
+  dispositivo      String?             @db.VarChar(80)
+  activo           Boolean             @default(true)
+  // Bloqueo por intentos fallidos (CU-S01).
+  intentosFallidos Int                 @default(0) @map("intentos_fallidos")
+  bloqueadoHasta   DateTime?           @map("bloqueado_hasta") @db.Timestamptz
+  fechaCreacion    DateTime            @default(now()) @map("fecha_creacion") @db.Timestamptz
+  rol              Rol                 @relation(fields: [rolId], references: [id])
+  cliente          Cliente?            @relation(fields: [clienteId], references: [id])
+  tokens           TokenRecuperacion[]
+  bitacora         Bitacora[]
+  solicitudes      Solicitud[]
+  descartadas      Solicitud[]         @relation("SolicitudDescartadaPor")
+  notificaciones   Notificacion[]
+  citas            Cita[]
+
+  @@map("usuario")
+}
+
+model Cliente {
+  id                 Int         @id @default(autoincrement())
+  tipoPersona        String      @map("tipo_persona") @db.VarChar(10) // persona | empresa
+  nombres            String      @db.VarChar(80)
+  apellidos          String      @db.VarChar(80)
+  razonSocial        String?     @map("razon_social") @db.VarChar(160)
+  documento          String?     @unique @db.VarChar(20) // EIN de la empresa
+  cargo              String?     @db.VarChar(80)
+  // Opcional: el Administrador puede registrar por teléfono a un cliente que no tiene correo (A3).
+  email              String?     @unique @db.VarChar(160)
+  telefono           String      @db.VarChar(20) // E.164: +1XXXXXXXXXX
+  aceptaAvisosCorreo Boolean     @default(true) @map("acepta_avisos_correo")
+  canalRegistro      String      @map("canal_registro") @db.VarChar(20) // web | local | telefono
+  activo             Boolean     @default(true)
+  fechaRegistro      DateTime    @default(now()) @map("fecha_registro") @db.Timestamptz
+  usuario            Usuario?
+  direcciones        Direccion[]
+  solicitudes        Solicitud[]
+
+  @@map("cliente")
+}
+
+model TokenRecuperacion {
+  id              Int       @id @default(autoincrement())
+  usuarioId       Int       @map("usuario_id")
+  // Solo se guarda el SHA-256 del token; el token en claro viaja únicamente en el correo.
+  tokenHash       String    @unique @map("token_hash") @db.Char(64)
+  fechaExpiracion DateTime  @map("fecha_expiracion") @db.Timestamptz
+  fechaUso        DateTime? @map("fecha_uso") @db.Timestamptz
+  fechaCreacion   DateTime  @default(now()) @map("fecha_creacion") @db.Timestamptz
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@map("token_recuperacion")
+}
+
+// RG-02: auditoría total.
+model Bitacora {
+  id            Int      @id @default(autoincrement())
+  usuarioId     Int?     @map("usuario_id")
+  modulo        String   @db.VarChar(30)
+  accion        String   @db.VarChar(60)
+  entidad       String   @db.VarChar(60)
+  entidadId     Int?     @map("entidad_id")
+  valorAnterior Json?    @map("valor_anterior")
+  valorNuevo    Json?    @map("valor_nuevo")
+  ip            String?  @db.VarChar(45)
+  fecha         DateTime @default(now()) @db.Timestamptz
+  usuario       Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([entidad, entidadId])
+  @@index([fecha])
+  @@map("bitacora")
+}
+
+// RG-04: ningún valor de negocio fijo en el código.
+model Parametro {
+  id                Int      @id @default(autoincrement())
+  clave             String   @unique @db.VarChar(80)
+  valor             String   @db.VarChar(200)
+  unidad            String?  @db.VarChar(30)
+  descripcion       String
+  modificadoPor     Int?     @map("modificado_por")
+  fechaModificacion DateTime @default(now()) @map("fecha_modificacion") @db.Timestamptz
+
+  @@map("parametro")
+}
+
+// ---------------------------------------------------------------- Comercial · CU-C01 Registrar solicitud de cotización
+// Una solicitud puede traer varios muebles (diseño W2): cada uno con su servicio, fotos y telas.
+
+model TipoMueble {
+  id      Int               @id @default(autoincrement())
+  // Código del dibujo por partes en la web (s3 = sofá de 3 cuerpos, ar = sillón…).
+  codigo  String            @unique @db.VarChar(20)
+  nombre  String            @unique @db.VarChar(80)
+  orden   Int               @default(0)
+  activo  Boolean           @default(true)
+  partes  TipoMuebleParte[]
+  muebles SolicitudMueble[]
+
+  @@map("tipo_mueble")
+}
+
+model TipoMuebleParte {
+  id           Int             @id @default(autoincrement())
+  tipoMuebleId Int             @map("tipo_mueble_id")
+  nombre       String          @db.VarChar(60)
+  orden        Int
+  tipoMueble   TipoMueble      @relation(fields: [tipoMuebleId], references: [id])
+  telas        SolicitudTela[]
+
+  @@unique([tipoMuebleId, orden])
+  @@map("tipo_mueble_parte")
+}
+
+// Catálogo de materiales y telas (A15). Por ahora solo telas, cargadas como datos de prueba.
+model Material {
+  id            Int             @id @default(autoincrement())
+  codigo        String          @unique @db.VarChar(30)
+  nombre        String          @db.VarChar(80)
+  categoria     String          @db.VarChar(30) // tela | espuma | insumo …
+  familia       String?         @db.VarChar(30) // Lino, Pana, Chenille…
+  // Cada tela se identifica por su modelo (pattern) y su número de color.
+  pattern       String?         @db.VarChar(20)
+  numeroColor   String?         @map("numero_color") @db.VarChar(10)
+  colorHex      String?         @map("color_hex") @db.Char(7)
+  descripcion   String?         @db.VarChar(160)
+  unidadMedida  String          @map("unidad_medida") @db.VarChar(10)
+  activo        Boolean         @default(true)
+  fechaCreacion DateTime        @default(now()) @map("fecha_creacion") @db.Timestamptz
+  telas         SolicitudTela[]
+
+  @@index([categoria, activo])
+  @@map("material")
+}
+
+model Direccion {
+  id            Int         @id @default(autoincrement())
+  clienteId     Int         @map("cliente_id")
+  etiqueta      String?     @db.VarChar(40) // Casa, Oficina…
+  direccion     String      @db.VarChar(200)
+  referencia    String?     @db.VarChar(120)
+  ciudad        String?     @db.VarChar(80)
+  latitud       Decimal?    @db.Decimal(9, 6)
+  longitud      Decimal?    @db.Decimal(9, 6)
+  esPrincipal   Boolean     @default(false) @map("es_principal")
+  // Solo las guardadas aparecen en Mi perfil y como opción en la próxima solicitud.
+  guardada      Boolean     @default(false)
+  activo        Boolean     @default(true)
+  fechaCreacion DateTime    @default(now()) @map("fecha_creacion") @db.Timestamptz
+  cliente       Cliente     @relation(fields: [clienteId], references: [id])
+  recojos       Solicitud[] @relation("SolicitudDireccion")
+  citas         Cita[]
+
+  @@index([clienteId])
+  @@map("direccion")
+}
+
+model Solicitud {
+  id                  Int               @id @default(autoincrement())
+  codigo              String?           @unique @db.VarChar(12) // SOL-0001, se asigna al crearla
+  clienteId           Int               @map("cliente_id")
+  canal               String            @db.VarChar(20) // web | telefono | local | correo | mensaje
+  // trae | catalogo | local | domicilio | sin
+  telaOpcion          String            @map("tela_opcion") @db.VarChar(12)
+  mismaTela           Boolean           @default(true) @map("misma_tela")
+  // Lo que el cliente escribe: la tela que trae o la que busca para la cita o la visita.
+  telaDescripcion     String?           @map("tela_descripcion") @db.VarChar(200)
+  // Pattern y color si ya conoce la tela.
+  telaConocida        String?           @map("tela_conocida") @db.VarChar(80)
+  // delivery | propio; vacío cuando se define en la cita o la visita.
+  traslado            String?           @db.VarChar(12)
+  direccionId         Int?              @map("direccion_id")
+  fechaPrefRecojo     DateTime?         @map("fecha_pref_recojo") @db.Date
+  franjaRecojo        String?           @map("franja_recojo") @db.VarChar(10) // manana | tarde
+  estado              String            @db.VarChar(30)
+  fechaSolicitud      DateTime          @default(now()) @map("fecha_solicitud") @db.Timestamptz
+  registradoPor       Int               @map("registrado_por")
+  cliente             Cliente           @relation(fields: [clienteId], references: [id])
+  direccion           Direccion?        @relation("SolicitudDireccion", fields: [direccionId], references: [id])
+  registrador         Usuario           @relation(fields: [registradoPor], references: [id])
+  // Descarte con motivo (CU-C02): nada se borra, queda quién y cuándo.
+  motivoDescarte      String?           @map("motivo_descarte") @db.VarChar(120)
+  descartadaPor       Int?              @map("descartada_por")
+  fechaDescarte       DateTime?         @map("fecha_descarte") @db.Timestamptz
+  descartador         Usuario?          @relation("SolicitudDescartadaPor", fields: [descartadaPor], references: [id])
+  // El Administrador pidió las fotos por enlace (A3): no se cotiza hasta que lleguen.
+  esperaFotos         Boolean           @default(false) @map("espera_fotos")
+  muebles             SolicitudMueble[]
+  citas               Cita[]
+  notificaciones      Notificacion[]
+
+  @@index([clienteId, fechaSolicitud])
+  @@index([estado])
+  @@map("solicitud")
+}
+
+model SolicitudMueble {
+  id           Int                @id @default(autoincrement())
+  solicitudId  Int                @map("solicitud_id")
+  orden        Int
+  tipoMuebleId Int                @map("tipo_mueble_id")
+  // retapizado | retapizado_espuma | espuma | estructura | fabricacion
+  servicio     String             @db.VarChar(20)
+  acabado      String?            @db.VarChar(12) // solo fabricación: liso | capitoneado | canales
+  cantidad     Int                @default(1)
+  medidas      String?            @db.VarChar(120)
+  modoTela     String?            @map("modo_tela") @db.VarChar(10) // una | partes (telas del catálogo)
+  solicitud    Solicitud          @relation(fields: [solicitudId], references: [id])
+  tipoMueble   TipoMueble         @relation(fields: [tipoMuebleId], references: [id])
+  telas        SolicitudTela[]
+  adjuntos     SolicitudAdjunto[]
+
+  @@unique([solicitudId, orden])
+  @@map("solicitud_mueble")
+}
+
+model SolicitudTela {
+  id                Int              @id @default(autoincrement())
+  solicitudMuebleId Int              @map("solicitud_mueble_id")
+  materialId        Int              @map("material_id")
+  parteId           Int?             @map("parte_id") // con "distintas telas por partes"
+  orden             Int
+  mueble            SolicitudMueble  @relation(fields: [solicitudMuebleId], references: [id])
+  material          Material         @relation(fields: [materialId], references: [id])
+  parte             TipoMuebleParte? @relation(fields: [parteId], references: [id])
+
+  @@map("solicitud_tela")
+}
+
+model SolicitudAdjunto {
+  id                Int             @id @default(autoincrement())
+  solicitudMuebleId Int             @map("solicitud_mueble_id")
+  tipo              String          @db.VarChar(10) // foto | video
+  nombreOriginal    String          @map("nombre_original") @db.VarChar(160)
+  // Ruta dentro del almacén de archivos (disco en Docker; Supabase Storage en producción).
+  ruta              String          @db.VarChar(200)
+  mime              String          @db.VarChar(60)
+  tamanoBytes       Int             @map("tamano_bytes")
+  fechaSubida       DateTime        @default(now()) @map("fecha_subida") @db.Timestamptz
+  mueble            SolicitudMueble @relation(fields: [solicitudMuebleId], references: [id])
+
+  @@map("solicitud_adjunto")
+}
+
+// ---------------------------------------------------------------- RG-05: todo lo que se avisa por correo también queda aquí
+model Notificacion {
+  id          Int        @id @default(autoincrement())
+  usuarioId   Int        @map("usuario_id")
+  solicitudId Int?       @map("solicitud_id")
+  tipo        String     @db.VarChar(40)
+  titulo      String     @db.VarChar(120)
+  mensaje     String     @db.VarChar(400)
+  // Ruta de la web donde se atiende el aviso (p. ej. /cliente/pedidos/solicitudes).
+  enlace      String?    @db.VarChar(200)
+  leida       Boolean    @default(false)
+  fecha       DateTime   @default(now()) @db.Timestamptz
+  usuario     Usuario    @relation(fields: [usuarioId], references: [id])
+  solicitud   Solicitud? @relation(fields: [solicitudId], references: [id])
+
+  @@index([usuarioId, leida, fecha])
+  @@map("notificacion")
+}
+
+// ---------------------------------------------------------------- CU-C03 / C04: agenda de citas en el local y visitas a domicilio
+model Cita {
+  id               Int        @id @default(autoincrement())
+  solicitudId      Int        @map("solicitud_id")
+  tipo             String     @db.VarChar(12) // local | domicilio
+  // Cita en el local: hora exacta del turno. Visita: el día a las 00:00 y la franja aparte.
+  fechaHora        DateTime   @map("fecha_hora") @db.Timestamptz
+  franja           String?    @db.VarChar(10) // manana | tarde (solo visitas)
+  duracionMin      Int        @map("duracion_min")
+  direccionId      Int?       @map("direccion_id") // dónde es la visita
+  reprogramaciones Int        @default(0)
+  estado           String     @db.VarChar(20) // Programada | Atendida | No asistió | Reprogramada | Cancelada
+  observaciones    String?    @db.VarChar(300)
+  registradoPor    Int        @map("registrado_por")
+  fechaRegistro    DateTime   @default(now()) @map("fecha_registro") @db.Timestamptz
+  solicitud        Solicitud  @relation(fields: [solicitudId], references: [id])
+  direccion        Direccion? @relation(fields: [direccionId], references: [id])
+  registrador      Usuario    @relation(fields: [registradoPor], references: [id])
+
+  @@index([fechaHora, estado])
+  @@index([solicitudId])
+  @@map("cita")
+}
+
+// Días u horas en que el taller no atiende citas (feriados, cierres). Los administra la Agenda (A2).
+model AgendaBloqueo {
+  id            Int      @id @default(autoincrement())
+  fecha         DateTime @db.Date
+  horaInicio    String?  @map("hora_inicio") @db.VarChar(5) // vacío = todo el día
+  horaFin       String?  @map("hora_fin") @db.VarChar(5)
+  motivo        String   @db.VarChar(120)
+  creadoPor     Int?     @map("creado_por")
+  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.Timestamptz
+
+  @@index([fecha])
+  @@map("agenda_bloqueo")
+}

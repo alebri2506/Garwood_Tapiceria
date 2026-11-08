@@ -1,0 +1,40 @@
+/* Portal del cliente — barra y contenedor de las pantallas W (screens.css del prototipo) */
+.wp { width: 100%; min-height: 100vh; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; font-size: 15.5px; overflow-x: clip; /* el fondo de .wmain mide 100vw */ }
+.wtop { position: sticky; top: 0; z-index: 50; background: var(--navy-950); color: #FFFFFF; border-bottom: 1.5px dashed #67E8F966; }
+.wtop-in { max-width: 1200px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.wbrand { display: flex; flex-direction: column; text-decoration: none; color: #FFFFFF; margin-right: 12px; }
+.wbrand b { font-family: var(--font-display); font-weight: 800; font-size: 22px; letter-spacing: -.02em; }
+.wbrand b::before { content: ''; display: inline-block; width: 12px; height: 12px; margin-right: 8px; border-radius: 4px; vertical-align: 1px; background: linear-gradient(135deg, var(--cyan-300), var(--blue-600)); box-shadow: 0 0 0 3px #67E8F926; }
+.wbrand span { font-size: 11.5px; color: var(--on-dark-muted); }
+.wnav { display: flex; flex-wrap: wrap; gap: 4px; margin-right: auto; }
+.wnav a { min-height: 40px; padding: 0 14px; border-radius: 10px; display: inline-flex; align-items: center; color: #C3D2EE; text-decoration: none; font-weight: 500; font-size: 14.5px; transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out); }
+.wnav a:hover { background: #FFFFFF14; color: #FFFFFF; }
+.wnav a.on { background: var(--blue-900); color: #FFFFFF; font-weight: 600; box-shadow: inset 0 -3px 0 var(--sky-400); }
+.wbell { position: relative; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: #FFFFFF14; color: #FFFFFF; text-decoration: none; }
+.wav { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; text-decoration: none; color: #FFFFFF; font-weight: 700; font-size: 14px; background: linear-gradient(135deg, var(--blue-600), var(--sky-400)); }
+.wnav a:focus-visible, .wbell:focus-visible, .wav:focus-visible, .wbrand:focus-visible { outline: 2px solid var(--cyan-300); outline-offset: 2px; }
+
+.wmain { position: relative; isolation: isolate; width: 100%; max-width: 1200px; margin: 0 auto; padding: 28px 24px 56px; display: flex; flex-direction: column; gap: 22px; }
+.wmain::before { content: ''; position: absolute; left: 50%; width: 100vw; transform: translateX(-50%); top: 0; height: 240px; z-index: -1; pointer-events: none; background: radial-gradient(50% 100% at 80% 0%, #38BDF826 0%, transparent 70%), linear-gradient(180deg, #DBEAFE 0%, transparent 100%); }
+.whead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; padding-bottom: 6px; }
+.whead h1 { font-size: 34px; line-height: 40px; font-weight: 800; letter-spacing: -0.03em; }
+.wcols { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.wcols > .wl { flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+.wcols > .wr { flex: 1 1 340px; max-width: 420px; display: flex; flex-direction: column; gap: 20px; }
+@media (min-width: 900px) { .wcols > .wr { position: sticky; top: 104px; } }
+
+@media (max-width: 760px) {
+  .wtop-in { padding: 10px 16px; gap: 10px; }
+  .wbrand span { display: none; }
+  .wtop .gw-btn-on-dark { order: 3; }
+  .wnav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; margin: 0; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); background: var(--navy-950); border-top: 1px solid #FFFFFF1F; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .wnav a { justify-content: center; min-height: 48px; font-size: 13.5px; }
+  .wmain { padding: 20px 16px 96px; }
+  .whead h1 { font-size: 26px; line-height: 32px; }
+  .wcols > .wr { max-width: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .wmain > * { animation: gw-rise var(--dur-2) var(--ease-out) both; }
+  .wmain > *:nth-child(2) { animation-delay: 40ms; }
+  .wmain > *:nth-child(n+3) { animation-delay: 80ms; }
+}

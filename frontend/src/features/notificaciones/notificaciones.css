@@ -1,0 +1,28 @@
+/* W11 Notificaciones (estilos del prototipo, con prefijo nt-) */
+.nt-filtros { flex: 0 1 240px !important; }
+.nt-flt { display: flex; flex-direction: column; gap: 4px; padding: 8px; }
+.nt-flt button { display: flex; justify-content: space-between; align-items: center; min-height: 42px; padding: 0 14px; border-radius: 10px; border: 0; background: transparent; color: var(--ink); font: 500 14px/1 var(--font-sans); cursor: pointer; text-align: left; }
+.nt-flt button.on { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+.nt-flt button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.nt-lista { padding: 0; overflow: hidden; }
+.nt { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; width: 100%; padding: 14px 18px; border: 0; border-bottom: 1px solid var(--line); background: var(--surface); text-decoration: none; color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+.nt:last-child { border-bottom: 0; }
+.nt:hover { background: var(--surface-sunken); color: var(--ink); }
+.nt:focus-visible { outline: none; box-shadow: inset var(--focus-ring); }
+.nt.nt-nueva { background: var(--primary-soft); }
+.nt b { font-size: 15px; }
+.nt p { font-size: 14px; color: var(--ink-muted); margin-top: 2px; }
+.nt small { font-size: 12.5px; color: var(--ink-muted); white-space: nowrap; }
+.nt-ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; }
+.nt-info { background: var(--primary-soft); color: var(--primary); }
+.nt-ok { background: var(--success-soft); color: var(--success-ink); }
+.nt-warn { background: var(--warning-soft); color: var(--warning-ink); }
+.nt-bad { background: var(--danger-soft); color: var(--danger-ink); }
+.nt.nt-nueva .nt-info { background: var(--surface); }
+@media (max-width: 640px) {
+  .nt { grid-template-columns: 40px minmax(0, 1fr); }
+  .nt small { grid-column: 2; }
+}
+/* Campana con el número de no leídas */
+.wbell { position: relative; }
+.wbell-n { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9999px; background: var(--warning-500); color: #0A1630; font: 800 11px/18px var(--font-sans); text-align: center; }

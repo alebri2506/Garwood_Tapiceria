@@ -1,0 +1,52 @@
+# Entorno local de GARWEB (base, API y web). Uso desde esta carpeta:
+#   docker compose up -d db          -> solo PostgreSQL (puerto 5433), para desarrollar con `npm run dev`
+#   docker compose up -d --build     -> todo: web en http://localhost:8090, API en http://localhost:3000
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: garweb
+      POSTGRES_PASSWORD: garweb
+      POSTGRES_DB: garweb
+    ports:
+      - "5433:5432" # 5433 para no chocar con un PostgreSQL instalado en el equipo
+    volumes:
+      - garweb-db:/var/lib/postgresql/data
+      - ./docker/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U garweb -d garweb"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://garweb:garweb@db:5432/garweb
+      DIRECT_URL: postgresql://garweb:garweb@db:5432/garweb
+      APP_URL: http://localhost:8090
+      # Fotos y videos de las solicitudes (CU-C01): quedan en el volumen aunque se reconstruya la imagen.
+      UPLOADS_DIR: /app/uploads
+    volumes:
+      - garweb-uploads:/app/uploads
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./frontend
+      # Se toman del entorno o de un .env en esta carpeta (docker compose los lee solo).
+      args:
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY:-}
+        VITE_GOOGLE_MAPS_MAP_ID: ${VITE_GOOGLE_MAPS_MAP_ID:-}
+    ports:
+      - "8090:80"
+    depends_on:
+      - api
+
+volumes:
+  garweb-db:
+  garweb-uploads:
