@@ -90,7 +90,7 @@ export async function guardarParametros(usuarioId: number, cambios: { clave: str
       await tx.parametro.update({ where: { id: p.id }, data: { valor, modificadoPor: usuarioId, fechaModificacion: new Date() } });
       await tx.parametroHistorial.create({ data: { parametroId: p.id, valorAnterior: p.valor, valorNuevo: valor, usuarioId } });
       await registrarBitacora(tx, {
-        usuarioId, modulo: 'seguridad', accion: 'parametro_modificado', entidad: 'parametro', entidadId: p.id,
+        usuarioId, modulo: 'configuracion', accion: 'parametro_modificado', entidad: 'parametro', entidadId: p.id,
         valorAnterior: { clave, valor: p.valor }, valorNuevo: { clave, valor }, ip,
       });
     }

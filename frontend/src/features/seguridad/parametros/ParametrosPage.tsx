@@ -209,7 +209,7 @@ export function ParametrosPage() {
             <div className="card stack">
               <span className="ov">Relacionado</span>
               <Link to="/admin/plantillas" className="pr-rel">Plantillas de cotización</Link>
-              <Link to="/admin/usuarios" className="pr-rel">Usuarios, roles y auditoría completa</Link>
+              <Link to="/admin/usuarios?tab=actividad" className="pr-rel">Usuarios, roles y auditoría completa</Link>
             </div>
           </aside>
         </div>

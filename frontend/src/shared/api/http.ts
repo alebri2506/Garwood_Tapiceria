@@ -46,6 +46,40 @@ export function apiPost<T>(path: string, body: unknown): Promise<T> {
   return pedir<T>(path, { method: 'POST', body: JSON.stringify(body) }, false);
 }
 
+/**
+ * Descarga autenticada de un archivo (p. ej. el CSV de A20): si el access token venció, lo renueva una vez y
+ * reintenta. Guarda el archivo con el nombre que manda la API (o `nombrePorDefecto`).
+ */
+export async function apiDescargar(path: string, nombrePorDefecto: string): Promise<void> {
+  const traer = async () => {
+    try {
+      return await fetch(`${API_URL}${path}`, { headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {}, credentials: 'include' });
+    } catch {
+      throw new ApiError('No pudimos conectar con GARWEB. Revise su conexión e intente de nuevo.', 0);
+    }
+  };
+  let res = await traer();
+  if (res.status === 401 && renovar && (await renovar())) res = await traer();
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new ApiError(data.mensaje ?? 'No pudimos descargar el archivo. Intente de nuevo.', res.status);
+  }
+  const nombre = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? nombrePorDefecto;
+  guardarArchivo(await res.blob(), nombre);
+}
+
+/** Entrega un archivo al navegador para que lo guarde (Descargas). */
+export function guardarArchivo(blob: Blob, nombre: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombre;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 /** Petición autenticada: si el access token venció, lo renueva una vez y reintenta. */
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   try {

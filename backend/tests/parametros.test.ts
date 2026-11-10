@@ -94,7 +94,7 @@ describe('CU-S05 API de parámetros (A14)', () => {
 
     const p = await prisma.parametro.findUniqueOrThrow({ where: { clave: 'cotizacion.vigencia_dias' } });
     const bitacora = await prisma.bitacora.findFirstOrThrow({ where: { accion: 'parametro_modificado', entidadId: p.id }, orderBy: { id: 'desc' } });
-    expect(bitacora).toMatchObject({ modulo: 'seguridad', entidad: 'parametro', valorAnterior: { valor: '30' }, valorNuevo: { valor: '45' } });
+    expect(bitacora).toMatchObject({ modulo: 'configuracion', entidad: 'parametro', valorAnterior: { valor: '30' }, valorNuevo: { valor: '45' } });
     expect(p.modificadoPor).toBe(bitacora.usuarioId);
   });
 

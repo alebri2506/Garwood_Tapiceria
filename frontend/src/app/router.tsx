@@ -20,14 +20,14 @@ import { AnterioresPage } from '../features/comercial/pedidos/AnterioresPage';
 import { PendientePage } from './PendientePage';
 import { NotificacionesPage } from '../features/notificaciones/NotificacionesPage';
 import { ParametrosPage } from '../features/seguridad/parametros/ParametrosPage';
+import { UsuariosPage } from '../features/seguridad/usuarios/UsuariosPage';
 
 // Pantallas A del diseño que aún no se implementan (ruta del menú lateral → pantalla).
 const PANTALLAS_ADMIN: [string, string][] = [
   ['pagos', 'A5 Pagos'],
   ['pedidos', 'A6 Pedidos'], ['plantillas', 'A16 Plantillas'], ['inventario', 'A8 Inventario'], ['catalogo', 'A15 Catálogo de materiales y telas'],
   ['historial', 'A12 Historial'], ['clientes', 'A17 Clientes y expediente'], ['salidas', 'A13 Planificar salidas'],
-  ['taller', 'A18 Taller: recepciones y retiros'], ['reclamos', 'A19 Reclamos e incidencias'],
-  ['usuarios', 'A20 Usuarios, roles y auditoría'],
+  ['taller', 'A18 Taller: recepciones y retiros'], ['reclamos', 'A19 Reclamos e incidencias'],
 ];
 
 export const router = createBrowserRouter([
@@ -88,6 +88,7 @@ export const router = createBrowserRouter([
         { path: 'cotizaciones', element: <CotizacionesPage /> },
         { path: 'cotizaciones/cotizar', element: <CotizarPage /> },
         { path: 'parametros', element: <ParametrosPage /> },
+        { path: 'usuarios', element: <UsuariosPage /> },
         ...PANTALLAS_ADMIN.map(([path, titulo]) => ({ path, element: <PendientePage titulo={titulo} /> })),
       ],
     }],
