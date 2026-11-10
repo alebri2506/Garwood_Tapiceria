@@ -33,9 +33,13 @@ export function emitirAccessToken(u: UsuarioToken) {
   });
 }
 
-/** `rec` guarda si el usuario marcó "Recordarme", para renovar la cookie del mismo tipo. */
-export function emitirRefreshToken(usuarioId: number, recordarme: boolean) {
-  return jwt.sign({ rec: recordarme }, env.JWT_REFRESH_SECRET, {
+/**
+ * `rec` guarda si el usuario marcó "Recordarme", para renovar la cookie del mismo tipo.
+ * `ver` es la `version_sesion` del usuario al emitirlo: si luego se desactiva, cambia de rol o de contraseña,
+ * la versión sube y este token ya no renueva la sesión (decisiones D.1.6).
+ */
+export function emitirRefreshToken(usuarioId: number, recordarme: boolean, version = 0) {
+  return jwt.sign({ rec: recordarme, ver: version }, env.JWT_REFRESH_SECRET, {
     subject: String(usuarioId),
     expiresIn: env.JWT_REFRESH_DIAS * 86_400,
   });
@@ -48,7 +52,7 @@ export function crearSesion(u: UsuarioCompleto, recordarme: boolean): { sesion: 
       token: emitirAccessToken({ id: u.id, rol, clienteId: u.clienteId }),
       usuario: { id: String(u.id), nombre: nombreVisible(u), rol },
     },
-    refreshToken: emitirRefreshToken(u.id, recordarme),
+    refreshToken: emitirRefreshToken(u.id, recordarme, u.versionSesion),
   };
 }
 
@@ -61,10 +65,11 @@ export function verificarAccessToken(token: string): UsuarioToken {
   }
 }
 
-export function verificarRefreshToken(token: string): { usuarioId: number; recordarme: boolean } {
+export function verificarRefreshToken(token: string): { usuarioId: number; recordarme: boolean; version: number } {
   try {
     const p = jwt.verify(token, env.JWT_REFRESH_SECRET) as jwt.JwtPayload;
-    return { usuarioId: Number(p.sub), recordarme: p.rec === true };
+    // Los tokens emitidos antes de version_sesion no traen `ver`: cuentan como versión 0.
+    return { usuarioId: Number(p.sub), recordarme: p.rec === true, version: typeof p.ver === 'number' ? p.ver : 0 };
   } catch {
     throw new NoAutorizadoError();
   }

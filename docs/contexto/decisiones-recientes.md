@@ -98,7 +98,7 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
    - no vence;
    - el usuario **debe cambiarla en su primer ingreso**, en una pantalla nueva con el estilo de G1.
 4. **Editar un usuario:**
-   - se puede cambiar **nombre, rol y dispositivo**;
+   - se puede cambiar **nombre, rol, dispositivo y correo** (el correo se agregó el 10/11, para poder subir a Administrador a alguien que no tenía; a un Administrador no se le puede quitar);
    - el **nombre de usuario no se cambia** (identifica a la persona en la bitácora);
    - el Administrador puede generarle una contraseña temporal nueva.
 5. **Protecciones:** nadie puede desactivarse a sí mismo, y siempre debe quedar **al menos un Administrador activo**.

@@ -2,6 +2,7 @@
 // Sin Express ni Prisma: los nombres de los registros (códigos, etiquetas, usuarios) llegan ya resueltos en `Referencias`.
 import { leerFecha } from '../../comercial/domain/calendario.js';
 import { enNY } from '../../comercial/domain/agenda.js';
+import { etiquetaRol } from './usuarios.js';
 
 /** Módulos del filtro, en el orden de A20. */
 export const MODULOS: { codigo: string; nombre: string }[] = [
@@ -129,6 +130,22 @@ export function describir(e: EntradaBitacora, r: Referencias): EntradaLegible {
     case 'cita_inasistencia': return l('No asistió', deCita,
       `Solicitud: ${texto(antes.solicitud)} → ${texto(despues.solicitud)} · ${plural(despues.inasistencias, 'inasistencia', 'inasistencias')}`);
     case 'agenda_bloqueo': return l('Turno bloqueado', 'Agenda', `${cuandoCita(despues)} · ${texto(despues.motivo)}`);
+
+    case 'usuario_creado': {
+      const partes = [etiquetaRol(texto(despues.rol)), texto(despues.dispositivo), despues.email ? 'con correo' : 'sin correo'].filter(Boolean);
+      return l('Usuario creado', texto(despues.nombreUsuario) || cuenta, `${partes.join(' · ')} · contraseña temporal`);
+    }
+    case 'usuario_modificado': {
+      const CAMPOS: Record<string, string> = { nombre: 'Nombre', rol: 'Rol', dispositivo: 'Dispositivo', email: 'Correo' };
+      const valor = (campo: string, v: unknown) => (v == null || v === '' ? '—' : campo === 'rol' ? etiquetaRol(texto(v)) : texto(v));
+      // Orden fijo: la base (jsonb) no conserva el orden de las claves.
+      const campos = [...Object.keys(CAMPOS).filter((c) => c in despues), ...Object.keys(despues).filter((c) => !(c in CAMPOS))];
+      const cambios = campos.map((c) => `${CAMPOS[c] ?? c}: ${valor(c, antes[c])} → ${valor(c, despues[c])}`);
+      return l('Usuario editado', cuenta, cambios.join(' · '));
+    }
+    case 'usuario_desactivado': return l('Usuario desactivado', cuenta, 'Activo → Desactivado');
+    case 'usuario_reactivado': return l('Usuario reactivado', cuenta, 'Desactivado → Activo');
+    case 'contrasena_temporal': return l('Contraseña temporal', cuenta, 'Se generó una nueva; debe cambiarla al ingresar');
 
     case 'cliente_registrado': {
       const tipo = despues.tipoPersona === 'empresa' ? 'Empresa' : 'Persona';
