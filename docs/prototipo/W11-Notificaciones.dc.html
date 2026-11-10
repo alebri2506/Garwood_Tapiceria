@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W11 Notificaciones (web)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.nt{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.nt:last-child{border-bottom:0}
+.nt:hover{background:var(--surface-sunken);color:var(--ink)}
+.nt.new{background:var(--primary-soft)}
+.nt .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center}
+.nt b{font-size:15px}
+.nt p{font-size:14px;color:var(--ink-muted);margin-top:2px}
+.nt small{font-size:12.5px;color:var(--ink-muted);white-space:nowrap}
+.t-info{background:var(--primary-soft);color:var(--primary)} .t-ok{background:var(--success-soft);color:var(--success-ink)} .t-warn{background:var(--warning-soft);color:var(--warning-ink)} .t-bad{background:var(--danger-soft);color:var(--danger-ink)}
+.nt.new .ic.t-info{background:var(--surface)}
+.flt{display:flex;flex-direction:column;gap:4px}
+.flt button{display:flex;justify-content:space-between;align-items:center;min-height:42px;padding:0 14px;border-radius:10px;border:0;background:transparent;color:var(--ink);font:500 14px/1 var(--font-sans);cursor:pointer;text-align:left}
+.flt button.on{background:var(--primary-soft);color:var(--primary);font-weight:600}
+</style>
+</helmet>
+<div class="wp">
+  <header class="wtop"><div class="wtop-in">
+    <a class="wbrand" href="W1-Inicio.dc.html"><b>Garwood</b><span>Tapicería de Interiores</span></a>
+    <nav class="wnav" aria-label="Portal del cliente"><a href="W6a-EnCurso.dc.html">Mis pedidos</a><a href="W9-Reclamos.dc.html">Reclamos</a></nav>
+    <a class="gw-btn gw-btn-on-dark gw-btn-sm" href="W2-Solicitud.dc.html">+ Nueva solicitud</a>
+    <a class="wbell" href="W11-Notificaciones.dc.html" aria-label="Notificaciones" style="box-shadow: 0 0 0 3px #67E8F9"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></a>
+    <a class="wav" href="W10-Perfil.dc.html" aria-label="Mi perfil">LM</a>
+  </div></header>
+  <main class="wmain">
+    <div class="whead"><div><div class="crumb">También le llegan por correo · <a href="W10-Perfil.dc.html">preferencias</a></div><h1>Notificaciones</h1></div><button class="gw-btn gw-btn-secondary" onClick="{{readAll}}">Marcar todas como leídas</button></div>
+    <div class="wcols">
+      <aside class="wr" style="flex: 0 1 240px">
+        <div class="card flt" style="padding: 8px"><sc-for list="{{filters}}" as="f" hint-placeholder-count="6"><button class="{{f.cls}}" onClick="{{f.pick}}"><span>{{f.label}}</span><span class="num">{{f.n}}</span></button></sc-for></div>
+      </aside>
+      <div class="wl">
+        <div class="card" style="padding: 0; overflow: hidden">
+          <sc-for list="{{list}}" as="n" hint-placeholder-count="6">
+            <a class="{{n.cls}}" href="{{n.href}}">
+              <span class="{{n.ic}}"><x-import component-from-global-scope="Garweb.Icon" name="{{n.icon}}"></x-import></span>
+              <span><b>{{n.title}}</b><p>{{n.text}}</p></span>
+              <small>{{n.when}}</small>
+            </a>
+          </sc-for>
+          <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}"><div style="padding: 24px"><x-import component-from-global-scope="Garweb.EmptyState" icon="check" title="Está al día">No hay avisos en este filtro.</x-import></div></sc-if>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":950}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { f: 0, read: false }; }
+  renderVals() {
+    const N = [
+      ['truck', 't-info', 'Recordatorio: su entrega es mañana', 'Jueves 22 entre 10:00 y 12:00. Saldo a pagar: $684.', 'mié 21 oct · 18:00', 'W7-Entrega.dc.html', true, 'Entrega'],
+      ['calendar', 't-info', 'Fecha de entrega asignada', 'Su pedido llegará el jueves 22 entre 10:00 y 12:00. Confirme o reprograme.', 'lun 19 oct · 16:10', 'W7-Entrega.dc.html', true, 'Entrega'],
+      ['check', 't-ok', 'Su pedido está terminado', 'PED-0076 salió del taller. Pronto le avisaremos la fecha de entrega.', 'vie 16 oct · 17:30', 'W6a-EnCurso.dc.html', true, 'Pedido'],
+      ['truck', 't-info', 'Fecha de recojo asignada', 'Pasaremos por su sofá el jue 8 oct entre 14:00 y 16:00. Confirme o reprograme hasta hoy 14:00.', 'mié 7 oct · 09:40', 'W7-Entrega.dc.html', false, 'Entrega'],
+      ['payment', 't-ok', 'Adelanto confirmado · pedido generado', 'Adelanto de $456 por Zelle. Se generó su pedido PED-0076.', 'mié 7 oct · 09:31', 'W5-Pagos.dc.html', false, 'Pagos del pedido'],
+      ['x', 't-bad', 'Comprobante rechazado', 'No se lee el monto del comprobante del adelanto. Vuelva a subirlo.', 'mar 6 oct · 17:40', 'W5-Pagos.dc.html', false, 'Pagos del pedido'],
+      ['quote', 't-info', 'Su cotización está lista', 'Total $1,140 · vence en 1 mes (vie 6 nov).', 'mar 6 oct · 11:20', 'W4-Cotizacion.dc.html', false, 'Cotización'],
+      ['clock', 't-info', 'Recordatorio de su cita', 'Mañana martes 6 oct, 10:00–10:30, en el taller.', 'lun 5 oct · 18:00', 'W3-Cita.dc.html', false, 'Cotización'],
+      ['check', 't-ok', 'Reclamo: reposición aprobada', 'Recogeremos el cojín el mar 27 oct y lo devolveremos el jue 29.', 'lun 26 oct · vista futura', 'W9-Reclamos.dc.html', false, 'Reclamos']
+    ];
+    const s = this.state;
+    const all = N.map(n => ({ icon: n[0], ic: 'ic ' + n[1], title: n[2], text: n[3], when: n[4], href: n[5], unread: n[6] && !s.read, type: n[7] }));
+    const F = [['Todas', () => true], ['No leídas', n => n.unread], ['Cotización', n => n.type === 'Cotización'], ['Pagos', n => n.type === 'Pagos'], ['Pedido', n => n.type === 'Pedido'], ['Entrega', n => n.type === 'Entrega'], ['Reclamos', n => n.type === 'Reclamos']];
+    const list = all.filter(F[s.f][1]).map(n => ({ ...n, cls: n.unread ? 'nt new' : 'nt' }));
+    return {
+      filters: F.map((f, i) => ({ label: f[0], n: all.filter(f[1]).length, cls: s.f === i ? 'on' : '', pick: () => this.setState({ f: i }) })),
+      list, empty: list.length === 0,
+      readAll: () => this.setState({ read: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

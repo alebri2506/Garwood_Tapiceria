@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>D2b Pedido bloqueado</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.blk{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:26px 18px;border-radius:20px;background:var(--surface);border:2px solid var(--error-500)}
+.blk .ic{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;background:var(--danger-soft);color:var(--danger-ink)}
+</style>
+</helmet>
+<div class="phone" style="width: 390px; min-height: 900px; background: var(--danger-soft)">
+  <div class="ph-head">
+    <a class="ph-back" href="D2-Carga.dc.html" aria-label="Volver a validar carga"><x-import component-from-global-scope="Garweb.Icon" name="arrow-right" style="transform: rotate(180deg)"></x-import></a>
+    <h1>Pedido bloqueado</h1>
+  </div>
+  <div class="ph-body">
+    <div class="blk">
+      <span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 32 }}"></x-import></span>
+      <span class="ov" style="color: var(--danger-ink)">Solo este pedido no sale</span>
+      <h2 style="font-size: 21px; line-height: 27px">Faltan 2 cojines de PED-0081</h2>
+      <p class="muted" style="font-size: 14px; line-height: 20px">No hay entregas parciales. Búsquelos otra vez o saque este pedido de la ruta; las demás paradas salen igual.</p>
+    </div>
+    <sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+      <a class="big-btn pri" href="D2-Carga.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 22 }}"></x-import>Buscar de nuevo</a>
+      <button class="big-btn danger" onClick="{{remove}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 22 }}"></x-import>Sacar este pedido de la ruta</button>
+      <span class="muted" style="font-size: 12.5px; text-align: center">Al sacarlo se avisa al Administrador y a J. Ortega. El pedido queda bloqueado hasta que aparezcan las piezas.</span>
+    </sc-if>
+    <sc-if value="{{removed}}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="Garweb.Toast" tone="warning" title="PED-0081 fuera de la ruta">Avisos enviados al Administrador y al cliente. Queda bloqueado hasta resolverlo.</x-import>
+      <div class="ph-card" style="gap: 8px">
+        <b>Así sale la camioneta</b>
+        <div class="kv"><span>Paradas 1, 2 y 4</span><b style="color: var(--success-ink)">Salen completas</b></div>
+        <div class="kv"><span>PED-0081</span><b style="color: var(--danger-ink)">Bloqueado · no sale</b></div>
+      </div>
+      <a class="big-btn pri" href="D1-Ruta.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="truck" size="{{ 22 }}"></x-import>Iniciar salida · 3 paradas</a>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { r: false }; }
+  renderVals() { return { open: !this.state.r, removed: this.state.r, remove: () => this.setState({ r: true }) }; }
+}
+</script>
+</body>
+</html>

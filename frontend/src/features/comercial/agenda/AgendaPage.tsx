@@ -26,7 +26,7 @@ const iniciales = (n: string) => n.split(' ').map((w) => w[0]).join('').slice(0,
 const telefono = (t: string) => t.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, '($1) $2-$3');
 const citasTexto = (n: number) => (n === 1 ? '1 cita' : `${n} citas`);
 const CANAL: Record<string, string> = { web: 'Web', telefono: 'Teléfono', local: 'En persona', correo: 'Correo', mensaje: 'Mensaje de texto' };
-const TELA: Record<string, string> = { trae: 'La trae el cliente', catalogo: 'Catálogo en línea', local: 'Ver en el local', domicilio: 'Visita a domicilio', sin: 'No lleva tela' };
+const TELA: Record<string, string> = { trae: 'La trae el cliente', catalogo: 'Telas en línea', local: 'Ver en el local', domicilio: 'Visita a domicilio', sin: 'No lleva tela' };
 const FILTROS = ['Todas', 'Visitas al local', 'Retiros'] as const;
 
 /** Lo que se está agendando: una solicitud en espera (A2c/A2d/A2e) o una cita que se mueve (A2g / tras una falta, A2f). */

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A5 Pagos</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.pay{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);text-align:left;width:100%;font:inherit;color:var(--ink);cursor:pointer}
+.pay.on{border-color:var(--primary);background:var(--primary-soft)}
+.receipt{border-radius:16px;padding:20px;background:linear-gradient(160deg,#F4F8FE,#E9F2FF);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px;color:#0F172A;font-size:14px}
+.seg{display:inline-flex;flex-wrap:wrap;gap:8px}
+.seg button{min-height:44px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1 var(--font-sans);cursor:pointer}
+.seg button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.kpi span{font-size:12px;font-weight:600;color:var(--ink-muted)}
+.kpi b{font:800 22px/1.1 var(--font-display);font-variant-numeric:tabular-nums}
+.kpi small{font-size:12px;color:var(--ink-muted)}
+.gwp{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface-sunken);font-size:13px}
+.gwp b{font-size:14px}
+.gwp .fee{font-size:12px;color:var(--ink-muted);text-align:right}
+.mhint{font-size:13px;line-height:19px;padding:10px 12px;border-radius:10px;background:var(--info-soft,var(--primary-soft));color:var(--ink)}
+@media (max-width:900px){.kpis{grid-template-columns:1fr 1fr}}
+.cb{border:1.5px solid var(--error-500);background:color-mix(in srgb,var(--error-500) 4%,var(--surface))}
+.cbi{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--error-soft,#FEE2E2);color:var(--error-ink,#991B1B)}
+.cbs{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.45}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav on" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">4</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Comercial › Pagos · mié 7 oct</div><h1>Pagos</h1></div>
+      <button class="gw-btn gw-btn-primary" onClick="{{openReg}}">+ Registrar pago en el local</button>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><span>Cobrado hoy</span><b>$494</b><small>2 pagos · confirmados por la pasarela</small></div>
+      <div class="kpi"><span>Por confirmar</span><b style="color: var(--warning-ink)">$976</b><small>2 comprobantes · Zelle y cheque</small></div>
+      <div class="kpi"><span>En proceso en el banco</span><b>$1,200</b><small>1 débito ACH · llega en 2–3 días</small></div>
+      <div class="kpi"><span>Comisiones de la pasarela · oct</span><b>$87.40</b><small>tarjeta 2.9 % + $0.30 · ACH 0.8 % (máx. $5)</small></div>
+    </div>
+
+    <div class="card stack cb" id="contracargo">
+      <div class="between" style="flex-wrap: wrap; gap: 8px"><div class="row"><span class="cbi"><x-import component-from-global-scope="Garweb.Icon" name="alert" size="{{ 20 }}"></x-import></span><div><h2 style="font-size: 18px">El banco desconoció un pago con tarjeta</h2><span class="muted" style="font-size: 13px">Contracargo · PED-0069 · Rachel Adams · aviso de la pasarela hoy 07:40</span></div></div><x-import component-from-global-scope="Garweb.StatusChip" tone="danger">Saldo pendiente otra vez · $420</x-import></div>
+      <p style="font-size: 14px; margin: 0; line-height: 1.5">La clienta le dijo a su banco que no reconoce el cargo de <b>$420</b> (adelanto pagado con tarjeta el 28 sep). La pasarela le devolvió el dinero y cobró <b>$15</b> por la disputa. El pedido ya está en el taller, así que el saldo volvió a «pendiente».</p>
+      <ol class="cbs"><li><b>Llamarla.</b> Muchas veces es un error o no reconoció el nombre «Garwood LLC» en su estado de cuenta.</li><li><b>Enviar pruebas a la pasarela hasta el vie 23 oct:</b> la cotización aceptada, las fotos de recepción y la firma. GARWEB las junta solas.</li><li><b>Si no se resuelve,</b> pedirle el pago por otra vía (Zelle, cheque o efectivo). El pedido no se entrega hasta cubrir el saldo.</li></ol>
+      <div class="row" style="flex-wrap: wrap; gap: 8px"><button class="gw-btn gw-btn-primary gw-btn-sm">Enviar pruebas a la pasarela</button><button class="gw-btn gw-btn-secondary gw-btn-sm">Pedirle otra forma de pago</button><a class="gw-btn gw-btn-ghost gw-btn-sm" href="A6b-FichaPedido.dc.html">Ver pedido</a></div>
+    </div>
+
+    <sc-if value="{{reg}}" hint-placeholder-val="{{ false }}">
+      <div class="card stack" style="border: 2px solid var(--primary)">
+        <div class="between"><h2 style="font-size: 18px">Registrar pago recibido en el local</h2><span class="muted" style="font-size: 13px">Sin comprobante del cliente · queda confirmado al guardar</span></div>
+        <div class="grid3" style="gap: 14px">
+          <x-import component-from-global-scope="Garweb.TextField" label="Pedido" value="PED-0083 · Ana Ruiz" hint="Saldo pendiente: $312 (adelanto 40 %)"></x-import>
+          <x-import component-from-global-scope="Garweb.TextField" label="Monto recibido" value="312.00" prefix="$" numeric="{{ true }}"></x-import>
+          <x-import component-from-global-scope="Garweb.TextField" label="Concepto" value="Adelanto"></x-import>
+        </div>
+        <div class="stack" style="gap: 6px"><span class="gw-field-label">Método</span><div class="seg"><sc-for list="{{methods}}" as="m" hint-placeholder-count="5"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for></div></div>
+        <div class="mhint">{{methodHint}}</div>
+        <x-import component-from-global-scope="Garweb.TextField" label="Referencia" optional="{{ true }}" placeholder="{{refPh}}"></x-import>
+        <p class="audit" style="margin: 0">5 métodos aceptados: efectivo, tarjeta, cheque, Zelle y transferencia. Los pagos en línea del cliente (tarjeta o cuenta bancaria) no se registran aquí: llegan solos desde la pasarela.</p>
+        <div class="row"><button class="gw-btn gw-btn-primary" onClick="{{saveReg}}">Guardar pago</button><button class="gw-btn gw-btn-ghost" onClick="{{closeReg}}">Cancelar</button></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{regDone}}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Pago registrado y confirmado">PED-0083 · $312 en {{methodTxt}} · se emite el recibo al cliente.</x-import>
+    </sc-if>
+
+    <div class="split">
+      <div class="aside" style="max-width: 400px">
+        <span class="ov">Por confirmar · Zelle y cheque (los revisa usted)</span>
+        <button class="pay on"><div><b>PED-0076 · Laura Méndez</b><div class="muted" style="font-size: 13px">Adelanto 40 % · Zelle · hoy 09:14</div></div><div class="stack" style="gap: 6px; align-items: flex-end"><b class="num">$456</b><x-import component-from-global-scope="Garweb.StatusChip" status="{{status}}"></x-import></div></button>
+        <button class="pay"><div><b>PED-0081 · J. Ortega</b><div class="muted" style="font-size: 13px">Saldo · cheque · cobrado por el conductor (Luis) en la entrega</div></div><div class="stack" style="gap: 6px; align-items: flex-end"><b class="num">$520</b><x-import component-from-global-scope="Garweb.StatusChip" status="Por confirmar"></x-import></div></button>
+        <p class="audit" style="padding: 8px 10px; border-radius: 10px; background: var(--surface-sunken)">PED-0084 · Hotel Willow tiene adelanto 0 % (ya tiene pedidos cerrados): el pedido se generó al aceptar, sin pago por confirmar.</p>
+        <span class="ov" style="margin-top: 8px">Confirmados por la pasarela · hoy</span>
+        <div class="gwp"><div><b>PED-0090 · Emily Carter</b><div class="muted">Adelanto · tarjeta en línea · 08:52</div></div><div class="fee"><b class="num" style="font-size: 14px; color: var(--ink)">$310.00</b><br>comisión $9.29 · neto $300.71</div></div>
+        <div class="gwp"><div><b>PED-0091 · Daniel Brooks</b><div class="muted">Saldo · tarjeta con lector del conductor · 10:05</div></div><div class="fee"><b class="num" style="font-size: 14px; color: var(--ink)">$184.00</b><br>comisión $5.02 · neto $178.98</div></div>
+        <div class="gwp"><div><b>PED-0084 · Hotel Willow</b><div class="muted">Saldo · cuenta bancaria (ACH) · <span style="color: var(--warning-ink); font-weight: 600">en proceso</span></div></div><div class="fee"><b class="num" style="font-size: 14px; color: var(--ink)">$1,200.00</b><br>comisión $5.00 · llega jue 9 oct</div></div>
+        <p class="audit" style="margin: 0">Estos pagos no necesitan revisión: la pasarela confirma el cobro y GARWEB actualiza el saldo del pedido y emite el recibo.</p>
+        <span class="ov" style="margin-top: 8px">Pendientes de pago</span>
+        <button class="pay" onClick="{{openReg}}"><div><b>PED-0083 · Ana Ruiz</b><div class="muted" style="font-size: 13px">Adelanto 40 % · dijo que paga en el local</div></div><div class="stack" style="gap: 6px; align-items: flex-end"><b class="num">$312</b><x-import component-from-global-scope="Garweb.StatusChip" status="{{anaStatus}}"></x-import></div></button>
+      </div>
+      <div class="wide">
+        <div class="grid2">
+          <div class="card stack">
+            <div class="between"><h2 style="font-size: 18px">Comprobante</h2><span class="muted" style="font-size: 13px">zelle-456.png</span></div>
+            <div class="receipt" aria-label="Vista previa del comprobante de Zelle">
+              <div class="between"><b style="font-size: 16px">Zelle · pago enviado</b><span style="color: #047857; font-weight: 700">Completado</span></div>
+              <b class="num" style="font-family: var(--font-display); font-size: 34px">$456.00</b>
+              <div class="between"><span style="color: #56657D">Para</span><b>Garwood LLC</b></div>
+              <div class="between"><span style="color: #56657D">Fecha</span><b>7 oct 2026, 09:10</b></div>
+              <div class="between"><span style="color: #56657D">Nota</span><b>PED-0076 Méndez</b></div>
+            </div>
+            <x-import component-from-global-scope="Garweb.Alert" tone="success" title="El monto coincide" compact="{{ true }}">Comprobante $456.00 = adelanto esperado $456.00.</x-import>
+          </div>
+          <div class="card stack">
+            <h2 style="font-size: 18px">Adelanto del pedido</h2>
+            <x-import component-from-global-scope="Garweb.TextField" label="Adelanto sugerido (40 %)" value="456.00" prefix="$" locked="{{ true }}" numeric="{{ true }}" hint="Laura Méndez aún no tiene pedidos cerrados (RN-05): cliente nueva."></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Adelanto a cobrar" value="456.00" prefix="$" numeric="{{ true }}" hint="Si lo cambia, quedará registrado quién y cuándo."></x-import>
+            <hr class="stitch">
+            <span class="ov">Registro de cambios</span>
+            <p class="audit">mar 6 oct, 11:14 · Sistema · sugirió 40 % ($456)</p>
+            <p class="audit">mar 6 oct, 11:15 · Administrador · mantuvo $456</p>
+            <sc-if value="{{rejecting}}" hint-placeholder-val="{{ false }}">
+              <x-import component-from-global-scope="Garweb.TextField" label="Motivo del rechazo" required="{{ true }}" error="Escriba el motivo: el cliente lo verá."></x-import>
+            </sc-if>
+            <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+              <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Pago confirmado" action-label="Deshacer">PED-0076 pasa a Generado y se pide la tela.</x-import>
+              <a class="gw-btn gw-btn-primary gw-btn-block" href="A6b-FichaPedido.dc.html">Ver ficha de PED-0076</a>
+            </sc-if>
+            <sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+              <div class="row"><button class="gw-btn gw-btn-primary" style="flex: 2" onClick="{{confirm}}">Confirmar pago</button><button class="gw-btn gw-btn-danger" style="flex: 1" onClick="{{reject}}">Rechazar</button></div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { mode: 'open', reg: false, regDone: false, met: 0 }; }
+  renderVals() {
+    const s = this.state, m = s.mode;
+    const M = ['Efectivo', 'Tarjeta (lector)', 'Cheque', 'Zelle', 'Transferencia'];
+    const PH = ['N.º del recibo entregado', 'Se completa solo con el cobro del lector', 'N.º de cheque y banco', 'Código de confirmación de Zelle', 'N.º de operación de la transferencia'];
+    const HINT = ['Cuente el dinero y entregue el recibo. Queda confirmado al guardar y suma a la caja del día.', 'Cobre con el lector de la pasarela: al aprobarse la tarjeta, el pago se registra y confirma solo. Comisión 2.7 % + $0.05.', 'Guarde el cheque para depositarlo. Queda confirmado al guardar; si el banco lo devuelve, se revierte.', 'Verifique en la app del banco que el dinero llegó antes de guardar.', 'Verifique en la cuenta del banco que el dinero llegó antes de guardar.'];
+    return {
+      tema: this.props.tema ?? 'light',
+      status: m === 'done' ? 'Confirmado' : m === 'rej' ? 'Rechazado' : 'Por confirmar',
+      open: m !== 'done', done: m === 'done', rejecting: m === 'rej',
+      confirm: () => this.setState({ mode: 'done' }),
+      reject: () => this.setState({ mode: 'rej' }),
+      reg: s.reg, regDone: s.regDone, anaStatus: s.regDone ? 'Confirmado' : 'Pendiente',
+      methods: M.map((l, i) => ({ label: l, on: s.met === i, cls: s.met === i ? 'on' : '', pick: () => this.setState({ met: i }) })),
+      methodTxt: M[s.met] === 'Zelle' ? 'Zelle' : M[s.met].toLowerCase(), refPh: PH[s.met], methodHint: HINT[s.met],
+      openReg: () => this.setState({ reg: true, regDone: false }),
+      closeReg: () => this.setState({ reg: false }),
+      saveReg: () => this.setState({ reg: false, regDone: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

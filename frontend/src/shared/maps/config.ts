@@ -1,5 +1,5 @@
 // Clave de navegador de Google Maps (restringida por dominio en Google Cloud; no es un secreto del servidor).
-// APIs que necesita: "Maps JavaScript API" y "Places API (New)".
+// APIs que necesita: "Maps JavaScript API" y "Places API (New)". La dirección al tocar el mapa sale de OpenStreetMap (direccionDePunto.ts).
 export const GOOGLE_MAPS_API_KEY: string = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '';
 // Los marcadores avanzados exigen un Map ID; DEMO_MAP_ID sirve para desarrollo.
 export const GOOGLE_MAPS_MAP_ID: string = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A13 Planificar salida</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.pend{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.pend .box{width:28px;height:28px;border-radius:8px;border:2px dashed var(--line-strong);display:grid;place-items:center;flex:none;color:var(--on-primary)}
+.pend.on{border-color:var(--primary);background:var(--primary-soft)}
+.pend.on .box{background:var(--primary);border:0}
+.bigmap{position:relative;height:380px;border-radius:16px;overflow:hidden;background:repeating-linear-gradient(0deg,transparent 0 31px,#2563EB12 31px 32px),repeating-linear-gradient(90deg,transparent 0 31px,#2563EB12 31px 32px),var(--primary-soft)}
+.pin{position:absolute;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--primary);color:var(--on-primary);font:800 15px/1 var(--font-display);box-shadow:0 0 0 5px #2563EB33,var(--shadow-md)}
+.pin.home{background:var(--navy-950);color:#FFFFFF;border-radius:10px}
+.stop{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.stop .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--primary);color:var(--on-primary);font:800 14px/1 var(--font-display)}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav on" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Despacho › Salidas · lun 19 oct</div><h1>Planificar salida · jue 22 oct</h1></div>
+      <span class="muted" style="font-size: 14px">Salida grupal · conductor: Luis · camioneta 1</span>
+    </div>
+    <div class="split">
+      <div class="aside">
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 17px">Pedidos para esta salida</h2><span class="pill">{{nSel}} de 5</span></div>
+          <sc-for list="{{pend}}" as="p" hint-placeholder-count="5">
+            <button class="{{p.cls}}" role="checkbox" aria-checked="{{p.on}}" onClick="{{p.pick}}">
+              <span class="box"><sc-if value="{{p.on}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 16 }}"></x-import></sc-if></span>
+              <span style="flex: 1; display: flex; flex-direction: column"><b>{{p.code}} · {{p.client}}</b><span class="muted" style="font-size: 12.5px">{{p.kind}} · {{p.city}}</span></span>
+              <x-import component-from-global-scope="Garweb.StatusChip" tone="{{p.tone}}">{{p.wait}}</x-import>
+            </button>
+          </sc-for>
+          <x-import component-from-global-scope="Garweb.Alert" tone="warning" title="PED-0079 espera hace 15 días" compact="{{ true }}">Supera el aviso de 7 días. Inclúyalo en esta salida.</x-import>
+        </div>
+      </div>
+      <div class="wide">
+        <div class="card stack" style="padding: 16px">
+          <div class="bigmap" role="img" aria-label="Ruta con 4 paradas desde el taller">
+            <svg width="100%" height="100%" viewBox="0 0 800 380" preserveAspectRatio="none" aria-hidden="true" style="position: absolute; inset: 0"><path d="M90 300 C 180 260, 230 210, 300 190 S 430 120, 500 110 S 640 170, 690 230 S 600 320, 520 320" fill="none" stroke="#2563EB" stroke-width="4" stroke-dasharray="10 8" stroke-linecap="round"/></svg>
+            <span class="pin home" style="left: 74px; top: 284px">G</span>
+            <span class="pin" style="left: 284px; top: 174px">1</span>
+            <span class="pin" style="left: 484px; top: 94px">2</span>
+            <span class="pin" style="left: 674px; top: 214px">3</span>
+            <span class="pin" style="left: 504px; top: 304px">4</span>
+            <span style="position: absolute; right: 12px; bottom: 12px; background: var(--surface); padding: 6px 10px; border-radius: 8px; font-size: 12.5px; font-weight: 600">48 mi · 4 h 10 min aprox.</span>
+          </div>
+          <div>
+            <div class="stop"><span class="n">1</span><div><b>PED-0076 · Laura Méndez</b><div class="muted" style="font-size: 13px">Entrega · Montclair · 10:00–12:00 · cobrar $684 · 9 piezas</div></div><x-import component-from-global-scope="Garweb.StatusChip" status="{{s1}}"></x-import></div>
+            <div class="stop"><span class="n">2</span><div><b>PED-0079 · Emily Stone</b><div class="muted" style="font-size: 13px">Entrega · Bloomfield · 11:30–13:00 · pagado · 1 pieza</div></div><x-import component-from-global-scope="Garweb.StatusChip" status="{{s2}}"></x-import></div>
+            <div class="stop"><span class="n">3</span><div><b>PED-0081 · J. Ortega</b><div class="muted" style="font-size: 13px">Entrega · Clifton · 13:30–15:00 · a cuenta · 4 piezas</div></div><x-import component-from-global-scope="Garweb.StatusChip" status="{{s3}}"></x-import></div>
+            <div class="stop" style="border-bottom: 0"><span class="n">4</span><div><b>PED-0083 · Ana Ruiz</b><div class="muted" style="font-size: 13px">Recojo · Garwood · 15:30–16:30 · 1 pieza</div></div><x-import component-from-global-scope="Garweb.StatusChip" status="{{s4}}"></x-import></div>
+          </div>
+          <sc-if value="{{draft}}" hint-placeholder-val="{{ true }}">
+            <button class="gw-btn gw-btn-primary" onClick="{{assign}}">Asignar salida y avisar a los clientes</button>
+          </sc-if>
+          <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Clientes avisados">4 correos y notificaciones con fecha y hora aproximada. Pueden confirmar o reprogramar hasta 24 h antes.</x-import>
+            <div class="row" style="flex-wrap: wrap"><a class="gw-btn gw-btn-secondary" href="W7-Entrega.dc.html">Ver aviso de Laura</a><a class="gw-btn gw-btn-primary" href="D1-Ruta.dc.html">Hoja de ruta del conductor</a></div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { sel: [true, true, true, true, false], sent: false }; }
+  renderVals() {
+    const P = [
+      ['PED-0076', 'Laura Méndez', 'Entrega', 'Montclair', '4 días', 'info'],
+      ['PED-0079', 'Emily Stone', 'Entrega', 'Bloomfield', '15 días', 'warning'],
+      ['PED-0081', 'J. Ortega', 'Entrega', 'Clifton', '5 días', 'info'],
+      ['PED-0083', 'Ana Ruiz', 'Recojo', 'Garwood', 'Recojo', 'neutral'],
+      ['PED-0080', 'Daniel Cruz', 'Entrega', 'Cranford', '1 día', 'info']
+    ];
+    const sel = this.state.sel, sent = this.state.sent;
+    return {
+      tema: this.props.tema ?? 'light',
+      pend: P.map((p, i) => ({ code: p[0], client: p[1], kind: p[2], city: p[3], wait: p[4], tone: p[5], on: sel[i], cls: sel[i] ? 'pend on' : 'pend', pick: () => { const s = sel.slice(); s[i] = !s[i]; this.setState({ sel: s }); } })),
+      nSel: sel.filter(Boolean).length,
+      s1: sent ? 'Confirmada' : 'Asignada', s2: sent ? 'Pendiente' : 'Asignada', s3: sent ? 'Confirmada' : 'Asignada', s4: 'Asignada',
+      draft: !sent, sent,
+      assign: () => this.setState({ sent: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

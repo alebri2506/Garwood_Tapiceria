@@ -8,10 +8,13 @@ const MESES_VISIBLES = 2;
 interface Props {
   value: Date;
   onChange(d: Date): void;
+  /** Hasta cuántos días adelante se puede pedir el recojo (parámetro `recojo.dias_anticipacion_max`). */
+  diasMax?: number;
 }
 
-export function CalendarioRecojo({ value, onChange }: Props) {
+export function CalendarioRecojo({ value, onChange, diasMax }: Props) {
   const base = hoy();
+  const limite = diasMax == null ? null : new Date(base.getFullYear(), base.getMonth(), base.getDate() + diasMax);
   const [desplazamiento, setDesplazamiento] = useState(() =>
     (value.getFullYear() - base.getFullYear()) * 12 + value.getMonth() - base.getMonth(),
   );
@@ -31,7 +34,7 @@ export function CalendarioRecojo({ value, onChange }: Props) {
         {Array.from({ length: huecos }, (_, i) => <span key={`e${i}`} className="d e" />)}
         {Array.from({ length: diasMes }, (_, i) => {
           const d = new Date(primero.getFullYear(), primero.getMonth(), i + 1);
-          const motivo = motivoNoDisponible(d);
+          const motivo = motivoNoDisponible(d) ?? (limite && d > limite ? `Solo hasta ${diasMax} días adelante` : null);
           const on = mismoDia(d, value);
           const cls = ['d', on ? 'on' : motivo ? '' : 'ok', mismoDia(d, base) && 'td', feriadoDe(d) && 'hol'].filter(Boolean).join(' ');
           return (

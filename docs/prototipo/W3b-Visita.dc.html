@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W3b Visita a domicilio (web)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>body{margin:0}
+.tools{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.vseg{display:flex;padding:4px;gap:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line)}
+.vseg button{height:36px;padding:0 16px;border:0;border-radius:9px;background:transparent;color:var(--ink-muted);font:600 14px/1 var(--font-sans);cursor:pointer}
+.vseg button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.navr{display:flex;gap:6px}
+.nb{min-width:40px;height:40px;padding:0 10px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:700 18px/1 var(--font-sans);cursor:pointer}
+.nb.hoy{font-size:14px;padding:0 14px}
+.nb:disabled{opacity:.4;cursor:default}
+.quick{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border-radius:9999px;border:1.5px solid var(--primary);background:var(--primary-soft);color:var(--primary);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.quick b{color:var(--ink)}
+.mgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.mh{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);text-align:center;padding:4px 0}
+.mc{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:6px;min-height:74px;padding:8px 9px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);text-align:left;cursor:pointer;font-family:var(--font-sans)}
+.mc b{font:700 15px/1 var(--font-display);color:var(--ink)}
+.mc span{font-size:11.5px;font-weight:600;padding:3px 7px;border-radius:9999px}
+.mc.many span{background:var(--success-soft);color:var(--success-ink)}
+.mc.few span{background:var(--warning-soft);color:var(--warning-ink)}
+.mc.none,.mc.closed,.mc.past{background:var(--surface-sunken);cursor:default}
+.mc.none span,.mc.closed span,.mc.past span{color:var(--ink-muted);padding:0}
+.mc.past b,.mc.closed b{color:var(--ink-muted)}
+.mc.out{visibility:hidden}
+.mc.today{border-color:var(--ink)}
+.mc.sel{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.wscroll{overflow-x:auto}
+.wgrid{display:grid;grid-template-columns:52px repeat(6,minmax(76px,1fr));gap:6px;min-width:560px}
+.wh{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0 8px;border:0;border-radius:10px;background:transparent;cursor:pointer;font-family:var(--font-sans)}
+.wh small{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted)}
+.wh b{font:700 18px/1.1 var(--font-display);color:var(--ink)}
+.wh em{font-style:normal;font-size:11.5px;color:var(--success-ink);font-weight:600}
+.wh.today b{color:var(--primary)}
+.wh.closed em{color:var(--ink-muted)}
+.wt{font-size:12px;color:var(--ink-muted);font-variant-numeric:tabular-nums;align-self:center;text-align:right;padding-right:4px}
+.wl2{grid-column:1/-1;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);padding:6px 10px;border-radius:8px;background:var(--surface-sunken)}
+.sl{height:40px;border-radius:10px;border:1.5px solid var(--primary);background:var(--surface);color:var(--primary);font:600 14px/1 var(--font-sans);font-variant-numeric:tabular-nums;cursor:pointer}
+.sl.busy{border:1px dashed var(--line);background:repeating-linear-gradient(135deg,var(--surface-sunken) 0 5px,transparent 5px 10px);color:transparent;cursor:default}
+.sl.sel,.dc.sel{background:var(--primary);color:var(--on-primary,#fff);box-shadow:0 0 0 3px var(--primary-soft)}
+.dgroups{display:flex;flex-direction:column;gap:16px}
+.dg{display:flex;flex-direction:column;gap:8px}
+.dchips{display:flex;flex-wrap:wrap;gap:8px}
+.dc{min-width:92px;height:48px;border-radius:12px;border:1.5px solid var(--primary);background:var(--surface);color:var(--primary);font:700 15px/1 var(--font-sans);font-variant-numeric:tabular-nums;cursor:pointer}
+.dc.busy{border:1px dashed var(--line);background:var(--surface-sunken);color:var(--ink-muted);text-decoration:line-through;cursor:default;font-weight:500}
+.hint{font-size:13px;color:var(--ink-muted)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink-muted);padding-top:6px;border-top:1px solid var(--line)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:14px;border-radius:4px}
+.lf{border:1.5px solid var(--primary);background:var(--surface)}
+.ls{background:var(--primary)}
+.lo{border:1px dashed var(--line-strong);background:var(--surface-sunken)}
+.empty-pick{display:flex;align-items:center;gap:10px;padding:14px;border-radius:12px;border:1.5px dashed var(--line-strong);color:var(--ink-muted);font-size:14px}
+.next3{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:20px;color:var(--ink)}
+@media (hover:hover){.sl:not(.busy):not(.sel):hover,.dc:not(.busy):not(.sel):hover{background:var(--primary-soft)}.mc.many:hover,.mc.few:hover{border-color:var(--primary)}}
+.sl:active,.dc:active,.mc:active{transform:scale(.97)}
+.cbar{display:none}
+@media (max-width:760px){.cbar{display:flex;position:fixed;left:12px;right:12px;bottom:84px;z-index:55;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px 10px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-lg)}.cbar span{display:block;font-size:12px;color:var(--ink-muted)}.cbar b{font:700 15px/1.2 var(--font-display)}.wmain{padding-bottom:170px}.mgrid{gap:4px}.mc{min-height:56px;padding:6px}.mc span{font-size:10px;padding:2px 5px}}
+.hgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.hgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hday{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}
+.hday > b{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted)}.hday > span{font:700 16px/1.1 var(--font-display)}
+.hfr{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--primary-soft);background:var(--primary-soft);color:var(--primary);font:700 13px/1.1 var(--font-sans);cursor:pointer;text-align:left}
+.hfr small{font:500 11.5px/1.2 var(--font-sans);color:var(--ink-muted)}
+.hfr.on{background:var(--primary);border-color:var(--primary);color:#fff}.hfr.on small{color:#DBEAFE}
+.hfr:disabled{background:var(--surface-sunken);border-color:var(--line);color:var(--ink-muted);cursor:not-allowed;text-decoration:line-through}
+.okb{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:16px;background:var(--success-soft);color:var(--success-ink)}
+.okb .oki{flex:0 0 40px;width:40px;height:40px;border-radius:50%;background:var(--success-500);color:#fff;display:grid;place-items:center}
+.okb b{display:block;font:700 17px/1.3 var(--font-display);color:var(--ink)}.okb span{font-size:14px;line-height:20px}
+.when{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.calt{flex:0 0 92px;width:92px;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--surface);text-align:center;box-shadow:var(--shadow-sm)}
+.calt small{display:block;padding:6px 0;background:var(--primary);color:#fff;font:700 12px/1 var(--font-sans);letter-spacing:.1em;text-transform:uppercase}
+.calt b{display:block;font:800 36px/1 var(--font-display);padding:10px 0 2px}.calt span{display:block;font-size:13px;color:var(--ink-muted);padding-bottom:10px}
+.whn{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1}
+.whn h2{font-size:22px;margin:0}
+.wli{display:flex;gap:8px;align-items:flex-start;font-size:14.5px;line-height:20px;color:var(--ink)}.wli > :first-child{flex:none;color:var(--ink-muted);margin-top:1px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}.tags span{height:26px;padding:0 10px;border-radius:9999px;background:var(--surface-sunken);border:1px solid var(--line);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center}
+.tags span.g{background:var(--success-soft);border-color:transparent;color:var(--success-ink)}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.tl li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;position:relative;padding-bottom:16px}
+.tl li:last-child{padding-bottom:0}
+.tl li::before{content:"";position:absolute;left:13px;top:26px;bottom:0;width:2px;background:var(--line)}
+.tl li:last-child::before{display:none}
+.tl i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:800 12px/1 var(--font-display);font-style:normal;background:var(--primary-soft);color:var(--primary)}
+.tl li.d i{background:var(--success-500);border-color:var(--success-500);color:#fff}
+.tl li.d::before{background:var(--success-500)}
+.tl li.n i{border-color:var(--primary);color:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
+.tl small{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-muted)}
+.tl b{display:block;font-size:14.5px}.tl span{font-size:13.5px;color:var(--ink-muted);line-height:19px}
+.prep{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.prep li{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--surface-sunken);font-size:13.5px;line-height:19px}
+.prep li > :first-child{flex:none;color:var(--primary);margin-top:1px}
+@media (max-width:640px){.prep{grid-template-columns:1fr}.calt{flex-basis:76px;width:76px}.calt b{font-size:30px}}
+.wzb{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:inherit;flex:1;min-width:0;cursor:pointer;color:inherit;text-decoration:none}
+.wzb:focus-visible{outline:2px solid var(--primary);outline-offset:3px;border-radius:8px}
+.gw-wizard-steps li.is-done{cursor:pointer}
+@media (hover:hover){.gw-wizard-steps li.is-done:hover .gw-wizard-label{text-decoration:underline}}
+</style>
+</helmet>
+<div class="wp">
+  <header class="wtop"><div class="wtop-in">
+    <a class="wbrand" href="W1-Inicio.dc.html"><b>Garwood</b><span>Tapicería de Interiores</span></a>
+    <nav class="wnav" aria-label="Portal del cliente"><a href="W6a-EnCurso.dc.html">Mis pedidos</a><a href="W9-Reclamos.dc.html">Reclamos</a></nav>
+    <a class="gw-btn gw-btn-on-dark gw-btn-sm" href="W2-Solicitud.dc.html">+ Nueva solicitud</a>
+    <a class="wbell" href="W11-Notificaciones.dc.html" aria-label="Notificaciones, 3 nuevas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span>3</span></a>
+    <a class="wav" href="W10-Perfil.dc.html" aria-label="Mi perfil">LM</a>
+  </div></header>
+  <main class="wmain">
+    <div class="whead"><div><div class="crumb"><a href="{{crumbHref}}">{{crumbA}}</a> › {{crumbT}}</div><h1>{{h1}}</h1></div><x-import component-from-global-scope="Garweb.StatusChip" tone="{{hdrTone}}">{{hdrSt}}</x-import></div>
+    <sc-if value="{{firstTime}}" hint-placeholder-val="{{ true }}"><div class="card" style="padding: 20px"><div class="gw-wizard"><div class="gw-wizard-head"><span class="gw-overline">{{wzNo}}</span><span class="gw-wizard-title">{{wzTitle}}</span></div><div class="gw-progress" role="progressbar"><span class="gw-progress-fill" style="{{wzPct}}"></span></div><ol class="gw-wizard-steps" style="{{wzCols}}"><sc-for list="{{wz}}" as="w" hint-placeholder-count="4"><li class="{{w.cls}}"><sc-if value="{{w.link}}" hint-placeholder-val="{{ false }}"><a class="wzb" href="{{w.href}}" title="Volver a este paso"><span class="gw-wizard-num gw-num"><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 14 }}"></x-import></span><span class="gw-wizard-label">{{w.l}}</span></a></sc-if><sc-if value="{{w.btn}}" hint-placeholder-val="{{ false }}"><button class="wzb" onClick="{{w.go}}" title="Volver a este paso"><span class="gw-wizard-num gw-num"><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 14 }}"></x-import></span><span class="gw-wizard-label">{{w.l}}</span></button></sc-if><sc-if value="{{w.plain}}" hint-placeholder-val="{{ true }}"><span class="gw-wizard-num gw-num">{{w.n}}</span><span class="gw-wizard-label">{{w.l}}</span></sc-if></li></sc-for></ol></div><a class="gw-btn gw-btn-ghost gw-btn-sm" style="margin-top: 12px" href="{{backHref}}">← Atrás: volver a Tela</a></div></sc-if>
+    <div class="wcols">
+      <div class="wl">
+        <sc-if value="{{shopNote}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Garweb.Alert" tone="{{shopTone}}" title="{{shopT}}" compact="{{ true }}">{{shopB}}</x-import></sc-if>
+        <sc-if value="{{homeNote}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Alert" tone="info" title="Visita a su casa" compact="{{ true }}">Es una cortesía del taller: no tiene costo. Llevamos los libros de telas, medimos su mueble y el espacio, y le dejamos la cotización.</x-import></sc-if>
+        <sc-if value="{{sPick}}" hint-placeholder-val="{{ true }}">
+        <div class="card stack sched">
+          <div class="tools">
+            <div class="vseg" role="group" aria-label="Vista del calendario"><sc-for list="{{views}}" as="v" hint-placeholder-count="3"><button class="{{v.cls}}" aria-pressed="{{v.on}}" onClick="{{v.pick}}">{{v.label}}</button></sc-for></div>
+            <div class="navr"><button class="nb" aria-label="{{prevLbl}}" disabled="{{noPrev}}" onClick="{{prev}}">‹</button><button class="nb hoy" onClick="{{goToday}}">Hoy</button><button class="nb" aria-label="{{nextLbl}}" disabled="{{noNext}}" onClick="{{next}}">›</button></div>
+          </div>
+          <div class="between" style="flex-wrap: wrap; gap: 10px"><h2 style="font-size: 20px">{{title}}</h2><button class="quick" onClick="{{pickFirst}}"><x-import component-from-global-scope="Garweb.Icon" name="clock" size="{{ 16 }}"></x-import>Primer turno libre: <b>{{firstTxt}}</b></button></div>
+
+          <sc-if value="{{isMonth}}" hint-placeholder-val="{{ false }}">
+            <div class="mgrid">
+              <sc-for list="{{wdh}}" as="w" hint-placeholder-count="7"><span class="mh">{{w}}</span></sc-for>
+              <sc-for list="{{mcells}}" as="c" hint-placeholder-count="35"><button class="{{c.cls}}" disabled="{{c.dis}}" onClick="{{c.pick}}"><b>{{c.n}}</b><span>{{c.txt}}</span></button></sc-for>
+            </div>
+            <p class="hint">Toque un día con turnos libres para ver sus horarios.</p>
+          </sc-if>
+
+          <sc-if value="{{isWeek}}" hint-placeholder-val="{{ true }}">
+            <div class="wscroll"><div class="wgrid">
+              <span></span>
+              <sc-for list="{{wdays}}" as="d" hint-placeholder-count="5"><button class="{{d.cls}}" onClick="{{d.pick}}"><small>{{d.w}}</small><b>{{d.n}}</b><em>{{d.free}}</em></button></sc-for>
+              <sc-for list="{{wrows}}" as="r" hint-placeholder-count="10">
+                <sc-if value="{{r.lunch}}" hint-placeholder-val="{{ false }}"><span class="wl2">Almuerzo · 12:00 – 15:00</span></sc-if>
+                <sc-if value="{{r.slot}}" hint-placeholder-val="{{ true }}">
+                  <span class="wt">{{r.t}}</span>
+                  <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="5"><button class="{{c.cls}}" disabled="{{c.dis}}" aria-label="{{c.aria}}" onClick="{{c.pick}}">{{c.txt}}</button></sc-for>
+                </sc-if>
+              </sc-for>
+            </div></div>
+          </sc-if>
+
+          <sc-if value="{{isDay}}" hint-placeholder-val="{{ false }}">
+            <div class="dgroups">
+              <sc-for list="{{dgroups}}" as="g" hint-placeholder-count="2">
+                <div class="dg"><span class="ov">{{g.label}}</span><div class="dchips"><sc-for list="{{g.slots}}" as="c" hint-placeholder-count="5"><button class="{{c.cls}}" disabled="{{c.dis}}" onClick="{{c.pick}}">{{c.t}}</button></sc-for></div></div>
+              </sc-for>
+              <sc-if value="{{dayEmpty}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.EmptyState" icon="calendar" title="No hay turnos este día">Pruebe el día siguiente o use “Primer turno libre”.</x-import></sc-if>
+            </div>
+          </sc-if>
+          <div class="legend"><span><i class="lf"></i>Libre</span><span><i class="ls"></i>Elegido</span><span><i class="lo"></i>Ocupado o cerrado</span><span class="muted">{{legTxt}}</span></div>
+        </div>
+        </sc-if>
+        <sc-if value="{{hPick}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack">
+            <div class="between" style="flex-wrap: wrap; gap: 8px"><h2 style="font-size: 20px">¿Qué día y en qué franja lo visitamos?</h2><span class="muted" style="font-size: 13px">Lunes a sábado</span></div>
+            <div class="hgrid"><sc-for list="{{hdays}}" as="d" hint-placeholder-count="8"><div class="hday"><b>{{d.w}}</b><span>{{d.n}}</span><sc-for list="{{d.fr}}" as="f" hint-placeholder-count="2"><button class="{{f.cls}}" disabled="{{f.dis}}" aria-pressed="{{f.on}}" onClick="{{f.pick}}">{{f.l}}<small>{{f.h}}</small></button></sc-for></div></sc-for></div>
+            <p class="muted" style="font-size: 12.5px; margin: 0">Se elige una franja, no una hora exacta: llegamos en algún momento dentro de esa franja. La visita dura aprox. 1 hora.</p>
+          </div>
+        </sc-if>
+        <sc-if value="{{doneL}}" hint-placeholder-val="{{ false }}">
+          <div class="okb"><span class="oki"><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 22 }}"></x-import></span><div><b>{{okT}}</b><span>{{okB}}</span></div></div>
+          <div class="card stack" style="gap: 16px">
+            <div class="when">
+              <div class="calt"><small>{{dW}}</small><b>{{dN}}</b><span>{{dM}}</span></div>
+              <div class="whn">
+                <span class="ov">{{doneT}}</span>
+                <h2>{{dLong}}</h2>
+                <div class="wli"><x-import component-from-global-scope="Garweb.Icon" name="clock" size="{{ 18 }}"></x-import><span>{{dHour}}</span></div>
+                <div class="wli"><x-import component-from-global-scope="Garweb.Icon" name="map-pin" size="{{ 18 }}"></x-import><span>{{dPlace}}</span></div>
+                <div class="tags"><sc-for list="{{tags}}" as="t" hint-placeholder-count="3"><span class="{{t.c}}">{{t.l}}</span></sc-for></div>
+              </div>
+            </div>
+          </div>
+          <div class="card stack">
+            <h2 style="font-size: 18px; margin: 0">{{tlT}}</h2>
+            <ol class="tl"><sc-for list="{{tl}}" as="x" hint-placeholder-count="5"><li><i>{{x.n}}</i><div><b>{{x.t}}</b><span>{{x.d}}</span></div></li></sc-for></ol>
+          </div>
+          <div class="card stack">
+            <h2 style="font-size: 18px; margin: 0">{{prepT}}</h2>
+            <ul class="prep"><sc-for list="{{prep}}" as="p" hint-placeholder-count="4"><li><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 16 }}"></x-import><span>{{p}}</span></li></sc-for></ul>
+          </div>
+        </sc-if>
+      </div>
+      <aside class="wr">
+        <sc-if value="{{noShow}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Alert" tone="warning" title="{{nsT}}">{{nsB}}</x-import>
+        </sc-if>
+        <sc-if value="{{used}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Alert" tone="danger" title="Ya usó su reprogramación">{{usedB}}</x-import>
+        </sc-if>
+        <sc-if value="{{pending}}" hint-placeholder-val="{{ true }}">
+          <div class="card stack">
+            <span class="ov">{{pickTitle}}</span>
+            <sc-if value="{{hasSel}}" hint-placeholder-val="{{ false }}"><b style="font-family: var(--font-display); font-size: 22px; line-height: 1.25">{{slotTxt}}</b></sc-if>
+            <sc-if value="{{noSel}}" hint-placeholder-val="{{ true }}"><div class="empty-pick"><x-import component-from-global-scope="Garweb.Icon" name="calendar" size="{{ 22 }}"></x-import><span>{{emptyPick}}</span></div></sc-if>
+            <sc-if value="{{atShop}}" hint-placeholder-val="{{ true }}"><span class="muted" style="font-size: 14px">{{placeTxt}}</span></sc-if>
+            <sc-if value="{{atHome}}" hint-placeholder-val="{{ false }}"><label style="display: flex; flex-direction: column; gap: 6px"><span class="gw-field-label">¿Dónde lo visitamos?</span><select class="gw-input" onChange="{{onAd}}"><sc-for list="{{adOpts}}" as="o" hint-placeholder-count="3"><option selected="{{o.on}}">{{o.l}}</option></sc-for></select></label><sc-if value="{{adNew}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.TextField" label="Escriba la dirección" placeholder="Ej.: 31 Elm St, Westfield, NJ 07090" hint="Se completa con Google Maps · puede guardarla en Mi perfil"></x-import><x-import component-from-global-scope="Garweb.TextField" label="Depto., piso o referencia" optional="{{ true }}"></x-import></sc-if><span class="muted" style="font-size: 12.5px">Sus direcciones guardadas en Mi perfil · visita sin costo.</span></sc-if>
+            <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" disabled="{{noSel}}" onClick="{{confirm}}">{{confirmLabel}}</button>
+          </div>
+          <div class="card stack" style="gap: 10px">
+            <span class="ov">{{inTxt}}</span>
+            <sc-for list="{{sumKv}}" as="k" hint-placeholder-count="3"><div class="kv"><span>{{k.l}}</span><b>{{k.v}}</b></div></sc-for>
+            <sc-if value="{{atHome}}" hint-placeholder-val="{{ false }}"><ol class="next3"><li>Le mostramos los libros de telas en su casa y elige una.</li><li>Medimos el mueble y, si es fabricación, el espacio donde irá.</li><li>Le damos la cotización ahí mismo; también le llega por correo y a su cuenta. Si acepta, el taller agenda el recojo.</li></ol></sc-if>
+            <sc-if value="{{atShop}}" hint-placeholder-val="{{ true }}"><ol class="next3"><li>{{shopL1}}</li><li>Tomamos las medidas finales y acordamos el traslado: recojo y entrega o lo trae usted.</li><li>Registramos todo y le damos su cotización ahí mismo; también le llega por correo y a su cuenta.</li></ol></sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack">
+            <div class="between"><b>{{solId}}</b><x-import component-from-global-scope="Garweb.StatusChip" status="Programada"></x-import></div>
+            <sc-for list="{{sumKv}}" as="k" hint-placeholder-count="3"><div class="kv"><span>{{k.l}}</span><b>{{k.v}}</b></div></sc-for>
+            <div class="kv"><span>Reprogramaciones</span><b>{{reprogTxt}}</b></div>
+            <a class="gw-btn gw-btn-primary gw-btn-block" href="W6c-Solicitudes.dc.html">Ir a Mis pedidos › Solicitudes</a>
+          </div>
+          <div class="card stack" style="gap: 10px">
+            <span class="ov">¿Le cambió el plan?</span>
+            <p class="muted" style="font-size: 13px; line-height: 19px; margin: 0">{{ruleTxt}}</p>
+            <button class="gw-btn gw-btn-secondary gw-btn-block" onClick="{{reprog}}">Reprogramar</button>
+            <button class="gw-btn gw-btn-ghost gw-btn-block" onClick="{{askCancel}}">{{cancelLbl}}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{canceling}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack" style="border: 2px solid var(--error-500)">
+            <b>¿{{cancelLbl}} del {{slotTxt}}?</b>
+            <p class="muted" style="font-size: 14px">{{cancelB}}</p>
+            <div class="row"><button class="gw-btn gw-btn-danger" onClick="{{doCancel}}">Sí, cancelar</button><button class="gw-btn gw-btn-ghost" onClick="{{keep}}">Mantener</button></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{canceled}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack"><div class="between"><b>{{canceledT}}</b><x-import component-from-global-scope="Garweb.StatusChip" status="Cancelada"></x-import></div><p class="muted" style="font-size: 14px">{{canceledB}}</p><button class="gw-btn gw-btn-primary gw-btn-block" onClick="{{again}}">{{againLbl}}</button></div>
+        </sc-if>
+      </aside>
+    </div>
+    <sc-if value="{{showBar}}" hint-placeholder-val="{{ false }}"><div class="cbar"><div><span>{{pickTitle}}</span><b>{{shortSel}}</b></div><button class="gw-btn gw-btn-primary" onClick="{{confirm}}">Confirmar</button></div></sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tipo":{"editor":"enum","options":["visita a domicilio","en el taller"],"default":"visita a domicilio"},"estado":{"editor":"enum","options":["elegir turno","programada","reprogramar"],"default":"elegir turno"},"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const e = p.estado;
+    // semana visible: lunes 5 oct 2026 · día visible: mar 6 · hoy: vie 2 oct
+    this.state = { mode: e === 'programada' ? 'done' : 'pick', noShow: e === 'reprogramar', reprogs: 0, view: (typeof window !== 'undefined' && window.innerWidth < 640) ? 'day' : 'week', wk: 0, day: 1, month: 0,
+      sel: p.tipo === 'visita a domicilio' ? (e === 'reprogramar' ? '2026-10-08|Mañana' : e === 'programada' ? '2026-10-06|Tarde' : null) : (e === 'reprogramar' ? '2026-10-08|11:30' : e === 'programada' ? '2026-10-06|10:00' : null) };
+  }
+  renderVals() {
+    const s = this.state;
+    const home = this.props.tipo === 'visita a domicilio';
+    const cam = !home && this.props.origen === 'cambio-de-tela';
+        const T = ['09:30', '10:00', '10:30', '11:00', '11:30', '15:00', '15:30', '16:00', '16:30'];
+    const end = t => { const [h, m] = t.split(':').map(Number); const x = h * 60 + m + 30; return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); };
+    const WD = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'], WDL = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const MN = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const D = (y, m, d) => new Date(Date.UTC(y, m, d));
+    const add = (d, n) => new Date(d.getTime() + n * 864e5);
+    const key = d => d.toISOString().slice(0, 10);
+    const TODAY = D(2026, 9, 2), LAST = D(2026, 11, 31);
+    const F5 = [[0,1,0,1,1,1,0,1,1],[1,1,0,1,0,0,1,1,1],[0,0,1,1,1,1,1,0,1],[1,0,0,0,1,1,0,1,1],[1,1,1,0,0,1,1,1,0]];
+    const isFree = (d, j) => {
+      const wd = d.getUTCDay();
+      if (wd === 0 || d < TODAY) return false;
+      if (key(d) === '2026-10-02') return j >= 6;          // hoy: solo quedan turnos de la tarde
+      const diff = Math.round((d - D(2026, 9, 5)) / 864e5);
+      if (diff >= 0 && diff < 5) return !!F5[diff][j];      // semana del 5 al 9 (igual a la agenda del taller)
+      const h = (d.getUTCDate() * 7 + (d.getUTCMonth() + 1) * 13 + j * 5) % 9;
+      return h > 3;
+    };
+    const freeCount = d => T.filter((t, j) => isFree(d, j)).length;
+    const pick = (d, t) => () => this.setState({ sel: key(d) + '|' + t });
+    const WK0 = D(2026, 9, 5);
+    const monday = add(WK0, s.wk * 7);
+    const dayD = add(monday, s.day);
+    const longTxt = d => WDL[d.getUTCDay()] + ' ' + d.getUTCDate() + ' de ' + MN[d.getUTCMonth()];
+    // primer turno libre desde mañana
+    let first = null;
+    for (let d = add(TODAY, 1); d <= LAST && !first; d = add(d, 1)) { const j = T.findIndex((t, i) => isFree(d, i)); if (j >= 0) first = [d, T[j]]; }
+    const goTo = d => { const wk = Math.floor((d - WK0) / (7 * 864e5)); const di = (d.getUTCDay() + 6) % 7; return { wk, day: Math.min(5, di), month: d.getUTCMonth() - 9 }; };
+    // mes
+    const mY = 2026, mM = 9 + s.month, m1 = D(mY, mM, 1), lead = (m1.getUTCDay() + 6) % 7, nDays = new Date(Date.UTC(mY, mM + 1, 0)).getUTCDate();
+    const mcells = [];
+    for (let i = 0; i < lead; i++) mcells.push({ cls: 'mc out', dis: true, n: '', txt: '', pick: null });
+    for (let n = 1; n <= nDays; n++) {
+      const d = D(mY, mM, n), wd = d.getUTCDay(), c = freeCount(d);
+      const closed = wd === 0, past = d < TODAY;
+      const selDay = s.sel && s.sel.startsWith(key(d));
+      const cls = 'mc ' + (past ? 'past' : closed ? 'closed' : c === 0 ? 'none' : c <= 3 ? 'few' : 'many') + (key(d) === key(TODAY) ? ' today' : '') + (selDay ? ' sel' : '');
+      mcells.push({ cls, dis: past || closed || c === 0, n: String(n), txt: past ? '' : closed ? 'Cerrado' : c === 0 ? 'Sin turnos' : c + ' libres', pick: () => this.setState({ view: 'day', ...goTo(d) }) });
+    }
+    while (mcells.length % 7) mcells.push({ cls: 'mc out', dis: true, n: '', txt: '', pick: null });
+    // semana
+    const wdays = [0, 1, 2, 3, 4, 5].map(i => { const d = add(monday, i), c = freeCount(d); return { w: WD[d.getUTCDay()], n: String(d.getUTCDate()), free: d < TODAY ? 'pasado' : c ? c + ' libres' : 'sin turnos', cls: 'wh' + (key(d) === key(TODAY) ? ' today' : '') + (c ? '' : ' closed'), pick: () => this.setState({ view: 'day', day: i }) }; });
+    const wrows = [];
+    T.forEach((t, j) => {
+      if (j === 5) wrows.push({ lunch: true, slot: false });
+      wrows.push({ lunch: false, slot: true, t, cells: [0, 1, 2, 3, 4, 5].map(i => { const d = add(monday, i), f = isFree(d, j), k = key(d) + '|' + t; return { cls: 'sl' + (f ? '' : ' busy') + (s.sel === k ? ' sel' : ''), dis: !f, txt: f ? t : '', aria: (f ? 'Elegir ' : 'Ocupado ') + WD[d.getUTCDay()] + ' ' + d.getUTCDate() + ' a las ' + t, pick: f ? pick(d, t) : null }; }) });
+    });
+    // día
+    const mk = (from, to) => T.slice(from, to).map((t, k) => { const j = from + k, f = isFree(dayD, j), kk = key(dayD) + '|' + t; return { t, cls: 'dc' + (f ? '' : ' busy') + (s.sel === kk ? ' sel' : ''), dis: !f, pick: f ? pick(dayD, t) : null }; });
+    const dgroups = [{ label: 'Mañana · 09:30 – 12:00', slots: mk(0, 5) }, { label: 'Tarde · 15:00 – 17:00', slots: mk(5, 9) }];
+    // navegación
+    const v = s.view;
+    const minWk = -1, maxWk = 12;
+    const prev = () => v === 'month' ? this.setState({ month: s.month - 1 }) : v === 'week' ? this.setState({ wk: s.wk - 1 }) : this.setState(s.day > 0 ? { day: s.day - 1 } : { wk: s.wk - 1, day: 5 });
+    const next = () => v === 'month' ? this.setState({ month: s.month + 1 }) : v === 'week' ? this.setState({ wk: s.wk + 1 }) : this.setState(s.day < 5 ? { day: s.day + 1 } : { wk: s.wk + 1, day: 0 });
+    const sunday = add(monday, 5);
+    const title = v === 'month' ? MN[mM % 12].charAt(0).toUpperCase() + MN[mM % 12].slice(1) + ' ' + mY : v === 'week' ? 'Semana del ' + monday.getUTCDate() + (monday.getUTCMonth() !== sunday.getUTCMonth() ? ' de ' + MN[monday.getUTCMonth()] : '') + ' al ' + sunday.getUTCDate() + ' de ' + MN[sunday.getUTCMonth()] : longTxt(dayD).charAt(0).toUpperCase() + longTxt(dayD).slice(1);
+    const frTxt = t => t === 'Mañana' ? 'mañana, 9:00–12:00' : t === 'Tarde' ? 'tarde, 15:00–17:00' : null;
+    const selTxt = (() => { if (!s.sel) return ''; if (frTxt(s.sel.split('|')[1])) { const [k, t] = s.sel.split('|'); const [y, m, d] = k.split('-').map(Number); return longTxt(D(y, m - 1, d)) + ' · ' + frTxt(t); } const [k, t] = s.sel.split('|'); const [y, m, d] = k.split('-').map(Number); return longTxt(D(y, m - 1, d)) + ' · ' + t + '–' + end(t); })();
+    const V = [['day', 'Día'], ['week', 'Semana'], ['month', 'Mes']];
+    return {
+      views: V.map(x => ({ label: x[1], on: v === x[0], cls: v === x[0] ? 'on' : '', pick: () => this.setState({ view: x[0] }) })),
+      isDay: v === 'day', isWeek: v === 'week', isMonth: v === 'month',
+      prev, next, prevLbl: v === 'month' ? 'Mes anterior' : v === 'week' ? 'Semana anterior' : 'Día anterior', nextLbl: v === 'month' ? 'Mes siguiente' : v === 'week' ? 'Semana siguiente' : 'Día siguiente',
+      noPrev: v === 'month' ? s.month <= 0 : s.wk <= minWk && (v === 'week' || s.day === 0), noNext: v === 'month' ? s.month >= 2 : s.wk >= maxWk && (v === 'week' || s.day === 5),
+      goToday: () => this.setState({ ...goTo(TODAY) }),
+      title,
+      firstTxt: first ? WD[first[0].getUTCDay()] + ' ' + first[0].getUTCDate() + ' oct · ' + first[1] : '—',
+      pickFirst: () => first && this.setState({ sel: key(first[0]) + '|' + first[1], view: 'day', ...goTo(first[0]) }),
+      wdh: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'], mcells,
+      wdays, wrows, dgroups, dayEmpty: dgroups.every(g => g.slots.every(c => c.dis)),
+      noShow: s.noShow && s.mode === 'pick',
+      used: s.noShow && s.mode === 'done',
+      pending: s.mode === 'pick', done: s.mode === 'done', canceling: s.mode === 'cancel', canceled: s.mode === 'canceled',
+      adOpts: ['Casa · 48 Park St, Montclair, NJ 07042', 'Oficina · 200 Bloomfield Ave, Montclair', '+ Otra dirección…'].map((l, i) => ({ l, on: (s.ad || 0) === i })), onAd: e => this.setState({ ad: e.target.selectedIndex }), adNew: (s.ad || 0) === 2, adShort: ['Casa · 48 Park St', 'Oficina · 200 Bloomfield Ave', 'Dirección nueva'][s.ad || 0],
+      hPick: home && s.mode === 'pick',
+      hdays: (() => { const out = []; for (let d = add(TODAY, 1); out.length < 8; d = add(d, 1)) { if (d.getUTCDay() === 0) continue; const k = key(d), n = out.length; out.push({ w: WD[d.getUTCDay()], n: d.getUTCDate() + ' ' + ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getUTCMonth()], fr: [['Mañana', '9:00–12:00'], ['Tarde', '15:00–17:00']].map((f, j) => { const v = k + '|' + f[0], taken = (n * 3 + j) % 5 === 1, on = s.sel === v; return { l: f[0], h: taken ? 'ocupada' : f[1], dis: taken, on, cls: 'hfr' + (on ? ' on' : ''), pick: () => this.setState({ sel: v }) }; }) }); } return out; })(),
+      hasSel: !!s.sel, noSel: !s.sel,
+      showBar: !!s.sel && s.mode === 'pick',
+      shortSel: (() => { if (!s.sel) return ''; const [k, t] = s.sel.split('|'); const [y, m, d] = k.split('-').map(Number); return WD[D(y, m - 1, d).getUTCDay()] + ' ' + d + ' oct · ' + (frTxt(t) || t); })(),
+      pickTitle: s.noShow ? (home ? 'Nueva fecha · su única reprogramación' : 'Nuevo turno · su única reprogramación') : (home ? 'Día y franja elegidos' : 'Turno elegido'),
+      crumbA: cam || s.noShow || s.reprogs || s.mode !== 'pick' ? 'Mis pedidos › Solicitudes' : 'Nueva solicitud', crumbHref: cam || s.noShow || s.reprogs || s.mode !== 'pick' ? 'W6c-Solicitudes.dc.html' : 'W2-Solicitud.dc.html',
+      hdrTone: s.mode === 'done' ? 'success' : s.mode === 'canceled' ? 'neutral' : 'info',
+      hdrSt: s.mode === 'done' ? 'Programada' : s.mode === 'canceled' ? 'Cancelada' : home ? 'En espera de visita' : 'En espera de cita',
+      nsT: home ? 'No lo encontramos en casa el mar 6 oct' : 'No asistió a su cita del mar 6 oct',
+      nsB: home ? 'Puede reprogramar la visita una sola vez. Elija otro día y franja a la izquierda.' : 'Puede reprogramarla una sola vez. Elija un turno nuevo a la izquierda.',
+      usedB: home ? 'Si otra vez no lo encontramos en casa, la solicitud se cierra. Para una nueva visita, comuníquese con el taller.' : 'Si no asiste otra vez, la solicitud se cierra. Para una nueva cita, comuníquese con el taller.',
+      inTxt: home ? 'En la visita, con lo que usted pidió' : 'En la cita, con lo que usted pidió',
+      ruleTxt: home ? 'Puede reprogramar o cancelar hasta el día anterior. Si no lo encontramos en casa, podrá reprogramar una sola vez; si vuelve a pasar, la solicitud vence.' : 'Puede reprogramar o cancelar antes de la cita. Si no asiste, podrá reprogramar una sola vez; si vuelve a faltar, la solicitud vence.',
+      cancelLbl: home ? 'Cancelar la visita' : 'Cancelar la cita',
+      cancelB: home ? 'La franja se libera. Su solicitud queda guardada y puede agendar otra visita, o elegir ver las telas en el local.' : 'El turno se libera para otro cliente. Su solicitud queda guardada y puede agendar otra cita cuando quiera.',
+      canceledT: home ? 'Visita cancelada' : 'Cita cancelada', canceledB: home ? 'Su solicitud SOL-0091 sigue esperando la visita.' : 'Su solicitud ' + (cam ? 'SOL-0090' : 'SOL-0076') + ' sigue en espera de cita.', againLbl: home ? 'Agendar otra visita' : 'Agendar otra cita',
+      emptyPick: home ? 'Elija un día y una franja libre.' : 'Elija un horario libre en el calendario.',
+      turnoLbl: home ? 'Día y franja' : 'Turno',
+      confirmLabel: s.noShow || s.reprogs ? (home ? 'Confirmar nueva fecha' : 'Confirmar nuevo turno') : (home ? 'Confirmar visita y enviar solicitud' : cam ? 'Confirmar cita' : 'Confirmar cita y enviar solicitud'),
+      firstTime: !cam && !s.noShow && !s.reprogs && s.mode === 'pick', wsteps: ['Mueble y fotos', 'Tela', home ? 'Visita a domicilio' : 'Cita en el local'], backHref: home ? 'W2-Solicitud.dc.html?inicio=tela-visita' : 'W2-Solicitud.dc.html?inicio=tela-local', wzNo: 'Paso ' + (2 + 1) + ' de ' + ['Mueble y fotos', 'Tela', home ? 'Visita a domicilio' : 'Cita en el local'].length, wzTitle: ['Mueble y fotos', 'Tela', home ? 'Visita a domicilio' : 'Cita en el local'][2], wzPct: 'width:' + Math.max(6, Math.round(2 / (['Mueble y fotos', 'Tela', home ? 'Visita a domicilio' : 'Cita en el local'].length - 1) * 100)) + '%', wzCols: 'grid-template-columns:repeat(' + ['Mueble y fotos', 'Tela', home ? 'Visita a domicilio' : 'Cita en el local'].length + ',minmax(0,1fr))', wz: ['Mueble y fotos', 'Tela', home ? 'Visita a domicilio' : 'Cita en el local'].map((l, i) => { const d = i < 2; return { l, n: String(i + 1), cls: d ? 'is-done' : i === 2 ? 'is-current' : 'is-todo', link: d, btn: false, plain: !d, href: i === 0 ? 'W2-Solicitud.dc.html' : (home ? 'W2-Solicitud.dc.html?inicio=tela-visita' : 'W2-Solicitud.dc.html?inicio=tela-local') }; }), atHome: home, atShop: !home, doneT: home ? 'Su visita a domicilio' : 'Su cita', afterTxt: home ? 'En la visita le mostramos los libros de telas, medimos y le dejamos la cotización; también le llega por correo y aquí.' : 'Después de la cita, el taller arma su cotización y le avisa por correo y aquí.', crumbT: home ? 'Visita a domicilio' : 'Cita en el local',
+      placeTxt: home ? '' : 'Taller Garwood, NJ · 30 min',
+      legTxt: home ? '' : 'Turnos de 30 min · un cliente por turno · lunes a sábado',
+      h1: s.mode === 'done' ? (home ? 'Su visita está programada' : 'Su cita está programada') : s.noShow || s.reprogs ? (home ? 'Reprogramar su visita' : 'Reprogramar su cita') : home ? 'Elija el día de la visita a su casa' : 'Elija el día y la hora de su cita',
+      toastTitle: s.noShow || s.reprogs ? (home ? 'Visita reprogramada' : 'Cita reprogramada') : home ? 'Solicitud enviada y visita programada' : 'Solicitud enviada y cita programada',
+      slotTxt: selTxt,
+      sPick: !home && s.mode === 'pick', homeNote: home && s.mode === 'pick', shopNote: !home && s.mode === 'pick',
+      shopTone: cam ? 'warning' : 'info',
+      shopT: cam ? 'Venga a ver las telas en persona' : '¿Por qué una cita?',
+      shopB: cam ? 'La muestra no le convenció: lo mejor es que vea y toque los libros de telas en el local. Le tendremos separadas opciones parecidas a la que pidió. Puede quedarse con la muestra.' : 'Eligió ver y tocar la tela en el local. Si eligió ver las telas en línea o pedir una muestra a su casa, este paso no aparece.',
+      shopL1: cam ? 'Le tenemos separadas telas parecidas a la que pidió; las toca y elige una (o varias para comparar precios).' : 'Le mostramos las telas y elige una.',
+      solId: 'Solicitud ' + (home ? 'SOL-0091' : cam ? 'SOL-0090' : 'SOL-0076'),
+      sumKv: home ? [{ l: 'Mueble', v: 'Sofá en L' }, { l: 'Servicio', v: 'Retapizado' }, { l: 'Fotos enviadas', v: '3' }] : cam ? [{ l: 'Mueble', v: 'Sofá de 3 cuerpos' }, { l: 'Muestra recibida', v: 'Terciopelo Vino · no le convenció' }, { l: 'Servicio', v: 'Retapizado' }] : [{ l: 'Mueble', v: 'Sofá de 3 cuerpos' }, { l: 'Servicio', v: 'Retapizado + cambio de espuma' }, { l: 'Fotos enviadas', v: '4' }],
+      doneL: s.mode === 'done' || s.mode === 'cancel',
+      okT: s.noShow || s.reprogs ? (home ? 'Listo, su visita quedó reprogramada' : 'Listo, su cita quedó reprogramada') : home ? '¡Listo! Solicitud enviada y visita programada' : cam ? '¡Listo! Su cita para ver las telas quedó agendada' : '¡Listo! Solicitud enviada y cita programada',
+      okB: 'Le enviamos la confirmación a su correo. ' + (home ? 'No tiene que pagar nada por la visita.' : 'El turno es solo para usted.'),
+      tlT: home ? 'Cómo será su visita' : 'Cómo será su cita',
+      ...(() => {
+        if (!s.sel) return { dW: '', dN: '', dM: '', dLong: '', dHour: '', dPlace: '', tags: [], tl: [], prep: [], prepT: '' };
+        const [k, t] = s.sel.split('|'); const [y, m, d] = k.split('-').map(Number); const dd = D(y, m - 1, d); 
+        const fr = frTxt(t), short = x => WD[x.getUTCDay()] + ' ' + x.getUTCDate() + ' ' + ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][x.getUTCMonth()];
+        const L = longTxt(dd);
+        const tl = home ? [
+          ['Llegamos a su casa', 'Dentro de la franja elegida. La visita dura aprox. 1 hora.'],
+          ['Elige la tela y medimos', 'Le mostramos los libros de telas; medimos el mueble y, si es a medida, el espacio.'],
+          ['Le dejamos la cotización', 'Ahí mismo, y también le llega a Mis pedidos. Si la acepta, el taller agenda el recojo.']
+        ] : [
+          ['Viene al taller', 'Taller Garwood, NJ. El turno dura 30 minutos y es solo para usted.'],
+          [cam ? 'Toca las telas y elige' : 'Elige la tela y medimos', cam ? 'Le tenemos separadas opciones parecidas a la que pidió.' : 'Le mostramos los libros de telas y tomamos las medidas finales.'],
+          ['Le damos la cotización', 'Ahí mismo, y también le llega a Mis pedidos. Si la acepta, acordamos el recojo o lo trae usted.']
+        ];
+        return {
+          dW: WD[dd.getUTCDay()], dN: String(d), dM: MN[m - 1],
+          dLong: L.charAt(0).toUpperCase() + L.slice(1),
+          dHour: home ? 'Franja de la ' + fr + ' · llegamos dentro de ese horario' : t + '–' + end(t) + ' · llegue 5 minutos antes',
+          dPlace: home ? ['48 Park St, Montclair, NJ 07042 (Casa)', '200 Bloomfield Ave, Montclair (Oficina)', 'La dirección nueva que escribió'][s.ad || 0] : 'Taller Garwood, NJ',
+          tags: home ? [{ l: 'Sin costo', c: 'g' }, { l: 'Aprox. 1 hora', c: '' }, { l: 'Llevamos los libros de telas', c: '' }] : [{ l: 'Sin costo', c: 'g' }, { l: '30 minutos', c: '' }, { l: cam ? 'Telas separadas para usted' : 'Libros de telas en el local', c: '' }],
+          tl: tl.map((x, i) => ({ n: String(i + 1), t: x[0], d: x[1] })),
+          prepT: home ? 'Tenga listo para la visita' : 'Para aprovechar su cita',
+          prep: home ? ['El mueble despejado y fácil de ver por todos lados.', 'Una persona adulta en casa durante toda la franja.', 'Si es un mueble a medida: el espacio libre donde irá.', 'Fotos o ideas de telas que le gusten (opcional).'] : cam ? ['Traiga la muestra que recibió, para comparar.', 'Si puede, una foto del ambiente donde está el mueble.', 'Si quiere comparar precios, puede elegir varias telas.', 'Llegue 5 minutos antes: el turno dura 30 min.'] : ['Si puede, una foto del ambiente donde va el mueble.', 'Un cojín o retazo, si quiere combinar colores.', 'Las medidas del espacio, si es un mueble a medida.', 'Llegue 5 minutos antes: el turno dura 30 min.']
+        };
+      })(),
+      reprogTxt: s.noShow ? '1 de 1 usada (no asistió)' : s.reprogs + ' realizadas',
+      confirm: () => s.sel && this.setState({ mode: 'done' }),
+      reprog: () => this.setState({ mode: 'pick', reprogs: s.reprogs + 1, sel: null }),
+      askCancel: () => this.setState({ mode: 'cancel' }), keep: () => this.setState({ mode: 'done' }),
+      doCancel: () => this.setState({ mode: 'canceled' }), again: () => this.setState({ mode: 'pick', sel: null })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -169,7 +169,7 @@ const OPCIONES_TELA: { id: OpcionTelaW2; titulo: string; detalle: string; icono:
   { id: 'sin', titulo: 'No lleva tela', detalle: 'Solo espuma o estructura', icono: 'x' },
 ];
 
-const TITULO_ADMIN: Partial<Record<OpcionTelaW2, string>> = { trae: 'La trae el cliente', catalogo: 'Catálogo en línea', local: 'Ver en el local (cita)' };
+const TITULO_ADMIN: Partial<Record<OpcionTelaW2, string>> = { trae: 'La trae el cliente', catalogo: 'Telas en línea', local: 'Ver en el local (cita)' };
 
 /** Paso 2 · Tela. */
 export function PasoTelaW2(p: PropsPaso) {
@@ -350,38 +350,41 @@ function CatalogoW2(p: PropsPaso) {
 export function CampoDireccion({ valor, onChange, guardadas, etiqueta, error, textoGuardar = 'Guardarla en Mi perfil' }: { valor: DireccionW2; onChange(d: DireccionW2): void; guardadas: DireccionGuardada[]; etiqueta: string; error?: string; textoGuardar?: string }) {
   const nueva = valor.guardadaId == null;
   const set = (c: Partial<DireccionW2>) => onChange({ ...valor, ...c });
+  // Con una dirección guardada se ve solo el desplegable; con una nueva, solo el campo para escribirla (nada bloqueado a la vista).
+  if (!nueva) {
+    return (
+      <div className="stack" style={{ gap: 8 }}>
+        <label className="gw-field">
+          <span className="gw-field-label">{etiqueta}</span>
+          <select className="gw-input" value={String(valor.guardadaId)} onChange={(x) => set({ guardadaId: +x.target.value })}>
+            {guardadas.map((d) => <option key={d.id} value={d.id}>{d.etiqueta ? `${d.etiqueta} · ` : ''}{d.direccion}</option>)}
+          </select>
+        </label>
+        <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => set({ guardadaId: null })}>
+          + Usar una dirección nueva
+        </button>
+      </div>
+    );
+  }
   return (
     <div className="stack" style={{ gap: 8 }}>
-      {guardadas.length > 0 && (
-        <>
-          <label className="gw-field">
-            <span className="gw-field-label">{etiqueta}</span>
-            <select className="gw-input" value={nueva ? '' : String(valor.guardadaId)} disabled={nueva} onChange={(x) => set({ guardadaId: +x.target.value })}>
-              {nueva && <option value="">Dirección nueva</option>}
-              {guardadas.map((d) => <option key={d.id} value={d.id}>{d.etiqueta ? `${d.etiqueta} · ` : ''}{d.direccion}</option>)}
-            </select>
-          </label>
-          <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => set({ guardadaId: nueva ? guardadas[0]!.id : null })}>
-            {nueva ? 'Usar una dirección guardada' : '+ Usar una dirección nueva'}
-          </button>
-        </>
+      {mapsHabilitado ? (
+        <DireccionAutocompletar label={etiqueta} value={valor.texto}
+          onChange={(texto) => set({ texto, ubicacion: null })} onElegir={(d) => set({ texto: d.texto, ubicacion: d.ubicacion })} />
+      ) : (
+        <TextField label={etiqueta} required maxLength={200} placeholder="Ej.: 31 Elm St, Westfield, NJ 07090" error={error}
+          value={valor.texto} onChange={(x) => set({ texto: x.target.value, ubicacion: null })} />
       )}
-      {nueva && (
-        <>
-          {mapsHabilitado ? (
-            <DireccionAutocompletar label={guardadas.length ? 'Escriba la dirección' : etiqueta} value={valor.texto}
-              onChange={(texto) => set({ texto, ubicacion: null })} onElegir={(d) => set({ texto: d.texto, ubicacion: d.ubicacion })} />
-          ) : (
-            <TextField label={guardadas.length ? 'Escriba la dirección' : etiqueta} required maxLength={200} placeholder="Ej.: 31 Elm St, Westfield, NJ 07090" error={error}
-              value={valor.texto} onChange={(x) => set({ texto: x.target.value, ubicacion: null })} />
-          )}
-          {mapsHabilitado && <ErrorCampo texto={error} />}
-          <TextField label="Depto., piso o referencia" optional maxLength={120} value={valor.referencia} onChange={(x) => set({ referencia: x.target.value })} />
-          <label className="row" style={{ fontSize: 14, gap: 8 }}>
-            <input type="checkbox" checked={valor.guardar} onChange={(x) => set({ guardar: x.target.checked })} style={{ width: 18, height: 18, accentColor: 'var(--primary)' }} />
-            {textoGuardar}
-          </label>
-        </>
+      {mapsHabilitado && <ErrorCampo texto={error} />}
+      <TextField label="Depto., piso o referencia" optional maxLength={120} value={valor.referencia} onChange={(x) => set({ referencia: x.target.value })} />
+      <label className="row" style={{ fontSize: 14, gap: 8 }}>
+        <input type="checkbox" checked={valor.guardar} onChange={(x) => set({ guardar: x.target.checked })} style={{ width: 18, height: 18, accentColor: 'var(--primary)' }} />
+        {textoGuardar}
+      </label>
+      {guardadas.length > 0 && (
+        <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => set({ guardadaId: guardadas[0]!.id })}>
+          Usar una de mis direcciones guardadas
+        </button>
       )}
     </div>
   );
@@ -420,13 +423,15 @@ export function PasoTrasladoW2(p: PropsPaso) {
         <>
           <div className="grid2" style={{ gap: 16, alignItems: 'start' }}>
             <CampoDireccion valor={e.dir} onChange={(dir) => set({ dir })} guardadas={guardadas} textoGuardar={p.admin ? 'Guardarla en la ficha del cliente' : undefined} etiqueta={nuevo ? 'Dirección de entrega' : 'Dirección de recojo y entrega'} error={errores.direccion} />
-            <MapaUbicacion alto={240} ubicacion={mapa.ubicacion} etiqueta={mapa.etiqueta} />
+            {/* Tocar el mapa llena la dirección (como dirección nueva, aunque antes hubiera una guardada elegida). */}
+            <MapaUbicacion alto={240} ubicacion={mapa.ubicacion} etiqueta={mapa.etiqueta}
+              onElegir={(d) => set({ dir: { ...e.dir, guardadaId: null, texto: d.texto, ubicacion: d.ubicacion } })} />
           </div>
           {hayRecojo(e) ? (
             <div className="stack" style={{ gap: 8, marginTop: 8 }}>
               <span className="gw-field-label">¿Cuándo prefiere que pasemos a recogerlo?</span>
               <div className="pick2">
-                <CalendarioRecojo value={f} onChange={(fechaRecojo) => set({ fechaRecojo })} />
+                <CalendarioRecojo value={f} diasMax={c.limites.diasRecojo} onChange={(fechaRecojo) => set({ fechaRecojo })} />
                 <div className="selday">
                   <div className="big">
                     <span><small>{MESES[f.getMonth()]!.slice(0, 3)}</small>{f.getDate()}</span>
@@ -439,7 +444,7 @@ export function PasoTrasladoW2(p: PropsPaso) {
                     ))}
                   </div>
                   <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.45 }}>
-                    Horario del taller: {c.franjas.map((x) => x.nombre.split('· ')[1]).join(' y ')} (cierra al mediodía). Es una preferencia: el recojo se hace después de que acepte la cotización; el taller confirma el día exacto al planificar la salida y le avisa por correo y aquí.
+                    Horario del taller: {c.franjas.map((x) => x.nombre.split('· ')[1]).join(' y ')} (cierra al mediodía). Es una preferencia: el recojo se hace después de que acepte la cotización; el taller le confirma el día y la hora al planificar la salida y le avisa por correo y aquí.
                   </span>
                 </div>
               </div>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W8 Daño oculto V2 · PED-0077 (web)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.vs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.vs>div{border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:6px}
+</style>
+</helmet>
+<div class="wp">
+  <header class="wtop"><div class="wtop-in">
+    <a class="wbrand" href="W1-Inicio.dc.html"><b>Garwood</b><span>Tapicería de Interiores</span></a>
+    <nav class="wnav" aria-label="Portal del cliente"><a class="on" href="W6a-EnCurso.dc.html">Mis pedidos</a><a href="W9-Reclamos.dc.html">Reclamos</a></nav>
+    <a class="gw-btn gw-btn-on-dark gw-btn-sm" href="W2-Solicitud.dc.html">+ Nueva solicitud</a>
+    <a class="wbell" href="W11-Notificaciones.dc.html" aria-label="Notificaciones, 3 nuevas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span>3</span></a>
+    <a class="wav" href="W10-Perfil.dc.html" aria-label="Mi perfil">RK</a>
+  </div></header>
+  <main class="wmain">
+    <div class="whead"><div><div class="crumb">Caso alterno · portal de Robert King · <a href="W6a-EnCurso.dc.html">Mis pedidos</a> › PED-0077 · Sillón Berger</div><h1>Encontramos un daño oculto</h1></div><x-import component-from-global-scope="Garweb.StatusChip" tone="warning" size="lg">Recotización</x-import></div>
+    <x-import component-from-global-scope="Garweb.Alert" tone="warning" title="No hemos tocado su sillón">Al recibirlo lo revisamos antes de empezar y encontramos resortes del asiento rotos y el marco flojo. Por eso anulamos la orden OS-0077 y le enviamos esta recotización. Responda hasta el dom 18 oct, 18:00.</x-import>
+    <div class="wcols">
+      <div class="wl">
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 18px">Fotos del daño</h2><span class="muted" style="font-size: 13px">13 oct · 11:20</span></div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+            <span class="thumb b" style="height: 160px"><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 26 }}"></x-import></span>
+            <span class="thumb" style="height: 160px"><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 26 }}"></x-import></span>
+            <span class="thumb c" style="height: 160px"><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 26 }}"></x-import></span>
+          </div>
+          <p style="font-size: 15px; line-height: 23px">Trabajo adicional: <b>reemplazar los resortes del asiento y reforzar el marco</b>.</p>
+        </div>
+        <sc-if value="{{cancel}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack" style="border: 2px solid var(--error-500)">
+            <h2 style="font-size: 18px">Si no acepta la recotización</h2>
+            <p class="muted" style="font-size: 13px">Solo se cobra la revisión y lo que ya se hizo por usted. Le devolvemos el sillón y el resto del adelanto.</p>
+            <div class="grid2" style="gap: 8px 28px">
+              <div class="kv"><span>Cargo por revisión</span><b>$45</b></div>
+              <div class="kv"><span>Recojo realizado</span><b>$45</b></div>
+              <div class="kv"><span>Tela ya comprada (se la entregamos)</span><b>$136</b></div>
+              <div class="kv"><span>Total a descontar</span><b>$226</b></div>
+            </div>
+            <div class="kv"><span><b style="color: var(--ink)">Devolución del adelanto</b></span><b style="color: var(--success-ink)">$86</b></div>
+            <button class="gw-btn gw-btn-danger" style="align-self: flex-start">Rechazar y pedir la devolución</button>
+          </div>
+        </sc-if>
+      </div>
+      <aside class="wr">
+        <div class="card stack">
+          <h2 style="font-size: 18px">Su cotización cambia</h2>
+          <div class="vs">
+            <div style="background: var(--surface-sunken); border: 1.5px dashed var(--line-strong)"><span class="ov">V1 · orden anulada</span><b class="num" style="font-family: var(--font-display); font-size: 26px; color: var(--ink-muted); text-decoration: line-through">$780</b></div>
+            <div style="background: var(--primary-soft); border: 1.5px solid var(--primary)"><span class="ov" style="color: var(--primary)">V2 · nueva</span><b class="num" style="font-family: var(--font-display); font-size: 26px; color: var(--primary)">$960</b></div>
+          </div>
+          <div class="kv"><span>Cobro adicional</span><b>+ $180</b></div>
+          <div class="kv"><span>Adelanto ya pagado · 40 %</span><b>$312</b></div>
+          <div class="kv"><span>Nuevo saldo</span><b>$648</b></div>
+          <a href="W5-Pagos.dc.html" style="font-size: 13px; font-weight: 600">Puede pagar el adicional ahora en Pagos del pedido</a>
+          <a class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" href="W6a-EnCurso.dc.html">Aceptar la recotización</a>
+          <p class="muted" style="font-size: 12.5px; margin: 0">Al aceptar se genera una nueva orden de servicio con el precio de la V2.</p>
+          <button class="gw-btn gw-btn-ghost gw-btn-block" onClick="{{toggle}}">No la acepto</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { cancel: false }; }
+  renderVals() { return { cancel: this.state.cancel, toggle: () => this.setState({ cancel: !this.state.cancel }) }; }
+}
+</script>
+</body>
+</html>

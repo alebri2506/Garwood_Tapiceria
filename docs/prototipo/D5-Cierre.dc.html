@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>D5 Cierre de salida (web en el celular)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{padding:14px;border-radius:16px;background:var(--surface);border:1.5px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.kpi b{font-family:var(--font-display);font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+.kpi span{font-size:13px;color:var(--ink-muted)}
+.row2{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.row2:last-child{border-bottom:0}
+.row2 .d{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:800 13px/1 var(--font-display)}
+.row2 .d.ok{background:var(--success-soft);color:var(--success-ink)}
+.row2 .d.bad{background:var(--danger-soft);color:var(--danger-ink)}
+.cash{border-radius:20px;padding:20px;color:#FFFFFF;background:radial-gradient(60% 120% at 100% 0%,#38BDF866 0%,#38BDF800 60%),linear-gradient(135deg,#0A1630,#102A5C 55%,#1D4ED8);display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow-lg)}
+.cash span{font-size:12px;font-weight:700;letter-spacing:.08em;color:#A9BEE3}
+.cash b{font-family:var(--font-display);font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.m{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.m:last-child{border-bottom:0}
+.m b{font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div class="phone" style="width: 390px; min-height: 1200px">
+  <div class="ph-head">
+    <a class="ph-back" href="D1-Ruta.dc.html" aria-label="Volver a la hoja de ruta"><x-import component-from-global-scope="Garweb.Icon" name="arrow-right" style="transform: rotate(180deg)"></x-import></a>
+    <h1>Cierre de salida</h1>
+    <span class="pill">jue 22 oct</span>
+  </div>
+  <div class="ph-body">
+    <x-import component-from-global-scope="Garweb.SyncBadge" state="synced"></x-import>
+    <div class="kpis">
+      <div class="kpi"><b style="color: var(--success-ink)">3</b><span>Paradas realizadas</span></div>
+      <div class="kpi"><b style="color: var(--danger-ink)">1</b><span>Paradas fallidas</span></div>
+    </div>
+    <div class="ph-card" style="gap: 0">
+      <b style="font-size: 16px; margin-bottom: 4px">Paradas</b>
+      <div class="row2"><span class="d ok">1</span><span><b>PED-0076 · Laura Méndez</b><div class="muted" style="font-size: 12.5px">Entrega · 9/9 · firma ✓</div></span><b>$684</b></div>
+      <div class="row2"><span class="d bad">2</span><span><b>PED-0079 · Emily Stone</b><div style="font-size: 12.5px; color: var(--danger-ink); font-weight: 600">Cliente ausente · por reprogramar</div></span><span class="muted">—</span></div>
+      <div class="row2"><span class="d ok">3</span><span><b>PED-0081 · J. Ortega</b><div class="muted" style="font-size: 12.5px">Entrega · 4/4 · firma ✓</div></span><b>$520</b></div>
+      <div class="row2"><span class="d ok">4</span><span><b>PED-0083 · Ana Ruiz</b><div class="muted" style="font-size: 12.5px">Recojo · 1 pieza · 2 fotos · a A18</div></span><span class="muted">—</span></div>
+    </div>
+    <div class="cash">
+      <span>ENTREGAR AL ADMINISTRADOR</span>
+      <b>1 cheque · $0 en efectivo</b>
+      <div style="font-size: 13px; color: #C3D2EE">Cheque $520 (PED-0081). La tarjeta de PED-0076 ($684) ya la confirmó la pasarela: no hay voucher que entregar.</div>
+    </div>
+    <div class="ph-card" style="gap: 0">
+      <div class="between" style="margin-bottom: 4px"><b style="font-size: 16px">Cobrado por método</b><span class="pill">Total $1,204</span></div>
+      <div class="m"><span>Tarjeta · 1 (lector · confirmado por la pasarela)</span><b>$684</b></div>
+      <div class="m"><span>Cheque · 1 (foto ✓) · entregar físico</span><b>$520</b></div>
+      <div class="m"><span>Efectivo</span><b>$0</b></div>
+      <div class="m"><span>Zelle</span><b>$0</b></div>
+      <div class="m"><span>Transferencia</span><b>$0</b></div>
+    </div>
+    <div class="ph-card" style="gap: 8px">
+      <b style="font-size: 16px">Para devolver al taller</b>
+      <div class="kv"><span>PED-0079 · cabecera (no entregada)</span><b>1 pieza</b></div>
+      <div class="kv"><span>PED-0083 · puff recogido</span><b>1 pieza</b></div>
+    </div>
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Salida cerrada">El Administrador recibe el cheque (y el efectivo, si hubo) y confirma esos cobros (A5). La tarjeta ya quedó confirmada. Las piezas pasan a A18.</x-import></sc-if>
+  </div>
+  <div class="ph-foot">
+    <sc-if value="{{open}}" hint-placeholder-val="{{ true }}"><button class="big-btn pri" onClick="{{close}}">Cerrar salida y entregar</button></sc-if>
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><a class="big-btn" href="D1-Ruta.dc.html">Volver a la hoja de ruta</a></sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1200}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { done: false }; }
+  renderVals() { return { done: this.state.done, open: !this.state.done, close: () => this.setState({ done: true }) }; }
+}
+</script>
+</body>
+</html>

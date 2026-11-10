@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A3 Solicitudes</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+.t td.num{white-space:nowrap}
+.mchip{min-height:38px;padding:0 14px;border-radius:9999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.mchip.on{border-color:var(--error-500);background:var(--danger-soft);color:var(--danger-ink)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border-radius:9999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.chip.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.chip.sw i{width:16px;height:16px;border-radius:5px}
+.sub{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--line)}
+.late{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;border-radius:14px;background:var(--warning-soft,#FEF3C7);color:var(--warning-ink,#92400E);font-size:13.5px;line-height:1.45}
+.late span{flex:1;min-width:240px;color:var(--ink)}
+.age{display:inline-block;padding:2px 8px;border-radius:9999px;background:var(--warning-soft,#FEF3C7);color:var(--warning-ink,#92400E);font-weight:700;font-size:12.5px}
+.det{display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-md);position:sticky;top:16px}
+.who{display:flex;align-items:center;gap:12px}
+.who .av{width:46px;height:46px;flex:none;border-radius:14px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font:800 16px/1 var(--font-display)}
+.who h2{font-size:19px;line-height:1.2}
+.who small{font-size:12.5px;color:var(--ink-muted)}
+.blk{display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px dashed var(--line)}
+.blk > b{font-size:14.5px}
+.blk > small{font-size:12.5px;color:var(--ink-muted);line-height:1.4}
+.ph{display:flex;gap:6px}
+.ph > span{width:56px;height:56px;border-radius:10px;display:grid;place-items:center;color:#FFFFFFB3}
+.fab{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line)}
+.fab i{width:30px;height:30px;border-radius:8px}
+.fab b{display:block;font-size:13.5px}
+.fab small{display:block;font-size:12px;color:var(--ink-muted)}
+.fab em{font-style:normal;font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap}
+.discf{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;border:2px solid var(--error-500);background:var(--surface)}
+.split > .aside{flex:0 1 360px}
+.t td,.t th{padding-left:14px;padding-right:14px}
+.t td:nth-child(2) b{white-space:nowrap}
+.t td.num{white-space:nowrap}
+body{margin:0}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line);gap:4px}
+.seg button{min-height:38px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:var(--ink-muted);font:600 14px/1 var(--font-sans);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+
+.nw{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.nw-steps{display:flex;gap:6px;padding:6px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);overflow-x:auto}
+.nw-steps button{flex:1;min-width:120px;display:flex;align-items:center;gap:10px;padding:10px 12px;border:0;border-radius:12px;background:transparent;font:600 13.5px/1.2 var(--font-sans);color:var(--ink-muted);cursor:pointer;text-align:left}
+.nw-steps button i{width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:12.5px;background:var(--surface-sunken);border:1.5px solid var(--line-strong)}
+.nw-steps button.done{color:var(--success-ink)}
+.nw-steps button.done i{background:var(--success-500);border-color:var(--success-500);color:#fff}
+.nw-steps button.cur{background:var(--primary-soft);color:var(--primary)}
+.nw-steps button.cur i{background:var(--primary);border-color:var(--primary);color:#fff}
+.nw-card{display:flex;flex-direction:column;gap:16px;padding:22px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-md)}
+.nw-card h2{font-size:20px}
+.nw-q{font-size:14px;font-weight:700}
+.nw-hint{font-size:13px;color:var(--ink-muted);line-height:1.45;margin-top:-8px}
+.nw-res{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.nw-res.on{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 0 0 3px var(--primary-soft)}
+.nw-res .av{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font:800 14px/1 var(--font-display)}
+.nw-res b{display:block;font-size:15px}
+.nw-res small{display:block;font-size:12.5px;color:var(--ink-muted)}
+.nw-res .tag{margin-left:auto;font-size:12px;font-weight:700;padding:4px 10px;border-radius:9999px;background:var(--success-soft);color:var(--success-ink);white-space:nowrap}
+.nw-opt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.nw-opt button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.nw-opt button b{font-size:14.5px}
+.nw-opt button small{font-size:12.5px;color:var(--ink-muted);line-height:1.4}
+.nw-opt button.on{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 0 0 3px var(--primary-soft)}
+.nw-ft{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:14px;border-top:1px solid var(--line);flex-wrap:wrap}
+.nw-sum{display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);position:sticky;top:16px}
+.nw-sum .r{display:flex;flex-direction:column;gap:2px;padding-bottom:10px;border-bottom:1px dashed var(--line)}
+.nw-sum .r span{font-size:12px;color:var(--ink-muted)}
+.nw-sum .r b{font-size:14px}
+.nw-sum .r b.no{color:var(--ink-muted);font-weight:500}
+.nw-next{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:14px;background:var(--surface-sunken)}
+.cnt3{display:inline-flex;align-items:center;gap:8px}
+.cnt3 button{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--line-strong);background:var(--surface);font:800 18px/1 var(--font-display);cursor:pointer;color:var(--ink)}
+.cnt3 b{min-width:28px;text-align:center;font:800 20px/1 var(--font-display)}
+@media (max-width:1100px){.nw{grid-template-columns:1fr}.nw-sum{position:static}}
+@media (max-width:640px){.nw-opt{grid-template-columns:1fr}}
+
+.wz-cols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.wz-l{display:flex;flex-direction:column;gap:16px;min-width:0}
+.wz-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}
+.wz-stp{display:inline-flex;align-items:center;border:1.5px solid var(--line-strong);border-radius:12px;background:var(--surface);overflow:hidden;flex:none}
+.wz-stp button{width:40px;height:40px;border:0;background:transparent;color:var(--primary);font:700 20px/1 var(--font-sans);cursor:pointer}
+.wz-stp output{min-width:64px;text-align:center;font:700 15px/1 var(--font-sans);border-left:1px solid var(--line);border-right:1px solid var(--line);line-height:40px}
+.wz-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--line)}
+.wz-row b{font-size:14px}.wz-row small{display:block;font-size:12.5px;color:var(--ink-muted)}
+.wz-sum{position:sticky;top:16px}
+.opt .tag2{margin-left:auto;align-self:center;font-size:12px;font-weight:700;padding:4px 10px;border-radius:9999px;background:var(--success-soft);color:var(--success-ink);white-space:nowrap}
+@media (max-width:1100px){.wz-cols{grid-template-columns:1fr}.wz-sum{position:static}}
+/* --- tomado de W2 (formulario del cliente) --- */
+
+.pday{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px;padding:8px 10px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 13px/1.2 var(--font-sans);cursor:pointer}
+.pday span{font-size:12px;color:var(--ink-muted);font-weight:500}
+.pday.on,.pslot.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.pick2{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:640px){.pick2{grid-template-columns:1fr}}
+.cal2{padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-sm)}
+.cal2 .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal2 .hd b{font:700 15px/1 var(--font-display);text-transform:capitalize}
+.cal2 .hd button{width:34px;height:34px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:700 16px/1 var(--font-sans);cursor:pointer}
+.cal2 .hd button[disabled]{opacity:.35;cursor:not-allowed}
+.cal2 .g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal2 .w{font-size:11px;font-weight:700;color:var(--ink-muted);text-align:center;padding:4px 0}
+.cal2 .d{aspect-ratio:1;min-height:36px;border:0;border-radius:10px;background:transparent;color:var(--ink);font:600 13.5px/1 var(--font-sans);font-variant-numeric:tabular-nums;cursor:pointer;position:relative}
+.cal2 .d.ok{background:var(--primary-soft)}
+.cal2 .d.ok:hover{box-shadow:inset 0 0 0 1.5px var(--primary)}
+.cal2 .d.on{background:var(--primary);color:#fff;box-shadow:var(--shadow-sm)}
+.cal2 .d.td::after{content:"";position:absolute;left:50%;bottom:5px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:currentColor}
+.cal2 .d[disabled]{color:var(--ink-muted);opacity:.45;cursor:not-allowed;background:transparent}
+.cal2 .d.hol{text-decoration:line-through}
+.cal2 .d.e{visibility:hidden}
+.cal2 .lg{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--ink-muted)}
+.cal2 .lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.selday{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--line)}
+.selday .big{display:flex;align-items:center;gap:12px}
+.selday .big > span{width:52px;height:56px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font:800 22px/1 var(--font-display);color:var(--primary)}
+.selday .big > span > small{font:700 10.5px/1 var(--font-sans);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);margin-bottom:3px}
+.selday .big > div > b{display:block;font-size:15px}
+.selday .big > div > em{display:block;font-style:normal;font-size:12.5px;color:var(--ink-muted)}
+.pslot{min-height:40px;padding:0 14px;border-radius:9999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr));gap:12px}
+@media (max-width:560px){.sw{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.sw .cap{padding:8px 10px 10px}.pk{grid-template-columns:34px minmax(0,1fr) auto}.pk select{grid-column:1/-1;grid-row:2}.pk .stp{justify-self:end}}
+.sw button{position:relative;display:flex;flex-direction:column;padding:0;border:1.5px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;cursor:pointer;text-align:left;font-family:var(--font-sans);color:var(--ink);box-shadow:var(--shadow-sm);transition:border-color 160ms,box-shadow 160ms,transform 160ms}
+.sw .tex{position:relative;display:block;aspect-ratio:4/3;overflow:hidden}
+.sw .tex::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,#FFFFFF2E 0%,#FFFFFF00 38%,#00000000 62%,#00000033 100%);transition:transform 300ms}
+.sw .cap{display:flex;flex-direction:column;gap:2px;padding:10px 12px 12px}
+.sw .cap b{font-size:13.5px;line-height:1.25}
+.sw .cap small{font-size:12px;color:var(--ink-muted)}
+.sw .ck{position:absolute;top:8px;right:8px;z-index:1;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#FFFFFFD9;border:1.5px solid #FFFFFF;color:transparent;box-shadow:0 1px 3px #0003}
+.sw button.on{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft),var(--shadow-sm)}
+.sw button.on .ck{background:var(--primary);color:#fff}
+.sw button[disabled]{opacity:.45;cursor:not-allowed}
+@media (hover:hover){.sw button:not([disabled]):hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}.sw button:not([disabled]):hover .tex::after{transform:scale(1.08)}}
+.dz{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:16px;border:1px solid var(--line);background:var(--surface-sunken)}
+.dzhd b{display:block;font-size:14.5px}
+.dzhd small{font-size:12.5px;color:var(--ink-muted)}
+.dzgrid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:640px){.dzgrid{grid-template-columns:1fr}}
+.draw{width:100%;height:auto;background:var(--surface);border-radius:14px;border:1px solid var(--line);padding:8px}
+.draw rect.pt{cursor:pointer;stroke:#FFFFFF;stroke-width:2;transition:filter 160ms}
+.draw rect.pt:hover{filter:brightness(1.12)}
+.draw rect.pt.on{stroke:#2563EB;stroke-width:4}
+.plist{display:flex;flex-direction:column;gap:6px}
+.prow{display:flex;align-items:center;gap:8px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);padding:4px 6px 4px 4px}
+.prow.on{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.pbtn{flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:6px;border:0;background:transparent;text-align:left;cursor:pointer;font-family:var(--font-sans);color:var(--ink)}
+.pbtn i{width:28px;height:28px;flex:none;border-radius:8px;border:1px solid var(--line)}
+.pbtn b{display:block;font-size:13px}
+.pbtn small{display:block;font-size:12px;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.swtools{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.fchips{display:flex;gap:6px;flex-wrap:wrap}
+.fchip{height:32px;padding:0 12px;border-radius:9999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink-muted);font:600 12.5px/1 var(--font-sans);cursor:pointer}
+.fchip.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.yd{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--line)}
+.ydrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ydrow > div:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ydrow b{font-size:14px}
+.ydrow small{font-size:12.5px;color:var(--ink-muted);line-height:1.4}
+.stp{display:inline-flex;align-items:center;border:1.5px solid var(--line-strong);border-radius:12px;background:var(--surface);overflow:hidden;flex:none}
+.stp button{width:40px;height:40px;border:0;background:transparent;color:var(--primary);font:700 20px/1 var(--font-sans);cursor:pointer}
+.stp output{min-width:64px;text-align:center;font:700 15px/1 var(--font-sans);font-variant-numeric:tabular-nums;border-left:1px solid var(--line);border-right:1px solid var(--line);line-height:40px}
+.stp.sm button{width:34px;height:36px;font-size:18px}
+.stp.sm output{min-width:56px;line-height:36px;font-size:14px}
+.ydseg{display:flex;gap:6px;flex-wrap:wrap}
+.swhd{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.swhd b{font-size:13px;color:var(--primary)}
+.use{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px}
+.picked{display:flex;flex-direction:column;gap:8px}
+.pk{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,170px) auto;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--surface-sunken)}
+.pk i{width:34px;height:34px;border-radius:8px}
+.pk b{font-size:13.5px}
+.sw i{display:block;height:56px;border-radius:8px}
+.fin{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:700px){.fin{grid-template-columns:1fr}}
+.fin .opt{align-items:center}
+.fsw{flex:0 0 44px;width:44px;height:44px;border-radius:10px;background:#CBD5E1;border:1px solid var(--line)}
+.fsw.fc{background:radial-gradient(circle,#475569 2.2px,transparent 2.8px) 0 0/14px 14px,radial-gradient(circle,#475569 2.2px,transparent 2.8px) 7px 7px/14px 14px,linear-gradient(45deg,transparent 46%,#94A3B8 48% 52%,transparent 54%) 0 0/14px 14px,linear-gradient(-45deg,transparent 46%,#94A3B8 48% 52%,transparent 54%) 0 0/14px 14px,#CBD5E1}
+.fsw.fk{background:repeating-linear-gradient(90deg,#CBD5E1 0 9px,#94A3B8 9px 11px)}
+.draw rect.deco{pointer-events:none}
+.msb{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--line)}
+.mso{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.mso b{display:block;font-size:14px}.mso small{font-size:12.5px;color:var(--ink-muted);line-height:1.4}
+.mso .ck2{flex:0 0 20px;width:20px;height:20px;margin-top:1px;border-radius:6px;border:2px solid var(--line-strong);background:var(--surface)}
+.mso.on{border-color:var(--primary);background:var(--primary-soft)}.mso.on .ck2{border-color:var(--primary);background:var(--primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/14px no-repeat}
+.itbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.itc{display:inline-flex;align-items:center;border-radius:9999px;border:1.5px solid var(--line-strong);background:var(--surface);overflow:hidden}
+.itc.on{border-color:var(--primary);background:var(--primary-soft)}
+.itc-b{border:0;background:transparent;padding:7px 12px;font:600 13.5px/1 var(--font-sans);color:var(--ink);cursor:pointer}.itc-b b{color:var(--primary)}
+.itc-x{border:0;border-left:1px solid var(--line);background:transparent;padding:7px 10px;font:700 14px/1 var(--font-sans);color:var(--ink-muted);cursor:pointer}
+.itadd{border:1.5px dashed var(--primary);background:transparent;color:var(--primary);border-radius:9999px;padding:7px 14px;font:700 13.5px/1 var(--font-sans);cursor:pointer}
+.wz-row2{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.wz-row2 b{display:block;font-size:14px}.wz-row2 small{font-size:12.5px;color:var(--ink-muted)}
+.stp2{display:inline-flex;align-items:center;border:1px solid var(--line-strong);border-radius:12px;overflow:hidden}
+.stp2 button{width:38px;height:38px;border:0;background:var(--surface-sunken);font:700 18px/1 var(--font-sans);cursor:pointer;color:var(--ink)}
+.stp2 output{min-width:44px;text-align:center;font:700 15px/1 var(--font-sans)}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav on" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Comercial › Solicitudes · mar 6 oct</div><h1>Solicitudes</h1></div>
+      <div class="row" style="flex-wrap: wrap">
+        <div class="search"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 18 }}"></x-import>Buscar por cliente o código</div>
+        <button class="gw-btn gw-btn-primary" onClick="{{openNew}}">+ Nueva solicitud</button>
+      </div>
+    </div>
+
+    <sc-if value="{{lateAny}}" hint-placeholder-val="{{ true }}">
+      <div class="late"><x-import component-from-global-scope="Garweb.Icon" name="clock" size="{{ 18 }}"></x-import><span><b>{{lateTxt}}</b> · Ninguna solicitud se pierde: toda debe terminar cotizada, vencida o descartada con motivo (RN-C04).</span><button class="gw-btn gw-btn-sm gw-btn-secondary" onClick="{{showNew}}">Ver nuevas</button></div>
+    </sc-if>
+
+    <sc-if value="{{creating}}" hint-placeholder-val="{{ false }}">
+      <div class="between" style="flex-wrap: wrap; gap: 10px"><div><span class="ov">Nueva solicitud · la registra el Administrador</span><p class="muted" style="font-size: 13.5px; margin-top: 2px">Para clientes que llaman, escriben o vienen al local. Son los mismos pasos que hace el cliente en la web.</p></div><button class="gw-btn gw-btn-ghost" onClick="{{closeNew}}">Cancelar</button></div>
+      <div class="card" style="padding: 20px"><x-import component-from-global-scope="Garweb.WizardSteps" steps="{{wSteps}}" current="{{ws}}"></x-import></div>
+      <div class="wz-cols">
+        <div class="wz-l">
+          <sc-if value="{{w0}}" hint-placeholder-val="{{ true }}">
+            <div class="card stack">
+              <h2 style="font-size: 20px">¿Por dónde se comunicó?</h2>
+              <div class="wz-opts"><sc-for list="{{medios}}" as="o" hint-placeholder-count="2"><button class="{{o.cls}}" onClick="{{o.pick}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="{{o.icon}}"></x-import></span><span><b>{{o.l}}</b><small>{{o.d}}</small></span></button></sc-for></div>
+            </div>
+            <div class="card stack">
+              <h2 style="font-size: 20px">El cliente</h2>
+              <x-import component-from-global-scope="Garweb.TextField" label="Buscar cliente" value="mark" hint="Nombre, teléfono o correo. Si ya compró, se usan sus datos y su historial."></x-import>
+              <button class="{{cliA}}" onClick="{{pickA}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import></span><span><b>Mark Ellison</b><small>+1 (973) 555-0177 · Bloomfield, NJ · 1 solicitud atendida</small></span><span class="tag2">Cliente registrado</span></button>
+              <button class="{{cliN}}" onClick="{{pickN}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import></span><span><b>Es un cliente nuevo</b><small>No aparece en la búsqueda: registrarlo ahora</small></span></button>
+              <sc-if value="{{isNew}}" hint-placeholder-val="{{ false }}">
+                <span class="gw-field-label">Tipo de cliente</span>
+                <div class="wz-opts"><sc-for list="{{ctOpts}}" as="o" hint-placeholder-count="2"><button class="{{o.cls}}" onClick="{{o.pick}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="{{o.icon}}"></x-import></span><span><b>{{o.l}}</b><small>{{o.d}}</small></span></button></sc-for></div>
+                <sc-if value="{{isPer}}" hint-placeholder-val="{{ true }}">
+                  <div class="grid2" style="gap: 16px">
+                    <x-import component-from-global-scope="Garweb.TextField" label="Nombre y apellido" required="{{ true }}" value="Paula Reyes"></x-import>
+                    <x-import component-from-global-scope="Garweb.TextField" label="Teléfono" required="{{ true }}" value="+1 (908) 555-0147" hint="Solo números de EE. UU. (+1)"></x-import>
+                  </div>
+                  <x-import component-from-global-scope="Garweb.TextField" label="Correo" optional="{{ true }}" value="paula.reyes@correo.com" hint="Para enviarle la cotización y los avisos"></x-import>
+                </sc-if>
+                <sc-if value="{{isEmp}}" hint-placeholder-val="{{ false }}">
+                  <div class="grid2" style="gap: 16px">
+                    <x-import component-from-global-scope="Garweb.TextField" label="Nombre legal de la empresa" required="{{ true }}" value="Maple Grove Offices LLC" hint="Como figura en sus documentos fiscales"></x-import>
+                    <x-import component-from-global-scope="Garweb.TextField" label="EIN · identificación fiscal" required="{{ true }}" value="45-6789012" hint="9 dígitos que emite el IRS"></x-import>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px; margin-top: -6px; font-size: 12.5px; font-weight: 600; color: var(--success-ink)"><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 15 }}"></x-import>Formato válido · no hay otra cuenta con este EIN</div>
+                  <span class="gw-field-label">Persona de contacto</span>
+                  <x-import component-from-global-scope="Garweb.TextField" label="Nombre y apellido" required="{{ true }}" value="Daniel Ortiz"></x-import>
+                  <div class="grid2" style="gap: 16px">
+                    <x-import component-from-global-scope="Garweb.TextField" label="Teléfono" required="{{ true }}" value="+1 (908) 555-0182" hint="Solo números de EE. UU. (+1)"></x-import>
+                    <x-import component-from-global-scope="Garweb.TextField" label="Correo de trabajo" required="{{ true }}" value="mantenimiento@maplegrove.com" hint="Aquí le llegan la cotización y los comprobantes"></x-import>
+                  </div>
+                </sc-if>
+                <p class="muted" style="font-size: 13px">Al registrar la solicitud le llega un enlace para crear su contraseña y seguir su pedido en la web.</p>
+              </sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{w1}}" hint-placeholder-val="{{ false }}">
+            <div class="itbar"><span class="gw-field-label" style="margin-right: 4px">{{itLbl}}</span><sc-for list="{{itChips}}" as="c" hint-placeholder-count="2"><span class="{{c.cls}}"><button class="itc-b" onClick="{{c.pick}}"><b>{{c.n}}</b>{{c.l}}</button><sc-if value="{{c.canX}}" hint-placeholder-val="{{ false }}"><button class="itc-x" aria-label="Quitar este mueble" onClick="{{c.rm}}">×</button></sc-if></span></sc-for><sc-if value="{{itAddable}}" hint-placeholder-val="{{ true }}"><button class="itadd" onClick="{{itAdd}}">+ Agregar otro mueble</button></sc-if></div>
+            <div class="card stack">
+              <h2 style="font-size: 20px">{{itTitle}}</h2>
+              <div class="grid2" style="gap: 16px">
+                <label style="display: flex; flex-direction: column; gap: 6px"><span class="gw-field-label">Tipo de mueble</span><select class="gw-input" onChange="{{onMu}}"><sc-for list="{{muOpts}}" as="m" hint-placeholder-count="6"><option selected="{{m.on}}">{{m.l}}</option></sc-for></select></label>
+                <label style="display: flex; flex-direction: column; gap: 6px"><span class="gw-field-label">Servicio</span><select class="gw-input" onChange="{{onSv}}"><sc-for list="{{svOpts}}" as="m" hint-placeholder-count="5"><option selected="{{m.on}}">{{m.l}}</option></sc-for></select></label>
+              </div>
+              <sc-if value="{{custom}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Alert" tone="info" title="Fabricación a medida" compact="{{ true }}">Se hace desde cero copiando una foto que trae el cliente (revista, internet). Suba esa foto y anote las medidas que quiere: se cotiza por tamaño.</x-import></sc-if>
+              <sc-if value="{{hasFinish}}" hint-placeholder-val="{{ true }}">
+                <span class="gw-field-label">Acabado</span>
+                <div class="fin"><sc-for list="{{finOpts}}" as="f" hint-placeholder-count="3"><button class="{{f.cls}}" aria-pressed="{{f.on}}" onClick="{{f.pick}}"><span class="fsw {{f.k}}"></span><span><b>{{f.t}}</b><small>{{f.d}}</small></span></button></sc-for></div>
+              </sc-if>
+              <div class="wz-row"><div><b>¿Cuántos son?</b><small>Por ejemplo, 6 sillas de comedor iguales</small></div><div class="wz-stp"><button aria-label="Menos" onClick="{{qMinus}}">−</button><output>{{qty}}</output><button aria-label="Más" onClick="{{qPlus}}">+</button></div></div>
+              <div class="grid2" style="gap: 16px">
+                <x-import component-from-global-scope="Garweb.TextField" label="{{medLbl}}" optional="{{medOpt}}" placeholder="Ej.: 95 × 85 × 90 cm" hint="{{medHint}}"></x-import>
+                <x-import component-from-global-scope="Garweb.TextField" label="Lo que cuenta el cliente" optional="{{ true }}" value="El asiento está hundido y la tela rota en un brazo."></x-import>
+              </div>
+            </div>
+            <div class="card stack">
+              <h2 style="font-size: 20px">{{fotTitle2}}</h2>
+              <sc-if value="{{fotNow}}" hint-placeholder-val="{{ true }}">
+                <x-import component-from-global-scope="Garweb.UploadZone" title="{{fotTitle}}" hint="Frente, costado y detalles · mínimo 1 foto · videos de hasta 1 min" files="{{wFiles}}"></x-import>
+                <sc-if value="{{canAskF}}" hint-placeholder-val="{{ true }}"><p class="muted" style="font-size: 13px">¿El cliente no tiene las fotos a mano? <button class="lnk" style="border: 0; background: none; padding: 0; color: var(--primary); font: 600 13px/1 var(--font-sans); cursor: pointer; text-decoration: underline" onClick="{{toAsk}}">Pedírselas por enlace</button></p></sc-if>
+              </sc-if>
+              <sc-if value="{{fotAsk}}" hint-placeholder-val="{{ false }}">
+                <x-import component-from-global-scope="Garweb.Alert" tone="info" title="Se le pedirán las fotos al cliente" compact="{{ true }}">Al registrar, le llega un enlace por mensaje de texto y correo para subirlas. La solicitud queda «Esperando fotos» y no se puede cotizar hasta que lleguen.</x-import>
+                <p class="muted" style="font-size: 13px"><button class="lnk" style="border: 0; background: none; padding: 0; color: var(--primary); font: 600 13px/1 var(--font-sans); cursor: pointer; text-decoration: underline" onClick="{{toNow}}">Mejor subirlas ahora</button></p>
+              </sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{w2}}" hint-placeholder-val="{{ false }}">
+            <div class="card stack">
+              <h2 style="font-size: 20px">¿Qué tela usará?</h2>
+              <sc-if value="{{multi}}" hint-placeholder-val="{{ false }}"><div class="ydrow" style="padding: 0"><div><b>¿La misma tela para todos los muebles?</b><small>Si no, elija la tela de cada mueble tocando su nombre.</small></div><div class="ydseg"><sc-for list="{{sameOpts}}" as="m" hint-placeholder-count="2"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for></div></div></sc-if>
+              <sc-if value="{{perItem}}" hint-placeholder-val="{{ false }}"><div class="itbar"><span class="gw-field-label" style="margin-right: 4px">{{itLbl}}</span><sc-for list="{{itChips}}" as="c" hint-placeholder-count="2"><span class="{{c.cls}}"><button class="itc-b" onClick="{{c.pick}}"><b>{{c.n}}</b>{{c.l}}</button><sc-if value="{{noAdd}}" hint-placeholder-val="{{ false }}"><button class="itc-x" aria-label="Quitar este mueble" onClick="{{c.rm}}">×</button></sc-if></span></sc-for><sc-if value="{{noAdd}}" hint-placeholder-val="{{ true }}"><button class="itadd" onClick="{{itAdd}}">+ Agregar otro mueble</button></sc-if></div></sc-if>
+              <div class="wz-opts"><sc-for list="{{nTelas}}" as="o" hint-placeholder-count="2"><button class="{{o.cls}}" onClick="{{o.pick}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="{{o.icon}}"></x-import></span><span><b>{{o.l}}</b><small>{{o.d}}</small></span></button></sc-for></div>
+          <sc-if value="{{online}}" hint-placeholder-val="{{ false }}">
+            <span class="gw-field-label">¿Cómo quiere la tela el cliente?</span>
+            <div class="use"><sc-for list="{{mdOpts}}" as="u" hint-placeholder-count="2"><button class="{{u.cls}}" aria-pressed="{{u.on}}" onClick="{{u.pick}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="{{u.icon}}"></x-import></span><span><b>{{u.title}}</b><small>{{u.sub}}</small></span></button></sc-for></div>
+            <sc-if value="{{byParts}}" hint-placeholder-val="{{ false }}">
+              <div class="dz">
+                <div class="dzhd"><b>1. Toque una parte del {{mueble}}</b><small>Marque la tela que el cliente quiere en cada parte.</small></div>
+                <div class="dzgrid">
+                  <svg class="draw" viewBox="0 0 400 230" role="group" aria-label="Partes del mueble"><sc-for list="{{shapes}}" as="r" hint-placeholder-count="9"><rect class="{{r.c}}" x="{{r.x}}" y="{{r.y}}" width="{{r.w}}" height="{{r.h}}" rx="{{r.rx}}" fill="{{r.f}}" onClick="{{r.k}}"><title>{{r.t}}</title></rect></sc-for></svg>
+                  <div class="plist"><sc-for list="{{parts}}" as="q" hint-placeholder-count="6"><div class="{{q.cls}}"><button class="pbtn" onClick="{{q.pick}}"><i style="{{q.bg}}"></i><span><b>{{q.name}}</b><small>{{q.fab}}</small></span></button><sc-if value="{{q.yd}}" hint-placeholder-val="{{ false }}"><div class="stp sm"><button aria-label="Menos" onClick="{{q.minus}}">−</button><output>{{q.ydTxt}}</output><button aria-label="Más" onClick="{{q.plus}}">+</button></div></sc-if></div></sc-for></div>
+                </div>
+                <small class="muted" style="font-size: 12.5px">El dibujo y sus partes cambian según el tipo de mueble elegido en el paso 1.</small>
+              </div>
+            </sc-if>
+            <div class="swhd"><span class="gw-field-label">{{swLabel}}</span><b>{{swCount}}</b></div>
+            <div class="swtools"><div class="fchips" role="group" aria-label="Tipo de tela"><sc-for list="{{fams}}" as="f" hint-placeholder-count="6"><button class="{{f.cls}}" aria-pressed="{{f.on}}" onClick="{{f.pick}}">{{f.label}}</button></sc-for></div></div>
+            <div class="sw"><sc-for list="{{swatches}}" as="w" hint-placeholder-count="8"><button class="{{w.cls}}" aria-pressed="{{w.on}}" onClick="{{w.pick}}"><span class="tex" style="{{w.bg}}"><span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg></span></span><span class="cap"><b>{{w.name}}</b><small>{{w.comp}}</small></span></button></sc-for></div>
+              <small class="muted" style="font-size: 12.5px">Las yardas las calcula el taller con las fotos y medidas: se definen al armar la cotización.</small>
+                <x-import component-from-global-scope="Garweb.TextField" label="¿Ya conoce la tela?" optional="{{ true }}" placeholder="Escriba el pattern y el color, ej.: 42015 · color 9" hint="Cada tela se identifica por su modelo (pattern) y su número de color."></x-import>
+          </sc-if>
+          <sc-if value="{{bring}}" hint-placeholder-val="{{ false }}">
+            <div class="yd">
+              <x-import component-from-global-scope="Garweb.TextField" label="¿Qué tela trae?" optional="{{ true }}" placeholder="Ej.: lino gris claro, liso"></x-import>
+                <small class="muted" style="font-size: 12.5px">No hace falta anotar las yardas: el taller mide la tela al recibirla y avisa al cliente si no alcanza.</small>
+            </div>
+          </sc-if>
+              <sc-if value="{{nfBusca}}" hint-placeholder-val="{{ true }}">
+                <x-import component-from-global-scope="Garweb.TextField" label="¿Qué tela busca el cliente?" optional="{{ true }}" multiline="{{ true }}" rows="{{ 2 }}" placeholder="Ej.: azul marino, suave al tacto, lisa o con rayas finas" hint="Con sus palabras: así se separan antes las muestras de los libros de telas."></x-import>
+              </sc-if>
+              <sc-if value="{{nfLocal}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Garweb.Alert" tone="info" title="{{locTitle}}" compact="{{ true }}">{{locTxt}}</x-import></sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{w3}}" hint-placeholder-val="{{ false }}">
+            <div class="card stack">
+              <h2 style="font-size: 20px">{{trasH3}}</h2>
+              <sc-if value="{{custom}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Alert" tone="info" compact="{{ true }}" title="Mueble nuevo: no hay recojo">Solo se define cómo se entrega cuando esté terminado. La fecha se coordina con el cliente al final.</x-import></sc-if>
+              <sc-if value="{{nfLocal}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Alert" tone="info" title="{{locTitle2}}" compact="{{ true }}">{{locTxt2}}</x-import></sc-if>
+              <sc-if value="{{nfNoLocal}}" hint-placeholder-val="{{ true }}">
+                <div class="wz-opts"><sc-for list="{{nTras}}" as="o" hint-placeholder-count="2"><button class="{{o.cls}}" onClick="{{o.pick}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="{{o.icon}}"></x-import></span><span><b>{{o.l}}</b><small>{{o.d}}</small></span></button></sc-for></div>
+            <sc-if value="{{delivery}}" hint-placeholder-val="{{ true }}">
+              <div class="grid2" style="gap: 16px; align-items: start">
+                <div class="stack" style="gap: 8px">
+                  <sc-if value="{{hasSaved}}" hint-placeholder-val="{{ true }}">
+                    <label style="display: flex; flex-direction: column; gap: 6px"><span class="gw-field-label">Dirección de recojo y entrega</span><select class="gw-input"><option>Casa · 22 Orchard Rd, Bloomfield, NJ 07003</option><option>Trabajo · 410 Broad St, Bloomfield, NJ</option></select></label>
+                    <span class="muted" style="font-size: 12.5px">Direcciones guardadas del cliente.</span>
+                    <sc-if value="{{noAdding}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-secondary gw-btn-sm" style="align-self: flex-start" onClick="{{toggleAdd}}">+ Usar una dirección nueva</button></sc-if>
+                  </sc-if>
+                  <sc-if value="{{showNewAddr}}" hint-placeholder-val="{{ false }}">
+                    <x-import component-from-global-scope="Garweb.TextField" label="Dirección nueva" placeholder="Empiece a escribir…" hint="Autocompletada con Google Maps"></x-import>
+                    <x-import component-from-global-scope="Garweb.TextField" label="Depto., piso o referencia" optional="{{ true }}"></x-import>
+                    <label class="row" style="font-size: 14px; gap: 8px"><input type="checkbox" checked=""> Guardarla en la ficha del cliente</label>
+                  </sc-if>
+                </div>
+                <div class="map" style="height: 160px" aria-label="Mapa de la dirección"><span style="position: absolute; left: 55%; top: 38%; width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--primary); box-shadow: 0 0 0 6px #2563EB33"></span><span style="position: absolute; left: 12px; bottom: 10px; font-size: 12px; font-weight: 600; color: var(--ink); background: var(--surface); padding: 4px 8px; border-radius: 8px">{{mapTxt}}l taller</span></div>
+              </div>
+              <div class="stack" style="gap: 8px; margin-top: 8px">
+                <span class="gw-field-label">¿Cuándo prefiere el cliente que pasemos a recogerlo?</span>
+                <div class="pick2">
+                  <div class="cal2">
+                    <div class="hd"><button aria-label="Mes anterior" disabled="{{noPrev}}" onClick="{{prevM}}">‹</button><b>{{mTitle}}</b><button aria-label="Mes siguiente" disabled="{{noNext}}" onClick="{{nextM}}">›</button></div>
+                    <div class="g"><sc-for list="{{wds}}" as="w" hint-placeholder-count="7"><span class="w">{{w}}</span></sc-for><sc-for list="{{cdays}}" as="d" hint-placeholder-count="35"><button class="{{d.cls}}" disabled="{{d.dis}}" aria-label="{{d.aria}}" aria-pressed="{{d.on}}" title="{{d.tip}}" onClick="{{d.pick}}">{{d.n}}</button></sc-for></div>
+                    <div class="lg"><span><i style="background: var(--primary-soft)"></i>Disponible</span><span><i style="background: var(--primary)"></i>Elegido</span><span>Lunes a sábado · domingos y feriados sin recojos</span></div>
+                  </div>
+                  <div class="selday">
+                    <div class="big"><span><small>{{selMon}}</small>{{selNum}}</span><div><b>{{selLong}}</b><em>Fecha preferida de recojo</em></div></div>
+                    <span class="gw-field-label">Franja horaria</span>
+                    <div class="row" style="flex-wrap: wrap; gap: 8px"><sc-for list="{{pslots}}" as="f" hint-placeholder-count="2"><button class="{{f.cls}}" onClick="{{f.pick}}">{{f.label}}</button></sc-for></div>
+                    <span class="muted" style="font-size: 12.5px; line-height: 1.45">Horario del taller: 9:00–12:00 y 15:00–17:00. Es una preferencia: el día exacto se confirma al planificar la salida y el cliente recibe el aviso.</span>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+              </sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{w4}}" hint-placeholder-val="{{ false }}">
+            <div class="card stack">
+              <h2 style="font-size: 20px">Revise y registre</h2>
+              <p class="muted">Léale al cliente el resumen de la derecha para confirmar que todo está bien.</p>
+              <span class="gw-field-label">¿Qué hacemos ahora?</span>
+              <div class="wz-opts"><sc-for list="{{wAct}}" as="o" hint-placeholder-count="2"><button class="{{o.cls}}" onClick="{{o.pick}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="{{o.icon}}"></x-import></span><span><b>{{o.l}}</b><small>{{o.d}}</small></span></button></sc-for></div>
+              <x-import component-from-global-scope="Garweb.Alert" tone="info" title="{{nextTitle}}" compact="{{ true }}">{{nextTxt}}</x-import>
+              <label class="row" style="font-size: 14px; gap: 8px"><input type="checkbox" checked=""> Avisar al cliente por mensaje de texto y correo, con el enlace a su solicitud</label>
+            </div>
+          </sc-if>
+          <div class="between">
+            <sc-if value="{{canBack}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-ghost" onClick="{{wBack}}">Atrás</button></sc-if>
+            <span></span>
+            <sc-if value="{{notLast}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-primary gw-btn-lg" disabled="{{wBlocked}}" onClick="{{wNext}}">Continuar</button></sc-if>
+            <sc-if value="{{toAgRemote}}" hint-placeholder-val="{{ false }}"><a class="gw-btn gw-btn-primary gw-btn-lg" href="{{agHref}}">{{agLbl}}</a></sc-if><sc-if value="{{toAgPres}}" hint-placeholder-val="{{ false }}"><div class="row" style="gap: 8px; flex-wrap: wrap"><a class="gw-btn gw-btn-secondary gw-btn-lg" href="A2d-AgendarNueva.dc.html">Guardarle un turno para otro día</a><a class="gw-btn gw-btn-primary gw-btn-lg" href="A2b-AtenderCita.dc.html">Atenderlo ahora</a></div></sc-if><sc-if value="{{isLast}}" hint-placeholder-val="{{ false }}"><sc-if value="{{actLink}}" hint-placeholder-val="{{ false }}"><a class="gw-btn gw-btn-primary gw-btn-lg" href="{{actHref}}">{{saveLbl}}</a></sc-if><sc-if value="{{actSave}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-primary gw-btn-lg" onClick="{{saveNew}}">{{saveLbl}}</button></sc-if></sc-if>
+          </div>
+        </div>
+        <aside class="wz-sum">
+          <div class="card stack" style="gap: 10px">
+            <div class="between"><span class="ov">Resumen de la solicitud</span><span class="pill">{{medioTxt}}</span></div>
+            <div class="kv"><span>Cliente</span><b>{{sCli}}</b></div>
+            <hr class="stitch">
+            <sc-for list="{{itSum2}}" as="m" hint-placeholder-count="1"><div class="kv"><span>{{m.k}}</span><b>{{m.v}}</b></div></sc-for>
+            <div class="kv"><span>Fotos</span><b>{{sFot}}</b></div>
+            <hr class="stitch">
+            <div class="kv"><span>Tela</span><b>{{sTel}}</b></div>
+            <div class="kv"><span>Traslado</span><b>{{sTra}}</b></div>
+            <p class="audit">Queda registrado que la ingresó el Administrador, por {{medioLow}}, con fecha y hora.</p>
+          </div>
+        </aside>
+      </div>
+    </sc-if>
+    <sc-if value="{{saved}}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Solicitud SOL-0088 registrada">Recibida por {{medioLow}} · el cliente recibe un mensaje de texto y un correo con el enlace a su solicitud.</x-import>
+    </sc-if>
+
+    <sc-if value="{{notCreating}}" hint-placeholder-val="{{ true }}">
+    <x-import component-from-global-scope="Garweb.Tabs" items="{{tabs}}" active="{{tab}}" on-change="{{setTab}}"></x-import>
+    <div class="split">
+      <div class="wide">
+        <div class="tbl-box">
+          <table class="t">
+            <thead><tr><th>Código</th><th>Cliente</th><th>Mueble y tela</th><th>Estado</th><th>Recibida</th></tr></thead>
+            <tbody>
+              <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+                <tr class="{{r.cls}}" onClick="{{r.open}}" style="cursor: pointer">
+                  <td class="num"><b>{{r.code}}</b></td>
+                  <td><b>{{r.client}}</b><div class="muted" style="font-size: 12.5px">{{r.city}}</div></td>
+                  <td><b style="font-weight: 600">{{r.item}}</b><div class="muted" style="font-size: 12.5px">{{r.fabric}}</div></td>
+                  <td><x-import component-from-global-scope="Garweb.StatusChip" status="{{r.status}}" tone="{{r.tone}}"></x-import><div class="muted" style="font-size: 12px; margin-top: 4px">{{r.sub}}</div></td>
+                  <td class="num"><span class="{{r.ageCls}}">{{r.when}}</span><div class="muted" style="font-size: 12px">{{r.medio}}</div></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.EmptyState" icon="inbox" title="No hay solicitudes en este estado">Cuando un cliente envíe una solicitud, o la registre usted por teléfono, aparecerá aquí.</x-import>
+        </sc-if>
+      </div>
+      <aside class="aside">
+        <div class="det">
+          <div class="between"><span class="ov">{{d.code}} · {{d.medio}}</span><x-import component-from-global-scope="Garweb.StatusChip" status="{{d.status}}" tone="{{d.tone}}"></x-import></div>
+          <div class="who"><span class="av">{{d.ini}}</span><div><h2>{{d.client}}</h2><small>{{d.contact}}</small></div></div>
+          <div class="blk"><span class="ov">Mueble</span><b>{{d.item}}</b><small>{{d.meas}}</small>
+            <div class="ph"><sc-for list="{{d.photos}}" as="p" hint-placeholder-count="4"><span style="{{p}}"><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 16 }}"></x-import></span></sc-for></div>
+            <small>{{d.photoTxt}}</small>
+          </div>
+          <div class="blk"><span class="ov">Tela · {{d.fabOpt}}</span>
+            <sc-for list="{{d.fabs}}" as="f" hint-placeholder-count="2"><div class="fab"><i style="{{f.bg}}"></i><div><b>{{f.name}}</b><small>{{f.use}}</small></div><em>{{f.yd}}</em></div></sc-for>
+            <small>{{d.fabNote}}</small>
+          </div>
+          <div class="blk"><span class="ov">Traslado</span><b>{{d.tras}}</b><small>{{d.trasSub}}</small></div>
+          <sc-if value="{{d.hasCita}}" hint-placeholder-val="{{ false }}"><div class="blk"><span class="ov">Cita en el local</span><b>{{d.cita}}</b><small>{{d.citaSub}}</small></div></sc-if>
+          <sc-if value="{{d.isLate}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Alert" tone="warning" title="{{d.lateTitle}}" compact="{{ true }}">Cotícela o descártela con motivo para que no se pierda.</x-import></sc-if>
+          <sc-if value="{{d.propOk}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Turno propuesto">{{d.propMsg}}</x-import></sc-if>
+          <sc-if value="{{d.aLink}}" hint-placeholder-val="{{ true }}"><a class="gw-btn gw-btn-primary gw-btn-block" href="{{d.href}}">{{d.action}}</a></sc-if>
+          <sc-if value="{{d.aBtn}}" hint-placeholder-val="{{ false }}"><button class="gw-btn gw-btn-primary gw-btn-block" onClick="{{d.propose}}">{{d.action}}</button></sc-if>
+          <sc-if value="{{d.canDisc}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-ghost gw-btn-block" onClick="{{d.disc}}">Descartar solicitud</button></sc-if>
+          <sc-if value="{{discOpen}}" hint-placeholder-val="{{ false }}">
+            <div class="discf">
+              <b>Motivo del descarte (obligatorio)</b>
+              <div class="chips"><sc-for list="{{discMots}}" as="m" hint-placeholder-count="5"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for></div>
+              <p class="audit" style="margin: 0">No se borra: queda Descartada con motivo, quién y cuándo. El cliente recibe un aviso.</p>
+              <div class="row"><button class="gw-btn gw-btn-danger" disabled="{{noDiscMot}}" onClick="{{confirmDisc}}">Descartar</button><button class="gw-btn gw-btn-ghost" onClick="{{cancelDisc}}">Volver</button></div>
+            </div>
+          </sc-if>
+          <p class="audit" style="margin: 0">{{d.trail}}</p>
+        </div>
+      </aside>
+    </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { tab: 0, creating: false, saved: false, medio: 0, sel: 'SOL-0084', disc: false, mot: -1, gone: {}, prop: {}, nf: 2, ns: [0], nt: 0, ws: 0, cli: -1, items: [], ai: 0, same: 1, ms: false, mu: 4, sv: 0, fin: 0, idk: 2, qty: 1, fo: 0, ct: 0, act: -1 }; }
+  renderVals() {
+    const s = this.state;
+    const SW = { navy: ['Lino Navy 204', '#1E2A4A'], arena: ['Lino Arena 110', '#CDBA96'], pana: ['Pana Gris 318', '#6B7280'], verde: ['Chenille Verde 52', '#3F6B4E'], vino: ['Terciopelo Vino', '#6D1F3A'], cafe: ['Cuero sint. Café', '#6B4226'] };
+    const P = ['#1E3A8A', '#2563EB', '#0EA5E9', '#64748B'];
+    // code, client, city, contact, item, meas, nFotos, fabCol, fabOpt, fabs[[key|label, color, use, yd]], fabNote, medio, status, sub, when, age(días), tras, trasSub, cita, citaSub, href, action, kind
+    const base = [
+      ['SOL-0084', 'Rosa Díaz', 'Westfield, NJ', 'rosa.diaz@correo.com · (908) 555-0133', 'Sillón · retapizado', 'Medidas: no indicó', 3, 'En línea · 1 tela', 'Telas en línea', [['pana', '', 'Todo el mueble', 'Taller calcula']], 'Eligió Pana Gris · Pattern 318 · color 2 del catálogo en línea. Se cotiza con sus fotos.', 'Web', 'Nueva', 'Cotizar con fotos', '3 oct', 3, 'Delivery · 31 Elm St, Westfield', 'Recojo preferido: mié 14 oct · mañana', '', '', 'A4-Cotizar.dc.html', 'Armar cotización', 'go'],
+      ['SOL-0080', 'Grace Lin', 'Cranford, NJ', 'grace.lin@correo.com · (908) 555-0119', 'Cabecera · retapizado', 'Medidas: 160 × 120 cm', 2, 'La trae · 6 yd', 'La trae el cliente', [['', '#9CA3AF', 'Lino gris claro, liso', '6 yd']], 'Costo de tela 0. Revisar al recibir si alcanza.', 'Web', 'Nueva', 'Cotizar con fotos', 'hoy', 0, 'Lo lleva y lo recoge el cliente', 'Con turno libre de la agenda', '', '', 'A4-Cotizar.dc.html', 'Armar cotización', 'go'],
+      ['SOL-0076', 'Laura Méndez', 'Montclair, NJ', 'laura.mendez@correo.com · (973) 555-0142', 'Sofá 3 cuerpos · retapizado + espuma', 'Medidas: las tomamos en la cita', 4, 'Ver en el local', 'Ver en el local', [], 'Elige la tela en la cita.', 'Web', 'En espera de cita', 'Cita hoy 10:00 · en curso', '2 oct', 4, 'Se define en la cita', '', 'mar 6 oct · 10:00', 'Ahora en el local', 'A2-Agenda.dc.html', 'Ir a la cita', 'go'],
+      ['SOL-0082', 'Carla Ortiz', 'Kenilworth, NJ', 'carla.ortiz@correo.com · (908) 555-0150', 'Butaca · retapizado', 'Medidas: no indicó', 2, 'Ver en el local', 'Ver en el local', [], 'Elige la tela en la cita.', 'Web', 'En espera de cita', 'Cita hoy 15:30', '4 oct', 2, 'Se define en la cita', '', 'mar 6 oct · 15:30', 'Elegida por el cliente al enviar', 'A2-Agenda.dc.html', 'Ver cita', 'go'],
+      ['SOL-0093', 'María Gómez', 'Elizabeth, NJ', 'maria.gomez@correo.com · (908) 555-0188', 'Sofá de 2 cuerpos · retapizado', 'Medidas: no indicó', 2, 'Ver en el local', 'Ver en el local', [], 'Elige la tela en la cita. Llamó por teléfono y aún no eligió el turno.', 'Teléfono', 'En espera de cita', 'Sin turno todavía', '6 oct', 0, 'Se define en la cita', '', '', '', 'A2c-AgendarCita.dc.html', 'Agendar cita', 'go'],
+      ['SOL-0086', 'Jorge Vela', 'Rahway, NJ', 'jorge.vela@correo.com · (732) 555-0108', 'Sofá cama · retapizado', 'Medidas: no indicó', 3, 'Ver en el local', 'Ver en el local', [], 'Elige la tela en la cita.', 'Web', 'En espera de cita', 'Cita jue 8 · 11:30', '4 oct', 2, 'Se define en la cita', '', 'jue 8 oct · 11:30', 'Elegida por el cliente al enviar', 'A2-Agenda.dc.html', 'Ver cita', 'go'],
+      ['SOL-0087', 'Grace Kim', 'Linden, NJ', 'grace.kim@correo.com · (908) 555-0164', 'Otomana · retapizado', 'Medidas: 60 × 60 cm', 1, 'Ver en el local', 'Ver en el local', [], 'Elige la tela en la cita.', 'Web', 'En espera de cita', 'Cita vie 9 · 09:30', '5 oct', 1, 'Se define en la cita', '', 'vie 9 oct · 09:30', 'Elegida por el cliente al enviar', 'A2-Agenda.dc.html', 'Ver cita', 'go'],
+      ['SOL-0074', 'Mark Ellison', 'Bloomfield, NJ', 'mark.ellison@correo.com · (973) 555-0177', 'Sillón · retapizado', 'Medidas: 95 × 85 × 90 cm (cita)', 3, 'Elegida en el local', 'Elegida en la cita', [['arena', '', 'Todo el mueble', '7 yd']], 'Registrada en la visita del lun 5.', 'En persona', 'Atendida', 'Cita lun 5 · visita registrada', '1 oct', 5, 'Delivery · 22 Orchard Rd, Bloomfield', 'Acordado en la cita', 'lun 5 oct · 09:30', 'Atendida', 'A4-Cotizar.dc.html', 'Armar cotización', 'go'],
+      ['SOL-0081', 'Hotel Willow', 'Newark, NJ', 'compras@hotelwillow.com · (973) 555-0190', '12 sillas · retapizado', 'Medidas: 45 × 45 cm asiento', 6, 'En línea · 2 telas · por partes', 'Telas en línea', [['vino', '', 'Asiento', '9 yd'], ['cafe', '', 'Respaldo', '6 yd']], 'Por partes: asiento en una tela y respaldo en otra.', 'Web', 'Cotizada', 'COT-0081 · esperando respuesta', '5 oct', 1, 'Delivery · 210 Market St, Newark', 'Recojo preferido: lun 12 oct · tarde', '', '', 'A4-Cotizar.dc.html', 'Ver cotización', 'go'],
+      ['SOL-0083', 'Ana Ruiz', 'Garwood, NJ', 'ana.ruiz@correo.com · (908) 555-0101', 'Puff · retapizado', 'Medidas: 50 × 50 × 42 cm', 2, 'En línea · 1 tela', 'Telas en línea', [['navy', '', 'Todo el mueble', 'Taller calcula']], '', 'Web', 'Cotizada', 'COT-0083 · aceptada, falta el adelanto', '3 oct', 3, 'Lo lleva y lo recoge el cliente', '', '', '', 'A5-Pagos.dc.html', 'Ver pago', 'go'],
+      ['SOL-0071', 'Tom Becker', 'Clark, NJ', 'tom.becker@correo.com · (732) 555-0125', 'Cabecera · retapizado', 'Medidas: no indicó', 1, 'Ver en el local', 'Ver en el local', [], '', 'Teléfono', 'Vencida', 'Faltó 2 veces a la cita (RN-19)', '8 sep', 28, 'Se define en la cita', '', 'Faltó 2 veces', 'Venció la solicitud', 'A4-Cotizar.dc.html', 'Renovar', 'go'],
+      ['SOL-0073', 'Jane Cole', 'Linden, NJ', '(908) 555-0172', 'Mesa de comedor · barnizado', '', 0, 'No lleva', 'No lleva tela', [], '', 'Teléfono', 'Descartada', 'Motivo: trabajo que no hacemos', '30 sep', 6, 'Lo lleva y lo recoge el cliente', '', '', '', 'A17-Clientes.dc.html', 'Ver cliente', 'go']
+    ];
+    const tones = { 'Nueva': 'info', 'En espera de cita': 'info', 'Atendida': 'success', 'Cotizada': 'progress', 'Vencida': 'neutral', 'Descartada': 'danger' };
+    const medios = ['Teléfono', 'En persona', 'Correo', 'Mensaje de texto'];
+    const FT = {"s2": {"parts": ["Respaldo", "Asiento (cojines)", "Brazo izquierdo", "Brazo derecho", "Base y faldón", "Parte trasera"], "yd": [4, 3, 2, 2, 2, 2], "sh": [[5, 88, 18, 224, 20, 8], [0, 100, 30, 200, 84, 20], [2, 56, 74, 56, 112, 18], [3, 288, 74, 56, 112, 18], [1, 114, 112, 84, 44, 10], [1, 202, 112, 84, 44, 10], [4, 66, 156, 268, 34, 9], [-1, 92, 190, 12, 18, 3], [-1, 296, 190, 12, 18, 3]]}, "s3": {"parts": ["Respaldo", "Asiento (cojines)", "Brazo izquierdo", "Brazo derecho", "Base y faldón", "Parte trasera"], "yd": [5, 4, 2, 2, 3, 3], "sh": [[5, 58, 18, 284, 20, 8], [0, 70, 30, 260, 84, 20], [2, 26, 74, 56, 112, 18], [3, 318, 74, 56, 112, 18], [1, 84, 112, 76, 44, 10], [1, 162, 112, 76, 44, 10], [1, 240, 112, 76, 44, 10], [4, 36, 156, 328, 34, 9], [-1, 62, 190, 12, 18, 3], [-1, 326, 190, 12, 18, 3]]}, "sL": {"parts": ["Respaldo", "Asiento (cojines)", "Chaise (extensión)", "Brazo izquierdo", "Brazo derecho", "Base y faldón"], "yd": [6, 4, 4, 2, 2, 3], "sh": [[0, 40, 24, 316, 76, 18], [3, 16, 62, 46, 124, 16], [4, 338, 62, 46, 124, 16], [1, 64, 100, 84, 44, 10], [1, 150, 100, 84, 44, 10], [2, 238, 100, 98, 94, 12], [5, 26, 144, 210, 42, 9], [-1, 40, 186, 12, 18, 3], [-1, 320, 194, 12, 14, 3]]}, "ar": {"parts": ["Respaldo", "Asiento", "Brazo izquierdo", "Brazo derecho", "Base y faldón"], "yd": [2, 1, 1, 1, 2], "sh": [[0, 128, 22, 144, 94, 22], [2, 94, 70, 54, 116, 18], [3, 252, 70, 54, 116, 18], [1, 146, 112, 108, 44, 10], [4, 104, 156, 192, 34, 9], [-1, 124, 190, 12, 18, 3], [-1, 264, 190, 12, 18, 3]]}, "ch": {"parts": ["Respaldo", "Asiento"], "yd": [1, 1], "sh": [[-1, 150, 24, 10, 186, 3], [-1, 240, 24, 10, 186, 3], [0, 146, 18, 108, 96, 14], [1, 124, 118, 152, 34, 9], [-1, 132, 152, 10, 58, 3], [-1, 258, 152, 10, 58, 3]]}, "hb": {"parts": ["Frente", "Bordes y ribete"], "yd": [3, 1], "sh": [[1, 58, 14, 284, 156, 34], [0, 76, 32, 248, 120, 24], [-2, 40, 170, 320, 44, 10]]}, "bed": {"parts": ["Cabecera", "Laterales y piecera", "Faldón"], "yd": [3, 4, 3], "sh": [[0, 70, 14, 260, 104, 24], [-2, 58, 110, 284, 40, 12], [1, 48, 148, 304, 36, 9], [2, 48, 184, 304, 22, 4]]}, "ot": {"parts": ["Tapa (arriba)", "Lados"], "yd": [1, 1], "sh": [[1, 116, 104, 168, 72, 10], [0, 108, 70, 184, 42, 16], [-1, 128, 176, 12, 18, 3], [-1, 260, 176, 12, 18, 3]]}, "bn": {"parts": ["Asiento", "Lados"], "yd": [2, 1], "sh": [[1, 66, 130, 268, 32, 6], [0, 58, 96, 284, 40, 12], [-1, 80, 162, 12, 44, 3], [-1, 308, 162, 12, 44, 3]]}, "bq": {"parts": ["Respaldo", "Asiento", "Base (frente)"], "yd": [3, 2, 2], "sh": [[0, 40, 18, 320, 96, 12], [1, 34, 112, 332, 40, 10], [2, 40, 152, 320, 52, 6]]}, "wn": {"parts": ["Cojín del asiento", "Frente del cojín", "Cojines del respaldo"], "yd": [2, 1, 2], "sh": [[-2, 40, 14, 320, 104, 8], [2, 64, 58, 128, 62, 16], [2, 208, 58, 128, 62, 16], [0, 44, 118, 312, 30, 10], [1, 44, 146, 312, 16, 4], [-1, 44, 162, 312, 46, 4]]}, "gen": {"parts": ["Parte principal", "Otra parte"], "yd": [3, 2], "sh": [[0, 90, 30, 220, 110, 18], [1, 90, 140, 220, 50, 10], [-1, 110, 190, 12, 18, 3], [-1, 278, 190, 12, 18, 3]]}};
+    const MUX = [["Sofá de 2 cuerpos", "s2", "10 a 12 yardas"], ["Sofá de 3 cuerpos", "s3", "14 a 16 yardas"], ["Sofá seccional (en L)", "sL", "18 a 22 yardas"], ["Sofá cama", "s3", "14 a 16 yardas"], ["Sillón", "ar", "6 a 8 yardas"], ["Silla de comedor", "ch", "1 a 2 yardas"], ["Cabecera de cama", "hb", "3 a 5 yardas"], ["Cama tapizada", "bed", "8 a 10 yardas"], ["Otomán o puf", "ot", "2 a 3 yardas"], ["Banco (bench)", "bn", "2 a 4 yardas"], ["Banqueta de restaurante", "bq", "3 a 4 yardas por metro"], ["Cojín de ventana o asiento empotrado", "wn", "2 a 3 yardas"], ["Otro mueble de interior", "gen", "las yardas que diga el taller"]];
+    const MU = MUX.map(m => m[0]);
+    const SV = ['Retapizado completo', 'Retapizado + cambio de espuma', 'Solo cambio de espuma', 'Reparación de estructura', 'Fabricación a medida'];
+    const FIN = [['Liso', 'Tela lisa, sin costuras extra', 'fl'], ['Capitoneado', 'Con botones hundidos · más trabajo', 'fc'], ['Con canales', 'Costuras en franjas · más trabajo', 'fk']];
+    const custom = s.sv === 4, hasFinish = s.sv === 4, home = s.nf === 3;
+    const nc = s.cli === 1, emp = nc && s.ct === 1, cName = emp ? 'Maple Grove Offices' : nc ? 'Paula Reyes' : 'Mark Ellison', cCity = nc ? 'Cranford, NJ' : 'Bloomfield, NJ', cCont = emp ? 'Daniel Ortiz · mantenimiento@maplegrove.com · +1 (908) 555-0182' : nc ? 'paula.reyes@correo.com · +1 (908) 555-0147' : 'mark.ellison@correo.com · +1 (973) 555-0177';
+    const itemTxt = (s.qty > 1 ? s.qty + ' × ' : '') + MU[s.mu] + ' · ' + SV[s.sv].toLowerCase();
+    const askF = s.fo === 1 && s.medio !== 1;
+    const addr = nc ? '14 Elm St, Cranford, NJ' : '22 Orchard Rd, Bloomfield, NJ';
+    const pres = s.medio === 1;
+    // [id, título, detalle, enlace (vacío = solo guardar), estado, qué pasa, botón]
+    const A_ATT = ['att', 'Atenderlo ahora en el local', 'Elige la tela, se toman medidas y se cotiza en esta misma visita. Puede aceptar y pagar el adelanto ahí mismo.', 'A2b-AtenderCita.dc.html', 'Pasa directo a «Atención en el local»', 'Se abre la guía de atención (tela, medidas, traslado y cotización). El cliente responde en el momento y, si acepta, paga el adelanto en el local.', 'Registrar y atender ahora'];
+    const A_COT = ['cot', 'Armar la cotización ahora', pres ? 'Con lo que ya tiene, cotice mientras el cliente espera.' : 'Cotice mientras sigue en la llamada y regístrele la respuesta.', 'A4-Cotizar.dc.html', 'Queda «Nueva» y se abre la cotización', 'Se abre Cotizar con estos datos. Al publicarla, si el cliente responde por ' + (pres ? 'aquí mismo' : 'teléfono') + ', registre su respuesta en el momento; si no, la responde desde la web.', 'Registrar y cotizar ahora'];
+    const A_VIS = ['vis', 'Agendar la visita a domicilio', 'Se van a su casa con los libros de telas y se mide.', 'A2e-AgendarVisita.dc.html', 'Queda «En espera de visita»', 'Se abre la Agenda con esta solicitud: elija con el cliente el turno de la visita (1 hora).', 'Registrar y elegir turno'];
+    const A_CIT = ['cit', 'Agendar una cita', 'Para que venga a ver las telas otro día.', 'A2d-AgendarNueva.dc.html', 'Queda «En espera de cita»', 'Se abre la Agenda con esta solicitud: elija con el cliente un turno libre.', 'Registrar y elegir turno'];
+    const A_FOT = ['fot', 'Esperar las fotos', 'Se cotiza cuando el cliente las suba con el enlace.', '', 'Queda «Esperando fotos»', 'El cliente recibe el enlace para subir las fotos. Cuando lleguen, la solicitud aparece como Nueva y se puede cotizar.', 'Registrar y enviar enlace'];
+    const A_REG = ['reg', 'Solo registrarla', 'Queda en la bandeja para cotizarla más tarde.', '', 'Queda «Nueva», lista para cotizar', 'Queda en la bandeja. El cliente recibe un aviso con el enlace a su solicitud.', 'Registrar solicitud'];
+    const askF0 = s.fo === 1 && s.medio !== 1;
+    const W2V = (() => {
+      const SW = [['Lino Navy 204', '#1E2A4A', 'Lino', 'Pattern 204 · color 4 · azul marino'], ['Lino Arena 110', '#CDBA96', 'Lino', 'Pattern 110 · color 11 · arena'], ['Pana Gris 318', '#6B7280', 'Pana', 'Pattern 318 · color 2 · gris'], ['Chenille Verde 52', '#3F6B4E', 'Chenille', 'Pattern 52 · color 7 · verde bosque'], ['Chenille Marfil 12', '#E7DFCF', 'Chenille', 'Pattern 12 · color 1 · marfil'], ['Cuero sint. Café', '#6B4226', 'Cuero sint.', 'Pattern 640 · color 5 · café'], ['Terciopelo Vino', '#6D1F3A', 'Terciopelo', 'Pattern 220 · color 9 · vino'], ['Terciopelo Mostaza', '#B8860B', 'Terciopelo', 'Pattern 224 · color 3 · mostaza'], ['Estampado Floral', '#9C6B5B', 'Estampado', 'Pattern 760 · color 2 · floral']];
+      const TX = { 'Lino': 'repeating-linear-gradient(0deg,#FFFFFF14 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,#0000001A 0 1px,transparent 1px 3px)', 'Pana': 'repeating-linear-gradient(90deg,#FFFFFF1F 0 3px,#0000001F 3px 4px,transparent 4px 7px)', 'Chenille': 'radial-gradient(#FFFFFF24 1px,transparent 1.6px) 0 0/5px 5px,radial-gradient(#00000024 1px,transparent 1.6px) 2.5px 2.5px/5px 5px', 'Cuero sint.': 'radial-gradient(120% 90% at 25% 15%,#FFFFFF33,transparent 55%),radial-gradient(#0000001F 0.8px,transparent 1.2px) 0 0/4px 4px', 'Terciopelo': 'linear-gradient(125deg,#FFFFFF38 0%,transparent 35%,transparent 60%,#00000040 100%)', 'Estampado': 'radial-gradient(circle at 30% 30%,#F3D9C9 0 4px,transparent 5px) 0 0/18px 18px,radial-gradient(circle at 70% 70%,#5E7D5A 0 3px,transparent 4px) 0 0/18px 18px' };
+      const U = { short: 'yd', long: 'yardas', note: 'Se vende por yarda (0.91 m) · unidad configurada por el taller' };
+      const ydTxt = v => v + ' ' + U.short;
+      const PARTS = FT[MUX[s.mu][1]].parts;
+      const sw = s.sw || [0], md = s.md ?? 0, ap = s.ap || 0, asg = s.asg || [0, 3, 0, 0, 0, 0, 0, 0], yp = s.yp || FT[MUX[s.mu][1]].yd, fam = s.fam || 'Todas', ydk = s.ydk || 0, ydc = s.ydc || 7, yb = s.yb || 7, ybk = s.ybk || 0, pm = s.pm || 0, pdd = s.pdd || [0, 8], pf = s.pf || 0;
+      const used = [...new Set(asg)];
+      const MN = ['octubre', 'noviembre'], MS = ['oct', 'nov'], WL = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+      const HOL = { '1-11': 'Veterans Day', '1-26': 'Thanksgiving' };
+      const first = new Date(2026, 9 + pm, 1), nd = new Date(2026, 10 + pm, 0).getDate(), off = (first.getDay() + 6) % 7;
+      const cells = [];
+      for (let i = 0; i < off; i++) cells.push({ n: '', cls: 'd e', dis: true, aria: '', on: false, tip: '', pick: () => {} });
+      for (let d = 1; d <= nd; d++) {
+        const wd = new Date(2026, 9 + pm, d).getDay(), hol = HOL[pm + '-' + d], past = pm === 0 && d < 7, wk = wd === 0;
+        const dis = past || wk || !!hol, on = pdd[0] === pm && pdd[1] === d;
+        cells.push({ n: String(d), dis, on, tip: hol ? hol + ' · sin recojos' : wk ? 'Domingo · sin recojos' : past ? 'Fecha pasada' : '', aria: WL[wd] + ' ' + d + ' de ' + MN[pm], cls: 'd' + (on ? ' on' : dis ? '' : ' ok') + (pm === 0 && d === 6 ? ' td' : '') + (hol ? ' hol' : ''), pick: () => this.setState({ pdd: [pm, d] }) });
+      }
+      const sm = pdd[0], sd = pdd[1], swd = new Date(2026, 9 + sm, sd).getDay();
+      const swTxt = md === 1 ? used.length + ' telas por partes' : SW[sw[0]][0];
+      return {
+        online: s.nf === 1, bring: s.nf === 0,
+        swatches: SW.map((w, i) => ({ w, i })).filter(o => fam === 'Todas' || o.w[2] === fam).map(({ w, i }) => { const on = md === 1 ? asg[ap] === i : sw.includes(i); return { name: w[0], comp: w[3], bg: 'background:' + TX[w[2]] + ',' + w[1], on, cls: on ? 'on' : '', pick: () => { if (md === 1) { const g = asg.slice(); g[ap] = i; this.setState({ asg: g }); } else this.setState({ sw: [i] }); } }; }),
+        mdOpts: [['Una tela para todo', 'Una sola tela en todo el mueble', 'quote'], ['Distintas telas por partes', 'Elija en el dibujo qué tela va en cada parte', 'sofa']].map((u, i) => ({ title: u[0], sub: u[1], icon: u[2], on: md === i, cls: md === i ? 'opt on' : 'opt', pick: () => this.setState({ md: i }) })),
+        byParts: md === 1,
+        shapes: FT[MUX[s.mu][1]].sh.map(([p, x, y, w, h, rx]) => ({ x, y, w, h, rx, c: p < 0 ? 'deco' : 'pt' + (ap === p ? ' on' : ''), f: p === -1 ? '#475569' : p === -2 ? '#E2E8F0' : SW[asg[p]][1], k: p < 0 ? () => {} : () => this.setState({ ap: p }), t: p < 0 ? '' : PARTS[p] })),
+        pc: Object.fromEntries(PARTS.map((n, i) => ['p' + i, 'pt' + (ap === i ? ' on' : '')])),
+        pf: Object.fromEntries(PARTS.map((n, i) => ['p' + i, SW[asg[i]][1]])),
+        pk: Object.fromEntries(PARTS.map((n, i) => ['p' + i, () => this.setState({ ap: i })])),
+        parts: PARTS.map((n, i) => ({ name: n, fab: SW[asg[i]][0], bg: 'background:' + TX[SW[asg[i]][2]] + ',' + SW[asg[i]][1], cls: 'prow' + (ap === i ? ' on' : ''), pick: () => this.setState({ ap: i }), yd: ydk === 1, ydTxt: ydTxt(yp[i]), minus: () => { const a = yp.slice(); a[i] = Math.max(1, a[i] - 1); this.setState({ yp: a }); }, plus: () => { const a = yp.slice(); a[i]++; this.setState({ yp: a }); } })),
+        swLabel: md === 1 ? '2. Elija la tela para: ' + PARTS[ap] : 'Elija la tela para todo el mueble',
+        uLong: U.long, uNote: U.note,
+        fams: ['Todas', 'Lino', 'Pana', 'Chenille', 'Cuero sint.', 'Terciopelo', 'Estampado'].map(x => ({ label: x, on: fam === x, cls: 'fchip' + (fam === x ? ' on' : ''), pick: () => this.setState({ fam: x }) })),
+        mueble: MU[s.mu].toLowerCase(), ydRef: MUX[s.mu][2],
+        ydModes: ['Que la calcule el taller', 'Ya sé cuántas'].map((l, i) => ({ label: l, on: ydk === i, cls: 'fchip' + (ydk === i ? ' on' : ''), pick: () => this.setState({ ydk: i }) })),
+        ydOne: ydk === 1 && md === 0, ydPerHint: ydk === 1 && md === 1,
+        ydOneLbl: sw.length > 1 ? 'Por cada tela' : 'De ' + SW[sw[0]][0],
+        ydcTxt: ydTxt(ydc), ydcMinus: () => this.setState({ ydc: Math.max(1, ydc - 1) }), ydcPlus: () => this.setState({ ydc: ydc + 1 }),
+        ybKnown: ybk === 1,
+        ybModes: ['No sé', 'Sé cuántas'].map((l, i) => ({ label: l, on: ybk === i, cls: 'fchip' + (ybk === i ? ' on' : ''), pick: () => this.setState({ ybk: i }) })), ybTxt: ydTxt(yb), ybMinus: () => this.setState({ yb: Math.max(1, yb - 1) }), ybPlus: () => this.setState({ yb: yb + 1 }),
+        swCount: md === 1 ? used.length + (used.length === 1 ? ' tela en el mueble' : ' telas en el mueble') : (sw.length === 1 ? '1 tela elegida' : sw.length + ' telas elegidas'),
+        
+        hasSaved: s.cli === 0, showNewAddr: s.cli !== 0 || !!s.adding, noAdding: !s.adding, toggleAdd: () => this.setState({ adding: !s.adding }),
+        cdays: cells, wds: ['L', 'M', 'M', 'J', 'V', 'S', 'D'], mTitle: MN[pm] + ' 2026', noPrev: pm === 0, noNext: pm === 1, prevM: () => this.setState({ pm: 0 }), nextM: () => this.setState({ pm: 1 }),
+        selMon: MS[sm], selNum: String(sd), selLong: WL[swd].charAt(0).toUpperCase() + WL[swd].slice(1) + ' ' + sd + ' de ' + MN[sm],
+        pslots: ['Mañana · 9:00–12:00', 'Tarde · 15:00–17:00'].map((l, i) => ({ label: l, cls: 'pslot' + (pf === i ? ' on' : ''), pick: () => this.setState({ pf: i }) })),
+        prefTxt: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'][swd] + ' ' + sd + ' ' + MS[sm] + ' · ' + ['mañana', 'tarde'][pf],
+        mapTxt: s.cli === 0 ? 'Bloomfield, NJ · 9 mi de' : 'Cranford, NJ · 6 mi de',
+        swTxt: swTxt + (ydk ? ' · ' + (md === 1 ? yp.reduce((t, v) => t + v, 0) : ydc) + ' yd' : ''),
+        bringTxt: 'La trae el cliente' + (ybk ? ' · ' + ydTxt(yb) : '')
+      };
+    })();
+    const citaLike = s.nf === 2 || home;
+    const ACTS = home ? [A_VIS, A_REG] : pres ? [A_ATT, s.nf === 2 ? A_CIT : A_COT, A_REG] : askF0 ? [A_FOT] : s.nf === 2 ? [A_CIT, A_REG] : [A_COT, A_REG];
+    const ai = s.act >= 0 && s.act < ACTS.length ? s.act : 0, ACT = ACTS[ai];
+    let all = s.saved ? [['SOL-0088', cName, cCity, cCont, itemTxt, 'Medidas: no indicó', askF ? 0 : 2, ['La trae', 'En línea', 'Ver en el local', 'Visita', 'No lleva'][s.nf], ['La trae el cliente', 'Telas en línea', 'Ver en el local', 'Visita a domicilio', 'No lleva tela'][s.nf], [], '', medios[s.medio], s.nf === 2 ? 'En espera de cita' : 'Nueva', askF ? 'Esperando fotos del cliente' : 'Registrada por el Administrador', 'hoy', 0, s.nf === 2 || home ? 'Se define en la cita' : (s.nt === 0 ? 'Delivery · ' + addr.split(',')[0] : 'Lo lleva y lo recoge el cliente'), s.nt === 0 ? 'Recojo preferido: jue 8 oct · mañana' : '', '', '', askF ? 'A3-Solicitudes.dc.html' : 'A4-Cotizar.dc.html', askF ? 'Reenviar enlace de fotos' : 'Armar cotización', 'go']].concat(base) : base;
+    all = all.map(r => s.gone[r[0]] ? r.slice(0, 12).concat(['Descartada', 'Motivo: ' + s.gone[r[0]].toLowerCase(), r[14], r[15], r[16], r[17], r[18], r[19], 'A17-Clientes.dc.html', 'Ver cliente', 'go']) : r);
+    all = all.map(r => s.prop[r[0]] ? r.slice(0, 13).concat(['Turno propuesto: ' + r[23], r[14], r[15], r[16], r[17], r[23], 'Propuesto · el cliente lo confirma', 'A2-Agenda.dc.html', 'Ver en la Agenda', 'go', r[23]]) : r);
+    const states = ['Nueva', 'En espera de cita', 'Atendida', 'Cotizada', 'Vencida', 'Descartada'];
+    const f = s.tab === 0 ? null : states[s.tab - 1];
+    const late = r => r[12] === 'Nueva' && r[15] >= 2;
+    const rows = all.filter(r => !f || r[12] === f).map(r => ({ code: r[0], client: r[1], city: r[2], item: r[4], fabric: r[7], medio: r[11], status: r[12], tone: tones[r[12]], sub: r[13],
+      when: late(r) ? r[14] + ' · hace ' + r[15] + ' días' : r[14], ageCls: late(r) ? 'age' : '', cls: s.sel === r[0] ? 'sel' : '', open: () => this.setState({ sel: r[0], disc: false, mot: -1 }) }));
+    const n = (x) => all.filter(r => r[12] === x).length;
+    const r = all.find(x => x[0] === s.sel) || all[0];
+    const sw = k => SW[k];
+    const M = ['El cliente no respondió', 'Trabajo que no hacemos', 'Solicitud duplicada', 'El cliente desistió', 'Otro motivo'];
+    const lateN = all.filter(late).length;
+    const canDisc = ['Nueva', 'En espera de cita', 'Atendida'].includes(r[12]);
+    const T = ['La trae el cliente', 'Telas en línea', 'Ver en el local', 'Visita a domicilio', 'No lleva tela'];
+    const NSW = ['navy', 'arena', 'pana', 'verde', 'vino', 'cafe'];
+    return {
+      ...W2V, delivery: s.nt === 0,
+      ...(() => {
+        const snap = () => ({ mu: s.mu, sv: s.sv, fin: s.fin, qty: s.qty || 1, sw: s.sw, asg: s.asg, md: s.md, yp: s.yp });
+        const all = (s.items.length ? s.items : [snap()]).map((it, i) => i === s.ai ? snap() : it);
+        const go = i => { const a = all.slice(); a[s.ai] = snap(); const t = a[i]; this.setState({ items: a, ai: i, mu: t.mu, sv: t.sv, fin: t.fin, qty: t.qty, sw: t.sw, asg: t.asg, md: t.md, yp: t.yp, ap: 0 }); };
+        const SVs = ['Retapizado completo', 'Retapizado + cambio de espuma', 'Solo cambio de espuma', 'Reparación de estructura', 'Fabricación a medida'];
+        const lbl = it => (it.qty > 1 ? it.qty + ' × ' : '') + MUX[it.mu][0];
+        const n = all.length;
+        return {
+          itLbl: n > 1 ? 'Muebles del cliente:' : 'Mueble:', itAddable: n < 8, noAdd: false,
+          itChips: all.map((it, i) => ({ n: (i + 1) + ' · ', l: lbl(it), cls: 'itc' + (i === s.ai ? ' on' : ''), pick: () => i !== s.ai && go(i), canX: n > 1, rm: () => { const a = all.filter((_, j) => j !== i); const ni = Math.max(0, Math.min(s.ai > i ? s.ai - 1 : s.ai, a.length - 1)); const t = a[ni]; this.setState({ items: a, ai: ni, mu: t.mu, sv: t.sv, fin: t.fin, qty: t.qty, sw: t.sw, asg: t.asg, md: t.md, yp: t.yp, ap: 0 }); } })),
+          itAdd: () => { const a = all.slice(); a[s.ai] = snap(); const nw = { mu: 5, sv: 0, fin: 0, qty: 1, sw: [0], asg: [0, 3, 0, 0, 0, 0, 0, 0], md: 1, yp: FT['ch'].yd.slice() }; a.push(nw); this.setState({ items: a, ai: a.length - 1, mu: nw.mu, sv: nw.sv, fin: 0, qty: 1, sw: nw.sw, asg: nw.asg, md: nw.md, yp: nw.yp, ap: 0 }); },
+          itTitle: n > 1 ? 'Mueble ' + (s.ai + 1) + ' de ' + n : 'Su mueble',
+          fotTitle2: n > 1 ? 'Fotos o videos del mueble ' + (s.ai + 1) : 'Fotos o videos',
+          qty: s.qty || 1, qMinus: () => this.setState({ qty: Math.max(1, (s.qty || 1) - 1) }), qPlus: () => this.setState({ qty: (s.qty || 1) + 1 }),
+          multi: n > 1, perItem: n > 1 && s.same === 0,
+          sameOpts: ['Sí', 'No, distinta por mueble'].map((l, i) => ({ label: l, on: s.same === 1 - i, cls: 'fchip' + (s.same === 1 - i ? ' on' : ''), pick: () => this.setState({ same: 1 - i }) })),
+          itSum: n > 1 ? all.map((it, i) => ({ k: 'Mueble ' + (i + 1), v: lbl(it) + ' · ' + SVs[it.sv].toLowerCase() })) : [{ k: 'Mueble', v: lbl(all[0]) }, { k: 'Servicio', v: SVs[all[0].sv] }],
+          itSum2: s.ws >= 1 ? (n > 1 ? all.map((it, i) => ({ k: 'Mueble ' + (i + 1), v: lbl(it) + ' · ' + SVs[it.sv].toLowerCase() })) : [{ k: 'Mueble', v: lbl(all[0]) }, { k: 'Servicio', v: SVs[all[0].sv] }]) : [{ k: 'Mueble', v: 'Pendiente' }, { k: 'Servicio', v: 'Pendiente' }]
+        };
+      })(),
+
+      tema: this.props.tema ?? 'light',
+      tab: s.tab, setTab: (i) => this.setState({ tab: i }),
+      tabs: [{ label: 'Todas', count: all.length }].concat(states.map(x => ({ label: x, count: n(x) }))),
+      rows, empty: rows.length === 0,
+      lateAny: lateN > 0, lateTxt: lateN === 1 ? '1 solicitud nueva lleva 2 días o más sin atender' : lateN + ' solicitudes nuevas llevan 2 días o más sin atender', showNew: () => this.setState({ tab: 1 }),
+      d: {
+        code: r[0], medio: r[11], status: r[12], tone: tones[r[12]], client: r[1], contact: r[3], ini: r[1].split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+        item: r[4], meas: r[5], photos: Array.from({ length: Math.min(r[6], 4) }, (_, i) => 'background:linear-gradient(135deg,' + P[i] + ',#0B1B3A)'), photoTxt: r[6] ? r[6] + (r[6] === 1 ? ' foto o video' : ' fotos o videos') : 'Sin fotos · se pueden pedir por la web',
+        fabOpt: r[8], fabs: r[9].map(x => { const k = x[0] ? sw(x[0]) : [x[2], x[1]]; return { name: x[0] ? k[0] : x[2], bg: 'background:' + k[1], use: x[0] ? x[2] : 'Tela del cliente', yd: x[3] }; }), fabNote: r[10],
+        tras: r[16], trasSub: r[17], hasCita: !!r[18], cita: r[18], citaSub: r[19],
+        isLate: late(r), lateTitle: 'Lleva ' + r[15] + ' días sin atender',
+        aLink: r[22] !== 'prop', aBtn: r[22] === 'prop', href: r[20], action: r[21],
+        propose: () => { const p = { ...s.prop }; p[r[0]] = true; this.setState({ prop: p }); },
+        propOk: !!s.prop[r[0]], propMsg: 'Se envió a ' + r[1] + ' el turno ' + (r[23] || '') + '. Lo confirma desde su cuenta.',
+        canDisc: canDisc && !s.disc, disc: () => this.setState({ disc: true, mot: -1 }),
+        trail: 'Recibida ' + r[14] + ' por ' + r[11].toLowerCase() + '. Cada cambio de estado queda con usuario, fecha y hora.'
+      },
+      discOpen: s.disc && canDisc,
+      discMots: M.map((m, i) => ({ label: m, on: s.mot === i, cls: 'mchip' + (s.mot === i ? ' on' : ''), pick: () => this.setState({ mot: i }) })),
+      noDiscMot: s.mot < 0,
+      confirmDisc: () => { if (s.mot < 0) return; const g = { ...s.gone }; g[r[0]] = M[s.mot]; this.setState({ gone: g, disc: false, mot: -1 }); },
+      cancelDisc: () => this.setState({ disc: false, mot: -1 }),
+      creating: s.creating, notCreating: !s.creating, saved: s.saved, medioTxt: medios[s.medio], medioLow: medios[s.medio].toLowerCase(),
+      wSteps: citaLike ? ['Cliente', 'Mueble y fotos', 'Tela', home ? 'Turno de la visita (Agenda)' : pres ? 'Atención o turno' : 'Turno en la Agenda'] : ['Cliente', 'Mueble y fotos', 'Tela', 'Traslado', 'Revisar y registrar'], ws: citaLike && s.ws === 4 ? 3 : s.ws,
+      w0: s.ws === 0, w1: s.ws === 1, w2: s.ws === 2, w3: s.ws === 3, w4: s.ws === 4,
+      canBack: s.ws > 0, noBack: s.ws === 0, notLast: s.ws < 4 && !(citaLike && s.ws === 2), isLast: s.ws === 4 && !citaLike,
+      toAgPres: citaLike && s.ws === 2 && pres && !home, toAgRemote: citaLike && s.ws === 2 && !(pres && !home),
+      agHref: home ? 'A2e-AgendarVisita.dc.html' : 'A2d-AgendarNueva.dc.html', agLbl: home ? 'Registrar y elegir turno de la visita' : 'Registrar y elegir turno',
+      wBack: () => this.setState({ ws: citaLike && s.ws === 4 ? 2 : Math.max(0, s.ws - 1) }), wNext: () => { if (s.cli < 0 && s.ws === 0) return; this.setState({ ws: citaLike && s.ws === 2 ? 4 : Math.min(4, s.ws + 1) }); },
+      wBlocked: s.ws === 0 && s.cli < 0,
+      cliA: 'opt' + (s.cli === 0 ? ' on' : ''), cliN: 'opt' + (s.cli === 1 ? ' on' : ''), isNew: s.cli === 1,
+      pickA: () => this.setState({ cli: 0 }), pickN: () => this.setState({ cli: 1 }),
+      muOpts: MU.map((l, i) => ({ l, on: s.mu === i })), onMu: e => { const i = e.target.selectedIndex; this.setState({ mu: i, ap: 0, yp: FT[MUX[i][1]].yd.slice() }); },
+      svOpts: SV.map((l, i) => ({ l, on: s.sv === i })), onSv: e => { const v = e.target.selectedIndex; this.setState({ sv: v, nf: v === 2 || v === 3 ? 4 : (s.nf === 4 ? 1 : s.nf) }); },
+      qty: s.qty, qMinus: () => this.setState({ qty: Math.max(1, s.qty - 1) }), qPlus: () => this.setState({ qty: s.qty + 1 }),
+      wFot: [[s.medio === 1 ? 'Tomar las fotos ahora' : 'Subir las fotos que envió', s.medio === 1 ? 'El cliente está en el local: fotografíe el mueble o las fotos de su celular.' : 'Si las mandó por correo o mensaje, súbalas aquí.'], ['Pedírselas al cliente', 'Le llega un enlace para subirlas desde su celular.']].map((o, i) => ({ l: o[0], d: o[1], icon: i === 0 ? 'image' : 'inbox', cls: 'opt' + ((i === 0 ? !askF : askF) ? ' on' : ''), pick: () => this.setState({ fo: i }) })),
+      fotNow: !askF, fotAsk: askF, toAsk: () => this.setState({ fo: 1 }), canAskF: s.medio !== 1, toNow: () => this.setState({ fo: 0 }), fotTitle: s.medio === 1 ? 'Tomar o subir fotos' : 'Arrastre las fotos que envió el cliente', wFiles: askF ? [] : [{ name: 'mueble-frente.jpg' }, { name: 'brazo-roto.jpg' }],
+      addr,
+      locTitle: home ? 'Necesita una visita a domicilio' : pres ? 'La elige ahora, con usted' : 'Necesita una cita en el local', locTxt: home ? 'Acuerde el día con el cliente: al continuar, la solicitud se registra y se abre la Agenda para guardarle 1 hora de visita (cortesía, sin costo).' : pres ? 'Puede atenderlo ahora con la guía de atención, o guardarle un turno para otro día.' : 'Acuerde el día con el cliente: al continuar, la solicitud se registra y se abre la Agenda para guardarle el turno.',
+      locTitle2: home ? 'Se define en la visita' : pres ? 'Se define en la atención' : 'Se define en la cita', locTxt2: home ? 'En la visita se acuerda si el taller recoge el mueble o lo trae el cliente.' : pres ? 'En la guía de atención se acuerda el recojo o si deja el mueble hoy.' : 'El cliente elige la tela en el local; ahí mismo se acuerda el recojo o si trae el mueble.',
+      sCli: s.cli < 0 ? 'Sin elegir' : cName + (emp ? ' · empresa nueva (contacto: Daniel Ortiz)' : nc ? ' · cliente nuevo' : ''),
+      ctOpts: [['Persona', 'Muebles de su casa', 'user'], ['Empresa', 'Hoteles, oficinas, decoradores · pide el EIN', 'clipboard']].map((x, i) => ({ l: x[0], d: x[1], icon: x[2], cls: 'opt' + (s.ct === i ? ' on' : ''), pick: () => this.setState({ ct: i }) })), isPer: s.ct === 0, isEmp: s.ct === 1, pickPer: () => this.setState({ ct: 0 }), pickEmp: () => this.setState({ ct: 1 }), sCliCls: s.cli < 0 ? 'no' : '',
+      sMue: s.ws >= 1 ? (s.qty > 1 ? s.qty + ' × ' : '') + MU[s.mu] : 'Pendiente', sSer: s.ws >= 1 ? SV[s.sv] : 'Pendiente',
+      sFot: s.ws >= 1 ? (askF ? 'Se pedirán al cliente' : '2 fotos') : 'Pendiente', sFotCls: s.ws >= 1 ? '' : 'no',
+      sTel: s.ws >= 2 ? [W2V.bringTxt, W2V.swTxt, (pres ? 'La elige en el local con usted' : 'La elige en el local (cita)'), 'No lleva tela'][s.nf] : 'Pendiente', sTelCls: s.ws >= 2 ? '' : 'no',
+      sTra: s.ws >= 3 ? (home ? 'Se define en la visita' : s.nf === 2 ? (pres ? 'Se define en la atención' : 'Se define en la cita') : s.nt === 0 ? 'Recojo y entrega · ' + W2V.prefTxt : 'Lo lleva y lo recoge el cliente') : 'Pendiente', sTraCls: s.ws >= 3 ? '' : 'no',
+      wAct: ACTS.map((a, i) => ({ l: a[1], d: a[2], icon: { att: 'sofa', cot: 'quote', cit: 'calendar', conf: 'calendar', vis: 'map-pin', fot: 'image', reg: 'inbox' }[a[0]], cls: 'opt' + (i === ai ? ' on' : ''), pick: () => this.setState({ act: i }) })),
+      actLink: !!ACT[3], actSave: !ACT[3], actHref: ACT[3] || '#',
+      nextTitle: ACT[4],
+      nextTxt: ACT[5],
+      saveLbl: ACT[6],
+      medios: medios.map((m, i) => ({ l: m, d: ['Llamó al taller', 'Vino al local', 'Escribió un correo', 'Mandó un mensaje de texto'][i], icon: ['user', 'map-pin', 'inbox', 'quote'][i], label: m, on: s.medio === i, cls: 'opt' + (s.medio === i ? ' on' : ''), pick: () => this.setState({ nf: i === 1 && s.nf === 1 ? 2 : s.nf, medio: i }) })),
+      nTelas: [['La trae el cliente', s.sv === 4 ? 'Sin costo de tela · la trae al taller' : 'Sin costo de tela · la entrega con el mueble', 'package'], ['Telas en línea', 'Elige del catálogo con foto y código', 'image'], [pres ? 'La elige ahora en el local' : 'Ver en el local', pres ? 'Muéstrele el muestrario' : 'Véala y tóquela · requiere cita', 'calendar'], ['Visita a domicilio', 'Cortesía sin costo · se llevan los libros y se mide', 'truck'], ['No lleva tela', 'Solo espuma o estructura', 'x']].map((x, i) => ({ l: x[0], d: x[1], icon: x[2], label: x[0], on: s.nf === i, cls: 'opt' + (s.nf === i ? ' on' : ''), pick: () => this.setState({ nf: i }) })).filter((x, i) => (i !== 4 || s.sv === 2 || s.sv === 3) && !(i === 1 && pres)),
+      nfBring: s.nf === 0, nfCat: s.nf === 1, nfLocal: s.nf === 2 || home, nfBusca: home || (s.nf === 2 && !pres), nfNoLocal: s.nf !== 2 && !home,
+      msOn: !!s.ms, msCls: 'mso' + (s.ms ? ' on' : ''), msToggle: () => this.setState({ ms: !s.ms }), msT: 'Pedir una muestra (memo sample) a la casa del cliente', msD: 'Se le pide a la compañía de telas que envíe un pedacito de cada tela marcada a la dirección del cliente, con su pattern y número de color.',
+      trasH3: custom ? '¿Cómo recibe el cliente su mueble nuevo?' : '¿Cómo llega el mueble?',
+      custom, hasFinish, finOpts: FIN.map((f, i) => ({ t: f[0], d: f[1], k: f[2], on: s.fin === i, cls: 'opt' + (s.fin === i ? ' on' : ''), pick: () => this.setState({ fin: i }) })),
+      medLbl: custom ? 'Medidas que quiere el cliente' : 'Medidas', medOpt: !custom, medHint: custom ? 'Obligatorio en fabricación: el precio depende del tamaño.' : 'Opcional: la medida exacta se toma en la cita o en el recojo.',
+      idOpts: ['Liso', 'Con diseño', 'No sé'].map((l, i) => ({ label: l, on: s.idk === i, cls: 'fchip' + (s.idk === i ? ' on' : ''), pick: () => this.setState({ idk: i }) })),
+      nSw: NSW.map((k, i) => { const on = s.ns.includes(i); return { name: SW[k][0], bg: 'background:' + SW[k][1], on, cls: 'chip sw' + (on ? ' on' : ''), pick: () => this.setState({ ns: on ? (s.ns.length > 1 ? s.ns.filter(x => x !== i) : s.ns) : s.ns.concat([i]) }) }; }),
+      nTras: [['Recojo y entrega a domicilio', 'El taller pasa por el mueble y lo devuelve terminado', 'truck'], ['Lo lleva y lo recoge el cliente', 'Sin costo de transporte', 'map-pin']].map((x, i) => ({ l: x[0], label: x[0], d: x[1], icon: x[2], on: s.nt === i, cls: 'opt' + (s.nt === i ? ' on' : ''), pick: () => this.setState({ nt: i }) })),
+      nfDel: s.nt === 0,
+      files: [],
+      openNew: () => this.setState({ creating: true, saved: false, disc: false, ws: 0, cli: -1, act: -1 }),
+      closeNew: () => this.setState({ creating: false }),
+      saveNew: () => this.setState({ creating: false, saved: true, tab: 0, sel: 'SOL-0088' })
+    };
+  }
+}
+</script>
+</body>
+</html>

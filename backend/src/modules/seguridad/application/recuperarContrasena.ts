@@ -16,7 +16,8 @@ const sha256 = (v: string) => createHash('sha256').update(v).digest('hex');
  */
 export async function solicitarRecuperacion(email: string, correo: Correo, ip?: string) {
   const usuario = await prisma.usuario.findUnique({ where: { email: email.trim().toLowerCase() } });
-  if (!usuario || !usuario.activo) return;
+  // Sin correo no hay a dónde enviar el enlace: a ese personal el Administrador le da una contraseña temporal (D.1.2).
+  if (!usuario || !usuario.activo || !usuario.email) return;
 
   const minutos = await parametroNumero(prisma, 'recuperacion.minutos_vigencia');
   const token = randomBytes(32).toString('base64url');

@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W6b Mis pedidos anteriores (web)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.mh{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.mh h1{margin-top:2px}
+.sumbar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.sb{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.sb i{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;font-style:normal}
+.sb.a i{background:var(--warning-soft);color:var(--warning-ink)}
+.sb.b i{background:var(--primary-soft);color:var(--primary)}
+.sb.c i{background:var(--success-soft);color:var(--success-ink)}
+.sb b{display:block;font:700 15px/1.3 var(--font-display)}
+.sb small{font-size:12.5px;color:var(--ink-muted)}
+.tabsx{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabsx a{white-space:nowrap;flex:none;display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;text-decoration:none;color:var(--ink-muted);font:600 15px/1 var(--font-sans);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabsx a span{min-width:22px;height:22px;padding:0 7px;border-radius:9999px;background:var(--surface-sunken);font-size:12px;display:grid;place-items:center}
+.tabsx a.on{color:var(--ink);border-bottom-color:var(--primary)}
+.tabsx a.on span{background:var(--primary);color:var(--on-primary)}
+.sec{display:flex;align-items:center;gap:10px;font:700 12px/1 var(--font-sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);margin-top:4px}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.oc{display:grid;grid-template-columns:96px minmax(0,1fr) 260px;gap:20px;padding:20px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);align-items:start}
+.oc.act{border:2px solid var(--primary);box-shadow:var(--shadow-md)}
+.oc .ph{width:96px;height:96px;border-radius:16px}
+.oc .bd{display:flex;flex-direction:column;gap:10px;min-width:0}
+.oc h2{font-size:20px}
+.oc .code{font-size:13px;color:var(--ink-muted)}
+.oc .oside{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.amt{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.amt b{font:800 26px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.amt small{font-size:12.5px;color:var(--ink-muted)}
+.nx{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;font-size:14px;line-height:20px}
+.nx > :first-child{flex:none;margin-top:1px}
+.nx.you{background:var(--warning-soft);color:var(--warning-ink)}
+.nx.us{background:var(--primary-soft);color:var(--ink)}
+.nx.us > :first-child{color:var(--primary)}
+.nx.ok{background:var(--success-soft);color:var(--success-ink)}
+.nx b{font-weight:700}
+.steps{display:flex;align-items:center;gap:0;flex-wrap:wrap;font-size:12.5px;color:var(--ink-muted)}
+.steps .s{display:inline-flex;align-items:center;gap:6px}
+.steps .s i{width:10px;height:10px;border-radius:50%;border:2px solid var(--line-strong);background:var(--surface)}
+.steps .s.d i{background:var(--success-500);border-color:var(--success-500)}
+.steps .s.c{color:var(--ink);font-weight:700}
+.steps .s.c i{background:var(--primary);border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
+.steps .ln{width:22px;height:2px;background:var(--line);margin:0 6px}
+.steps .ln.d{background:var(--success-500)}
+.kvs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px}
+.kvs div{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.kvs span{color:var(--ink-muted)}
+.hero{display:flex;flex-direction:column;gap:18px;padding:24px;border-radius:22px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-md)}
+.big{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;position:relative}
+.big .st{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;position:relative}
+.big .st::before{content:"";position:absolute;top:17px;left:-50%;width:100%;height:3px;background:var(--line);z-index:0}
+.big .st:first-child::before{display:none}
+.big .st.d::before,.big .st.c::before{background:var(--success-500)}
+.big .st i{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:800 14px/1 var(--font-display);font-style:normal;background:var(--surface);border:2px solid var(--line-strong);color:var(--ink-muted);z-index:1}
+.big .st.d i{background:var(--success-500);border-color:var(--success-500);color:#fff}
+.big .st.c i{background:var(--primary);border-color:var(--primary);color:var(--on-primary);box-shadow:0 0 0 6px var(--primary-soft)}
+.big .st b{font-size:13.5px}
+.big .st small{font-size:12px;color:var(--ink-muted)}
+.big .st.c b{color:var(--primary)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.acct{display:flex;flex-direction:column;gap:10px}
+.acct .row2{display:flex;justify-content:space-between;font-size:14.5px}
+.acct .row2 span{color:var(--ink-muted)}
+.meth{display:flex;flex-wrap:wrap;gap:6px}
+.meth span{height:26px;padding:0 10px;border-radius:9999px;background:var(--surface-sunken);border:1px solid var(--line);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center}
+.ph2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ph2 span{height:84px;border-radius:12px}
+.ph2 small{font-size:12px;color:var(--ink-muted)}
+.pc{display:grid;grid-template-columns:260px minmax(0,1fr);gap:22px;padding:20px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ba div{display:flex;flex-direction:column;gap:4px}
+.ba span.t{height:120px;border-radius:12px}
+.ba small{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+.rcl{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;font-size:13.5px;font-weight:600}
+.rcl.open{background:var(--success-soft);color:var(--success-ink)}
+.rcl.off{background:var(--surface-sunken);color:var(--ink-muted)}
+@media (max-width:640px){.oc{grid-template-columns:1fr;padding:16px}.oc .ph{width:56px;height:56px;border-radius:12px}.big{grid-template-columns:repeat(2,minmax(0,1fr))}.kvs{grid-template-columns:1fr}.ba span.t{height:100px}}
+@media (max-width:1000px){.oc{grid-template-columns:72px minmax(0,1fr)}.oc .oside{grid-column:1/-1}.oc .ph{width:72px;height:72px}.cols{grid-template-columns:1fr}.pc{grid-template-columns:1fr}.sumbar{grid-template-columns:1fr}.big{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:18px}.big .st::before{display:none}}
+
+.hbox{position:relative;z-index:6;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.hq{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 18px;color:var(--ink-muted);border-bottom:1px solid var(--line)}
+.hq input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:500 16px/1 var(--font-sans);color:var(--ink)}
+.hrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px}
+.hdd{position:relative;display:inline-flex;align-items:center}
+.hb{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px 0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink-muted);font:600 13.5px/1 var(--font-sans);cursor:pointer;white-space:nowrap}
+.hb b{color:var(--ink);font-weight:700}
+.hb.open{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);color:var(--ink)}
+.hb.on{background:var(--primary-soft);border-color:transparent;color:var(--primary);padding-right:34px}
+.hb.on b{color:var(--primary)}
+.hb.plain{border-color:transparent;padding:0 6px}
+.hx{position:absolute;right:6px;width:22px;height:22px;border-radius:6px;border:0;background:transparent;color:var(--primary);display:grid;place-items:center;cursor:pointer}
+.hpop{position:absolute;top:calc(100% + 6px);left:0;min-width:210px;padding:6px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-lg,0 12px 32px #0A163033);display:flex;flex-direction:column;gap:2px;z-index:8}
+.hpop.right{left:auto;right:0}
+.hpop .t{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);padding:8px 10px 4px}
+.ho{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 10px;border-radius:9px;border:0;background:transparent;font:500 14px/1 var(--font-sans);color:var(--ink);cursor:pointer;text-align:left}
+.ho:hover{background:var(--surface-sunken)}
+.ho .l{flex:1}
+.ho small{font-size:12px;color:var(--ink-muted)}
+.ho .rd{width:16px;height:16px;border-radius:50%;border:2px solid var(--line-strong);flex:none}
+.ho.on{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.ho.on .rd{border:5px solid var(--primary)}
+.ho.zero{opacity:.45}
+.hlk{border:0;background:none;padding:0 6px;color:var(--primary);font:600 13px/1 var(--font-sans);cursor:pointer}
+.hcnt{font-size:13.5px;color:var(--ink-muted)}
+.hcnt b{color:var(--ink)}
+.hovl{position:fixed;inset:0;z-index:5}
+.hy{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--ink-muted);display:flex;align-items:center;gap:10px;margin-top:4px}
+.hy::after{content:"";flex:1;height:1px;background:var(--line)}
+.hc{display:grid;grid-template-columns:200px minmax(0,1fr) 200px;gap:20px;align-items:center;padding:16px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);text-align:left;font:inherit;color:var(--ink);cursor:pointer;width:100%;transition:border-color .15s,box-shadow .15s,transform .15s}
+.hc:hover{border-color:var(--line-strong);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.hc.on{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.hc .ba2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.hc .ba2 span{height:96px;border-radius:12px}
+.hc h2{font-size:19px}
+.hc .cd{font-size:13px;color:var(--ink-muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips span{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:9999px;background:var(--surface-sunken);border:1px solid var(--line);font-size:12.5px;font-weight:500;white-space:nowrap}
+.hc .rt{display:flex;flex-direction:column;align-items:flex-end;gap:8px;text-align:right}
+.hc .rt b.m{font:800 22px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.hc .rt small{font-size:12px;color:var(--ink-muted)}
+.hc .vd{font-size:13.5px;font-weight:600;color:var(--primary)}
+.rcl2{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;margin-top:8px}
+.rcl2.open{color:var(--success-ink)}.rcl2.off{color:var(--ink-muted)}.rcl2.warn{color:var(--warning-ink)}
+.hdim{position:fixed;inset:0;background:#0A163059;z-index:199}
+.hdrw{position:fixed;top:0;right:0;bottom:0;width:min(540px,100%);background:var(--surface);z-index:200;display:flex;flex-direction:column;box-shadow:-16px 0 40px #0A163040;animation:hsl .2s ease}
+@keyframes hsl{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+.hdh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:20px 24px 14px;border-bottom:1px solid var(--line)}
+.hxb{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;flex:none}
+.hbody{flex:1;overflow-y:auto;padding:18px 24px 24px;display:flex;flex-direction:column;gap:20px}
+.hsec{display:flex;flex-direction:column;gap:8px}
+.hsec>span{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted)}
+.hk{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.hk div{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:var(--surface-sunken)}
+.hk div span{font-size:12px;color:var(--ink-muted)}
+.hk div b{font-size:14px}
+.htl{display:flex;flex-direction:column;border-left:2px solid var(--line);margin-left:6px}
+.hte{position:relative;display:grid;grid-template-columns:82px minmax(0,1fr);gap:10px;padding:7px 0 7px 18px;font-size:13.5px}
+.hte i{position:absolute;left:-6px;top:12px;width:10px;height:10px;border-radius:50%;background:var(--primary);border:2px solid var(--surface)}
+.hte .d{color:var(--ink-muted)}
+.hpay{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.hpay small{display:block;font-size:12.5px;color:var(--ink-muted)}
+.hpay.tot{border-bottom:0;font-weight:700}
+.hdoc{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);font-size:14px}
+.hdoc span{display:flex;align-items:center;gap:10px}
+.hdoc a{font-size:13px;font-weight:600}
+.hrc{padding:12px 14px;border-radius:12px;font-size:13.5px;line-height:20px}
+.hrc.ok{background:var(--success-soft);color:var(--success-ink)}
+.hrc.no{background:var(--surface-sunken);color:var(--ink-muted)}
+.hft{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding:14px 24px;border-top:1px solid var(--line)}
+@media (max-width:900px){.hc{grid-template-columns:120px minmax(0,1fr)}.hc .rt{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center;text-align:left}.hc .ba2 span{height:64px}}
+@media (max-width:560px){.hc{grid-template-columns:1fr}.hk{grid-template-columns:1fr}}
+</style>
+</helmet>
+<div class="wp">
+  <header class="wtop"><div class="wtop-in">
+    <a class="wbrand" href="W1-Inicio.dc.html"><b>Garwood</b><span>Tapicería de Interiores</span></a>
+    <nav class="wnav" aria-label="Portal del cliente"><a class="on" href="W6a-EnCurso.dc.html">Mis pedidos</a><a href="W9-Reclamos.dc.html">Reclamos</a></nav>
+    <a class="gw-btn gw-btn-on-dark gw-btn-sm" href="W2-Solicitud.dc.html">+ Nueva solicitud</a>
+    <a class="wbell" href="W11-Notificaciones.dc.html" aria-label="Notificaciones, 3 nuevas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span>3</span></a>
+    <a class="wav" href="W10-Perfil.dc.html" aria-label="Mi perfil">LM</a>
+  </div></header>
+  <main class="wmain">
+    <div class="mh"><div><div class="crumb">Hola, Laura · vista del mar 20 abr 2027</div><h1>Mis pedidos</h1></div></div>
+    <nav class="tabsx" aria-label="Mis pedidos"><a href="W6c-Solicitudes.dc.html">Solicitudes y cotizaciones <span>0</span></a><a href="W6a-EnCurso.dc.html">En curso <span>0</span></a><a href="W6b-Anteriores.dc.html" class="on" aria-current="page">Anteriores <span>5</span></a></nav>
+    <div class="hbox">
+      <label class="hq"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 20 }}"></x-import><input type="search" value="{{q}}" placeholder="Buscar por mueble, tela o código (ej.: sofá, lino, PED-0076)" aria-label="Buscar en mis pedidos" onInput="{{onQ}}"></label>
+      <div class="hrow">
+        <sc-for list="{{dds}}" as="g" hint-placeholder-count="4">
+          <div class="hdd">
+            <button class="{{g.btnCls}}" onClick="{{g.toggle}}" aria-expanded="{{g.open}}"><span>{{g.lbl}}</span><sc-if value="{{g.on}}" hint-placeholder-val="{{ false }}"><b>{{g.val}}</b></sc-if><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <sc-if value="{{g.on}}" hint-placeholder-val="{{ false }}"><button class="hx" aria-label="Quitar filtro" onClick="{{g.rm}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 14 }}"></x-import></button></sc-if>
+            <sc-if value="{{g.open}}" hint-placeholder-val="{{ false }}">
+              <div class="hpop" role="listbox"><span class="t">{{g.label}}</span>
+                <sc-for list="{{g.opts}}" as="o" hint-placeholder-count="3"><button class="{{o.cls}}" role="option" aria-selected="{{o.on}}" onClick="{{o.pick}}"><span class="rd"></span><span class="l">{{o.l}}</span><small>{{o.n}}</small></button></sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{anyAct}}" hint-placeholder-val="{{ false }}"><button class="hlk" onClick="{{clear}}">Limpiar filtros</button></sc-if>
+        <span style="flex: 1"></span>
+        <span class="hcnt"><b>{{nRes}}</b> {{resWord}}</span>
+        <div class="hdd">
+          <button class="{{sortCls}}" onClick="{{toggleSort}}"><span>Ordenar:</span><b>{{sortTxt}}</b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          <sc-if value="{{sortOpen}}" hint-placeholder-val="{{ false }}"><div class="hpop right"><sc-for list="{{sorts}}" as="o" hint-placeholder-count="2"><button class="{{o.cls}}" onClick="{{o.pick}}"><span class="rd"></span><span class="l">{{o.l}}</span></button></sc-for></div></sc-if>
+        </div>
+      </div>
+    </div>
+    <sc-if value="{{anyPop}}" hint-placeholder-val="{{ false }}"><div class="hovl" onClick="{{closePop}}"></div></sc-if>
+    <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="Garweb.EmptyState" icon="search" title="No encontramos pedidos con esa búsqueda">Pruebe con otra palabra o quite algún filtro.</x-import>
+    </sc-if>
+    <sc-for list="{{years}}" as="y" hint-placeholder-count="2">
+      <div class="hy">{{y.y}}</div>
+      <sc-for list="{{y.items}}" as="o" hint-placeholder-count="2">
+        <button class="{{o.cls}}" onClick="{{o.pick}}">
+          <span class="ba2"><span class="thumb b"></span><span class="thumb c"></span></span>
+          <span style="display: flex; flex-direction: column; min-width: 0">
+            <span class="cd">{{o.code}} · {{o.service}}</span>
+            <h2>{{o.t}}</h2>
+            <span class="chips"><span>Entregado {{o.when}}</span><span>{{o.fabric}}</span><span>{{o.pieces}}</span></span>
+            <span class="{{o.rcCls}}"><x-import component-from-global-scope="Garweb.Icon" name="{{o.rcIcon}}" size="{{ 15 }}"></x-import>{{o.rc}}</span>
+          </span>
+          <span class="rt"><x-import component-from-global-scope="Garweb.StatusChip" status="{{o.st}}"></x-import><span><b class="m">{{o.totalTxt}}</b><small style="display: block">pagado · {{o.methods}}</small></span><span class="vd">Ver detalle →</span></span>
+        </button>
+      </sc-for>
+    </sc-for>
+    <p class="muted" style="font-size: 13px">Los problemas se pueden reportar hasta 7 días después de la entrega. “Repetir trabajo” crea una solicitud nueva con los mismos datos y los precios de hoy.</p>
+    <x-import component-from-global-scope="Garweb.EmptyState" icon="history" title="Sus trabajos de antes de GARWEB">Si nos encargó algo antes, el taller está digitalizando los folders en papel: aparecerán aquí cuando estén listos.</x-import>
+
+  </main>
+    <sc-if value="{{drawer}}" hint-placeholder-val="{{ false }}">
+      <div class="hdim" onClick="{{close}}"></div>
+      <aside class="hdrw" role="dialog" aria-label="Detalle del pedido">
+        <div class="hdh">
+          <div><span class="ov">{{d.code}} · {{d.service}}</span><h2 style="font-size: 22px">{{d.t}}</h2><div style="margin-top: 6px"><x-import component-from-global-scope="Garweb.StatusChip" status="{{d.st}}"></x-import></div></div>
+          <button class="hxb" aria-label="Cerrar" onClick="{{close}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 20 }}"></x-import></button>
+        </div>
+        <div class="hbody">
+          <div class="ba"><div><span class="thumb b t"></span><small>Antes · {{d.before}}</small></div><div><span class="thumb c t"></span><small style="color: var(--primary)">Después · entrega</small></div></div>
+          <div class="hsec"><span>Qué hicimos</span>
+            <p style="font-size: 14.5px; line-height: 22px">{{d.job}}</p>
+            <div class="hk">
+              <div><span>Tela</span><b>{{d.fabric}}</b></div>
+              <div><span>Cantidad de tela</span><b>{{d.yd}}</b></div>
+              <div><span>Piezas entregadas</span><b>{{d.pieces}}</b></div>
+              <div><span>Traslado</span><b>{{d.trans}}</b></div>
+              <div><span>Entregado</span><b>{{d.when}}</b></div>
+              <div><span>Tiempo total</span><b>{{d.dur}}</b></div>
+            </div>
+          </div>
+          <div class="hsec"><span>Cómo fue su pedido</span>
+            <div class="htl"><sc-for list="{{d.ev}}" as="e" hint-placeholder-count="5"><div class="hte"><i></i><span class="d">{{e.d}}</span><span>{{e.t}}</span></div></sc-for></div>
+          </div>
+          <div class="hsec"><span>Pagos</span>
+            <div><sc-for list="{{d.pays}}" as="p" hint-placeholder-count="2"><div class="hpay"><span>{{p.c}}<small>{{p.m}}</small></span><b class="num">{{p.a}}</b></div></sc-for><div class="hpay tot"><span>Total pagado</span><span class="num">{{d.totalTxt}}</span></div></div>
+          </div>
+          <div class="hsec"><span>Documentos</span>
+            <sc-for list="{{d.docs}}" as="x" hint-placeholder-count="3"><div class="hdoc"><span><x-import component-from-global-scope="Garweb.Icon" name="clipboard" size="{{ 18 }}"></x-import>{{x.n}}</span><a href="#">Descargar PDF</a></div></sc-for>
+          </div>
+          <div class="hsec"><span>Reclamos y garantía</span>
+            <div class="{{d.rcBox}}">{{d.rcTxt}}</div>
+          </div>
+        </div>
+        <div class="hft">
+          <sc-if value="{{d.canClaim}}" hint-placeholder-val="{{ false }}"><a class="gw-btn gw-btn-secondary" href="W9-Reclamos.dc.html">Reportar un problema</a></sc-if>
+          <a class="gw-btn gw-btn-primary" href="W2-Solicitud.dc.html">Repetir trabajo</a>
+        </div>
+      </aside>
+    </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"plazo":{"editor":"enum","options":["dentro de los 7 días","vencido"],"default":"dentro de los 7 días"},"$preview":{"width":1280,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { q: '', pop: '', fm: 0, fs: 0, fy: 0, ord: 0, s: '' }; }
+  renderVals() {
+    const st = this.state, late = this.props.plazo === 'vencido';
+    const E = (d, t) => ({ d, t }), PY = (c, m, a) => ({ c, m, a });
+    // mueble: 1 sofá 2 sillas 3 cabecera 4 otros · servicio: 1 retapizado 2 fabricación nueva · año
+    const R = [
+      { code: 'PED-0158', t: 'Puff tapizado (nuevo)', mu: 4, sv: 2, y: 2027, iso: '2027-04-15', when: 'jue 15 abr 2027', total: 480, fabric: 'Cuero sintético Camel', yd: '2 yd · tela difícil', pieces: '1 pieza', trans: 'Entrega a domicilio', dur: '3 semanas', before: 'diseño aprobado', methods: 'tarjeta',
+        job: 'Fabricamos un puff nuevo de 60 × 60 cm con estructura de madera, espuma de alta densidad y tapiz en cuero sintético Camel.',
+        st: late ? 'Cerrado' : 'Entregado',
+        rc: late ? 'Plazo de reclamo vencido el jue 22 abr' : 'Puede reportar un problema hasta el jue 22 abr · quedan 2 días', rcCls: late ? 'rcl2 off' : 'rcl2 open', rcIcon: late ? 'lock' : 'clock', canClaim: !late,
+        rcTxt: late ? 'Sin reclamos. El plazo de 7 días venció el jue 22 abr.' : 'Sin reclamos. Si nota algún problema, puede reportarlo hasta el jue 22 abr.', rcBox: late ? 'hrc no' : 'hrc ok',
+        ev: [E('22 mar', 'Solicitud con medidas y 2 fotos de referencia'), E('24 mar', 'Cotización aceptada · sin adelanto (cliente frecuente)'), E('25 mar', 'Pagó $480 con tarjeta en línea'), E('29 mar–12 abr', 'Fabricación en el taller'), E('15 abr', 'Entregado · 1 pieza · firmó conforme')],
+        pays: [PY('Pago total', 'Tarjeta en línea · 25 mar', '$480')], docs: ['Orden de servicio OS-0158', 'Recibo REC-0158-1', 'Comprobante final', 'Constancia de entrega firmada'] },
+      { code: 'PED-0131', t: 'Sillas de comedor × 4', mu: 2, sv: 1, y: 2027, iso: '2027-02-19', when: 'vie 19 feb 2027', total: 520, fabric: 'Lino Arena 110', yd: '4 yd', pieces: '4 piezas', trans: 'Recojo y entrega', dur: '2 semanas', before: 'recojo', methods: 'Zelle',
+        job: 'Retapizado del asiento de las 4 sillas de comedor ($130 por silla), con cambio de espuma.',
+        st: 'Cerrado', rc: 'Plazo de reclamo cerrado', rcCls: 'rcl2 off', rcIcon: 'lock', canClaim: false, rcTxt: 'Sin reclamos.', rcBox: 'hrc no',
+        ev: [E('1 feb', 'Solicitud con 3 fotos'), E('2 feb', 'Cotización aceptada'), E('4 feb', 'Recojo · 4 piezas'), E('5–17 feb', 'Producción'), E('19 feb', 'Entregado · pagó el total por Zelle')],
+        pays: [PY('Pago total', 'Zelle · 19 feb · confirmado por el taller', '$520')], docs: ['Orden de servicio OS-0131', 'Recibo REC-0131-1', 'Comprobante final', 'Constancia de entrega firmada'] },
+      { code: 'PED-0102', t: 'Cabecera', mu: 3, sv: 1, y: 2026, iso: '2026-12-09', when: 'mié 9 dic 2026', total: 360, fabric: 'Terciopelo gris', yd: '3 yd · tela difícil', pieces: '1 pieza', trans: 'Ella la trajo y la recogió', dur: '10 días', before: 'recepción en el taller', methods: 'cheque',
+        job: 'Retapizado de la cabecera de cama queen en terciopelo gris, con capitoné de 12 botones.',
+        st: 'Cerrado', rc: 'Plazo de reclamo cerrado', rcCls: 'rcl2 off', rcIcon: 'lock', canClaim: false, rcTxt: 'Sin reclamos.', rcBox: 'hrc no',
+        ev: [E('25 nov', 'Solicitud con 2 fotos'), E('26 nov', 'Cotización aceptada · sin adelanto'), E('29 nov', 'Dejó la cabecera en el taller'), E('30 nov–8 dic', 'Producción'), E('9 dic', 'Retiro en el taller · pagó con cheque')],
+        pays: [PY('Pago total', 'Cheque · 9 dic · depositado', '$360')], docs: ['Orden de servicio OS-0102', 'Recibo REC-0102-1', 'Comprobante final'] },
+      { code: 'PED-0094', t: 'Silla de escritorio', mu: 4, sv: 1, y: 2026, iso: '2026-11-03', when: 'mar 3 nov 2026', total: 210, fabric: 'Microfibra Grafito', yd: '1.5 yd', pieces: '1 pieza', trans: 'Recojo y entrega', dur: '9 días', before: 'recojo', methods: 'tarjeta (lector)',
+        job: 'Retapizado del asiento y respaldo de la silla de escritorio, con la tela elegida del catálogo en línea.',
+        st: 'Cerrado', rc: 'Plazo de reclamo cerrado', rcCls: 'rcl2 off', rcIcon: 'lock', canClaim: false, rcTxt: 'Sin reclamos.', rcBox: 'hrc no',
+        ev: [E('13 oct', 'Solicitud con 3 fotos · tela del catálogo'), E('19 oct', 'Cotización aceptada'), E('26 oct', 'Recojo'), E('27 oct–2 nov', 'Producción'), E('3 nov', 'Entregado · pagó con tarjeta al conductor')],
+        pays: [PY('Pago total', 'Tarjeta con lector · 3 nov', '$210')], docs: ['Orden de servicio OS-0094', 'Recibo REC-0094-1', 'Comprobante final', 'Constancia de entrega firmada'] },
+      { code: 'PED-0076', t: 'Sofá de 3 cuerpos', mu: 1, sv: 1, y: 2026, iso: '2026-10-22', when: 'jue 22 oct 2026', total: 1140, fabric: 'Lino Navy 204', yd: '14 yd', pieces: '9 piezas', trans: 'Recojo y entrega', dur: '2 semanas', before: 'recojo', methods: 'Zelle + tarjeta',
+        job: 'Retapizado completo del sofá de 3 cuerpos con Lino Navy 204 y cambio de espuma de los asientos.',
+        st: 'Cerrado', rc: 'Reclamo REC-0012 resuelto', rcCls: 'rcl2 warn', rcIcon: 'check', canClaim: false,
+        rcTxt: 'REC-0012 · costura abierta en el cojín central (27 oct). Resuelto: el taller repuso la costura sin costo y lo devolvió el 2 nov.', rcBox: 'hrc ok',
+        ev: [E('2 oct', 'Solicitud con 4 fotos'), E('6 oct', 'Cita en el local · cotización $1,140 aceptada'), E('7 oct', 'Adelanto $456 por Zelle confirmado'), E('8 oct', 'Recojo · 9 piezas · revisión sin sorpresas'), E('12–16 oct', 'Producción'), E('22 oct', 'Entregado · saldo con tarjeta'), E('27 oct–2 nov', 'Reclamo de costura resuelto')],
+        pays: [PY('Adelanto 40 %', 'Zelle · 7 oct', '$456'), PY('Saldo', 'Tarjeta con lector · 22 oct', '$684')], docs: ['Orden de servicio OS-0076', 'Recibo REC-0076-1 (adelanto)', 'Recibo REC-0076-2 (saldo)', 'Comprobante final', 'Constancia de entrega firmada'] }
+    ].map(r => ({ ...r, docs: r.docs.map(n => ({ n })), totalTxt: '$' + r.total.toLocaleString('en-US'), service: r.sv === 1 ? 'Retapizado' : 'Fabricación nueva' }));
+    const G = [
+      { key: 'fm', label: 'Mueble', opts: ['Todos', 'Sofá', 'Sillas', 'Cabecera', 'Otros'], test: (x, v) => x.mu === v },
+      { key: 'fs', label: 'Servicio', opts: ['Todos', 'Retapizado', 'Fabricación nueva'], test: (x, v) => x.sv === v },
+      { key: 'fy', label: 'Año', opts: ['Todos', '2027', '2026'], test: (x, v) => x.y === [0, 2027, 2026][v] }
+    ];
+    const norm = t => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const qw = norm(st.q).split(/\s+/).filter(Boolean);
+    const mq = x => qw.every(w => norm([x.code, x.t, x.fabric, x.service].join(' ')).includes(w));
+    const pass = (x, skip) => mq(x) && G.every(g => g.key === skip || st[g.key] === 0 || g.test(x, st[g.key]));
+    let res = R.filter(x => pass(x)).sort(st.ord === 0 ? (a, b) => b.iso.localeCompare(a.iso) : st.ord === 1 ? (a, b) => a.iso.localeCompare(b.iso) : (a, b) => b.total - a.total);
+    const card = r => ({ ...r, cls: st.s === r.code ? 'hc on' : 'hc', pick: () => this.setState({ s: r.code, pop: '' }) });
+    const years = st.ord === 2 ? [{ y: 'POR MONTO', items: res.map(card) }] : [...new Set(res.map(r => r.y))].map(y => ({ y: String(y), items: res.filter(r => r.y === y).map(card) }));
+    const SO = ['Más recientes', 'Más antiguos', 'Mayor monto'];
+    return {
+      q: st.q, onQ: e => this.setState({ q: e.target.value }),
+      nRes: res.length, resWord: res.length === 1 ? 'pedido' : 'pedidos',
+      anyAct: G.some(g => st[g.key] !== 0) || !!st.q, clear: () => this.setState({ fm: 0, fs: 0, fy: 0, q: '', pop: '' }),
+      anyPop: !!st.pop, closePop: () => this.setState({ pop: '' }),
+      dds: G.map(g => { const v = st[g.key], open = st.pop === g.key; return {
+        label: g.label, lbl: v !== 0 ? g.label + ':' : g.label, on: v !== 0, val: g.opts[v], open,
+        btnCls: 'hb' + (v !== 0 ? ' on' : '') + (open ? ' open' : ''),
+        toggle: () => this.setState({ pop: open ? '' : g.key }), rm: () => this.setState({ [g.key]: 0, pop: '' }),
+        opts: g.opts.map((l, i) => { const n = R.filter(x => pass(x, g.key) && (i === 0 || g.test(x, i))).length; return { l, n, on: v === i, cls: 'ho' + (v === i ? ' on' : '') + (n === 0 ? ' zero' : ''), pick: () => this.setState({ [g.key]: i, pop: '' }) }; }) }; }),
+      sortTxt: SO[st.ord], sortOpen: st.pop === 'ord', sortCls: 'hb plain' + (st.pop === 'ord' ? ' open' : ''),
+      toggleSort: () => this.setState({ pop: st.pop === 'ord' ? '' : 'ord' }),
+      sorts: SO.map((l, i) => ({ l, cls: 'ho' + (st.ord === i ? ' on' : ''), pick: () => this.setState({ ord: i, pop: '' }) })),
+      empty: res.length === 0, years,
+      drawer: !!st.s, close: () => this.setState({ s: '' }),
+      d: R.find(x => x.code === st.s) || R[0]
+    };
+  }
+}
+</script>
+</body>
+</html>

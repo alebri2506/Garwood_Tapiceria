@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W10 Mi perfil (web)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line);gap:4px}
+.seg button{min-height:40px;padding:0 18px;border:0;border-radius:8px;background:transparent;color:var(--ink-muted);font:600 14px/1 var(--font-sans);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.addr{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.addr.on{border-color:var(--primary);background:var(--primary-soft)}
+.sw{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:48px;font-size:15px}
+.tg{width:48px;height:28px;border-radius:9999px;border:0;background:var(--line-strong);position:relative;cursor:pointer;flex:none}
+.tg::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#FFFFFF;transition:left .15s}
+.tg.on{background:var(--primary)}
+.tg.on::after{left:23px}
+.tg.lock{opacity:.55;cursor:not-allowed}
+.must{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:40px;font-size:14.5px}
+.must small{display:inline-flex;align-items:center;gap:4px;color:var(--ink-muted);font-size:12.5px;white-space:nowrap}
+</style>
+</helmet>
+<div class="wp">
+  <header class="wtop"><div class="wtop-in">
+    <a class="wbrand" href="W1-Inicio.dc.html"><b>Garwood</b><span>Tapicería de Interiores</span></a>
+    <nav class="wnav" aria-label="Portal del cliente"><a href="W6a-EnCurso.dc.html">Mis pedidos</a><a href="W9-Reclamos.dc.html">Reclamos</a></nav>
+    <a class="gw-btn gw-btn-on-dark gw-btn-sm" href="W2-Solicitud.dc.html">+ Nueva solicitud</a>
+    <a class="wbell" href="W11-Notificaciones.dc.html" aria-label="Notificaciones, 3 nuevas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span>3</span></a>
+    <a class="wav" href="W10-Perfil.dc.html" aria-label="Mi perfil" style="box-shadow: 0 0 0 3px #67E8F9">LM</a>
+  </div></header>
+  <main class="wmain">
+    <div class="whead"><div><div class="crumb">Cliente desde oct 2026</div><h1>Mi perfil</h1></div><div class="row"><a class="gw-btn gw-btn-ghost" href="G1-Acceso.dc.html">Cerrar sesión</a><button class="gw-btn gw-btn-primary" onClick="{{save}}">Guardar cambios</button></div></div>
+    <sc-if value="{{saved}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Datos guardados">El taller ve la versión actualizada.</x-import></sc-if>
+    <div class="wcols">
+      <div class="wl">
+        <div class="card stack">
+          <div class="between" style="flex-wrap: wrap"><h2 style="font-size: 18px">Datos</h2><div class="seg" role="group" aria-label="Tipo de cliente"><sc-for list="{{kinds}}" as="k" hint-placeholder-count="2"><button class="{{k.cls}}" aria-pressed="{{k.on}}" onClick="{{k.pick}}">{{k.label}}</button></sc-for></div></div>
+          <sc-if value="{{company}}" hint-placeholder-val="{{ false }}"><div class="grid2" style="gap: 16px"><x-import component-from-global-scope="Garweb.TextField" label="Nombre de la empresa" placeholder="Ej.: Hotel Willow"></x-import><x-import component-from-global-scope="Garweb.TextField" label="Persona de contacto" value="Laura Méndez"></x-import></div></sc-if>
+          <div class="grid2" style="gap: 16px">
+            <x-import component-from-global-scope="Garweb.TextField" label="Nombre y apellido" value="Laura Méndez"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Teléfono" hint="Solo números de EE. UU. (+1): código de área + 7 dígitos" inputmode="tel" value="+1 (973) 555-0142"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Correo" value="laura.mendez@correo.com"></x-import>
+          </div>
+        </div>
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 18px">Direcciones de entrega</h2><button class="gw-btn gw-btn-secondary gw-btn-sm" onClick="{{toggleAdd}}">+ Agregar dirección</button></div>
+          <div class="grid2" style="gap: 12px">
+            <sc-for list="{{addrs}}" as="a" hint-placeholder-count="2">
+              <button class="{{a.cls}}" onClick="{{a.pick}}"><x-import component-from-global-scope="Garweb.Icon" name="map-pin"></x-import><span style="flex: 1"><b>{{a.label}}</b><span class="muted" style="display: block; font-size: 13px">{{a.line}}</span></span><sc-if value="{{a.on}}" hint-placeholder-val="{{ false }}"><span class="pill" style="background: var(--surface); color: var(--primary)">Principal</span></sc-if></button>
+            </sc-for>
+          </div>
+          <sc-if value="{{adding}}" hint-placeholder-val="{{ false }}">
+            <div class="grid2" style="gap: 16px"><x-import component-from-global-scope="Garweb.TextField" label="Nombre" placeholder="Ej.: Casa de mi madre"></x-import><x-import component-from-global-scope="Garweb.TextField" label="Dirección" placeholder="Empiece a escribir…" hint="Autocompletada con Google Maps"></x-import></div>
+            <button class="gw-btn gw-btn-primary" style="align-self: flex-start" onClick="{{toggleAdd}}">Guardar dirección</button>
+          </sc-if>
+          <p class="muted" style="font-size: 13px">La dirección principal se propone al solicitar con delivery y en el despacho.</p>
+        </div>
+      </div>
+      <aside class="wr">
+        <div class="card stack" style="gap: 4px">
+          <h2 style="font-size: 18px; margin-bottom: 4px">Avisos</h2>
+          <span class="ov">Siempre activos · correo y notificación</span>
+          <sc-for list="{{must}}" as="m" hint-placeholder-count="4"><div class="must"><span>{{m}}</span><small><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 14 }}"></x-import>Obligatorio</small></div></sc-for>
+          <p class="muted" style="font-size: 12.5px; line-height: 18px; margin-bottom: 8px">No se pueden apagar: sin ellos el conductor podría llegar y no encontrar a nadie.</p>
+          <hr class="stitch">
+          <span class="ov" style="margin-top: 6px">Informativos · puede apagarlos</span>
+          <div class="sw"><span>Avance del pedido, cotización y pagos por correo</span><button class="{{mailCls}}" role="switch" aria-checked="{{mail}}" aria-label="Avisos informativos por correo" onClick="{{toggleMail}}"></button></div>
+          <div class="sw"><span>Recordatorios y novedades del taller</span><button class="{{newsCls}}" role="switch" aria-checked="{{news}}" aria-label="Recordatorios y novedades" onClick="{{toggleNews}}"></button></div>
+          <p class="muted" style="font-size: 12.5px">Dentro de GARWEB (la campana) siempre verá todos sus avisos.</p>
+          <a href="W11-Notificaciones.dc.html" style="font-size: 14px; font-weight: 600">Ver mis notificaciones</a>
+        </div>
+        <div class="card stack">
+          <h2 style="font-size: 18px">Seguridad</h2>
+          <button class="gw-btn gw-btn-secondary gw-btn-block">Cambiar contraseña</button>
+          <p class="audit">Último ingreso: hoy 09:12 desde este navegador.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { kind: 0, a: 0, adding: false, mail: true, news: false, saved: false }; }
+  renderVals() {
+    const s = this.state;
+    const A = [['Casa', '48 Park St, Montclair, NJ 07042'], ['Oficina', '200 Bloomfield Ave, Montclair, NJ']];
+    return {
+      kinds: ['Persona', 'Empresa'].map((l, i) => ({ label: l, on: s.kind === i, cls: s.kind === i ? 'on' : '', pick: () => this.setState({ kind: i }) })),
+      company: s.kind === 1,
+      addrs: A.map((x, i) => ({ label: x[0], line: x[1], on: s.a === i, cls: s.a === i ? 'addr on' : 'addr', pick: () => this.setState({ a: i }) })),
+      adding: s.adding, toggleAdd: () => this.setState({ adding: !s.adding }),
+      mail: s.mail, mailCls: s.mail ? 'tg on' : 'tg', toggleMail: () => this.setState({ mail: !s.mail }),
+      news: s.news, newsCls: s.news ? 'tg on' : 'tg', toggleNews: () => this.setState({ news: !s.news }),
+      must: ['Recojo del mueble en su casa', 'Entrega del pedido', 'Retiro en el taller', 'Daño oculto (V2)'],
+      saved: s.saved, save: () => this.setState({ saved: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W7 Recojo, entrega o retiro (web)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line);gap:4px}
+.seg button{min-height:42px;padding:0 18px;border:0;border-radius:8px;background:transparent;color:var(--ink-muted);font:600 14px/1 var(--font-sans);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.hero{border-radius:20px;padding:28px;color:#FFFFFF;background:radial-gradient(60% 120% at 100% 0%,#38BDF866 0%,#38BDF800 60%),linear-gradient(135deg,#0A1630,#102A5C 55%,#1D4ED8);display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-lg)}
+.hero .r{display:flex;justify-content:space-between;font-size:15px}
+.hero .r span{color:#A9BEE3}
+.lk{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.lk div{padding:16px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:6px}
+.lk div.now{border-color:var(--primary);background:var(--primary-soft)}
+.lk i{font-style:normal;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--surface-sunken);font-weight:700;font-size:13px}
+.lk div.now i{background:var(--primary);color:#fff}
+.lk b{font-size:15px}
+.lk small{font-size:13px;line-height:19px;color:var(--ink-muted)}
+.ctxb{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--success-soft);color:var(--success-ink);font-size:14px;line-height:20px}
+@media (max-width:760px){.lk{grid-template-columns:1fr}}
+</style>
+</helmet>
+<div class="wp">
+  <header class="wtop"><div class="wtop-in">
+    <a class="wbrand" href="W1-Inicio.dc.html"><b>Garwood</b><span>Tapicería de Interiores</span></a>
+    <nav class="wnav" aria-label="Portal del cliente"><a class="on" href="W6a-EnCurso.dc.html">Mis pedidos</a><a href="W9-Reclamos.dc.html">Reclamos</a></nav>
+    <a class="gw-btn gw-btn-on-dark gw-btn-sm" href="W2-Solicitud.dc.html">+ Nueva solicitud</a>
+    <a class="wbell" href="W11-Notificaciones.dc.html" aria-label="Notificaciones, 3 nuevas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span>3</span></a>
+    <a class="wav" href="W10-Perfil.dc.html" aria-label="Mi perfil">LM</a>
+  </div></header>
+  <main class="wmain">
+    <div class="whead"><div><div class="crumb"><a href="W6a-EnCurso.dc.html">Mis pedidos</a> › PED-0076</div><h1>{{title}}</h1></div>
+      <div class="seg" role="tablist" aria-label="Cómo recibe su pedido"><sc-for list="{{vars}}" as="v" hint-placeholder-count="3"><button class="{{v.cls}}" role="tab" aria-selected="{{v.on}}" onClick="{{v.pick}}">{{v.label}}</button></sc-for></div>
+    </div>
+
+    <sc-if value="{{locked}}" hint-placeholder-val="{{ false }}">
+      <div class="card stack" style="gap: 16px">
+        <div class="between" style="flex-wrap: wrap"><div><span class="ov">PED-0076 · Sofá de 3 cuerpos</span><h2 style="font-size: 22px">La fecha de {{lockWhat}} aún no está disponible</h2></div><x-import component-from-global-scope="Garweb.StatusChip" status="En producción" size="lg"></x-import></div>
+        <p style="font-size: 15px; line-height: 23px; max-width: 720px">Usted no elige la fecha mientras su pedido está en el taller. Primero lo terminamos; luego el taller lo incluye en una salida y le enviamos el día y la franja horaria para que los confirme o los cambie.</p>
+        <div class="lk">
+          <div class="now"><i>1</i><b>Terminamos su pedido</b><small>Ahora: en producción · estimado vie 16 oct.</small></div>
+          <div><i>2</i><b>{{lockStep2}}</b><small>{{lockStep2d}}</small></div>
+          <div><i>3</i><b>Le avisamos y usted decide</b><small>Aviso en Notificaciones y por correo. Confirma o reprograma hasta 24 h antes; el día anterior le llega un recordatorio.</small></div>
+        </div>
+        <a class="gw-btn gw-btn-secondary" style="align-self: flex-start" href="W6a-EnCurso.dc.html">Volver a mi pedido</a>
+      </div>
+    </sc-if>
+    <sc-if value="{{home}}" hint-placeholder-val="{{ true }}">
+      <div class="ctxb" style="margin-bottom: 16px"><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 18 }}"></x-import><span>{{ctxTxt}}</span></div>
+      <div class="wcols">
+        <div class="wl">
+          <div class="hero">
+            <div style="display: flex; align-items: center; gap: 10px"><span style="width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: #FFFFFF1F; color: #67E8F9"><x-import component-from-global-scope="Garweb.Icon" name="truck" size="{{ 26 }}"></x-import></span><span style="font-size: 12px; font-weight: 700; letter-spacing: .08em; color: #A9BEE3">{{kicker}}</span></div>
+            <p style="font-family: var(--font-display); font-size: 32px; line-height: 40px; font-weight: 700">{{heroTxt}}</p>
+            <div style="height: 0; border-top: 1.5px dashed #67E8F980"></div>
+            <div class="r"><span>Dirección</span><b>48 Park St, Montclair</b></div>
+            <div class="r"><span>{{payLabel}}</span><b class="num">{{payVal}}</b></div>
+            <div class="r"><span>Piezas</span><b>9 (sofá + cojines)</b></div>
+          </div>
+          <div class="card stack" style="gap: 8px"><b>{{tipTitle}}</b><p class="muted" style="font-size: 14px; line-height: 21px">{{tipTxt}}</p></div>
+        </div>
+        <aside class="wr">
+          <sc-if value="{{ask}}" hint-placeholder-val="{{ true }}">
+            <div class="card stack">
+              <p style="font-size: 14px; line-height: 21px">{{askTxt}}</p>
+              <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{confirm}}">Confirmar</button>
+              <button class="gw-btn gw-btn-secondary gw-btn-block" onClick="{{reprogram}}">No estaré, reprogramar</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{reSent}}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="Garweb.Toast" tone="info" title="Nueva fecha enviada">{{reSentTxt}}</x-import>
+            <div class="card stack"><div class="between"><b>Estado de la parada</b><x-import component-from-global-scope="Garweb.StatusChip" status="Reprogramada" tone="warning"></x-import></div><p class="muted" style="font-size: 13px">El taller lo pasa a esa salida y le llega la confirmación. El recordatorio del día anterior se envía igual.</p></div>
+          </sc-if>
+          <sc-if value="{{confirmed}}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="Garweb.Toast" tone="success" title="{{okTitle}}">{{okTxt}}</x-import>
+            <div class="card stack"><div class="between"><b>Estado de la parada</b><x-import component-from-global-scope="Garweb.StatusChip" status="Confirmada"></x-import></div><p class="muted" style="font-size: 13px">{{okNote}} <a href="W5-Pagos.dc.html">Pagos del pedido</a>.</p></div>
+          </sc-if>
+          <sc-if value="{{reprog}}" hint-placeholder-val="{{ false }}">
+            <div class="card stack">
+              <h2 style="font-size: 17px">¿Cuándo le queda mejor?</h2>
+              <span class="muted" style="font-size: 13px; line-height: 19px">Solo puede elegir entre las próximas salidas que el taller ya programó por su zona.</span>
+              <sc-for list="{{alts}}" as="a" hint-placeholder-count="3"><button class="{{a.cls}}" onClick="{{a.pick}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import></span><span><b>{{a.l}}</b><small>{{a.d}}</small></span></button></sc-for>
+              <sc-if value="{{isDel}}" hint-placeholder-val="{{ true }}"><button class="opt" onClick="{{toPickup}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="map-pin"></x-import></span><span><b>Prefiero recogerlo yo</b><small>Elija un turno libre en el taller</small></span></button></sc-if>
+              <button class="gw-btn gw-btn-primary gw-btn-block" onClick="{{sendRe}}">Enviar nueva fecha</button>
+              <button class="gw-btn gw-btn-ghost gw-btn-block" onClick="{{reset}}">Volver</button>
+            </div>
+          </sc-if>
+        </aside>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{pick}}" hint-placeholder-val="{{ false }}">
+      <div class="wcols">
+        <div class="wl">
+          <div class="card stack">
+            <div class="between"><h2 style="font-size: 20px">Semana del 19 al 23 oct</h2><x-import component-from-global-scope="Garweb.StatusChip" status="Listo para retiro"></x-import></div>
+            <x-import component-from-global-scope="Garweb.SlotPicker" days="{{days}}" selected="3-1" note="Solo ve turnos libres. Cada turno atiende a un cliente."></x-import>
+          </div>
+        </div>
+        <aside class="wr">
+          <div class="card stack">
+            <span class="ov">Retiro en el taller</span>
+            <b style="font-family: var(--font-display); font-size: 22px">jue 22 oct · 10:30–11:00</b>
+            <div class="kv"><span>Dónde</span><b>[dirección del local]</b></div>
+            <div class="kv"><span>Saldo a pagar al retirar</span><b>$684</b></div>
+            <p class="muted" style="font-size: 13px; line-height: 19px">Revisaremos las 9 piezas con usted antes de entregarlas.</p>
+            <sc-if value="{{pickOpen}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{bookPick}}">Agendar retiro</button></sc-if>
+            <sc-if value="{{pickDone}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Retiro agendado">Le recordaremos el día anterior. Puede reprogramarlo hasta 24 h antes.</x-import></sc-if>
+          </div>
+        </aside>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variante":{"editor":"enum","options":["recojo","entrega","retiro"],"default":"entrega"},"estado":{"editor":"enum","options":["fecha asignada","en producción"],"default":"fecha asignada"},"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { v: { recojo: 0, entrega: 1, retiro: 2 }[p.variante] ?? 1, mode: 'ask', pickDone: false, alt: 0 }; }
+  renderVals() {
+    const s = this.state, f = (t, free) => ({ time: t, free });
+    const T = ['10:00', '10:30', '11:00', '15:00', '15:30', '16:00'];
+    const lock = (this.props.estado || 'fecha asignada') === 'en producción' && s.v > 0;
+    const ALT = s.v === 0 ? [['vie 9 oct · 14:00–16:00', 'Salida de recojo · Montclair'], ['lun 12 oct · 9:00–11:00', 'Salida de recojo · Montclair']] : [['mar 27 oct · 10:00–12:00', 'Próxima salida por Montclair'], ['jue 29 oct · 14:00–16:00', 'Salida por Montclair y Bloomfield']];
+    const F = [[0,1,1,1,0,1],[1,0,1,0,0,1],[0,0,1,1,1,0],[1,1,0,0,1,1],[1,1,1,1,0,1]];
+    return {
+      title: ['Aviso de recojo', 'Aviso de entrega', 'Agendar retiro'][s.v],
+      vars: ['Recojo en su casa', 'Entrega en su casa', 'Retiro en el taller'].map((l, i) => ({ label: l, on: s.v === i, cls: s.v === i ? 'on' : '', pick: () => this.setState({ v: i, mode: 'ask' }) })),
+      locked: lock, home: !lock && s.v < 2, isDel: s.v === 1, pick: !lock && s.v === 2,
+      lockWhat: s.v === 2 ? 'retiro' : 'entrega',
+      lockStep2: s.v === 2 ? 'Se abren los turnos de retiro' : 'El taller lo asigna a una salida',
+      lockStep2d: s.v === 2 ? 'Cuando el pedido pase a “Listo para retiro”, verá aquí los turnos libres del taller.' : 'Agrupa los pedidos terminados por zona y fija el día y la franja horaria de su entrega.',
+      ctxTxt: s.v === 0 ? 'El taller asignó el recojo de su sofá a la salida del jueves 8 oct (parada 2 de 5).' : 'Su pedido está terminado y el taller lo asignó a la salida del jueves 22 oct (parada 1 de 4).',
+      alts: ALT.map((a, i) => ({ l: a[0], d: a[1], cls: s.alt === i ? 'opt on' : 'opt', pick: () => this.setState({ alt: i }) })),
+      reSent: s.mode === 'sent', reSentTxt: 'Pidió pasar a ' + ALT[s.alt][0] + '. Le confirmaremos la hora exacta.',
+      sendRe: () => this.setState({ mode: 'sent' }),
+      kicker: s.v === 0 ? 'RECOJO · PARADA 2 DE 5' : 'SALIDA GRUPAL · PARADA 1 DE 4',
+      heroTxt: s.v === 0 ? 'Pasaremos a recoger su sofá el jueves 8 oct entre 14:00 y 16:00.' : 'Su pedido llegará el jueves 22 entre 10:00 y 12:00.',
+      payLabel: s.v === 0 ? 'Pago en el recojo' : 'Saldo a pagar',
+      payVal: s.v === 0 ? 'Nada (adelanto ya confirmado)' : '$684',
+      tipTitle: s.v === 0 ? 'Antes del recojo' : 'Antes de la entrega',
+      tipTxt: s.v === 0 ? 'Retire objetos y fundas, y deje los 9 cojines juntos. El conductor contará las piezas con usted y le dejará la constancia.' : 'Despeje el paso hasta la sala. El conductor revisará las 9 piezas con usted y recibirá el pago del saldo si aún no lo informó.',
+      askTxt: s.v === 0 ? 'Puede confirmar o pedir otra fecha hasta el miércoles 7, 14:00 (24 h antes). Si no responde, mantenemos esta fecha y le recordamos el día anterior.' : 'Puede confirmar o pedir otra fecha hasta el miércoles 21, 10:00 (24 h antes). Si no responde, mantenemos esta fecha y le recordamos el día anterior.',
+      okTitle: s.v === 0 ? 'Recojo confirmado' : 'Entrega confirmada',
+      okTxt: s.v === 0 ? 'Le esperamos el jueves 8 entre 14:00 y 16:00.' : 'Le esperamos el jueves 22 entre 10:00 y 12:00.',
+      okNote: s.v === 0 ? 'Su sofá entra a producción cuando llegue al taller. Vea su cuenta en' : 'Tenga a mano el pago del saldo, o infórmelo antes en',
+      nextTxt: s.v === 0 ? 'Próxima salida de recojo: vie 9 oct' : 'Próxima salida: mar 27 oct',
+      ask: s.mode === 'ask', confirmed: s.mode === 'ok', reprog: s.mode === 're',
+      confirm: () => this.setState({ mode: 'ok' }), reprogram: () => this.setState({ mode: 're' }), reset: () => this.setState({ mode: 'ask' }),
+      toPickup: () => this.setState({ v: 2 }),
+      pickOpen: !s.pickDone, pickDone: s.pickDone, bookPick: () => this.setState({ pickDone: true }),
+      days: ['lun', 'mar', 'mié', 'jue', 'vie'].map((w, i) => ({ weekday: w, date: String(19 + i), slots: T.map((t, j) => f(t, !!F[i][j])) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W9 Reclamos (web)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:40px;padding:0 14px;border-radius:9999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.chips button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+</style>
+</helmet>
+<div class="wp">
+  <header class="wtop"><div class="wtop-in">
+    <a class="wbrand" href="W1-Inicio.dc.html"><b>Garwood</b><span>Tapicería de Interiores</span></a>
+    <nav class="wnav" aria-label="Portal del cliente"><a href="W6a-EnCurso.dc.html">Mis pedidos</a><a class="on" href="W9-Reclamos.dc.html">Reclamos</a></nav>
+    <a class="gw-btn gw-btn-on-dark gw-btn-sm" href="W2-Solicitud.dc.html">+ Nueva solicitud</a>
+    <a class="wbell" href="W11-Notificaciones.dc.html" aria-label="Notificaciones, 3 nuevas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span>3</span></a>
+    <a class="wav" href="W10-Perfil.dc.html" aria-label="Mi perfil">LM</a>
+  </div></header>
+  <main class="wmain">
+    <div class="whead"><div><div class="crumb">lun 26 oct</div><h1>Reclamos</h1></div></div>
+    <div class="wcols">
+      <div class="wl">
+        <div class="card stack">
+          <div class="between" style="flex-wrap: wrap"><div><span class="ov">REC-0012 · PED-0076</span><h2 style="font-size: 20px">Costura abierta en el cojín central</h2><span class="muted" style="font-size: 13px">Reportado el sáb 24 oct · respuesta del taller el lun 26 oct</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="{{tone}}" size="lg">{{result}}</x-import></div>
+          <div style="padding-top: 8px"><x-import component-from-global-scope="Garweb.OrderTimeline" steps="{{steps}}" current="{{cur}}" dates="{{dates}}"></x-import></div>
+          <hr class="stitch">
+          <sc-if value="{{nope}}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 14px 16px; border-radius: 12px; background: var(--danger-soft)"><b style="color: var(--danger-ink)">Motivo</b><p style="font-size: 15px; line-height: 23px; margin-top: 4px">La costura está en buen estado; la marca es por roce de uso después de la entrega y no la cubre la garantía del trabajo.</p><span class="muted" style="font-size: 13px">Revisado por el Administrador · lun 26 oct · con las fotos que envió</span></div>
+            <p class="muted" style="font-size: 14px">Si no está de acuerdo, puede responder a este reclamo o llamar al taller.</p>
+            <button class="gw-btn gw-btn-secondary" style="align-self: flex-start">Responder al taller</button>
+          </sc-if>
+          <sc-if value="{{ok}}" hint-placeholder-val="{{ true }}">
+          <div class="grid2" style="gap: 10px 32px">
+            <div class="kv"><span>Qué haremos</span><b>Recoser el cojín</b></div>
+            <div class="kv"><span>Costo para usted</span><b style="color: var(--success-ink)">Sin costo</b></div>
+            <div class="kv"><span>Recojo del cojín</span><b>mar 27 oct · 10:00–12:00</b></div>
+            <div class="kv"><span>Devolución</span><b>jue 29 oct</b></div>
+          </div>
+          <sc-if value="{{notConf}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-primary" style="align-self: flex-start" onClick="{{conf}}">Confirmar el recojo</button></sc-if>
+          <sc-if value="{{conf2}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Recojo confirmado">El conductor pasará el mar 27 entre 10:00 y 12:00.</x-import></sc-if>
+          </sc-if>
+        </div>
+        <div class="tbl-box">
+          <table class="t">
+            <thead><tr><th>Reclamo</th><th>Pedido</th><th>Motivo</th><th>Reportado</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr class="sel"><td><b>REC-0012</b></td><td>PED-0076</td><td>Costura del cojín central</td><td>24 oct</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="{{tone}}">{{result}}</x-import></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <aside class="wr">
+        <div class="card stack">
+          <h2 style="font-size: 18px">Reportar un problema nuevo</h2>
+          <label style="display: flex; flex-direction: column; gap: 6px"><span class="gw-field-label">Pedido</span><select class="gw-input"><option>PED-0076 · Sofá de 3 cuerpos · entregado 22 oct</option></select></label>
+          <div class="row" style="font-size: 13px; color: var(--ink-muted)"><x-import component-from-global-scope="Garweb.Icon" name="clock" size="{{ 16 }}"></x-import>Puede reportar hasta el jue 29 oct.</div>
+          <div class="chips"><sc-for list="{{kinds}}" as="k" hint-placeholder-count="4"><button class="{{k.cls}}" aria-pressed="{{k.on}}" onClick="{{k.pick}}">{{k.label}}</button></sc-for></div>
+          <x-import component-from-global-scope="Garweb.TextField" label="Cuéntenos" multiline="{{ true }}" required="{{ true }}" placeholder="¿Qué pasó y dónde?"></x-import>
+          <x-import component-from-global-scope="Garweb.UploadZone" title="Arrastre fotos del problema" hint="Ayudan a resolverlo más rápido" files="{{files}}"></x-import>
+          <button class="gw-btn gw-btn-primary gw-btn-block">Enviar reclamo</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"resultado":{"editor":"enum","options":["reposición aprobada","no procede"],"default":"reposición aprobada"},"$preview":{"width":1280,"height":1050}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { k: 0, c: false }; }
+  renderVals() {
+    const labels = ['Costura o tela', 'Falta una pieza', 'Daño en traslado', 'Otro'];
+    const no = this.props.resultado === 'no procede';
+    return {
+      nope: no, ok: !no, tone: no ? 'danger' : 'success', result: no ? 'No procede' : 'Reposición aprobada', cur: 2,
+      steps: no ? ['Recibido', 'En revisión', 'No procede'] : ['Recibido', 'En revisión', 'Reposición aprobada', 'Recojo del cojín', 'Devuelto reparado'],
+      dates: no ? ['sáb 24 oct', 'lun 26 oct', 'lun 26 oct'] : ['sáb 24 oct', 'lun 26 oct', 'lun 26 oct', 'mar 27 oct', 'jue 29 oct'],
+      kinds: labels.map((l, i) => ({ label: l, on: this.state.k === i, cls: this.state.k === i ? 'on' : '', pick: () => this.setState({ k: i }) })),
+      files: [],
+      notConf: !this.state.c, conf2: this.state.c, conf: () => this.setState({ c: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

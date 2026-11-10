@@ -14,15 +14,15 @@ const NOMBRE_MODULO: Record<Modulo, string> = {
   panel: 'Panel', com: 'Comercial', alm: 'Almacén e Inventario', his: 'Historial de Clientes', des: 'Despacho', seg: 'Seguridad y Administración',
 };
 
-// Los contadores son de ejemplo hasta que existan las bandejas en la API.
+// `cnt` queda para cuando la API dé los pendientes reales (p. ej. solicitudes nuevas sin ver); no se ponen números fijos.
 const MENU: Seccion[] = [
   { modulo: 'panel', opciones: [{ a: '/admin', texto: 'Panel principal', icono: 'dashboard' }, { a: '/admin/estadisticas', texto: 'Estadísticas', icono: 'trending-up' }] },
   {
     modulo: 'com', titulo: 'Comercial', opciones: [
       { a: '/admin/agenda', texto: 'Agenda de citas', icono: 'calendar' },
-      { a: '/admin/solicitudes', texto: 'Solicitudes', icono: 'inbox', cnt: 6 },
+      { a: '/admin/solicitudes', texto: 'Solicitudes', icono: 'inbox' },
       { a: '/admin/cotizaciones', texto: 'Cotizaciones', icono: 'quote' },
-      { a: '/admin/pagos', texto: 'Pagos', icono: 'payment', cnt: 3 },
+      { a: '/admin/pagos', texto: 'Pagos', icono: 'payment' },
       { a: '/admin/pedidos', texto: 'Pedidos', icono: 'kanban' },
       { a: '/admin/plantillas', texto: 'Plantillas', icono: 'clipboard' },
     ],
@@ -43,7 +43,7 @@ const MENU: Seccion[] = [
     modulo: 'des', titulo: 'Despacho', opciones: [
       { a: '/admin/salidas', texto: 'Salidas', icono: 'truck' },
       { a: '/admin/taller', texto: 'Taller: recepciones', icono: 'sofa' },
-      { a: '/admin/reclamos', texto: 'Reclamos', icono: 'alert', cnt: 1 },
+      { a: '/admin/reclamos', texto: 'Reclamos', icono: 'alert' },
     ],
   },
   {

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A17 Clientes y expediente</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.cl{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.cl.on{border-color:var(--primary);background:var(--primary-soft)}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;font-weight:700;font-size:14px;color:#FFFFFF;background:linear-gradient(135deg,var(--blue-700),var(--sky-400))}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line);gap:4px}
+.seg button{min-height:38px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:var(--ink-muted);font:600 14px/1 var(--font-sans);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav on" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Historial › Clientes · lun 26 oct</div><h1>Clientes</h1></div>
+      <div class="row" style="flex-wrap: wrap"><div class="search"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 18 }}"></x-import>Nombre, teléfono o correo</div><button class="gw-btn gw-btn-primary" onClick="{{newClient}}">+ Nuevo cliente</button></div>
+    </div>
+    <div class="split">
+      <div class="aside" style="max-width: 360px">
+        <sc-for list="{{clients}}" as="c" hint-placeholder-count="5">
+          <button class="{{c.cls}}" onClick="{{c.pick}}"><span class="av">{{c.ini}}</span><span style="flex: 1; display: flex; flex-direction: column"><b>{{c.name}}</b><span class="muted" style="font-size: 12.5px">{{c.sub}}</span></span><x-import component-from-global-scope="Garweb.StatusChip" tone="{{c.tone}}">{{c.state}}</x-import></button>
+        </sc-for>
+      </div>
+      <div class="wide">
+        <sc-if value="{{creating}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack" style="border: 2px solid var(--primary)">
+            <div class="between"><h2 style="font-size: 18px">Registrar cliente (llamada o visita)</h2><div class="seg"><button class="on">Persona</button><button>Empresa</button></div></div>
+            <div class="grid2" style="gap: 14px">
+              <x-import component-from-global-scope="Garweb.TextField" label="Nombre completo" required="{{ true }}" placeholder="Ej.: Mark Ellison"></x-import>
+              <x-import component-from-global-scope="Garweb.TextField" label="Teléfono" hint="Solo números de EE. UU. (+1): código de área + 7 dígitos" inputmode="tel" required="{{ true }}" placeholder="+1 (973) 555-0100"></x-import>
+              <x-import component-from-global-scope="Garweb.TextField" label="Correo" optional="{{ true }}" hint="Para enviarle la cotización y avisos"></x-import>
+              <x-import component-from-global-scope="Garweb.TextField" label="Dirección" optional="{{ true }}" hint="Autocompletada con Google Maps"></x-import>
+            </div>
+            <div class="row"><button class="gw-btn gw-btn-primary" onClick="{{saveClient}}">Guardar cliente</button><button class="gw-btn gw-btn-ghost" onClick="{{saveClient}}">Cancelar</button></div>
+          </div>
+        </sc-if>
+        <div class="card stack">
+          <div class="between" style="flex-wrap: wrap">
+            <div class="row"><span class="av" style="width: 56px; height: 56px; font-size: 18px">LM</span><div><span class="ov">Expediente · persona</span><h2 style="font-size: 22px">Laura Méndez</h2><span class="muted" style="font-size: 13px">Cliente desde 2 oct 2026 · registrada por la web</span></div></div>
+            <div class="row"><button class="gw-btn gw-btn-secondary gw-btn-sm">Editar datos</button><button class="gw-btn gw-btn-danger gw-btn-sm">Desactivar</button></div>
+          </div>
+          <div class="grid3" style="gap: 10px 24px">
+            <div class="kv"><span>Teléfono</span><b>+1 (973) 555-0142</b></div>
+            <div class="kv"><span>Correo</span><b>laura.mendez@correo.com</b></div>
+            <div class="kv"><span>Dirección</span><b>48 Park St, Montclair</b></div>
+          </div>
+          <x-import component-from-global-scope="Garweb.Alert" tone="info" title="Ya tiene un pedido cerrado" compact="{{ true }}">En su próximo pedido el adelanto sugerido será 0 %.</x-import>
+        </div>
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 17px">Estado de cuenta</h2><span class="pill" style="background: var(--success-soft); color: var(--success-ink)">Sin saldo pendiente</span></div>
+          <div class="grid3" style="gap: 10px">
+            <div class="stack" style="gap: 2px"><span class="ov">Facturado</span><b class="num" style="font-family: var(--font-display); font-size: 22px">$1,140</b></div>
+            <div class="stack" style="gap: 2px"><span class="ov">Pagado</span><b class="num" style="font-family: var(--font-display); font-size: 22px; color: var(--success-ink)">$1,140</b></div>
+            <div class="stack" style="gap: 2px"><span class="ov">Saldo</span><b class="num" style="font-family: var(--font-display); font-size: 22px">$0</b></div>
+          </div>
+          <div class="tbl-box" style="box-shadow: none">
+            <table class="t" style="min-width: 560px">
+              <thead><tr><th>Fecha</th><th>Pedido</th><th>Movimiento</th><th class="r">Monto</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr><td class="num">7 oct</td><td><a href="A6b-FichaPedido.dc.html">PED-0076</a></td><td>Adelanto · Zelle</td><td class="r">$456</td><td><x-import component-from-global-scope="Garweb.StatusChip" status="Confirmado"></x-import></td></tr>
+                <tr><td class="num">22 oct</td><td><a href="A6b-FichaPedido.dc.html">PED-0076</a></td><td>Saldo · tarjeta al entregar</td><td class="r">$684</td><td><x-import component-from-global-scope="Garweb.StatusChip" status="Confirmado"></x-import></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 17px">Pedidos y reclamos</h2><a href="A12-Historial.dc.html" style="font-size: 13px; font-weight: 600">Ver en historial</a></div>
+          <div class="kv"><span>PED-0076 · Sofá de 3 cuerpos · Lino Navy 204</span><x-import component-from-global-scope="Garweb.StatusChip" status="Archivado"></x-import></div>
+          <div class="kv"><span>REC-0012 · costura del cojín central</span><x-import component-from-global-scope="Garweb.StatusChip" tone="progress">Reposición en curso</x-import></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { s: 0, creating: false }; }
+  renderVals() {
+    const C = [['LM', 'Laura Méndez', 'Persona · 1 pedido', 'Activo', 'success'], ['HW', 'Hotel Willow', 'Empresa · 4 pedidos', 'Activo', 'success'], ['SC', 'Sara Cohen', 'Persona · 2 pedidos', 'Activo', 'success'], ['JO', 'J. Ortega', 'Persona · cheque $520 por confirmar', 'Por confirmar', 'warning'], ['TB', 'Tom Becker', 'Persona · sin pedidos', 'Inactivo', 'neutral']];
+    return {
+      tema: this.props.tema ?? 'light',
+      clients: C.map((c, i) => ({ ini: c[0], name: c[1], sub: c[2], state: c[3], tone: c[4], cls: this.state.s === i ? 'cl on' : 'cl', pick: () => this.setState({ s: i }) })),
+      creating: this.state.creating,
+      newClient: () => this.setState({ creating: true }),
+      saveClient: () => this.setState({ creating: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>G1 Acceso a GARWEB</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+.kinds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:420px){.kinds{grid-template-columns:1fr}}
+.kind{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:14px 14px 12px;border-radius:16px;border:1.5px solid var(--line-strong);background:var(--surface);text-align:left;cursor:pointer;font-family:var(--font-sans);color:var(--ink);transition:border-color 160ms var(--ease-out,ease),background 160ms var(--ease-out,ease),box-shadow 160ms var(--ease-out,ease),transform 120ms var(--ease-out,ease)}
+.kind .kt{display:flex;align-items:flex-start;justify-content:space-between;width:100%;margin-bottom:8px}
+.kind small{margin-bottom:10px}
+.kind .ki{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--surface-sunken);color:var(--ink-muted);transition:background 160ms,color 160ms}
+.kind .rd{width:22px;height:22px;border-radius:50%;border:2px solid var(--line-strong);display:grid;place-items:center;color:transparent;background:var(--surface);transition:all 160ms}
+.kind b{font:700 16px/1.2 var(--font-display)}
+.kind small{font-size:12.5px;line-height:1.35;color:var(--ink-muted)}
+.kind em{font-style:normal;margin-top:auto;padding-top:8px;border-top:1px dashed var(--line);width:100%;font-size:11.5px;font-weight:600;color:var(--ink-muted)}
+.kind.on{border-color:var(--primary);background:linear-gradient(180deg,color-mix(in srgb,var(--primary) 9%,var(--surface)),var(--surface));box-shadow:0 0 0 3px var(--primary-soft),var(--shadow-sm)}
+.kind.on .ki{background:var(--primary);color:#fff}
+.kind.on .rd{border-color:var(--primary);background:var(--primary);color:#fff}
+.kind.on em{color:var(--primary);border-top-color:color-mix(in srgb,var(--primary) 30%,transparent)}
+.kind:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+.kind:active{transform:scale(.98)}
+@media (hover:hover){.kind:not(.on):hover{border-color:color-mix(in srgb,var(--primary) 55%,var(--line-strong));box-shadow:var(--shadow-sm)}.kind:not(.on):hover .ki{color:var(--primary)}}
+.fs{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);padding-top:6px;border-top:1px solid var(--line)}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:12px}
+.okline{display:flex;align-items:center;gap:6px;margin-top:-8px;font-size:12.5px;font-weight:600;color:var(--success-ink)}
+.pw{position:relative}
+.pw .eye{position:absolute;right:8px;bottom:8px;height:32px;padding:0 10px;border:0;border-radius:8px;background:var(--surface-sunken);color:var(--primary);font:600 12.5px/1 var(--font-sans);cursor:pointer}
+.meter{display:flex;align-items:center;gap:6px;margin-top:-6px}
+.meter i{flex:1;height:5px;border-radius:9999px;background:var(--line)}
+.meter i.on{background:var(--success-500)}
+.meter span{font-size:12px;font-weight:600;color:var(--success-ink);margin-left:4px}
+.rules{list-style:none;margin:-6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--ink-muted)}
+.rules li.ok{color:var(--success-ink);font-weight:600}
+.ck{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.4}
+.ck input{width:18px;height:18px;margin-top:1px;flex:none}
+.lnk{border:0;background:none;padding:0;color:var(--primary);font:600 inherit;cursor:pointer;text-decoration:underline}
+.ctx{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:12px 14px;border-radius:12px;background:var(--primary-soft);color:var(--primary);font-size:13.5px;line-height:1.45}
+.ctx b{color:var(--ink)}
+.ctx span{color:var(--ink)}
+body{margin:0}
+.seg{display:flex;padding:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line);gap:4px}
+.seg button{flex:1;min-height:40px;border:0;border-radius:8px;background:transparent;color:var(--ink-muted);font:600 14px/1 var(--font-sans);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--bg); color: var(--ink)">
+  <section style="flex: 1 1 480px; min-height: 380px; position: relative; overflow: hidden; color: #FFFFFF; padding: 48px; display: flex; flex-direction: column; justify-content: space-between; gap: 32px; background: radial-gradient(60% 70% at 90% 10%, #38BDF880 0%, #38BDF800 70%), linear-gradient(140deg, #0A1630 0%, #102A5C 50%, #1D4ED8 100%)">
+    <div style="display: flex; flex-direction: column"><b style="font-family: var(--font-display); font-weight: 800; font-size: 30px; letter-spacing: -.02em">GARWEB</b><span style="color: #A9BEE3; font-size: 13px">Tapicería de Interiores Garwood LLC</span></div>
+    <div style="display: flex; flex-direction: column; gap: 14px; max-width: 440px">
+      <h1 style="font-size: 42px; line-height: 46px; font-weight: 800; letter-spacing: -.03em">Una sola entrada para todos.</h1>
+      <p style="color: #C3D2EE; font-size: 16px; line-height: 24px">Clientes y personal del taller ingresan con el mismo formulario, con su correo o usuario y su contraseña.</p>
+    </div>
+    <div style="height: 0; border-top: 1.5px dashed #67E8F980"></div>
+  </section>
+  <section style="flex: 1 1 460px; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 40px 20px">
+    <div class="card" style="width: 100%; min-width: 0; max-width: 440px; display: flex; flex-direction: column; gap: 16px; padding: 28px; box-shadow: var(--shadow-lg)">
+      <sc-if value="{{notSent}}" hint-placeholder-val="{{ true }}">
+        <div class="ctx"><x-import component-from-global-scope="Garweb.Icon" name="quote" size="{{ 20 }}"></x-import><span><b>¿Es cliente nuevo?</b> Cree su cuenta gratis para pedir cotizaciones y seguir sus pedidos.</span></div>
+        <div class="seg" role="tablist"><sc-for list="{{tabs}}" as="t" hint-placeholder-count="2"><button class="{{t.cls}}" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for></div>
+      </sc-if>
+
+      <sc-if value="{{login}}" hint-placeholder-val="{{ true }}">
+        <h2 style="font-size: 24px">Iniciar sesión</h2>
+        <x-import component-from-global-scope="Garweb.TextField" label="Correo o usuario" value="laura.mendez@correo.com"></x-import>
+        <x-import component-from-global-scope="Garweb.TextField" label="Contraseña" value="••••••••••"></x-import>
+        <div class="between" style="font-size: 14px"><label class="row" style="gap: 8px"><input type="checkbox" checked="" style="width: 18px; height: 18px"> Recordarme</label><button class="gw-btn gw-btn-ghost gw-btn-sm" onClick="{{forgot}}">¿Olvidó su contraseña?</button></div>
+        <a class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" href="W6a-EnCurso.dc.html">Ingresar</a>
+        <x-import component-from-global-scope="Garweb.Alert" tone="danger" title="Si los datos no coinciden" compact="{{ true }}">Correo o contraseña incorrectos. Tras 5 intentos la cuenta se bloquea 15 minutos.</x-import>
+      </sc-if>
+
+      <sc-if value="{{signup}}" hint-placeholder-val="{{ false }}">
+        <div><h2 style="font-size: 24px">Crear cuenta de cliente</h2><p class="muted" style="font-size: 13px; margin-top: 4px">Toma menos de un minuto. Las cuentas del personal las crea el Administrador.</p></div>
+        <div class="kinds" role="radiogroup" aria-label="Tipo de cliente">
+          <button class="{{kP}}" role="radio" aria-checked="{{onP}}" onClick="{{pickP}}">
+            <span class="kt"><span class="ki"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span><span class="rd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg></span></span>
+            <b>Persona</b><small>Muebles de su casa</small>
+            <em>Nombre, correo y teléfono</em>
+          </button>
+          <button class="{{kE}}" role="radio" aria-checked="{{onE}}" onClick="{{pickE}}">
+            <span class="kt"><span class="ki"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path></svg></span><span class="rd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg></span></span>
+            <b>Empresa</b><small>Hoteles, oficinas, decoradores</small>
+            <em>Pide el EIN de la empresa</em>
+          </button>
+        </div>
+
+        <sc-if value="{{company}}" hint-placeholder-val="{{ false }}">
+          <span class="fs">Datos de la empresa</span>
+          <x-import component-from-global-scope="Garweb.TextField" label="Nombre legal de la empresa" required="{{ true }}" value="Willow Hospitality LLC" hint="Como figura en sus documentos fiscales"></x-import>
+          <x-import component-from-global-scope="Garweb.TextField" label="EIN · Número de identificación fiscal" required="{{ true }}" value="12-3456789" placeholder="12-3456789" hint="9 dígitos que emite el IRS (Employer Identification Number). Va en sus comprobantes."></x-import>
+          <div class="okline"><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 15 }}"></x-import>Formato válido · no hay otra cuenta con este EIN</div>
+          <span class="fs">Persona de contacto</span>
+        </sc-if>
+        <sc-if value="{{person}}" hint-placeholder-val="{{ true }}"><span class="fs">Sus datos</span></sc-if>
+
+        <sc-if value="{{person}}" hint-placeholder-val="{{ true }}">
+          <div class="g2">
+            <x-import component-from-global-scope="Garweb.TextField" label="Nombre" required="{{ true }}" value="Laura"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Apellido" required="{{ true }}" value="Méndez"></x-import>
+          </div>
+          <x-import component-from-global-scope="Garweb.TextField" label="Correo" required="{{ true }}" value="laura.mendez@correo.com"></x-import>
+          <x-import component-from-global-scope="Garweb.TextField" label="Teléfono" hint="Solo números de EE. UU. (+1): código de área + 7 dígitos" inputmode="tel" required="{{ true }}" value="+1 (973) 555-0142"></x-import>
+        </sc-if>
+        <sc-if value="{{company}}" hint-placeholder-val="{{ false }}">
+          <div class="g2">
+            <x-import component-from-global-scope="Garweb.TextField" label="Nombre" required="{{ true }}" value="Rachel"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Apellido" required="{{ true }}" value="Stone"></x-import>
+          </div>
+          <x-import component-from-global-scope="Garweb.TextField" label="Cargo" optional="{{ true }}" value="Jefa de compras"></x-import>
+          <x-import component-from-global-scope="Garweb.TextField" label="Correo de trabajo" required="{{ true }}" value="compras@hotelwillow.com"></x-import>
+          <x-import component-from-global-scope="Garweb.TextField" label="Teléfono" hint="Solo números de EE. UU. (+1): código de área + 7 dígitos" inputmode="tel" required="{{ true }}" value="+1 (973) 555-0190"></x-import>
+        </sc-if>
+
+        <span class="fs">Seguridad</span>
+        <div class="pw">
+          <sc-if value="{{pwHidden}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Garweb.TextField" label="Contraseña" required="{{ true }}" value="••••••••"></x-import></sc-if>
+          <sc-if value="{{pwShown}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.TextField" label="Contraseña" required="{{ true }}" value="Sofa2026"></x-import></sc-if>
+          <button class="eye" onClick="{{togglePw}}" aria-label="{{pwAria}}">{{pwBtn}}</button>
+        </div>
+        <div class="meter" aria-label="Seguridad de la contraseña: buena"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><span>Buena</span></div>
+        <ul class="rules"><li class="ok">✓ 8 caracteres o más</li><li class="ok">✓ Al menos un número</li><li>Una mayúscula (recomendado)</li></ul>
+
+        <label class="ck"><input type="checkbox" checked=""> <span>Quiero recibir avisos de mis pedidos por correo</span></label>
+        <label class="ck"><input type="checkbox" checked=""> <span>Acepto los <a href="#">términos</a> y la <a href="#">política de privacidad</a></span></label>
+        <a class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" href="W2-Solicitud.dc.html">Crear cuenta y solicitar cotización</a>
+        <p class="audit" style="text-align: center">¿Ya tiene cuenta? <button class="lnk" onClick="{{toLogin}}">Iniciar sesión</button> · La dirección se agrega en su primera solicitud.</p>
+      </sc-if>
+
+      <sc-if value="{{recover}}" hint-placeholder-val="{{ false }}">
+        <h2 style="font-size: 24px">Recuperar contraseña</h2>
+        <p class="muted" style="font-size: 14px; line-height: 21px">Le enviaremos un enlace para crear una nueva. Vence en 30 minutos.</p>
+        <x-import component-from-global-scope="Garweb.TextField" label="Correo registrado" value="laura.mendez@correo.com"></x-import>
+        <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{send}}">Enviar enlace</button>
+        <button class="gw-btn gw-btn-ghost gw-btn-block" onClick="{{back}}">Volver a iniciar sesión</button>
+      </sc-if>
+
+      <sc-if value="{{sent}}" hint-placeholder-val="{{ false }}">
+        <x-import component-from-global-scope="Garweb.EmptyState" icon="check" title="Revise su correo">Si el correo está registrado, recibirá el enlace en unos minutos.</x-import>
+        <button class="gw-btn gw-btn-secondary gw-btn-block" onClick="{{back}}">Volver a iniciar sesión</button>
+      </sc-if>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"vista":{"editor":"enum","options":["iniciar sesión","crear cuenta · persona","crear cuenta · empresa"],"default":"iniciar sesión"},"$preview":{"width":1280,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const v = p.vista || 'iniciar sesión';
+    this.state = { m: v === 'iniciar sesión' ? 'login' : 'signup', kind: v === 'crear cuenta · empresa' ? 1 : 0, pw: false };
+  }
+  renderVals() {
+    const m = this.state.m, k = this.state.kind, s = this.state;
+    const T = [['login', 'Iniciar sesión'], ['signup', 'Crear cuenta']];
+    return {
+      tabs: T.map(t => ({ label: t[1], on: m === t[0], cls: m === t[0] ? 'on' : '', pick: () => this.setState({ m: t[0] }) })),
+      kP: 'kind' + (k === 0 ? ' on' : ''), kE: 'kind' + (k === 1 ? ' on' : ''), onP: k === 0, onE: k === 1,
+      pickP: () => this.setState({ kind: 0 }), pickE: () => this.setState({ kind: 1 }),
+      company: k === 1, person: k === 0,
+      fn: k ? 'Rachel' : 'Laura', ln: k ? 'Stone' : 'Méndez',
+      mailLbl: k ? 'Correo de trabajo' : 'Correo',
+      mail: k ? 'compras@hotelwillow.com' : 'laura.mendez@correo.com', phone: k ? '(973) 555-0190' : '(973) 555-0142',
+      pwHidden: !s.pw, pwShown: s.pw, pwBtn: s.pw ? 'Ocultar' : 'Mostrar', pwAria: s.pw ? 'Ocultar contraseña' : 'Mostrar contraseña', togglePw: () => this.setState({ pw: !s.pw }),
+      toLogin: () => this.setState({ m: 'login' }),
+      login: m === 'login', signup: m === 'signup', recover: m === 'rec', sent: m === 'sent', notSent: m === 'login' || m === 'signup',
+      forgot: () => this.setState({ m: 'rec' }),
+      send: () => this.setState({ m: 'sent' }),
+      back: () => this.setState({ m: 'login' })
+    };
+  }
+}
+</script>
+</body>
+</html>

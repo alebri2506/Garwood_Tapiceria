@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A12 Historial</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.big{display:flex;align-items:center;gap:14px;min-height:64px;padding:0 20px;border-radius:18px;background:var(--surface);border:2px solid var(--primary);box-shadow:0 0 0 5px var(--primary-soft),var(--shadow-md)}
+.big input{flex:1;border:0;outline:none;background:transparent;font:500 19px/1 var(--font-sans);color:var(--ink);min-width:0}
+.res{display:flex;gap:14px;align-items:center;padding:12px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.res.on{border-color:var(--primary);background:var(--primary-soft)}
+.ev{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;font-size:13.5px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.ev span:first-child{color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.sbox{display:flex;flex-direction:column;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);position:relative;z-index:6}
+.sq{display:flex;align-items:center;gap:12px;min-height:60px;padding:0 20px;color:var(--ink-muted);border-bottom:1px solid var(--line)}
+.sq:focus-within{color:var(--primary)}
+.sq input{flex:1;border:0;outline:none;background:transparent;font:500 18px/1 var(--font-sans);color:var(--ink);min-width:0}
+.frow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px}
+.dd{position:relative;display:inline-flex;align-items:center}
+.ddb{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px 0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink-muted);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.ddb:hover{border-color:var(--line-strong);color:var(--ink)}
+.ddb b{color:var(--ink);font-weight:700}
+.ddb.open{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);color:var(--ink)}
+.ddb.on{background:var(--primary-soft);border-color:transparent;color:var(--primary);padding-right:34px}
+.ddb.on b{color:var(--primary)}
+.ddb.plain{border-color:transparent;padding:0 6px}
+.ddx{position:absolute;right:6px;width:22px;height:22px;border-radius:6px;border:0;background:transparent;color:var(--primary);display:grid;place-items:center;cursor:pointer}
+.ddx:hover{background:#2563EB22}
+.pop{position:absolute;top:calc(100% + 6px);left:0;min-width:230px;padding:6px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-lg, 0 12px 32px #0A163033);display:flex;flex-direction:column;gap:2px;z-index:8}
+.pop.right{left:auto;right:0}
+.ph{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);padding:8px 10px 4px}
+.opt{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 10px;border-radius:9px;border:0;background:transparent;font:500 14px/1 var(--font-sans);color:var(--ink);cursor:pointer;text-align:left}
+.opt:hover{background:var(--surface-sunken)}
+.opt .ol{flex:1}
+.opt small{font-size:12px;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.opt .rd{width:16px;height:16px;border-radius:50%;border:2px solid var(--line-strong);flex:none}
+.opt.on{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.opt.on .rd{border:5px solid var(--primary)}
+.opt.zero{opacity:.45}
+.lk{border:0;background:none;padding:0 6px;color:var(--primary);font:600 13px/1 var(--font-sans);cursor:pointer}
+.cnt2{font-size:13.5px;color:var(--ink-muted)}
+.cnt2 b{color:var(--ink)}
+.ovl{position:fixed;inset:0;z-index:5}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.card2{display:flex;flex-direction:column;padding:0;border-radius:18px;border:1px solid var(--line);background:var(--surface);overflow:hidden;text-align:left;font:inherit;color:var(--ink);cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .15s,box-shadow .15s,border-color .15s}
+.card2:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--line-strong)}
+.card2.on{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.cimg{position:relative;height:150px;width:100%;border-radius:0}
+.bd{position:absolute;top:10px;left:10px;height:24px;padding:0 10px;border-radius:9999px;display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;background:#FFFFFFE6;color:var(--navy-950,#0A1630)}
+.bd.fo{background:#FDF3E1;color:#8A5A12}
+.cb{display:flex;flex-direction:column;gap:4px;padding:14px 16px 16px}
+.cc{font-size:12px;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.ct{font:700 17px/1.25 var(--font-display)}
+.cl{font-size:13.5px;color:var(--ink-muted)}
+.cf{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
+.cf b{font-size:16px}
+.mat{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:9999px;background:var(--surface-sunken);border:1px solid var(--line);font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%}
+.dim{position:fixed;inset:0;background:#0A163059;z-index:20;animation:fi .15s ease}
+.drw{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--surface);z-index:21;display:flex;flex-direction:column;box-shadow:-16px 0 40px #0A163040;animation:sl .2s ease}
+@keyframes sl{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.dh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:22px 24px 16px;border-bottom:1px solid var(--line)}
+.xb{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;flex:none}
+.dbody{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px}
+.dk{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.dk div{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:var(--surface-sunken)}
+.dk span{font-size:12px;color:var(--ink-muted)}
+.dk b{font-size:14.5px}
+.tl{display:flex;flex-direction:column;border-left:2px solid var(--line);margin-left:6px}
+.te2{position:relative;display:grid;grid-template-columns:78px minmax(0,1fr);gap:10px;padding:8px 0 8px 18px;font-size:13.5px}
+.te2 i{position:absolute;left:-6px;top:13px;width:10px;height:10px;border-radius:50%;background:var(--primary);border:2px solid var(--surface)}
+.te2 .d{color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.dft{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px;border-top:1px solid var(--line);background:var(--surface)}
+@media (max-width:1250px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav on" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top"><div><div class="crumb">Historial de clientes</div><h1>Historial</h1></div><x-import component-from-global-scope="Garweb.Tabs" items="{{tabs}}" active="{{tab}}" on-change="{{setTab}}"></x-import></div>
+
+    <sc-if value="{{t0}}" hint-placeholder-val="{{ true }}">
+    <div class="sbox">
+      <label class="sq"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 22 }}"></x-import><input type="search" value="{{q}}" placeholder="Buscar por cliente, teléfono, mueble, tela o código" aria-label="Buscar en el historial" onInput="{{onQ}}"></label>
+      <div class="frow">
+        <sc-for list="{{dds}}" as="g" hint-placeholder-count="4">
+          <div class="dd">
+            <button class="{{g.btnCls}}" onClick="{{g.toggle}}" aria-expanded="{{g.open}}"><span class="dl">{{g.lbl}}</span><sc-if value="{{g.on}}" hint-placeholder-val="{{ false }}"><b>{{g.val}}</b></sc-if><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            <sc-if value="{{g.on}}" hint-placeholder-val="{{ false }}"><button class="ddx" aria-label="Quitar filtro" onClick="{{g.rm}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 14 }}"></x-import></button></sc-if>
+            <sc-if value="{{g.open}}" hint-placeholder-val="{{ false }}">
+              <div class="pop" role="listbox"><span class="ph">{{g.label}}</span>
+                <sc-for list="{{g.opts}}" as="o" hint-placeholder-count="4"><button class="{{o.cls}}" role="option" aria-selected="{{o.on}}" onClick="{{o.pick}}"><span class="rd"></span><span class="ol">{{o.l}}</span><small>{{o.n}}</small></button></sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{anyAct}}" hint-placeholder-val="{{ false }}"><button class="lk" onClick="{{clear}}">Limpiar todo</button></sc-if>
+        <span style="flex: 1"></span>
+        <span class="cnt2"><b>{{nRes}}</b> {{resWord}}</span>
+        <div class="dd">
+          <button class="{{sortCls}}" onClick="{{toggleSort}}"><span class="dl">Ordenar:</span><b>{{sortTxt}}</b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          <sc-if value="{{sortOpen}}" hint-placeholder-val="{{ false }}"><div class="pop right"><sc-for list="{{sorts}}" as="o" hint-placeholder-count="2"><button class="{{o.cls}}" onClick="{{o.pick}}"><span class="rd"></span><span class="ol">{{o.l}}</span></button></sc-for></div></sc-if>
+        </div>
+      </div>
+    </div>
+    <sc-if value="{{anyPop}}" hint-placeholder-val="{{ false }}"><div class="ovl" onClick="{{closePop}}"></div></sc-if>
+    <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="Garweb.EmptyState" icon="search" title="No hay trabajos con esa búsqueda">Pruebe con otra palabra o quite algún filtro.</x-import>
+    </sc-if>
+    <sc-if value="{{hasRes}}" hint-placeholder-val="{{ true }}">
+    <div class="cards">
+      <sc-for list="{{results}}" as="r" hint-placeholder-count="6">
+        <button class="{{r.cls}}" onClick="{{r.pick}}">
+          <span class="{{r.thumb}} cimg"><x-import component-from-global-scope="Garweb.Icon" name="sofa" size="{{ 30 }}"></x-import><span class="{{r.bdCls}}">{{r.badge}}</span></span>
+          <span class="cb">
+            <span class="cc">{{r.code}} · {{r.date}}</span>
+            <b class="ct">{{r.title}}</b>
+            <span class="cl">{{r.name}} · {{r.city}}</span>
+            <span class="cf"><span class="mat">{{r.fabric}}</span><b class="num">{{r.totalTxt}}</b></span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+    </sc-if>
+    <sc-if value="{{drawer}}" hint-placeholder-val="{{ false }}">
+      <div class="dim" onClick="{{close}}"></div>
+      <aside class="drw" role="dialog" aria-label="Detalle del pedido">
+        <div class="dh">
+          <div><span class="ov">{{sel.code}} · {{sel.origin}}</span><h2 style="font-size: 22px">{{sel.title}}</h2><a href="A17-Clientes.dc.html" style="font-size: 14px">{{sel.client}}</a></div>
+          <button class="xb" aria-label="Cerrar" onClick="{{close}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 20 }}"></x-import></button>
+        </div>
+        <div class="dbody">
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <div class="stack" style="gap: 6px"><span class="thumb b" style="height: 150px; width: 100%"><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 26 }}"></x-import></span><span class="ov">Antes</span></div>
+            <div class="stack" style="gap: 6px"><span class="thumb c" style="height: 150px; width: 100%"><x-import component-from-global-scope="Garweb.Icon" name="sofa" size="{{ 26 }}"></x-import></span><span class="ov" style="color: var(--primary)">Después</span></div>
+          </div>
+          <div class="dk">
+            <div><span>Tela</span><b>{{sel.fabric}}</b></div>
+            <div><span>Servicio</span><b>{{sel.service}}</b></div>
+            <div><span>Entregado</span><b>{{sel.date}}</b></div>
+            <div><span>Piezas</span><b>{{sel.pieces}}</b></div>
+            <div><span>Origen</span><b>{{sel.origin}}</b></div>
+            <div><span>Total</span><b>{{sel.totalTxt}}</b></div>
+          </div>
+          <div class="stack" style="gap: 6px">
+            <span class="ov">Lo que pasó (se armó solo)</span>
+            <div class="tl"><sc-for list="{{sel.ev}}" as="e" hint-placeholder-count="4"><div class="te2"><i></i><span class="d">{{e.d}}</span><span>{{e.t}}</span></div></sc-for></div>
+          </div>
+        </div>
+        <div class="dft">
+          <p class="audit" style="margin: 0">Crea una solicitud nueva con estos datos y los precios de hoy.</p>
+          <a class="gw-btn gw-btn-primary" href="A3-Solicitudes.dc.html">Repetir trabajo</a>
+        </div>
+      </aside>
+    </sc-if>
+    </sc-if>
+
+    <sc-if value="{{t1}}" hint-placeholder-val="{{ false }}">
+      <div class="card stack">
+        <div class="between" style="flex-wrap: wrap"><div><span class="ov">Folders 2002–2026</span><h2 style="font-size: 18px">Avance de digitalización</h2></div><b class="num" style="font-family: var(--font-display); font-size: 24px">{{done}} de 1,180</b></div>
+        <div class="gw-progress"><span class="gw-progress-fill" style="width: {{pct}}"></span></div>
+        <span class="muted" style="font-size: 13px">Se empieza por los clientes más recientes y los que vuelven a llamar.</span>
+      </div>
+      <div class="split">
+        <div class="wide">
+          <div class="card stack">
+            <h2 style="font-size: 18px">Digitalizar una orden del folder</h2>
+            <x-import component-from-global-scope="Garweb.UploadZone" icon="camera" title="Escanee o fotografíe la orden" hint="PDF o fotos · todas las hojas del folder" files="{{scan}}"></x-import>
+            <span class="ov">Datos mínimos</span>
+            <div class="grid3" style="gap: 14px">
+              <x-import component-from-global-scope="Garweb.TextField" label="Cliente" required="{{ true }}" value="Robert King"></x-import>
+              <x-import component-from-global-scope="Garweb.TextField" label="Teléfono" hint="Solo números de EE. UU. (+1): código de área + 7 dígitos" inputmode="tel" required="{{ true }}" value="+1 (973) 555-0119"></x-import>
+              <x-import component-from-global-scope="Garweb.TextField" label="Mueble" required="{{ true }}" value="Sillón Berger"></x-import>
+              <x-import component-from-global-scope="Garweb.TextField" label="Tela" optional="{{ true }}" value="Terciopelo verde"></x-import>
+              <x-import component-from-global-scope="Garweb.TextField" label="Fecha aproximada" required="{{ true }}" value="mar 2021"></x-import>
+              <x-import component-from-global-scope="Garweb.TextField" label="Monto" optional="{{ true }}" value="520.00" prefix="$" numeric="{{ true }}"></x-import>
+            </div>
+            <sc-if value="{{open}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-primary" style="align-self: flex-start" onClick="{{save}}">Guardar y siguiente folder</button></sc-if>
+            <sc-if value="{{saved}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Orden digitalizada">Ya aparece en la búsqueda como “Folder 2021”. Siguiente: folder 314.</x-import></sc-if>
+          </div>
+        </div>
+        <aside class="aside">
+          <div class="card stack">
+            <span class="ov">Últimos digitalizados</span>
+            <div class="kv"><span>Sara Cohen · loveseat · 2019</span><b>hoy</b></div>
+            <div class="kv"><span>Hotel Willow · 20 sillas · 2018</span><b>hoy</b></div>
+            <div class="kv"><span>J. Ortega · sofá · 2017</span><b>ayer</b></div>
+            <p class="audit">Los folders digitalizados se respaldan cada día con el resto de la información.</p>
+          </div>
+        </aside>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { s: '', tab: 0, saved: false, q: '', pop: '', fm: 0, fs: 0, fp: 0, fr: 0, ord: 0 }; }
+  renderVals() {
+    const E = (d, t) => ({ d, t });
+    // [code, title, mueble(1 sofá 2 sillón 3 silla 4 otro), servicio(1 retap 2 retap+espuma 3 fabricación), client, city, fabric, fecha, fechaISO, total, origin(1 GARWEB 2 folder), pieces, thumb, ev]
+    const R = [
+      ['PED-0076', 'Sofá de 3 cuerpos', 1, 2, 'Laura Méndez', '(973) 555-0142 · Montclair', 'Lino Navy 204', 'jue 22 oct 2026', '2026-10-22', 1140, 1, '9', 'thumb c', [E('2 oct', 'Solicitud con 4 fotos'), E('6 oct', 'Cita atendida · cotización publicada $1,140'), E('7 oct', 'Adelanto $456 por Zelle confirmado'), E('8 oct', 'Recojo: 9 piezas, 4 fotos · tela recibida'), E('12–16 oct', 'Producción · equipo de taller · +1 plancha adicional'), E('22 oct', 'Entregado completo · saldo $684 · firma de la clienta')]],
+      ['PED-0075', 'Loveseat', 1, 1, 'Sara Cohen', '(973) 555-0177 · Maplewood', 'Terciopelo gris', 'mié 14 oct 2026', '2026-10-14', 890, 1, '5', 'thumb b', [E('20 sep', 'Solicitud web'), E('28 sep', 'Cotización aceptada'), E('14 oct', 'Entregado')]],
+      ['PED-0068', 'Silla de comedor × 6', 3, 1, 'Hotel Willow', '(862) 555-0100 · Newark', 'Pana mostaza', 'vie 18 sep 2026', '2026-09-18', 780, 1, '6', 'thumb', [E('1 sep', 'Solicitud por teléfono'), E('4 sep', 'Cotización por unidad × 6'), E('18 sep', 'Entregado')]],
+      ['PED-0061', 'Par de sillones', 2, 1, 'Sara Cohen', '(973) 555-0177 · Maplewood', 'Lino Navy 204', 'mar 14 jul 2026', '2026-07-14', 780, 1, '4', 'thumb', [E('25 jun', 'Solicitud web'), E('14 jul', 'Entregado')]],
+      ['PED-0052', 'Banco de entrada (nuevo)', 4, 3, 'Daniel Cruz', '(908) 555-0133 · Cranford', 'Cuero sintético negro', 'lun 4 may 2026', '2026-05-04', 460, 1, '1', 'thumb b', [E('10 abr', 'Solicitud · fabricación nueva'), E('4 may', 'Entregado')]],
+      ['FOLDER-2023-044', 'Sillón Berger', 2, 2, 'Robert King', '(973) 555-0119 · Garwood', 'Terciopelo verde', 'nov 2023', '2023-11-15', 610, 2, '3', 'thumb c', [E('nov 2023', 'Orden en papel'), E('hoy', 'Folder digitalizado')]],
+      ['FOLDER-2021-202', 'Sofá cama', 1, 1, 'Emily Stone', '(201) 555-0164 · Bloomfield', 'Microfibra beige', 'mar 2021', '2021-03-10', 520, 2, '4', 'thumb', [E('mar 2021', 'Orden en papel'), E('ayer', 'Folder digitalizado')]],
+      ['FOLDER-2019-118', 'Banco de entrada', 4, 2, 'Hotel Willow', '(862) 555-0100 · Newark', 'Lino Navy 204', 'abr 2019', '2019-04-12', 310, 2, '1', 'thumb b', [E('abr 2019', 'Orden en papel'), E('12 oct', 'Folder digitalizado')]],
+      ['FOLDER-2017-031', 'Sofá de 3 cuerpos', 1, 2, 'J. Ortega', '(973) 555-0108 · Clifton', 'Chenille azul', 'ago 2017', '2017-08-20', 690, 2, '7', 'thumb c', [E('ago 2017', 'Orden en papel'), E('ayer', 'Folder digitalizado')]]
+    ].map(r => ({ code: r[0], title: r[1], mu: r[2], sv: r[3], name: r[4], client: r[4] + ' · ' + r[5], fabric: r[6], date: r[7], iso: r[8], total: r[9], totalTxt: '$' + r[9].toLocaleString('en-US'), or: r[10], origin: r[10] === 1 ? 'GARWEB' : 'Folder digitalizado', pieces: r[11], thumb: r[12], ev: r[13], service: ['', 'Retapizado', 'Retapizado + espuma', 'Fabricación nueva'][r[3]], badge: r[10] === 1 ? 'GARWEB' : 'Folder' }));
+    const st = this.state;
+    const P = [() => true, x => x.iso >= '2026-07-31', x => x.iso >= '2026-01-01', x => x.iso >= '2021-01-01' && x.iso < '2026-01-01', x => x.iso < '2021-01-01'];
+    const G = [
+      { key: 'fm', label: 'Mueble', opts: ['Todos', 'Sofá', 'Sillón', 'Silla', 'Otros'], test: (x, v) => x.mu === v },
+      { key: 'fs', label: 'Servicio', opts: ['Todos', 'Retapizado', 'Retapizado + espuma', 'Fabricación nueva'], test: (x, v) => x.sv === v },
+      { key: 'fp', label: 'Fecha', opts: ['Cualquiera', 'Últimos 3 meses', 'Este año', '2021 – 2025', 'Antes de 2021'], test: (x, v) => P[v](x) },
+      { key: 'fr', label: 'Origen', opts: ['Todos', 'GARWEB', 'Folder digitalizado'], test: (x, v) => x.or === v }
+    ];
+    const norm = t => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const qw = norm(st.q).split(/\s+/).filter(Boolean);
+    const matchQ = x => qw.every(w => norm([x.code, x.title, x.client, x.fabric, x.service].join(' ')).includes(w));
+    const pass = (x, skip) => matchQ(x) && G.every(g => g.key === skip || st[g.key] === 0 || g.test(x, st[g.key]));
+    let res = R.filter(x => pass(x));
+    res = res.slice().sort(st.ord === 0 ? (a, b) => b.iso.localeCompare(a.iso) : (a, b) => b.total - a.total);
+    const sel = R.find(x => x.code === st.s) || R[0];
+    const act = G.filter(g => st[g.key] !== 0);
+    const done = st.saved ? 313 : 312;
+    return {
+      tema: this.props.tema ?? 'light',
+      tabs: ['Buscar', { label: 'Digitalizar folders', count: 868 }],
+      tab: st.tab, setTab: (i) => this.setState({ tab: i }),
+      t0: st.tab === 0, t1: st.tab === 1,
+      q: st.q, onQ: e => this.setState({ q: e.target.value }),
+      nRes: res.length, resWord: res.length === 1 ? 'resultado' : 'resultados',
+      anyAct: act.length > 0, clear: () => this.setState({ fm: 0, fs: 0, fp: 0, fr: 0, pop: '' }),
+      anyPop: !!st.pop, closePop: () => this.setState({ pop: '' }),
+      dds: G.map(g => { const v = st[g.key], open = st.pop === g.key; return {
+        label: g.label, lbl: v !== 0 ? g.label + ':' : g.label, on: v !== 0, val: g.opts[v], open,
+        btnCls: 'ddb' + (v !== 0 ? ' on' : '') + (open ? ' open' : ''),
+        toggle: () => this.setState({ pop: open ? '' : g.key }), rm: () => this.setState({ [g.key]: 0, pop: '' }),
+        opts: g.opts.map((l, i) => { const n = R.filter(x => pass(x, g.key) && (i === 0 || g.test(x, i))).length; return { l, n, on: v === i, cls: 'opt' + (v === i ? ' on' : '') + (n === 0 ? ' zero' : ''), pick: () => this.setState({ [g.key]: i, pop: '' }) }; }) }; }),
+      sortTxt: ['Más recientes', 'Mayor monto'][st.ord], sortOpen: st.pop === 'ord', sortCls: 'ddb plain' + (st.pop === 'ord' ? ' open' : ''),
+      toggleSort: () => this.setState({ pop: st.pop === 'ord' ? '' : 'ord' }),
+      sorts: ['Más recientes', 'Mayor monto'].map((l, i) => ({ l, cls: 'opt' + (st.ord === i ? ' on' : ''), pick: () => this.setState({ ord: i, pop: '' }) })),
+      empty: res.length === 0, hasRes: res.length > 0,
+      results: res.map(r => ({ code: r.code, title: r.title, thumb: r.thumb, badge: r.badge, bdCls: r.or === 1 ? 'bd' : 'bd fo', name: r.name, city: r.client.split(' · ').pop(), date: r.date, fabric: r.fabric, totalTxt: r.totalTxt, cls: st.s === r.code ? 'card2 on' : 'card2', pick: () => this.setState({ s: r.code }) })),
+      drawer: !!st.s, close: () => this.setState({ s: '' }),
+      sel,
+      done: done.toLocaleString('en-US'), pct: (done / 1180 * 100) + '%',
+      scan: [{ name: 'folder-313-hoja1.jpg' }, { name: 'folder-313-hoja2.jpg' }],
+      open: !st.saved, saved: st.saved, save: () => this.setState({ saved: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

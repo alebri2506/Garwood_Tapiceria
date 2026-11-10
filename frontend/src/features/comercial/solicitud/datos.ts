@@ -45,7 +45,7 @@ export type OpcionTela = 'trae' | 'catalogo' | 'local' | 'sin';
 
 export const OPCIONES_TELA: { id: OpcionTela; titulo: string; detalle: string; icono: IconName; requiereCita: boolean }[] = [
   { id: 'trae', titulo: 'La traigo yo', detalle: 'Sin costo de tela · la entrega con el mueble', icono: 'package', requiereCita: false },
-  { id: 'catalogo', titulo: 'Catálogo en línea', detalle: 'Elija aquí · solo telas disponibles', icono: 'image', requiereCita: false },
+  { id: 'catalogo', titulo: 'Telas en línea', detalle: 'Elija aquí · solo telas disponibles', icono: 'image', requiereCita: false },
   { id: 'local', titulo: 'Ver en el local', detalle: 'Véala y tóquela · requiere cita', icono: 'calendar', requiereCita: true },
   { id: 'sin', titulo: 'No lleva tela', detalle: 'Solo espuma o estructura', icono: 'x', requiereCita: false },
 ];

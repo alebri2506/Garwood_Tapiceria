@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W1 Inicio — Garwood</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.lp{width:100%;min-height:100vh;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+.wrap{max-width:1200px;width:100%;margin:0 auto;padding:0 24px;box-sizing:border-box}
+.hero{position:relative;overflow:hidden;color:#FFFFFF;background:radial-gradient(45% 80% at 85% 25%,#38BDF870 0%,#38BDF800 70%),radial-gradient(40% 60% at 10% 100%,#2563EB55 0%,#2563EB00 70%),linear-gradient(135deg,#0A1630 0%,#102A5C 50%,#1D4ED8 100%)}
+.hero::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.07;background:repeating-linear-gradient(45deg,#FFFFFF 0 1px,transparent 1px 9px),repeating-linear-gradient(-45deg,#FFFFFF 0 1px,transparent 1px 9px)}
+.nav{position:relative;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;padding:18px 0}
+.logo{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none;color:#FFFFFF}
+.logo i{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,#67E8F9,#2563EB);box-shadow:0 6px 16px #2563EB66;font-style:normal;font:800 18px/1 var(--font-display);color:#0A1630}
+.logo b{display:block;font:800 22px/1 var(--font-display);letter-spacing:-.02em}
+.logo span{display:block;font-size:11.5px;color:#A9BEE3;margin-top:3px}
+.nav a.l{color:#C3D2EE;text-decoration:none;font-weight:500;font-size:14.5px;padding:8px 4px}
+.nav a.l:hover{color:#FFFFFF}
+.hgrid{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:40px;align-items:center;padding:40px 0 88px}
+.hcopy{flex:999 1 480px;display:flex;flex-direction:column;gap:22px}
+.badge{display:inline-flex;align-self:flex-start;align-items:center;gap:8px;padding:6px 14px 6px 8px;border-radius:9999px;background:#FFFFFF1A;border:1px solid #FFFFFF33;font-size:13px;font-weight:600}
+.badge em{font-style:normal;padding:3px 8px;border-radius:9999px;background:#67E8F9;color:#0A1630;font-weight:700;font-size:11.5px}
+.hcopy h1{font-size:clamp(40px,5.4vw,64px);line-height:1.02;font-weight:800;letter-spacing:-.035em}
+.hcopy h1 span{background:linear-gradient(90deg,#67E8F9,#93C5FD);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hcopy p.lead{font-size:18.5px;line-height:29px;color:#C3D2EE;max-width:560px}
+.ctas{display:flex;flex-wrap:wrap;gap:12px}
+.cta-w{background:#FFFFFF !important;color:#0A1630 !important;box-shadow:0 10px 30px -8px #00000080}
+.cta-w:hover{background:#E9F2FF !important}
+.trust{display:flex;flex-wrap:wrap;gap:10px 22px;font-size:14px;color:#C3D2EE}
+.trust span{display:inline-flex;align-items:center;gap:8px}
+.trust svg{color:#67E8F9}
+.hart{flex:1 1 380px;max-width:480px;position:relative;min-height:380px}
+.sofa{position:absolute;inset:30px 0 70px 0;border-radius:28px;background:#FFFFFF12;border:1px solid #FFFFFF26;backdrop-filter:blur(6px);display:grid;place-items:center}
+.ocard{position:absolute;right:-6px;bottom:0;width:270px;padding:16px;border-radius:18px;background:#FFFFFF;color:var(--ink);box-shadow:0 24px 48px -12px #00000080;display:flex;flex-direction:column;gap:10px}
+.ocard .bars{display:flex;gap:5px}
+.ocard .bars i{flex:1;height:6px;border-radius:9999px;background:var(--line)}
+.ocard .bars i.d{background:var(--success-500)}
+.ocard .bars i.c{background:linear-gradient(90deg,var(--primary),var(--accent))}
+.sw{position:absolute;left:-8px;top:0;display:flex;gap:8px;padding:10px;border-radius:16px;background:#FFFFFF;box-shadow:0 16px 32px -10px #00000066}
+.sw i{width:34px;height:34px;border-radius:10px;box-shadow:inset 0 0 0 1px #0000001A}
+section{scroll-margin-top:20px}
+.sec{padding:72px 0;display:flex;flex-direction:column;gap:32px}
+.sh{display:flex;flex-direction:column;gap:8px;max-width:640px}
+.sh h2{font-size:clamp(28px,3.2vw,38px);line-height:1.12;font-weight:800;letter-spacing:-.025em}
+.sh p{color:var(--ink-muted);font-size:16.5px;line-height:26px}
+.svc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:18px}
+.svc a{display:flex;flex-direction:column;gap:12px;padding:24px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);text-decoration:none;color:var(--ink);transition:transform .18s,box-shadow .18s,border-color .18s}
+.svc a:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:#93C5FD}
+.svc .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--primary-soft),#E0F2FE);color:var(--primary)}
+.svc h3{font-size:18px}
+.svc p{color:var(--ink-muted);font-size:14.5px;line-height:22px}
+.svc span.more{margin-top:auto;font-weight:600;font-size:14px;color:var(--primary)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:18px;position:relative}
+.stp{position:relative;padding:24px;border-radius:20px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.stp b.n{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:800 18px/1 var(--font-display);color:#FFFFFF;background:linear-gradient(135deg,var(--blue-700),var(--sky-400));box-shadow:0 8px 18px -6px #2563EBAA}
+.stp h3{font-size:17.5px}
+.stp p{color:var(--ink-muted);font-size:14.5px;line-height:22px}
+.ba{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px}
+.bac{border-radius:20px;overflow:hidden;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.bai{position:relative;height:200px;display:grid;grid-template-columns:1fr 1fr}
+.bai>div{position:relative;display:grid;place-items:center;color:#FFFFFFCC}
+.bai>div::before{content:'';position:absolute;inset:0;opacity:.25;background:repeating-linear-gradient(45deg,#FFFFFF 0 1px,transparent 1px 7px),repeating-linear-gradient(-45deg,#FFFFFF 0 1px,transparent 1px 7px)}
+.bai .a{background:linear-gradient(135deg,#6B5E52,#9C8C7A);filter:saturate(.7)}
+.bai .lbl{position:absolute;left:10px;top:10px;padding:3px 9px;border-radius:9999px;background:#0A1630B3;color:#FFFFFF;font-size:11.5px;font-weight:700;letter-spacing:.04em}
+.bai::after{content:'';position:absolute;left:50%;top:0;bottom:0;width:3px;background:#FFFFFF;box-shadow:0 0 0 1px #0000001F}
+.bac .cap{padding:14px 18px;display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.fab{display:flex;flex-wrap:wrap;gap:12px}
+.fab a{display:flex;flex-direction:column;gap:8px;width:132px;text-decoration:none;color:var(--ink);font-size:13px;font-weight:600}
+.fab a i{height:92px;border-radius:16px;box-shadow:inset 0 0 0 1px #0000001A,var(--shadow-sm);position:relative;overflow:hidden;transition:transform .18s}
+.fab a i::before{content:'';position:absolute;inset:0;opacity:.18;background:repeating-linear-gradient(90deg,#FFFFFF 0 1px,transparent 1px 4px),repeating-linear-gradient(0deg,#000000 0 1px,transparent 1px 4px)}
+.fab a:hover i{transform:translateY(-3px) rotate(-1deg)}
+.band{border-radius:28px;padding:36px;color:#FFFFFF;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between;background:radial-gradient(60% 120% at 100% 0%,#38BDF866 0%,#38BDF800 60%),linear-gradient(135deg,#0A1630,#102A5C 55%,#1D4ED8);box-shadow:var(--shadow-lg)}
+.band h2{font-size:clamp(24px,2.6vw,32px);letter-spacing:-.02em}
+.band p{color:#C3D2EE;margin-top:6px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:28px;align-items:start}
+.faq details{border-bottom:1px solid var(--line);padding:16px 4px}
+.faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px;font-weight:700;font-size:16px;font-family:var(--font-display)}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';font-size:22px;line-height:1;color:var(--primary);transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{margin-top:10px;color:var(--ink-muted);font-size:15px;line-height:24px}
+.login{padding:28px;border-radius:24px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-md);display:flex;flex-direction:column;gap:14px}
+.foot{margin-top:auto;background:var(--navy-950);color:#A9BEE3;font-size:13.5px}
+.foot .wrap{padding:36px 24px;display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between}
+.foot b{color:#FFFFFF;font-family:var(--font-display);font-size:16px}
+.foot a{color:#C3D2EE;text-decoration:none}
+.foot a:hover{color:#FFFFFF}
+@media (max-width:760px){.nav a.l{display:none}.hart{min-height:320px}.ocard{width:240px}.band{padding:24px}}
+</style>
+</helmet>
+<div class="lp">
+  <header class="hero">
+    <div class="wrap">
+      <nav class="nav" aria-label="Principal">
+        <a class="logo" href="W1-Inicio.dc.html"><i>G</i><span style="margin: 0"><b>Garwood</b><span>Tapicería de Interiores · New Jersey</span></span></a>
+        <a class="l" href="#servicios">Servicios</a>
+        <a class="l" href="#como">Cómo funciona</a>
+        <a class="l" href="#trabajos">Trabajos</a>
+        <a class="l" href="#preguntas">Preguntas</a>
+        <a class="gw-btn gw-btn-on-dark" href="G1-Acceso.dc.html">Iniciar sesión</a>
+      </nav>
+      <div class="hgrid">
+        <div class="hcopy">
+          <span class="badge"><em>NUEVO</em>Cotice y siga su pedido en línea</span>
+          <h1>Su mueble, como nuevo.<br><span>Su pedido, siempre a la vista.</span></h1>
+          <p class="lead">Envíe fotos de su sofá, sillón o sillas y reciba su cotización. Elija la tela, apruebe el precio y vea cada paso hasta que lo entregamos en su casa.</p>
+          <div class="ctas">
+            <a class="gw-btn gw-btn-lg cta-w" href="G1-Acceso.dc.html">Solicitar cotización</a>
+            <a class="gw-btn gw-btn-on-dark gw-btn-lg" href="G1-Acceso.dc.html">Ver mis pedidos</a>
+          </div>
+          <div class="trust">
+            <span><x-import component-from-global-scope="Garweb.Icon" name="truck" size="{{ 18 }}"></x-import>Recojo y entrega a domicilio</span>
+            <span><x-import component-from-global-scope="Garweb.Icon" name="calendar" size="{{ 18 }}"></x-import>Cita en el local solo si la necesita</span>
+            <span><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 18 }}"></x-import>Más de 24 años en New Jersey</span>
+          </div>
+        </div>
+        <div class="hart" aria-hidden="true">
+          <div class="sofa">
+            <svg width="86%" viewBox="0 0 360 200" fill="none">
+              <defs>
+                <linearGradient id="fab" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2B3B66"/><stop offset="1" stop-color="#1E2A4A"/></linearGradient>
+                <pattern id="weave" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="url(#fab)"/><line x1="0" y1="0" x2="0" y2="6" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="2"/></pattern>
+              </defs>
+              <ellipse cx="180" cy="188" rx="150" ry="8" fill="#000000" opacity=".25"/>
+              <rect x="40" y="30" width="280" height="92" rx="26" fill="url(#weave)"/>
+              <rect x="18" y="74" width="54" height="96" rx="22" fill="url(#weave)"/>
+              <rect x="288" y="74" width="54" height="96" rx="22" fill="url(#weave)"/>
+              <rect x="64" y="104" width="78" height="54" rx="14" fill="#33467A"/><rect x="141" y="104" width="78" height="54" rx="14" fill="#33467A"/><rect x="218" y="104" width="78" height="54" rx="14" fill="#33467A"/>
+              <path d="M70 116 h66 M147 116 h66 M224 116 h66" stroke="#67E8F9" stroke-opacity=".5" stroke-width="2" stroke-dasharray="4 5" stroke-linecap="round"/>
+              <rect x="60" y="154" width="240" height="18" rx="9" fill="#26355E"/>
+              <rect x="56" y="170" width="10" height="16" rx="3" fill="#C9A66B"/><rect x="294" y="170" width="10" height="16" rx="3" fill="#C9A66B"/>
+            </svg>
+          </div>
+          <div class="sw"><i style="background: #1E2A4A"></i><i style="background: #CDBA96"></i><i style="background: #3F6B4E"></i><i style="background: #6D1F3A"></i></div>
+          <div class="ocard">
+            <div class="between"><span class="ov" style="color: var(--ink-muted)">PED-0076</span><x-import component-from-global-scope="Garweb.StatusChip" status="En producción"></x-import></div>
+            <b style="font-family: var(--font-display); font-size: 17px">Sofá de 3 cuerpos</b>
+            <div class="bars"><i class="d"></i><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i></div>
+            <span class="muted" style="font-size: 13px">Entrega: jue 22 oct, 10:00–12:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section id="servicios" class="wrap sec">
+    <div class="sh"><span class="ov">Servicios</span><h2>Lo que hacemos por su mueble</h2><p>Para casas y para empresas: hoteles, restaurantes y oficinas.</p></div>
+    <div class="svc">
+      <a href="G1-Acceso.dc.html"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="sofa" size="{{ 24 }}"></x-import></span><h3>Retapizado completo</h3><p>Tela nueva para sofás, sillones, sillas y cabeceras, con costuras y ribetes a medida.</p><span class="more">Cotizar →</span></a>
+      <a href="G1-Acceso.dc.html"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="package" size="{{ 24 }}"></x-import></span><h3>Cambio de espuma</h3><p>Asientos firmes otra vez. Espuma de alta densidad cortada a la medida de cada cojín.</p><span class="more">Cotizar →</span></a>
+      <a href="G1-Acceso.dc.html"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="scissors" size="{{ 24 }}"></x-import></span><h3>Reparación de estructura</h3><p>Resortes, travesaños y uniones. Si al desarmar aparece un daño, se lo mostramos antes de seguir.</p><span class="more">Cotizar →</span></a>
+      <a href="G1-Acceso.dc.html"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="dashboard" size="{{ 24 }}"></x-import></span><h3>Muebles para empresas</h3><p>Pedidos de varias piezas con una sola cuenta de empresa y entregas coordinadas.</p><span class="more">Cotizar →</span></a>
+    </div>
+  </section>
+
+  <section id="como" style="background: var(--surface); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line)">
+    <div class="wrap sec">
+      <div class="sh"><span class="ov">Cómo funciona</span><h2>Cuatro pasos, sin papeles</h2><p>Todo queda en su cuenta: la cotización, los pagos y la fecha de entrega.</p></div>
+      <div class="steps">
+        <div class="stp"><b class="n">1</b><h3>Envíe fotos o videos</h3><p>Tipo de mueble, servicio y fotos desde su celular. Las medidas son opcionales.</p></div>
+        <div class="stp"><b class="n">2</b><h3>Elija la tela</h3><p>Del catálogo en línea, igual a la actual, la suya, o véala en el local con una cita.</p></div>
+        <div class="stp"><b class="n">3</b><h3>Acepte la cotización</h3><p>Ve los trabajos, el precio y el total. Si es su primer pedido, informa un adelanto del 40 % por Zelle, transferencia o cheque.</p></div>
+        <div class="stp"><b class="n">4</b><h3>Siga su pedido</h3><p>Vea cada avance y confirme el día de recojo y entrega. Puede reprogramar hasta 24 h antes.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="trabajos" class="wrap sec">
+    <div class="sh"><span class="ov">Trabajos</span><h2>Antes y después</h2><p>Imágenes de referencia. Las fotos reales de su mueble las verá en su cuenta al terminar.</p></div>
+    <div class="ba">
+      <div class="bac"><div class="bai"><div class="a"><span class="lbl">ANTES</span><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 28 }}"></x-import></div><div class="thumb b" style="border-radius: 0"><span class="lbl">DESPUÉS</span><x-import component-from-global-scope="Garweb.Icon" name="sofa" size="{{ 30 }}"></x-import></div></div><div class="cap"><b>Sofá de 3 cuerpos</b><span class="muted">Lino azul marino · espuma nueva</span></div></div>
+      <div class="bac"><div class="bai"><div class="a"><span class="lbl">ANTES</span><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 28 }}"></x-import></div><div style="background: linear-gradient(135deg, #3F6B4E, #6FA382)"><span class="lbl">DESPUÉS</span><x-import component-from-global-scope="Garweb.Icon" name="sofa" size="{{ 30 }}"></x-import></div></div><div class="cap"><b>Sillón Berger</b><span class="muted">Terciopelo verde · resortes</span></div></div>
+      <div class="bac"><div class="bai"><div class="a"><span class="lbl">ANTES</span><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 28 }}"></x-import></div><div style="background: linear-gradient(135deg, #8C6B45, #CDBA96)"><span class="lbl">DESPUÉS</span><x-import component-from-global-scope="Garweb.Icon" name="sofa" size="{{ 30 }}"></x-import></div></div><div class="cap"><b>Sillas de comedor</b><span class="muted">Lino arena · asientos</span></div></div>
+    </div>
+    <div class="cols" style="align-items: center">
+      <div class="sh"><span class="ov">Telas</span><h2 style="font-size: 26px">Vea las telas disponibles antes de venir</h2><p>Elija del catálogo en línea al pedir su cotización, o agende una cita para tocarlas en el local.</p></div>
+      <div class="fab">
+        <a href="G1-Acceso.dc.html"><i style="background: #1E2A4A"></i>Lino Navy 204</a>
+        <a href="G1-Acceso.dc.html"><i style="background: #CDBA96"></i>Lino Arena 110</a>
+        <a href="G1-Acceso.dc.html"><i style="background: #6B7280"></i>Pana Gris 318</a>
+        <a href="G1-Acceso.dc.html"><i style="background: #3F6B4E"></i>Chenille Verde 52</a>
+        <a href="G1-Acceso.dc.html"><i style="background: #6D1F3A"></i>Terciopelo Vino</a>
+        <a href="G1-Acceso.dc.html"><i style="background: #6B4226"></i>Cuero sint. Café</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="preguntas" class="wrap sec" style="padding-top: 0">
+    <div class="cols">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div class="sh"><span class="ov">Preguntas frecuentes</span><h2 style="font-size: 30px">Antes de empezar</h2></div>
+        <div class="faq">
+          <details open><summary>¿Necesito ir al local?</summary><p>Solo si quiere ver y tocar las telas. Si elige del catálogo en línea, trae su propia tela o la quiere igual a la actual, cotizamos con sus fotos.</p></details>
+          <details><summary>¿Cuánto es el adelanto?</summary><p>40 % si es su primer pedido. Si ya compró antes, no pedimos adelanto: su pedido se genera en cuanto acepta la cotización.</p></details>
+          <details><summary>¿Cómo pago?</summary><p>Aceptamos 5 formas: tarjeta, transferencia bancaria, Zelle, cheque y efectivo. Con tarjeta o cuenta bancaria puede pagar en línea desde su pedido y se confirma solo. Con Zelle o cheque, suba la captura o foto. El efectivo y la tarjeta en persona se reciben en el taller o al conductor el día de la entrega.</p></details>
+          <details><summary>¿Y si encuentran un daño al desarmar?</summary><p>Pausamos el trabajo y le mostramos fotos con una nueva versión del precio. Usted decide si seguimos o cancela, y solo paga lo ya hecho.</p></details>
+          <details><summary>¿Puedo cambiar la fecha de entrega?</summary><p>Sí, hasta 24 horas antes, desde su cuenta. También puede elegir recogerlo en el taller.</p></details>
+        </div>
+      </div>
+      <div class="login">
+        <span class="ov">Clientes</span>
+        <h2 style="font-size: 24px">¿Ya tiene un pedido con nosotros?</h2>
+        <p class="muted">Ingrese para ver su cotización, pagos y fecha de entrega.</p>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Correo o teléfono
+          <input class="gw-input" value="laura.mendez@correo.com">
+        </label>
+        <a class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" href="G1-Acceso.dc.html">Entrar a Mis pedidos</a>
+        <span class="muted" style="font-size: 13px">¿Primera vez? <a href="G1-Acceso.dc.html">Cree su cuenta</a> en un minuto.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" style="padding-bottom: 72px">
+    <div class="band">
+      <div><h2>¿Listo para renovar su mueble?</h2><p>Envíe sus fotos hoy y reciba su cotización en su cuenta y por correo.</p></div>
+      <a class="gw-btn gw-btn-lg cta-w" href="G1-Acceso.dc.html">Solicitar cotización</a>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px"><b>Garwood</b><span>Tapicería de Interiores Garwood LLC · Garwood, NJ</span><span>Atención con cita: lunes a viernes, 9:30–17:00</span></div>
+      <div style="display: flex; flex-direction: column; gap: 8px"><a href="#servicios">Servicios</a><a href="#como">Cómo funciona</a><a href="#preguntas">Preguntas</a></div>
+      <div style="display: flex; flex-direction: column; gap: 8px"><a href="G1-Acceso.dc.html">Solicitar cotización</a><a href="G1-Acceso.dc.html">Iniciar sesión</a></div>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3600}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

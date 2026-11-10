@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>D1 Hoja de ruta (web en el celular)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.st{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:16px;border-radius:18px;background:var(--surface);border:2px solid var(--line);text-decoration:none;color:var(--ink);box-shadow:var(--shadow-sm)}
+.st:hover{border-color:var(--primary);color:var(--ink)}
+.st.done{opacity:.7}
+.st.fail{border-color:var(--error-500);border-style:dashed}
+.st .n{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--primary);color:var(--on-primary);font:800 19px/1 var(--font-display)}
+.st .n.pick{background:var(--sky-400);color:var(--navy-950)}
+.st .n.rec{background:var(--warning-500);color:var(--navy-950)}
+.st .n.ok{background:var(--success-500);color:var(--navy-950)}
+.tag{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:9999px;font-size:13px;font-weight:700}
+.kind{font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-muted)}
+.out{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;border:1.5px dashed var(--line-strong);background:var(--surface-sunken);font-size:14px}
+.seg{display:flex;padding:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line);gap:4px}
+.seg a{flex:1;min-height:42px;display:grid;place-items:center;border-radius:9px;text-decoration:none;color:var(--ink-muted);font:600 14.5px/1 var(--font-sans)}
+.seg a.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.web{font-size:11.5px;color:#A9BEE3;display:flex;align-items:center;gap:6px}
+</style>
+</helmet>
+<div class="phone" style="width: 390px; min-height: 1460px">
+  <div class="ph-head dark" style="flex-direction: column; align-items: stretch; gap: 10px">
+    <span class="web">GARWEB · app web en el celular (PWA)</span>
+    <div class="between"><div style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #A9BEE3">{{day}} · Luis · camioneta 1</span><h1 style="color: #FFFFFF; font-size: 22px">Hoja de ruta</h1></div><span style="font-family: var(--font-display); font-weight: 800; font-size: 26px">{{nStops}} <small style="font-size: 14px; color: #A9BEE3; font-weight: 600">paradas</small></span></div>
+    <div class="between"><x-import component-from-global-scope="Garweb.StatusChip" status="{{routeStatus}}"></x-import><x-import component-from-global-scope="Garweb.SyncBadge" state="{{sync}}" pending="{{pending}}"></x-import></div>
+  </div>
+  <div class="ph-body">
+    <nav class="seg" aria-label="Vista de la ruta"><a class="on" href="D1-Ruta.dc.html" aria-current="page">Lista</a><a href="D1b-Mapa.dc.html">Mapa</a></nav>
+    <sc-if value="{{before}}" hint-placeholder-val="{{ true }}">
+      <a class="big-btn pri" href="D2-Carga.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="clipboard" size="{{ 24 }}"></x-import>1. Validar carga pieza por pieza</a>
+      <span class="muted" style="font-size: 13px; text-align: center">Al terminar la validación podrá iniciar la salida: las paradas pasan a En ruta.</span>
+    </sc-if>
+    <sc-for list="{{stops}}" as="s" hint-placeholder-count="4">
+      <a class="{{s.cls}}" href="{{s.href}}">
+        <span class="{{s.ncls}}">{{s.n}}</span>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span class="kind">{{s.kind}}</span>
+          <div class="between"><b style="font-size: 17px">{{s.client}}</b><span class="num" style="font-weight: 700">{{s.time}}</span></div>
+          <span class="muted" style="font-size: 14px">{{s.code}} · {{s.pieces}}<br>{{s.place}}</span>
+          <div class="row" style="flex-wrap: wrap"><span class="tag" style="{{s.payStyle}}">{{s.pay}}</span><x-import component-from-global-scope="Garweb.StatusChip" tone="{{s.tone}}">{{s.status}}</x-import></div>
+        </div>
+      </a>
+    </sc-for>
+    <sc-if value="{{hasOut}}" hint-placeholder-val="{{ true }}">
+      <span class="ov">Fuera de esta ruta</span>
+      <sc-for list="{{outs}}" as="o" hint-placeholder-count="1"><div class="out"><x-import component-from-global-scope="Garweb.Icon" name="calendar" size="{{ 20 }}"></x-import><div><b>{{o.title}}</b><div class="muted" style="font-size: 13px">{{o.text}}</div></div></div></sc-for>
+    </sc-if>
+    <p class="muted" style="font-size: 13px; line-height: 19px">Confirmada = el cliente confirmó · Pendiente = no respondió (pase igual). Quien reprogramó sale de la ruta. La carga se valida en el taller con wifi. En ruta, si falla la señal, la app avisa y reintenta el envío.</p>
+  </div>
+  <sc-if value="{{onRoute}}" hint-placeholder-val="{{ false }}">
+    <div class="ph-foot"><a class="big-btn pri" href="D5-Cierre.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 22 }}"></x-import>Volví al taller: cerrar salida</a></div>
+  </sc-if>
+  <nav class="tabbar" aria-label="Navegación de la app"><a class="on" aria-current="page" href="D1-Ruta.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="truck" size="{{ 22 }}"></x-import>Ruta</a><a href="D1b-Mapa.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="map-pin" size="{{ 22 }}"></x-import>Mapa</a><a href="D2-Carga.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="package" size="{{ 22 }}"></x-import>Carga</a><a href="D5-Cierre.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="payment" size="{{ 22 }}"></x-import>Cierre</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"salida":{"editor":"enum","options":["jue 22 oct","mar 27 oct (reclamos)"],"default":"jue 22 oct"},"momento":{"editor":"enum","options":["antes de salir","en ruta"],"default":"antes de salir"},"pedido0081":{"editor":"enum","options":["se encontró la pieza","sacado de la ruta"],"default":"se encontró la pieza"},"$preview":{"width":390,"height":1460}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const r27 = (p.salida || '').indexOf('27') >= 0;
+    const route = p.momento === 'en ruta';
+    const out81 = p.pedido0081 === 'sacado de la ruta';
+    const paid = 'background: var(--success-soft); color: var(--success-ink)';
+    const due = 'background: var(--warning-soft); color: var(--warning-ink)';
+    const none = 'background: var(--neutral-soft); color: var(--neutral-ink)';
+    const S = (n, kind, ncls, client, time, code, pieces, place, pay, payStyle, conf, href, doneIt) => ({ n, kind, ncls, client, time, code, pieces, place, pay, payStyle, conf, href, doneIt });
+    let stops, outs;
+    if (!r27) {
+      stops = [
+        S('1', 'ENTREGA', 'n', 'Laura Méndez', '10:00–12:00', 'PED-0076', '9 piezas', '48 Park St, Montclair', 'Cobrar $684', due, 'Confirmada', 'D4-Entrega.dc.html', 'ok'),
+        S('2', 'ENTREGA', 'n', 'Emily Stone', '11:30–13:00', 'PED-0079', '1 pieza', 'Bloomfield', 'Pagado', paid, 'Pendiente', 'D4-Entrega.dc.html', 'fail'),
+        S('3', 'ENTREGA', 'n', 'J. Ortega', '13:30–15:00', 'PED-0081', '4 piezas', 'Clifton', 'Cobrar $520', due, 'Confirmada', 'D4-Entrega.dc.html', 'ok'),
+        S('4', 'RECOJO', 'n pick', 'Ana Ruiz', '15:30–16:30', 'PED-0083', '1 pieza · puff', 'Garwood', 'Sin cobro', none, 'Confirmada', 'D3-Recojo.dc.html', 'ok')
+      ];
+      if (out81) stops.splice(2, 1);
+      outs = [{ title: 'Kevin Park · PED-0074', text: 'Reprogramó el mar 20 (más de 24 h antes) · pasa a la salida del mar 27.' }];
+      if (out81) outs.push({ title: 'J. Ortega · PED-0081 · bloqueado', text: 'Faltan 2 cojines. Se sacó de la ruta; el Administrador y el cliente ya tienen el aviso.' });
+    } else {
+      stops = [
+        S('1', 'RECOJO POR RECLAMO · REC-0012', 'n rec', 'Laura Méndez', '10:00–12:00', 'PED-0076', '1 pieza · cojín central', '48 Park St, Montclair', 'Sin costo', none, 'Confirmada', 'D3-Recojo.dc.html', 'ok'),
+        S('2', 'ENTREGA', 'n', 'Kevin Park', '12:30–14:00', 'PED-0074', '5 piezas', 'Nutley', 'Pagado', paid, 'Confirmada', 'D4-Entrega.dc.html', 'ok'),
+        S('3', 'ENTREGA POR RECLAMO · REC-0011', 'n rec', 'Emily Stone', '14:30–15:30', 'PED-0079', '1 pieza · reparada', 'Bloomfield', 'Sin costo', none, 'Pendiente', 'D4-Entrega.dc.html', 'ok')
+      ];
+      outs = [];
+    }
+    stops = stops.map((s, i) => {
+      const n = String(i + 1);
+      if (!route) return { ...s, n, cls: 'st', status: s.conf, tone: s.conf === 'Confirmada' ? 'success' : 'neutral' };
+      const first = i === 0;
+      if (first) return { ...s, n: '✓', ncls: 'n ok', cls: 'st done', status: 'Realizada', tone: 'success' };
+      return { ...s, n, cls: 'st', status: 'En ruta', tone: 'progress' };
+    });
+    return {
+      day: r27 ? 'Martes 27 oct' : 'Jueves 22 oct',
+      nStops: String(stops.length),
+      routeStatus: route ? 'En ruta' : 'Programada',
+      sync: route ? 'syncing' : 'synced', pending: 0,
+      before: !route, onRoute: route,
+      stops, outs, hasOut: outs.length > 0
+    };
+  }
+}
+</script>
+</body>
+</html>

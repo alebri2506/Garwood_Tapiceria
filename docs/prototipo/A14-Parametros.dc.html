@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A14 Parámetros</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav on" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top"><div><div class="crumb">Configuración</div><h1>Parámetros</h1></div><button class="gw-btn gw-btn-primary" onClick="{{save}}">Guardar cambios</button></div>
+    <sc-if value="{{saved}}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Parámetros guardados">Aplican a las cotizaciones nuevas. Las publicadas mantienen sus condiciones.</x-import>
+    </sc-if>
+    <div class="split">
+      <div class="wide">
+        <div class="card stack">
+          <h2 style="font-size: 18px">Cotización y pagos</h2>
+          <div class="grid2" style="gap: 16px 20px">
+            <x-import component-from-global-scope="Garweb.TextField" label="Vigencia de la cotización" value="1" suffix="mes" numeric="{{ true }}" hint="Aviso al cliente 3 días antes de vencer"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Plazo de pago del adelanto" value="7" suffix="días" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Adelanto sugerido · sin pedidos cerrados o con saldo vencido" value="40" suffix="%" numeric="{{ true }}" hint="El dueño pide entre 40 % y 50 %: en cada pedido se puede subir hasta 50 % (queda registrado)"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Adelanto sugerido · con al menos un pedido cerrado" value="0" suffix="%" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Plazo para responder una recotización (daño oculto)" value="5" suffix="días" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Margen sobre costo" value="75" suffix="%" numeric="{{ true }}" hint="Se usa para el precio sugerido"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Cargo por revisión (diagnóstico)" value="45.00" prefix="$" numeric="{{ true }}" hint="Se cobra si, tras la revisión inicial, el cliente no acepta la recotización"></x-import>
+          </div>
+        </div>
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 18px">Unidades de medida</h2><span class="pill">Se usan en toda la plataforma</span></div>
+          <p class="muted" style="font-size: 13.5px; line-height: 1.45">La unidad que elija aquí aparece en la solicitud del cliente, la cotización, las compras al proveedor y el inventario. Si cambia, todo pasa a mostrarse en la nueva unidad.</p>
+          <div class="tbl-box" style="box-shadow: none">
+            <table class="t">
+              <thead><tr><th>Tipo de material</th><th>Unidad</th><th>Abreviatura</th><th>Equivalencia</th></tr></thead>
+              <tbody>
+                <tr><td><b>Telas</b></td><td><select class="gw-input" style="min-height: 38px"><option>Yarda</option><option>Metro</option></select></td><td class="num">yd</td><td class="muted">1 yd = 0.914 m</td></tr>
+                <tr><td><b>Espuma</b></td><td><select class="gw-input" style="min-height: 38px"><option>Plancha</option><option>Pie cuadrado</option></select></td><td class="num">u</td><td class="muted">Plancha de 24 × 72 in</td></tr>
+                <tr><td><b>Relleno</b></td><td><select class="gw-input" style="min-height: 38px"><option>Kilogramo</option><option>Libra</option></select></td><td class="num">kg</td><td class="muted">1 kg = 2.2 lb</td></tr>
+                <tr><td><b>Hilo</b></td><td><select class="gw-input" style="min-height: 38px"><option>Cono</option></select></td><td class="num">cono</td><td class="muted">—</td></tr>
+                <tr><td><b>Medidas del mueble</b></td><td><select class="gw-input" style="min-height: 38px"><option>Pulgada</option><option>Centímetro</option></select></td><td class="num">in</td><td class="muted">1 in = 2.54 cm</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card stack">
+          <h2 style="font-size: 18px">Tarifas</h2>
+          <div class="grid2" style="gap: 16px 20px">
+            <x-import component-from-global-scope="Garweb.TextField" label="Hora persona" value="15.00" prefix="$" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Costos fijos por pedido" value="60.00" prefix="$" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Tela de referencia para plantillas" value="17.00" prefix="$" suffix="/ yd" numeric="{{ true }}" hint="Solo para el precio de referencia de las plantillas. La cotización usa el precio de la tela que elige el cliente."></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Aviso de precio por revisar" value="180" suffix="días" numeric="{{ true }}" hint="Los precios del proveedor son estables (suben con la inflación): pasado este plazo, el Catálogo marca “Revisar precio”"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Horas extra por tela difícil" value="20" suffix="%" numeric="{{ true }}" hint="Se suma a coser y tapizar cuando la tela es difícil (seda, terciopelo, cuero)"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Transporte · carga chica (silla, cojín, otomán)" value="15.00" prefix="$" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Transporte · carga mediana (sillón, cabecera, banco)" value="30.00" prefix="$" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Transporte · carga grande (sofá, cama, seccional)" value="45.00" prefix="$" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Transporte · por milla" value="1.60" prefix="$" numeric="{{ true }}" hint="Ej.: sofá a 14 mi: 14 × 2 × $1.60 + $45 (grande) ≈ $90"></x-import>
+          </div>
+        </div>
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 18px">Métodos de pago aceptados</h2><span class="pill">5 métodos · pasarela de pago activa</span></div>
+          <div class="tbl-box" style="box-shadow: none">
+            <table class="t">
+              <thead><tr><th>Método</th><th>Cómo paga el cliente</th><th>¿Pasa por la pasarela?</th><th>Quién confirma</th><th>Comisión</th></tr></thead>
+              <tbody>
+                <tr><td><b>Tarjeta</b></td><td>En línea desde su pedido, o con el lector en el taller o al conductor</td><td>Sí</td><td>Automático</td><td>2.9 % + $0.30 en línea · 2.7 % + $0.05 con lector</td></tr>
+                <tr><td><b>Transferencia</b></td><td>En línea con su cuenta bancaria (ACH)</td><td>Sí</td><td>Automático (2–3 días)</td><td>0.8 %, máx. $5</td></tr>
+                <tr><td><b>Zelle</b></td><td>Envía a [correo o teléfono Zelle] y sube la captura</td><td>No</td><td>Administrador (A5)</td><td>$0</td></tr>
+                <tr><td><b>Cheque</b></td><td>Páguese a Garwood LLC · en el taller o al conductor</td><td>No</td><td>Administrador (A5)</td><td>$0</td></tr>
+                <tr><td><b>Efectivo</b></td><td>En el taller o al conductor, con recibo</td><td>No</td><td>Al registrarlo (A5 o conductor)</td><td>$0</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="grid2" style="gap: 14px">
+            <x-import component-from-global-scope="Garweb.TextField" label="Pasarela de pago" value="Stripe" hint="Procesa tarjeta y ACH. GARWEB no guarda datos de tarjetas."></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Comisión de la pasarela" value="La asume el taller" hint="No se cobra recargo al cliente."></x-import>
+          </div>
+          <p class="audit">Pagos en línea (tarjeta y cuenta bancaria): la pasarela avisa a GARWEB y el pago queda confirmado sin revisión. Zelle y cheque: el cliente sube el comprobante y el Administrador lo confirma. Efectivo: se confirma al registrarlo.</p>
+        </div>
+        <div class="card stack">
+          <h2 style="font-size: 18px">Agenda y despacho</h2>
+          <div class="grid2" style="gap: 16px 20px">
+            <x-import component-from-global-scope="Garweb.TextField" label="Días laborables" value="Lunes a sábado" hint="Domingo cerrado · se usa en la agenda, los recojos y el Planning"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Duración del turno de cita" value="30" suffix="min" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Aviso de pedido terminado sin salida" value="7" suffix="días" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Confirmar o reprogramar entrega hasta" value="24" suffix="h antes" numeric="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Plazo para reclamos" value="7" suffix="días" numeric="{{ true }}"></x-import>
+          </div>
+        </div>
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 18px">Respaldo y recuperación</h2><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Respaldo diario activo · 03:00</x-import></div>
+          <div class="tbl-box" style="box-shadow: none">
+            <table class="t" style="min-width: 560px">
+              <thead><tr><th>Respaldo</th><th>Contenido</th><th class="r">Tamaño</th><th>Estado</th><th></th></tr></thead>
+              <tbody>
+                <tr><td class="num">hoy 03:00</td><td>Todo (datos, fotos, folders)</td><td class="r">2.4 GB</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Correcto</x-import></td><td><button class="gw-btn gw-btn-secondary gw-btn-sm" onClick="{{askRestore}}">Recuperar</button></td></tr>
+                <tr><td class="num">ayer 03:00</td><td>Todo</td><td class="r">2.4 GB</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Correcto</x-import></td><td><button class="gw-btn gw-btn-secondary gw-btn-sm" onClick="{{askRestore}}">Recuperar</button></td></tr>
+                <tr><td class="num">dom 11 oct 03:00</td><td>Todo</td><td class="r">2.3 GB</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Correcto</x-import></td><td><button class="gw-btn gw-btn-secondary gw-btn-sm" onClick="{{askRestore}}">Recuperar</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <sc-if value="{{restoring}}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="Garweb.Alert" tone="warning" title="¿Qué quiere recuperar del respaldo de hoy 03:00?">Puede recuperar un registro puntual (un pedido, un cliente, un folder) sin tocar lo demás, o todo el sistema. Recuperar todo reemplaza los cambios hechos después de las 03:00.</x-import>
+            <div class="row" style="flex-wrap: wrap"><button class="gw-btn gw-btn-primary" onClick="{{doRestore}}">Recuperar un registro</button><button class="gw-btn gw-btn-danger" onClick="{{doRestore}}">Recuperar todo</button><button class="gw-btn gw-btn-ghost" onClick="{{cancelRestore}}">Cancelar</button></div>
+          </sc-if>
+          <sc-if value="{{restored}}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Recuperación registrada">Queda en la auditoría (A20) con usuario, fecha y hora.</x-import>
+          </sc-if>
+        </div>
+      </div>
+      <aside class="aside">
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 17px">Historial de cambios</h2><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import></div>
+          <div class="stack" style="gap: 0">
+            <div style="padding: 10px 0; border-bottom: 1px solid var(--line)"><b style="font-size: 14px">Unidad de telas: metro → yarda</b><p class="audit">Administrador · 2 oct 2026, 08:30</p></div>
+            <div style="padding: 10px 0; border-bottom: 1px solid var(--line)"><b style="font-size: 14px">Duración del turno: 45 → 30 min</b><p class="audit">Administrador · 1 oct 2026, 09:12</p></div>
+            <div style="padding: 10px 0; border-bottom: 1px solid var(--line)"><b style="font-size: 14px">Transporte por milla: $1.45 → $1.60</b><p class="audit">Administrador · 28 sep 2026, 17:40</p></div>
+            <div style="padding: 10px 0; border-bottom: 1px solid var(--line)"><b style="font-size: 14px">Vigencia: 15 días → 1 mes</b><p class="audit">Administrador · 15 sep 2026, 10:03</p></div>
+            <div style="padding: 10px 0"><b style="font-size: 14px">Adelanto sin historial: 50 % → 40 %</b><p class="audit">Administrador · 15 sep 2026, 10:01</p></div>
+          </div>
+        </div>
+        <div class="card stack"><span class="ov">Relacionado</span><a href="A16-Plantillas.dc.html" style="font-weight: 600">Plantillas de cotización</a><a href="A20-Usuarios.dc.html" style="font-weight: 600">Usuarios, roles y auditoría completa</a></div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":2720}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { saved: false, r: '' }; }
+  renderVals() {
+    const r = this.state.r;
+    return {
+      tema: this.props.tema ?? 'light', saved: this.state.saved, save: () => this.setState({ saved: true }),
+      restoring: r === 'ask', restored: r === 'done',
+      askRestore: () => this.setState({ r: 'ask' }),
+      doRestore: () => this.setState({ r: 'done' }),
+      cancelRestore: () => this.setState({ r: '' })
+    };
+  }
+}
+</script>
+</body>
+</html>

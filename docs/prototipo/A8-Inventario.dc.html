@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A8 Inventario</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.lvl{position:relative;height:8px;border-radius:9999px;background:var(--surface-sunken);border:1px solid var(--line);min-width:120px}
+.lvl i{position:absolute;left:0;top:0;bottom:0;border-radius:9999px}
+.lvl s{position:absolute;top:-4px;bottom:-4px;border-left:2px dashed var(--ink)}
+.chart{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:14px;align-items:end;height:220px;padding:0 4px;border-bottom:1px solid var(--line-strong)}
+.col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:100%}
+.col .b{width:100%;max-width:44px;border-radius:8px 8px 0 0;background:linear-gradient(180deg,var(--chart-3),var(--chart-2))}
+.col .b.now{background:linear-gradient(180deg,var(--sky-400),var(--chart-3))}
+.col .v{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.xl{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:14px;font-size:12px;color:var(--ink-muted);text-align:center}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line);gap:4px}
+.seg button{min-height:34px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--ink-muted);font:600 13px/1 var(--font-sans);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.qnote{font-size:13.5px;line-height:1.5;padding:12px 16px;border-radius:12px;background:var(--primary-soft);color:var(--ink)}
+.qrow{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) 110px minmax(0,1.1fr);gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.qrow:last-of-type{border-bottom:0}
+.qrow > div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.qm span,.qp small,.qq small{font-size:12.5px;color:var(--ink-muted)}
+.qp span{font-size:13.5px}
+.qq b{font-size:16px}
+.qa{flex-direction:row !important;align-items:center;justify-content:flex-end;gap:10px !important;flex-wrap:wrap}
+.qurg{font-size:12px;font-weight:700;color:var(--error-ink,#991B1B);background:var(--error-soft,#FEE2E2);padding:3px 8px;border-radius:9999px}
+.qeta{font-size:12.5px;color:var(--ink-muted)}.qeta.on{color:var(--success-ink);font-weight:700}
+@media (max-width:900px){.qrow{grid-template-columns:1fr 1fr}}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav on" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Almacén e Inventario › Inventario</div><h1>Inventario</h1></div>
+      <div class="row" style="flex-wrap: wrap">
+        <a class="gw-btn gw-btn-secondary" href="A9-Conteo.dc.html">Conteo del martes</a>
+        <button class="gw-btn gw-btn-primary" onClick="{{toPedir}}">Qué pedir · {{nPedir}}</button>
+      </div>
+    </div>
+    <x-import component-from-global-scope="Garweb.Tabs" items="{{tabs}}" active="{{tab}}" on-change="{{setTab}}"></x-import>
+
+    <sc-if value="{{t0}}" hint-placeholder-val="{{ true }}">
+      <div class="grid3">
+        <x-import component-from-global-scope="Garweb.Alert" tone="danger" title="Faltante: Plumas — 2 kg">PED-0082 lo necesita el vie 16 oct. Ya pedido: llega el mié 14.</x-import>
+        <x-import component-from-global-scope="Garweb.Alert" tone="warning" title="Stock mínimo: Espuma HD 2&quot;">Disponible 6 u · mínimo 10 u.</x-import>
+        <x-import component-from-global-scope="Garweb.Alert" tone="info" title="Consumo adicional · PED-0076">Carlos retiró 1 plancha extra hoy 10:05 (7 de 6 planificadas).</x-import>
+      </div>
+      <div class="tbl-box">
+        <table class="t" style="min-width: 920px">
+          <thead><tr><th>Material</th><th>Tipo</th><th class="r">Físico</th><th class="r">Reservado</th><th class="r">Disponible</th><th class="r">Por llegar</th><th class="r">Mínimo</th><th style="width: 180px">Nivel</th><th>Estado</th></tr></thead>
+          <tbody>
+            <sc-for list="{{items}}" as="m" hint-placeholder-count="8">
+              <tr>
+                <td><b>{{m.name}}</b></td><td class="muted">{{m.type}}</td>
+                <td class="r">{{m.f}}</td><td class="r">{{m.r}}</td><td class="r"><b style="color: {{m.color}}">{{m.d}}</b></td><td class="r muted">{{m.inc}}</td><td class="r muted">{{m.min}}</td>
+                <td><div class="lvl" aria-hidden="true"><i style="width: {{m.pct}}; background: {{m.fill}}"></i><s style="left: {{m.minPct}}"></s></div></td>
+                <td><x-import component-from-global-scope="Garweb.StatusChip" tone="{{m.tone}}">{{m.label}}</x-import></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid2">
+        <div class="card stack">
+          <div class="between"><h3 style="font-size: 16px">Tela asignada a pedidos</h3><span class="pill">Bajo pedido</span></div>
+          <div class="kv"><span>Lino Navy 204 · 14 yd</span><b>PED-0076</b></div>
+          <div class="kv"><span>Terciopelo gris · 22 yd</span><b>PED-0084</b></div>
+          <div class="kv"><span>Velvet Navy · 9 yd</span><b>PED-0086 y PED-0088 · se acabó, llega en 2–3 días</b></div>
+        </div>
+        <div class="card stack">
+          <div class="between"><h3 style="font-size: 16px">Retazos de stock</h3><span class="pill" style="background: var(--success-soft); color: var(--success-ink)">Costo $0</span></div>
+          <div class="kv"><span>Espuma HD 2" · ½ plancha</span><b>de PED-0071</b></div>
+          <div class="kv"><span>Guata · 1.5 yd</span><b>de PED-0068</b></div>
+          <p class="audit">Sobrantes de material de stock: vuelven al almacén y se pueden usar en otro pedido.</p>
+          <hr class="stitch">
+          <div class="between"><h3 style="font-size: 16px">Retazos de tela del cliente</h3><span class="pill">No son del almacén</span></div>
+          <div class="kv"><span>Lino Navy 204 · 0.8 yd</span><b>PED-0076 · va con la entrega</b></div>
+          <div class="kv"><span>Terciopelo gris · 1.2 yd</span><b>PED-0071 · entregado</b></div>
+          <p class="audit">La tela bajo pedido la paga el cliente completa, así que su sobrante es suyo y se entrega con el mueble. Regla provisional, por confirmar con el dueño.</p>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{tq}}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{toast}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="{{toastT}}">{{toastB}}</x-import></sc-if>
+      <div class="qnote"><b>Cómo funciona:</b> la lista se arma sola con lo que está bajo el mínimo o lo que falta para un pedido. Usted pide como siempre (llamada, WhatsApp o en línea) y marca <b>«Lo pedí»</b>. Cuando llega el delivery, marca <b>«Llegó»</b> y la cantidad se suma al stock.</div>
+      <section class="card stack">
+        <div class="between"><h2 style="font-size: 18px">Para pedir</h2><span class="muted" style="font-size: 13px">{{pedirTxt}}</span></div>
+        <sc-if value="{{noPedir}}" hint-placeholder-val="{{ false }}"><p class="muted" style="margin: 0">No falta nada por pedir. 👍</p></sc-if>
+        <sc-for list="{{pedir}}" as="r" hint-placeholder-count="5">
+          <div class="qrow">
+            <div class="qm"><b>{{r.m}}</b><span>{{r.why}}</span></div>
+            <div class="qp"><small>Proveedor</small><span>{{r.pv}}</span><small>{{r.tarda}}</small></div>
+            <div class="qq"><small>Cantidad</small><b class="num">{{r.qTxt}}</b></div>
+            <div class="qa"><sc-if value="{{r.urg}}" hint-placeholder-val="{{ false }}"><span class="qurg">Urgente</span></sc-if><button class="gw-btn gw-btn-primary gw-btn-sm" onClick="{{r.pedi}}">Lo pedí</button></div>
+          </div>
+        </sc-for>
+      </section>
+      <section class="card stack">
+        <div class="between"><h2 style="font-size: 18px">Por llegar</h2><span class="muted" style="font-size: 13px">{{llegarTxt}}</span></div>
+        <sc-for list="{{llegar}}" as="r" hint-placeholder-count="2">
+          <div class="qrow">
+            <div class="qm"><b>{{r.m}}</b><span>{{r.why}}</span></div>
+            <div class="qp"><small>Pedido</small><span>{{r.cuando}}</span><small>{{r.pv}}</small></div>
+            <div class="qq"><small>Cantidad</small><b class="num">{{r.qTxt}}</b></div>
+            <div class="qa"><span class="{{r.etaCls}}">{{r.eta}}</span><button class="gw-btn gw-btn-secondary gw-btn-sm" onClick="{{r.llego}}">Llegó</button></div>
+          </div>
+        </sc-for>
+      </section>
+      <p class="audit" style="margin: 0">No se generan órdenes ni documentos. Si el transportista deja algún papel, puede subir su foto en el movimiento (opcional).</p>
+    </sc-if>
+
+    <sc-if value="{{t1}}" hint-placeholder-val="{{ false }}">
+      <div class="row" style="flex-wrap: wrap"><div class="search" style="min-width: 300px"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 18 }}"></x-import>Material, pedido o persona</div><span class="pill">Tipo: todos</span><span class="pill">Últimos 7 días</span><button class="gw-btn gw-btn-secondary gw-btn-sm">Exportar</button></div>
+      <div class="tbl-box">
+        <table class="t" style="min-width: 900px">
+          <thead><tr><th>Fecha y hora</th><th>Tipo</th><th>Material</th><th class="r">Cantidad</th><th>Pedido / motivo</th><th>Quién</th><th class="r">Físico después</th></tr></thead>
+          <tbody>
+            <tr><td class="num">13 oct 10:05</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="warning">Retiro adicional</x-import></td><td>Espuma HD 2"</td><td class="r">−1 u</td><td>PED-0076</td><td>Carlos</td><td class="r">7 u</td></tr>
+            <tr><td class="num">13 oct 09:40</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="neutral">Ajuste de conteo</x-import></td><td>Espuma HD 4"</td><td class="r">−1 u</td><td>Plancha dañada por humedad</td><td>Administrador</td><td class="r">8 u</td></tr>
+            <tr><td class="num">12 oct 08:40</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="info">Retiro</x-import></td><td>Espuma HD 2"</td><td class="r">−6 u</td><td>PED-0076</td><td>Carlos</td><td class="r">8 u</td></tr>
+            <tr><td class="num">12 oct 08:38</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="info">Retiro</x-import></td><td>Cierres 60 cm</td><td class="r">−3 u</td><td>PED-0076</td><td>Carlos</td><td class="r">39 u</td></tr>
+            <tr><td class="num">12 oct 08:31</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="info">Retiro</x-import></td><td>Hilo nylon 40</td><td class="r">−2 conos</td><td>PED-0081</td><td>María</td><td class="r">11 conos</td></tr>
+            <tr><td class="num">10 oct 16:10</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Devolución</x-import></td><td>Pegamento de contacto</td><td class="r">+0.5 gal</td><td>PED-0075 · consumo menor</td><td>Carlos</td><td class="r">3 gal</td></tr>
+            <tr><td class="num">8 oct 11:02</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Llegó</x-import></td><td>Lino Navy 204</td><td class="r">+14 yd</td><td>Llegó · tela de PED-0076</td><td>Administrador</td><td class="r">14 yd</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{t2}}" hint-placeholder-val="{{ false }}">
+      <div class="grid4">
+        <x-import component-from-global-scope="Garweb.KpiTile" label="Consumo esta semana" value="$612" unit="en materiales" trend="+9 % vs. promedio" icon="package"></x-import>
+        <x-import component-from-global-scope="Garweb.KpiTile" label="Consumo adicional" value="3" unit="retiros" tone="warning" trend="2 en sofás 3 cuerpos" trend-icon="alert" icon="alert"></x-import>
+        <x-import component-from-global-scope="Garweb.KpiTile" label="Mermas no útiles" value="$24" unit="esta semana" tone="danger" trend="Corte mal medido" trend-icon="trending-up" icon="scissors"></x-import>
+        <x-import component-from-global-scope="Garweb.KpiTile" label="Cardex al día" value="0" unit="días de retraso" trend="Todo registrado hasta hoy" tone="success" icon="check"></x-import>
+      </div>
+      <div class="card stack">
+        <div class="between" style="flex-wrap: wrap">
+          <h2 style="font-size: 18px">Consumo de espuma HD 2" por semana (planchas)</h2>
+          <div class="row" style="flex-wrap: wrap"><div class="seg"><button class="on">Semanal</button><button>Mensual</button></div><div class="seg"><button class="on">Espuma HD 2"</button><button>Telas</button><button>Insumos</button></div></div>
+        </div>
+        <div class="chart" role="img" aria-label="Planchas por semana: 9, 11, 8, 12, 10, 13, 9, 14 la semana actual">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="8"><div class="col"><span class="v">{{b.v}}</span><span class="{{b.cls}}" style="height: {{b.h}}"></span></div></sc-for>
+        </div>
+        <div class="xl"><sc-for list="{{bars}}" as="b" hint-placeholder-count="8"><span>{{b.w}}</span></sc-for></div>
+        <p class="audit">Promedio 11 planchas/semana · el mínimo de 10 cubre menos de una semana: conviene subirlo a 14 en el Catálogo (A15).</p>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"pestana":{"editor":"enum","options":["existencias","qué pedir"],"default":"existencias"},"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { tab: p.pestana === 'qué pedir' ? 1 : 0, ord: {}, got: {}, toast: null }; }
+  renderVals() {
+    const rows = [
+      ['Espuma HD 2" (plancha)', 'Stock', 7, 1, 10, 'planchas', 20],
+      ['Plumas (relleno)', 'Stock', 3, 5, 4, 'kg', 12, '4 kg · mié 14'],
+      ['Grapas 71/10', 'Insumo de proceso', 24, 3, 8, 'cajas', 32, '10 · lun 19'],
+      ['Hilo nylon 40', 'Insumo de proceso', 11, 4, 6, 'conos', 20],
+      ['Pegamento de contacto', 'Insumo de proceso', 3, 1, 2, 'gal', 6],
+      ['Cierres 60 cm', 'Stock', 39, 6, 15, 'u', 60],
+      ['Botones forrables', 'Stock', 120, 24, 50, 'u', 200],
+      ['Espuma HD 4" (plancha)', 'Stock', 8, 2, 4, 'planchas', 16]
+    ];
+    const W = [['17 ago', 9], ['24 ago', 11], ['31 ago', 8], ['7 sep', 12], ['14 sep', 10], ['21 sep', 13], ['28 sep', 9], ['esta semana', 14]];
+    const t = this.state.tab, st = this.state;
+    const Q = [
+      { id: 'e2', m: 'Espuma HD 2" (plancha)', why: 'Hay 6 disponibles · mínimo 10', pv: 'Proveedor de espumas', tarda: 'tarda 3–5 días', q: 17, u: 'planchas', eta: 'aprox. lun 19' },
+      { id: 'vn', m: 'Velvet Navy (tela)', why: 'Se acabó · PED-0086 (6 yd) y PED-0088 (3 yd) la necesitan', pv: 'Proveedor de telas', tarda: 'tarda 2–3 días', q: 9, u: 'yd', eta: 'aprox. jue 15', urg: true, ped: 'PED-0086 y PED-0088' },
+      { id: 'hi', m: 'Hilo nylon 40', why: 'Alcanza para 1 semana · conviene reponer', pv: 'Proveedor de insumos', tarda: 'tarda 4–6 días', q: 5, u: 'conos', eta: 'aprox. mar 20' },
+      { id: 'pg', m: 'Pegamento de contacto', why: 'Hay 2 gal · mínimo 2', pv: 'Proveedor de insumos', tarda: 'tarda 4–6 días', q: 1, u: 'gal', eta: 'aprox. mar 20' }
+    ];
+    const L0 = [
+      { id: 'ln', m: 'Terciopelo gris (tela)', why: 'Tela para PED-0084', pv: 'Proveedor de telas', cuando: 'sáb 10 · WhatsApp', q: 22, u: 'yd', eta: 'Llega hoy', today: true, ped: 'PED-0084' },
+      { id: 'pl', m: 'Plumas (relleno)', why: 'Faltan 2 kg para PED-0082 (vie 16) · urgente, recargo $20', pv: 'Proveedor de espumas', cuando: 'lun 12 · teléfono', q: 4, u: 'kg', eta: 'mié 14', ped: 'PED-0082' },
+      { id: 'gr', m: 'Grapas 71/10', why: 'Reposición de stock', pv: 'Proveedor de insumos', cuando: 'jue 8 · en línea', q: 10, u: 'cajas', eta: 'aprox. lun 19' }
+    ];
+    const pedir = Q.filter(r => !st.ord[r.id]);
+    const llegar = L0.concat(Q.filter(r => st.ord[r.id]).map(r => ({ ...r, cuando: 'hoy · WhatsApp' }))).filter(r => !st.got[r.id]);
+    return {
+      tema: this.props.tema ?? 'light',
+      tabs: ['Existencias', 'Qué pedir · ' + pedir.length, 'Movimientos', 'Consumo'],
+      tab: t, setTab: (i) => this.setState({ tab: i }),
+      t0: t === 0, tq: t === 1, t1: t === 2, t2: t === 3,
+      toPedir: () => this.setState({ tab: 1 }), nPedir: String(pedir.length),
+      noPedir: pedir.length === 0, pedirTxt: pedir.length + (pedir.length === 1 ? ' material' : ' materiales'), llegarTxt: llegar.length + (llegar.length === 1 ? ' pedido' : ' pedidos'),
+      toast: !!st.toast, toastT: st.toast ? st.toast[0] : '', toastB: st.toast ? st.toast[1] : '',
+      pedir: pedir.map(r => ({ ...r, urg: !!r.urg, qTxt: r.q + ' ' + r.u, pedi: () => this.setState({ ord: { ...st.ord, [r.id]: 1 }, toast: ['Anotado: ' + r.m, 'Pasa a «Por llegar» (' + r.eta + ').' + ''] }) })),
+      llegar: llegar.map(r => ({ ...r, qTxt: r.q + ' ' + r.u, etaCls: r.today ? 'qeta on' : 'qeta', llego: () => this.setState({ got: { ...st.got, [r.id]: 1 }, toast: ['Llegó: ' + r.m, '+' + r.q + ' ' + r.u + ' al stock.' + (r.ped ? ' ' + r.ped + ' ya tiene su material.' : '')] }) })),
+      bars: W.map((w, i) => ({ w: w[0], v: w[1], h: (w[1] / 14 * 100) + '%', cls: i === W.length - 1 ? 'b now' : 'b' })),
+      items: rows.map(r => {
+        const d = r[2] - r[3];
+        const tone = d < 0 ? 'danger' : d < r[4] ? 'warning' : 'success';
+        return {
+          inc: r[7] || '—', name: r[0], type: r[1], f: r[2] + ' ' + r[5], r: r[3] + ' ' + r[5], d: d + ' ' + r[5], min: r[4] + ' ' + r[5],
+          tone, label: d < 0 ? 'Faltante' : d < r[4] ? 'Bajo mínimo' : 'Suficiente',
+          color: tone === 'danger' ? 'var(--danger-ink)' : tone === 'warning' ? 'var(--warning-ink)' : 'var(--ink)',
+          fill: tone === 'danger' ? 'var(--error-500)' : tone === 'warning' ? 'var(--warning-500)' : 'var(--success-500)',
+          pct: Math.max(0, Math.min(100, d / r[6] * 100)) + '%', minPct: (r[4] / r[6] * 100) + '%'
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

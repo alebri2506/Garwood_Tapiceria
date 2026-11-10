@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>D4 Entrega</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.meth{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mod{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:9999px;font-size:11px;font-weight:700;letter-spacing:.04em;background:var(--progress-soft);color:var(--progress-ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1 var(--font-sans);cursor:pointer}
+.chips button.on{border-color:var(--error-500);background:var(--danger-soft);color:var(--danger-ink)}
+.meth button{min-height:56px;border-radius:14px;border:2px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 15px/1 var(--font-sans);cursor:pointer}
+.meth button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.sign{position:relative;height:150px;border-radius:14px;border:2px dashed var(--line-strong);background:var(--surface-sunken)}
+.sign svg{position:absolute;inset:0;width:100%;height:100%}
+.sign span{position:absolute;left:14px;bottom:10px;font-size:12px;color:var(--ink-muted)}
+</style>
+</helmet>
+<div class="phone" style="width: 390px; min-height: 1300px">
+  <div class="ph-head">
+    <a class="ph-back" href="D1-Ruta.dc.html" aria-label="Volver a la hoja de ruta"><x-import component-from-global-scope="Garweb.Icon" name="arrow-right" style="transform: rotate(180deg)"></x-import></a>
+    <h1>{{title}}</h1>
+    <x-import component-from-global-scope="Garweb.StatusChip" tone="{{stTone}}">{{stopStatus}}</x-import>
+  </div>
+  <div class="ph-body">
+    <div class="ph-card" style="gap: 6px">
+      <span class="ov">{{when}}</span>
+      <b style="font-family: var(--font-display); font-size: 20px">{{who}}</b>
+      <span class="muted" style="font-size: 15px">{{place}}</span>
+    </div>
+    <sc-if value="{{ok}}" hint-placeholder-val="{{ true }}">
+      <div class="ph-card">
+        <div class="between"><b style="font-size: 17px">1. Revisar piezas con el cliente</b><span class="pill" style="background: var(--success-soft); color: var(--success-ink)">{{pieces}}</span></div>
+        <x-import component-from-global-scope="Garweb.ChecklistItem" label="Todas las piezas, sin daños" meta="{{piecesMeta}}" done="{{ true }}"></x-import>
+      </div>
+      <div class="ph-card">
+        <b style="font-size: 17px">2. Foto de la entrega · mínimo 1</b>
+        <x-import component-from-global-scope="Garweb.UploadZone" icon="camera" title="Tomar foto" hint="El mueble en su lugar" files="{{fotos}}"></x-import>
+      </div>
+      <div class="ph-card">
+        <div class="between"><b style="font-size: 17px">3. Cobro del saldo</b><span class="mod">POR CONFIRMAR · C11</span></div>
+        <sc-if value="{{toPay}}" hint-placeholder-val="{{ true }}">
+          <div class="between"><span class="muted">Saldo a cobrar</span><b class="num" style="font-family: var(--font-display); font-size: 26px">$684</b></div>
+          <div class="meth"><sc-for list="{{methods}}" as="m" hint-placeholder-count="5"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for></div>
+          <span class="muted" style="font-size: 13px; line-height: 19px">{{methNote}}</span>
+          <sc-if value="{{needPhoto}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.UploadZone" icon="camera" title="{{photoTitle}}" hint="Obligatoria" files="{{noFiles}}"></x-import></sc-if>
+        </sc-if>
+        <sc-if value="{{paid}}" hint-placeholder-val="{{ false }}">
+          <div class="between"><span class="muted">{{paidTxt}}</span><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Pagado</x-import></div>
+          <span class="muted" style="font-size: 13px">Saldo $0: no hay nada que cobrar en esta parada.</span>
+        </sc-if>
+      </div>
+      <div class="ph-card">
+        <b style="font-size: 17px">4. Firma de conformidad</b>
+        <div class="sign" aria-label="{{signLabel}}">
+          <svg viewBox="0 0 340 150" aria-hidden="true"><path d="M30 105 C 50 60, 70 50, 80 95 S 110 120, 125 70 S 150 40, 160 90 C 170 120, 190 60, 205 80 S 230 110, 250 75 C 262 58, 280 70, 310 64" fill="none" stroke="#0F172A" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="120" x2="320" y2="120" stroke="#7587A6" stroke-dasharray="6 5"/></svg>
+          <span>{{signLabel}}</span>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{inc}}" hint-placeholder-val="{{ false }}">
+      <div class="ph-card" style="border: 2px solid var(--error-500)">
+        <b style="font-size: 17px">Registrar incidencia</b>
+        <div class="chips" role="group" aria-label="Tipo de incidencia"><sc-for list="{{incs}}" as="c" hint-placeholder-count="4"><button class="{{c.cls}}" aria-pressed="{{c.on}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for></div>
+        <x-import component-from-global-scope="Garweb.TextField" label="Detalle" optional="{{ true }}" placeholder="{{incPh}}"></x-import>
+        <x-import component-from-global-scope="Garweb.UploadZone" icon="camera" title="Foto" hint="{{incPhotoHint}}" files="{{noFiles}}"></x-import>
+        <x-import component-from-global-scope="Garweb.Alert" tone="info" title="{{incTitle}}" compact="{{ true }}">{{incText}}</x-import>
+      </div>
+    </sc-if>
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="{{doneTone}}" title="{{doneTitle}}">{{doneText}}</x-import></sc-if>
+  </div>
+  <div class="ph-foot">
+    <sc-if value="{{open}}" hint-placeholder-val="{{ true }}"><button class="big-btn pri" onClick="{{finish}}">{{finishLabel}}</button><button class="big-btn" onClick="{{toggleInc}}">{{incBtn}}</button></sc-if>
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><a class="big-btn pri" href="D1-Ruta.dc.html">Siguiente parada</a></sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"caso":{"editor":"enum","options":["PED-0076 · cobra saldo","PED-0079 · ya pagado","REC-0011 · devolución por reclamo"],"default":"PED-0076 · cobra saldo"},"$preview":{"width":390,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { m: 0, inc: false, ic: 0, done: false }; }
+  renderVals() {
+    const s = this.state, c = this.props.caso || '';
+    const k = c.indexOf('0079') >= 0 ? 1 : c.indexOf('REC') >= 0 ? 2 : 0;
+    const D = [
+      ['Entrega · parada 1', 'jue 22 oct · 10:38', 'PED-0076 · Laura Méndez', '48 Park St, Montclair', '9 / 9', 'Estructura · 3 asiento · 3 respaldo · 2 decorativos', 'Laura Méndez · recibí conforme'],
+      ['Entrega · parada 2', 'jue 22 oct · 11:50', 'PED-0079 · Emily Stone', 'Bloomfield', '1 / 1', 'Cabecera retapizada', 'Emily Stone · recibí conforme'],
+      ['Entrega por reclamo', 'mar 27 oct · 14:40 · parada 3', 'REC-0011 · Emily Stone', 'Bloomfield · devolución de pieza reparada', '1 / 1', 'Cojín de la cabecera, reparado', 'Emily Stone · recibí reparado']
+    ][k];
+    const M = [['Tarjeta', 'Cobre con el lector de la pasarela. Al aprobarse, el pago queda registrado y confirmado solo; el cliente recibe su recibo. No necesita foto.', false, ''], ['Efectivo', 'Cuente el dinero delante del cliente y entréguele el recibo desde la app. Entregue el efectivo al Administrador al volver.', false, ''], ['Cheque', 'Tome foto del cheque y entréguelo al Administrador al volver.', true, 'Foto del cheque'], ['Zelle', 'Tome foto del comprobante en el celular del cliente; el Administrador lo confirma.', true, 'Foto del comprobante Zelle'], ['Transferencia', 'Tome foto de la confirmación en el celular del cliente; el Administrador la confirma.', true, 'Foto de la confirmación']];
+    const I = ['Cliente ausente', 'Dirección incorrecta', 'Rechaza pieza dañada', 'Piezas distintas'];
+    const IT = [
+      ['Queda por reprogramar', 'El pedido vuelve al taller. El Administrador acuerda otra fecha; el costo del segundo viaje está pendiente de definir con el dueño.', 'Ej.: nadie abrió, llamé 2 veces', 'Fachada (opcional)'],
+      ['Queda por reprogramar', 'El Administrador corrige la dirección con el cliente y asigna otra salida.', 'Ej.: el número no existe', 'Opcional'],
+      ['Se crea un reclamo en A19', 'La pieza rechazada vuelve al taller; las demás se entregan si el cliente acepta. El Administrador decide reposición o no procede.', 'Ej.: mancha en el cojín derecho', 'Foto del daño · obligatoria'],
+      ['Entrega con observación', 'Se registra la diferencia y se avisa al Administrador.', 'Ej.: el cliente dice que eran 10 piezas', 'Opcional']
+    ];
+    const fail = s.inc && s.ic < 2;
+    return {
+      title: D[0], when: D[1], who: D[2], place: D[3], pieces: D[4], piecesMeta: D[5], signLabel: D[6],
+      stopStatus: s.done ? (fail ? 'Fallida' : 'Realizada') : 'En ruta', stTone: s.done ? (fail ? 'danger' : 'success') : 'progress',
+      ok: !fail, inc: s.inc,
+      fotos: [{ name: 'entrega-sala.jpg' }],
+      toPay: k === 0, paid: k > 0, paidTxt: k === 1 ? 'Pagó antes por Zelle (confirmado)' : 'Reclamo sin costo para el cliente',
+      methods: M.map((x, i) => ({ label: x[0], on: s.m === i, cls: s.m === i ? 'on' : '', pick: () => this.setState({ m: i }) })),
+      methNote: M[s.m][1], needPhoto: M[s.m][2], photoTitle: M[s.m][3], noFiles: [],
+      incs: I.map((l, i) => ({ label: l, on: s.ic === i, cls: s.ic === i ? 'on' : '', pick: () => this.setState({ ic: i }) })),
+      incTitle: IT[s.ic][0], incText: IT[s.ic][1], incPh: IT[s.ic][2], incPhotoHint: IT[s.ic][3],
+      incBtn: s.inc ? 'Cancelar incidencia' : 'Registrar incidencia', toggleInc: () => this.setState({ inc: !s.inc }),
+      finishLabel: fail ? 'Guardar incidencia' : 'Entrega realizada',
+      done: s.done, open: !s.done,
+      doneTone: fail || (s.inc && s.ic === 2) ? 'warning' : 'success',
+      doneTitle: fail ? 'Parada no realizada' : 'Entrega completa',
+      doneText: fail ? I[s.ic] + ' · queda por reprogramar. Quedó registrado.' : (k === 0 ? 'PED-0076 entregado · cobro $684 con ' + (M[s.m][0] === 'Zelle' ? 'Zelle' : M[s.m][0].toLowerCase()) + ' · empieza la semana para reclamos.' : k === 1 ? 'PED-0079 entregado · ya estaba pagado.' : 'REC-0011 devuelto reparado · el reclamo queda cerrado.'),
+      finish: () => this.setState({ done: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

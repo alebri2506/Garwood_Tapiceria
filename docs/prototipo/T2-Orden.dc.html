@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T2 Orden de trabajo — PED-0076 (celular)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.ph{position:relative}
+.th{display:flex;flex-direction:column;gap:10px;padding:14px 16px 16px;background:var(--navy-950);color:#FFFFFF}
+.th a{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:#FFFFFF1F;color:#FFFFFF;text-decoration:none;font-size:20px}
+.seg{display:flex;padding:4px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--line);gap:4px}
+.seg button{flex:1;min-height:44px;border:0;border-radius:10px;background:transparent;color:var(--ink-muted);font:600 14.5px/1 var(--font-sans);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.spec{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;font-size:14px}
+.spec span{color:var(--ink-muted)}
+.ph-thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mt{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px 44px;gap:6px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.mt b{text-align:right;font-variant-numeric:tabular-nums}
+.mt.h{font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--ink-muted);padding-top:0}
+.mt.h b{font-weight:700}
+.pc .gw-check{min-height:60px}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini .big-btn{min-height:56px;font-size:15px;padding:0 10px}
+.ban{display:flex;gap:10px;align-items:flex-start;padding:14px;border-radius:14px;background:var(--warning-soft);border:1.5px solid var(--warning-500)}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:9999px;font-size:11px;font-weight:700;letter-spacing:.04em;background:#FFFFFF1F;color:#C3D2EE}
+.scrim{position:absolute;inset:0;background:#0A163080;display:flex;align-items:flex-end;z-index:5}
+.sheet{width:100%;background:var(--surface);border-radius:22px 22px 0 0;padding:10px 16px 22px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-lg)}
+.sheet .grab{width:44px;height:5px;border-radius:9999px;background:var(--line-strong);align-self:center}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1 var(--font-sans);cursor:pointer}
+.chips button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.step{display:flex;align-items:center;gap:10px}
+.step button{width:52px;height:52px;border-radius:14px;border:2px solid var(--line-strong);background:var(--surface);color:var(--ink);font:800 24px/1 var(--font-display);cursor:pointer}
+.step span{min-width:56px;text-align:center;font:800 30px/1 var(--font-display);font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div class="phone ph" style="width: 390px; min-height: 1250px">
+  <div class="th">
+    <div class="row" style="gap: 12px"><a href="T1-Ordenes.dc.html" aria-label="Volver a las órdenes del taller">←</a><div style="flex: 1"><b style="font-family: var(--font-display); font-size: 18px">PED-0076 · Sofá de 3 cuerpos</b><div style="font-size: 13px; color: #A9BEE3">Laura Méndez · para el vie 16 oct</div></div></div>
+    <div class="between"><x-import component-from-global-scope="Garweb.StatusChip" status="{{status}}"></x-import><span class="tag">INVENTARIO · PRODUCCIÓN</span></div>
+  </div>
+  <div class="ph-body">
+    <sc-if value="{{isPlan}}" hint-placeholder-val="{{ false }}">
+      <div class="ph-card"><b style="font-size: 16px">Todavía no empezó</b><p class="muted" style="font-size: 14px; line-height: 20px">Revise los datos y toque "Iniciar trabajo" cuando empiece. El pedido pasa a En producción y se guarda la hora.</p><button class="big-btn pri" onClick="{{start}}"><x-import component-from-global-scope="Garweb.Icon" name="arrow-right" size="{{ 22 }}"></x-import>Iniciar trabajo</button></div>
+    </sc-if>
+    <sc-if value="{{isPause}}" hint-placeholder-val="{{ false }}">
+      <div class="ban"><x-import component-from-global-scope="Garweb.Icon" name="pause" size="{{ 22 }}"></x-import><div style="flex: 1"><b>En pausa · {{pauseWhy}}</b><div class="muted" style="font-size: 13px">{{pauseSub}}</div></div></div>
+      <sc-if value="{{canResume}}" hint-placeholder-val="{{ true }}"><button class="big-btn pri" onClick="{{resume}}">Reanudar trabajo</button></sc-if>
+    </sc-if>
+
+    <div class="seg" role="tablist" aria-label="Secciones de la orden"><sc-for list="{{tabs}}" as="t" hint-placeholder-count="3"><button class="{{t.cls}}" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for></div>
+
+    <sc-if value="{{tDatos}}" hint-placeholder-val="{{ false }}">
+      <div class="ph-card">
+        <div class="between"><b style="font-size: 16px">Para trabajar</b><span class="muted" style="font-size: 12px">Solo lectura</span></div>
+        <div class="spec">
+          <span>Trabajo</span><b>Retapizado completo + cambio de espuma de asientos</b>
+          <span>Tela</span><b>Lino Navy 204 · 14 yd</b>
+          <span>Espuma</span><b>HD 2" · 6 planchas</b>
+          <span>Piezas</span><b>9 (estructura + 3 asiento + 3 respaldo + 2 decorativos)</b>
+          <span>Medidas</span><b>210 × 90 × 85 cm</b>
+          <span>Notas</span><b>Ribete del mismo lino. Cliente pidió asientos más firmes.</b>
+        </div>
+      </div>
+      <div class="ph-card">
+        <b style="font-size: 16px">Fotos del mueble recibido</b>
+        <div class="ph-thumbs">
+          <span class="thumb b" style="height: 90px; width: 100%"><x-import component-from-global-scope="Garweb.Icon" name="image"></x-import></span>
+          <span class="thumb" style="height: 90px; width: 100%"><x-import component-from-global-scope="Garweb.Icon" name="image"></x-import></span>
+          <span class="thumb c" style="height: 90px; width: 100%"><x-import component-from-global-scope="Garweb.Icon" name="image"></x-import></span>
+        </div>
+        <span class="muted" style="font-size: 12.5px">Recojo del jue 8 oct · 9 piezas contadas por el conductor</span>
+      </div>
+      <div class="ph-card">
+        <b style="font-size: 16px">Materiales planificados</b>
+        <div class="spec"><span>Lino Navy 204</span><b>14 yd</b><span>Espuma HD 2"</span><b>6 planchas</b><span>Cierres 60 cm</span><b>3 u</b><span>Insumos de proceso</span><b>Grapas, hilo, pegamento (por plantilla)</b></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{tActs}}" hint-placeholder-val="{{ true }}">
+      <div class="between"><b style="font-size: 16px">Actividades</b><span class="muted" style="font-size: 13px">Toque para marcar ✓</span></div>
+      <div class="pc stack" style="gap: 8px">
+        <sc-for list="{{acts}}" as="a" hint-placeholder-count="6"><x-import component-from-global-scope="Garweb.ChecklistItem" label="{{a.label}}" meta="{{a.meta}}" done="{{a.done}}"></x-import></sc-for>
+      </div>
+      <span class="muted" style="font-size: 12.5px">Al marcar ✓ anote las horas reales: se usan en el cotizado vs ejecutado (A11).</span>
+    </sc-if>
+
+    <sc-if value="{{tMat}}" hint-placeholder-val="{{ false }}">
+      <div class="ph-card" style="gap: 0">
+        <div class="mt h"><span>MATERIAL</span><b>PLAN</b><b>RETIRÓ</b><b>DEVOLVIÓ</b></div>
+        <div class="mt"><span>Lino Navy 204 (yd)</span><b>14</b><b>14</b><b>0</b></div>
+        <div class="mt"><span>Espuma HD 2" (pl.)</span><b>6</b><b style="{{espStyle}}">{{esp}}</b><b>{{espDev}}</b></div>
+        <div class="mt" style="border-bottom: 0"><span>Cierres 60 cm (u)</span><b>3</b><b>3</b><b>0</b></div>
+      </div>
+      <div class="mini">
+        <button class="big-btn pri" onClick="{{openRetiro}}"><x-import component-from-global-scope="Garweb.Icon" name="package" size="{{ 20 }}"></x-import>Retirar</button>
+        <button class="big-btn" onClick="{{openDev}}"><x-import component-from-global-scope="Garweb.Icon" name="refresh" size="{{ 20 }}"></x-import>Devolver</button>
+      </div>
+      <x-import component-from-global-scope="Garweb.Alert" tone="info" title="Grapas, hilo y pegamento no se retiran" compact="{{ true }}">Son insumos de proceso: el sistema los descuenta según la plantilla al cerrar la orden.</x-import>
+    </sc-if>
+
+    <sc-if value="{{toast}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="{{toastTone}}" title="{{toastTitle}}">{{toastText}}</x-import></sc-if>
+
+    <sc-if value="{{working}}" hint-placeholder-val="{{ true }}">
+      <div class="mini">
+        <button class="big-btn" onClick="{{openMerma}}"><x-import component-from-global-scope="Garweb.Icon" name="scissors" size="{{ 20 }}"></x-import>Merma o retazo</button>
+        <button class="big-btn" onClick="{{openPause}}"><x-import component-from-global-scope="Garweb.Icon" name="pause" size="{{ 20 }}"></x-import>Pausar</button>
+      </div>
+      <button class="big-btn warn" onClick="{{openDano}}"><x-import component-from-global-scope="Garweb.Icon" name="camera" size="{{ 22 }}"></x-import>Reportar daño oculto</button>
+      <span class="muted" style="font-size: 12px; text-align: center">El daño oculto lo atiende Comercial: el Administrador arma la V2 (C07).</span>
+    </sc-if>
+  </div>
+  <sc-if value="{{working}}" hint-placeholder-val="{{ true }}">
+    <div class="ph-foot"><a class="big-btn pri" href="T3-Terminar.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 22 }}"></x-import>Terminar trabajo</a></div>
+  </sc-if>
+
+  <sc-if value="{{sheet}}" hint-placeholder-val="{{ false }}">
+    <div class="scrim">
+      <div class="sheet" role="dialog" aria-label="{{sheetTitle}}">
+        <span class="grab"></span>
+        <div class="between"><h3 style="font-size: 20px">{{sheetTitle}}</h3><button class="gw-btn gw-btn-ghost gw-btn-sm" onClick="{{close}}">Cerrar</button></div>
+
+        <sc-if value="{{sRet}}" hint-placeholder-val="{{ false }}">
+          <select class="gw-input" style="min-height: 52px; font-size: 16px" aria-label="Material"><option>Espuma HD 2" (plancha)</option><option>Lino Navy 204 (yd)</option><option>Cierres 60 cm</option></select>
+          <div class="between"><span style="font-size: 16px">Cantidad</span><div class="step"><button aria-label="Menos" onClick="{{minus}}">−</button><span>{{qty}}</span><button aria-label="Más" onClick="{{plus}}">+</button></div></div>
+          <sc-if value="{{extra}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Garweb.Alert" tone="warning" title="Consumo adicional" compact="{{ true }}">Ya retiró las 6 planificadas. Se avisará al Administrador.</x-import></sc-if>
+          <button class="big-btn pri" onClick="{{doRetiro}}">Confirmar retiro</button>
+          <span class="audit">Queda registrado quién retiró (Carlos) y la hora. Baja el stock físico al instante.</span>
+        </sc-if>
+
+        <sc-if value="{{sDev}}" hint-placeholder-val="{{ false }}">
+          <p class="muted" style="font-size: 14px; line-height: 20px">Durante el trabajo: devuelva al almacén lo que retiró de más.</p>
+          <select class="gw-input" style="min-height: 52px; font-size: 16px" aria-label="Material"><option>Espuma HD 2" (plancha)</option><option>Cierres 60 cm</option></select>
+          <div class="between"><span style="font-size: 16px">Cantidad</span><div class="step"><button aria-label="Menos" onClick="{{minus}}">−</button><span>{{qty}}</span><button aria-label="Más" onClick="{{plus}}">+</button></div></div>
+          <button class="big-btn pri" onClick="{{doDev}}">Confirmar devolución</button>
+          <span class="audit">Vuelve al stock con su costo. Consumo = retirado − devuelto − retazos.</span>
+        </sc-if>
+
+        <sc-if value="{{sMer}}" hint-placeholder-val="{{ false }}">
+          <div class="chips" role="group" aria-label="Tipo"><sc-for list="{{merTypes}}" as="m" hint-placeholder-count="2"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for></div>
+          <x-import component-from-global-scope="Garweb.TextField" label="Lino Navy 204 · yardas" value="0.8" numeric="{{ true }}" hint="{{merHint}}"></x-import>
+          <sc-if value="{{isLoss}}" hint-placeholder-val="{{ false }}">
+            <span class="gw-field-label">Causa</span>
+            <div class="chips" role="group" aria-label="Causa"><sc-for list="{{causes}}" as="c" hint-placeholder-count="4"><button class="{{c.cls}}" aria-pressed="{{c.on}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for></div>
+            <sc-if value="{{damaged}}" hint-placeholder-val="{{ false }}">
+              <x-import component-from-global-scope="Garweb.Alert" tone="warning" title="Se pedirá una compra urgente" compact="{{ true }}">Se avisa al Administrador para pedir tela de reposición (Inventario › Qué pedir). Puede pausar la orden mientras llega.</x-import>
+              <x-import component-from-global-scope="Garweb.UploadZone" icon="camera" title="Foto de la tela dañada" hint="Opcional" files="{{noFiles}}"></x-import>
+            </sc-if>
+          </sc-if>
+          <button class="big-btn pri" onClick="{{doMer}}">{{merBtn}}</button>
+        </sc-if>
+
+        <sc-if value="{{sPau}}" hint-placeholder-val="{{ false }}">
+          <span class="gw-field-label">¿Por qué pausa?</span>
+          <div class="chips" role="group" aria-label="Motivo de pausa"><sc-for list="{{pauses}}" as="c" hint-placeholder-count="4"><button class="{{c.cls}}" aria-pressed="{{c.on}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for></div>
+          <x-import component-from-global-scope="Garweb.TextField" label="Detalle" optional="{{ true }}" placeholder="Ej.: faltan 2 cierres de 60 cm"></x-import>
+          <button class="big-btn pri" onClick="{{doPause}}">Pausar orden</button>
+          <span class="audit">El pedido pasa a En pausa y se avisa al Administrador. Usted mismo la reanuda.</span>
+        </sc-if>
+
+        <sc-if value="{{sDan}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.UploadZone" icon="camera" title="Tomar fotos del daño" hint="Mínimo 1 foto" files="{{noFiles}}"></x-import>
+          <x-import component-from-global-scope="Garweb.TextField" label="¿Qué encontró?" multiline="{{ true }}" placeholder="Ej.: travesaño de la base partido"></x-import>
+          <button class="big-btn warn" onClick="{{doDano}}">Pausar pedido y avisar</button>
+          <span class="audit">Comercial · C07. El Administrador arma la V2 y el cliente decide (W8). Solo el Administrador la reanuda.</span>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"estado":{"editor":"enum","options":["planificado","en producción","en pausa"],"default":"en producción"},"$preview":{"width":390,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const st = { 'planificado': 'plan', 'en pausa': 'pause' }[p.estado] || 'work';
+    this.state = { st, tab: 1, sheet: '', qty: 1, ret: 7, dev: 0, mer: 0, cause: 0, pau: 0, dano: false, toast: '', done: [true, true, true, false, false, false] };
+  }
+  renderVals() {
+    const s = this.state;
+    const A = [['Desmontar tapiz y espuma antigua', 'Plan 2.5 h · real 2.5 h · ✓ Carlos'], ['Revisar y reforzar estructura', 'Plan 1.5 h · real 1.8 h · ✓ Carlos'], ['Cortar tela — Lino Navy 204', 'Plan 1.5 h · real 1.5 h · ✓ María'], ['Cambiar espuma de asientos', 'Plan 1.5 h · 6 planchas'], ['Coser fundas y cojines', 'Plan 4 h · con María'], ['Tapizar y armar', 'Plan 3 h']];
+    const C = ['Corte errado', 'Defecto de fábrica', 'Tela dañada en el trabajo', 'Otra'];
+    const P = ['Falta material', 'Espera de tela', 'Otro pedido urgente', 'Otro'];
+    const titles = { r: 'Retirar material', d: 'Devolver lo que sobró', m: 'Merma o retazo', p: 'Pausar la orden', x: 'Reportar daño oculto' };
+    const T = {
+      ret: ['warning', 'Retiro registrado · consumo adicional', 'Pasa de lo planificado en PED-0076. Se avisó al Administrador.'],
+      ret1: ['success', 'Retiro registrado', 'Bajó el stock físico. Queda su nombre y la hora.'],
+      dev: ['success', 'Devolución registrada', 'Volvió al almacén. Su consumo se actualizó.'],
+      ret0: ['success', 'Retazo guardado', '0.8 yd de Lino Navy 204 quedan asignadas a PED-0076: se entregan a la clienta con el mueble.'],
+      loss: ['warning', 'Pérdida anotada', 'Se avisó al Administrador para la compra urgente de tela.'],
+      loss1: ['success', 'Pérdida anotada', 'Queda con su causa en los movimientos.']
+    };
+    const t = T[s.toast] || ['success', '', ''];
+    const stat = { plan: 'Listo para producir', work: 'En producción', pause: 'En pausa' }[s.st];
+    const close = () => this.setState({ sheet: '', qty: 1 });
+    return {
+      status: stat, isPlan: s.st === 'plan', isPause: s.st === 'pause', working: s.st === 'work',
+      pauseWhy: s.dano ? 'Daño oculto' : P[s.pau],
+      pauseSub: s.dano ? 'Esperando la respuesta del cliente a la V2. La reanuda el Administrador.' : 'Desde hoy 10:40 · se avisó al Administrador',
+      canResume: !s.dano,
+      start: () => this.setState({ st: 'work', toast: '' }),
+      resume: () => this.setState({ st: 'work', toast: '', dano: false }),
+      tabs: ['Datos', 'Actividades', 'Materiales'].map((l, i) => ({ label: l, on: s.tab === i, cls: s.tab === i ? 'on' : '', pick: () => this.setState({ tab: i }) })),
+      tDatos: s.tab === 0, tActs: s.tab === 1, tMat: s.tab === 2,
+      acts: A.map((a, i) => ({ label: a[0], meta: a[1], done: s.done[i] })),
+      esp: s.ret, espDev: s.dev, espStyle: s.ret - s.dev > 6 ? 'color: var(--warning-ink)' : '',
+      toast: !!s.toast, toastTone: t[0], toastTitle: t[1], toastText: t[2],
+      sheet: !!s.sheet, sheetTitle: titles[s.sheet] || '',
+      sRet: s.sheet === 'r', sDev: s.sheet === 'd', sMer: s.sheet === 'm', sPau: s.sheet === 'p', sDan: s.sheet === 'x',
+      openRetiro: () => this.setState({ sheet: 'r', toast: '' }), openDev: () => this.setState({ sheet: 'd', toast: '' }),
+      openMerma: () => this.setState({ sheet: 'm', toast: '' }), openPause: () => this.setState({ sheet: 'p', toast: '' }), openDano: () => this.setState({ sheet: 'x', toast: '' }),
+      close,
+      qty: s.qty, extra: s.ret - s.dev + s.qty > 6,
+      minus: () => this.setState({ qty: Math.max(1, s.qty - 1) }), plus: () => this.setState({ qty: s.qty + 1 }),
+      doRetiro: () => this.setState({ ret: s.ret + s.qty, sheet: '', qty: 1, toast: s.ret - s.dev + s.qty > 6 ? 'ret' : 'ret1', tab: 2 }),
+      doDev: () => this.setState({ dev: s.dev + s.qty, sheet: '', qty: 1, toast: 'dev', tab: 2 }),
+      merTypes: ['Retazo útil', 'Pérdida'].map((l, i) => ({ label: l, on: s.mer === i, cls: s.mer === i ? 'on' : '', pick: () => this.setState({ mer: i }) })),
+      merHint: s.mer === 0 ? 'Tela bajo pedido: queda asignada al pedido (es del cliente). Material de stock: vuelve al almacén con costo $0.' : 'Sale del stock como merma, con su causa',
+      isLoss: s.mer === 1, damaged: s.mer === 1 && s.cause === 2,
+      causes: C.map((l, i) => ({ label: l, on: s.cause === i, cls: s.cause === i ? 'on' : '', pick: () => this.setState({ cause: i }) })),
+      merBtn: s.mer === 1 && s.cause === 2 ? 'Anotar y pedir compra urgente' : 'Guardar',
+      doMer: () => this.setState({ sheet: '', toast: s.mer === 0 ? 'ret0' : (s.cause === 2 ? 'loss' : 'loss1') }),
+      pauses: P.map((l, i) => ({ label: l, on: s.pau === i, cls: s.pau === i ? 'on' : '', pick: () => this.setState({ pau: i }) })),
+      doPause: () => this.setState({ sheet: '', st: 'pause', toast: '' }),
+      doDano: () => this.setState({ sheet: '', st: 'pause', dano: true, toast: '' }),
+      noFiles: []
+    };
+  }
+}
+</script>
+</body>
+</html>

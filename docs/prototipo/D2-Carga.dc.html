@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>D2 Validar carga</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.grp{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border-radius:16px;background:var(--surface);border:2px solid var(--line)}
+.grp.ok{border-color:var(--success-500);background:var(--success-soft)}
+.grp.bad{border-color:var(--error-500);background:var(--danger-soft)}
+.cnt{font:800 22px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.pc .gw-check{min-height:60px;padding:8px 14px 8px 8px}
+.pc .gw-check-box{width:44px;height:44px}
+.pc .gw-check-label{font-size:16px;line-height:22px}
+</style>
+</helmet>
+<div class="phone" style="width: 390px; min-height: 1080px">
+  <div class="ph-head">
+    <a class="ph-back" href="D1-Ruta.dc.html" aria-label="Volver a la hoja de ruta"><x-import component-from-global-scope="Garweb.Icon" name="arrow-right" style="transform: rotate(180deg)"></x-import></a>
+    <h1>Validar carga</h1>
+    <span class="pill">jue 22 oct</span>
+  </div>
+  <div class="ph-body">
+    <p class="muted" style="font-size: 14px; line-height: 20px">Marque cada pieza al subirla. Si a un pedido le falta algo, solo ese pedido se bloquea; los demás salen.</p>
+    <div class="grp ok"><div><b style="font-size: 17px">PED-0076 · Laura Méndez</b><div class="muted" style="font-size: 13px">Parada 1 · Montclair</div></div><span class="cnt" style="color: var(--success-ink)">9/9</span></div>
+    <div class="pc stack" style="gap: 8px">
+      <x-import component-from-global-scope="Garweb.ChecklistItem" label="Estructura del sofá" meta="Pieza 1" done="{{ true }}"></x-import>
+      <x-import component-from-global-scope="Garweb.ChecklistItem" label="Cojines de asiento (3)" meta="Piezas 2–4" done="{{ true }}"></x-import>
+      <x-import component-from-global-scope="Garweb.ChecklistItem" label="Cojines de respaldo (3)" meta="Piezas 5–7" done="{{ true }}"></x-import>
+      <x-import component-from-global-scope="Garweb.ChecklistItem" label="Cojines decorativos (2)" meta="Piezas 8–9" done="{{ true }}"></x-import>
+    </div>
+    <div class="grp ok"><div><b style="font-size: 17px">PED-0079 · Emily Stone</b><div class="muted" style="font-size: 13px">Parada 2 · 1 pieza</div></div><span class="cnt" style="color: var(--success-ink)">1/1</span></div>
+    <div class="{{grp81}}"><div><b style="font-size: 17px">PED-0081 · J. Ortega</b><div style="{{sub81Style}}">{{sub81}}</div></div><span class="cnt" style="{{cnt81Style}}">{{cnt81}}</span></div>
+    <sc-if value="{{miss}}" hint-placeholder-val="{{ true }}">
+      <div class="pc stack" style="gap: 8px">
+        <sc-for list="{{m81}}" as="m" hint-placeholder-count="2"><button class="{{m.cls}}" role="checkbox" aria-checked="{{m.on}}" onClick="{{m.pick}}"><span class="gw-check-box">{{m.mark}}</span><span class="gw-check-text"><span class="gw-check-label">{{m.label}}</span><span class="gw-check-meta">{{m.meta}}</span></span></button></sc-for>
+      </div>
+      <span class="muted" style="font-size: 12.5px">Toque una pieza si la encuentra.</span>
+    </sc-if>
+    <div class="grp"><div><b style="font-size: 17px">PED-0083 · Ana Ruiz</b><div class="muted" style="font-size: 13px">Parada 4 · recojo, no se carga</div></div><span class="cnt muted">—</span></div>
+  </div>
+  <div class="ph-foot">
+    <sc-if value="{{miss}}" hint-placeholder-val="{{ true }}"><a class="big-btn danger" href="D2b-Bloqueo.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 22 }}"></x-import>PED-0081 incompleto: resolver</a></sc-if>
+    <sc-if value="{{all}}" hint-placeholder-val="{{ false }}"><a class="big-btn pri" href="D1-Ruta.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="truck" size="{{ 22 }}"></x-import>Iniciar salida · queda congelada</a></sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { f: [false, false] }; }
+  renderVals() {
+    const f = this.state.f, ok = f.filter(Boolean).length, all = ok === 2;
+    return {
+      miss: !all, all,
+      grp81: all ? 'grp ok' : 'grp bad',
+      sub81: all ? 'Parada 3 · 4 piezas' : 'Faltan ' + (2 - ok) + ' cojín' + (2 - ok > 1 ? 'es' : '') + ' · pedido bloqueado',
+      sub81Style: all ? 'font-size: 13px; color: var(--ink-muted)' : 'font-size: 13px; color: var(--danger-ink); font-weight: 600',
+      cnt81: (2 + ok) + '/4', cnt81Style: all ? 'color: var(--success-ink)' : 'color: var(--danger-ink)',
+      m81: ['Cojín de asiento (2 de 3)', 'Cojín de asiento (3 de 3)'].map((l, i) => ({ label: l, meta: f[i] ? 'PED-0081 · encontrado' : 'PED-0081 · no encontrado', on: f[i], mark: f[i] ? '✓' : '', cls: f[i] ? 'gw-check is-done' : 'gw-check is-missing', pick: () => { const x = f.slice(); x[i] = !x[i]; this.setState({ f: x }); } }))
+    };
+  }
+}
+</script>
+</body>
+</html>

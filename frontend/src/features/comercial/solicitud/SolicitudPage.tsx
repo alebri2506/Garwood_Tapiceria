@@ -146,7 +146,7 @@ function Asistente({ c, guardadas }: { c: Catalogo; guardadas: DireccionGuardada
           {e.paso === 3 && !cita && (
             <section className="card stack" aria-labelledby="w2-rev">
               <h2 id="w2-rev" className="w2-h2">Revise y envíe</h2>
-              <p className="muted">Revise el resumen de la derecha.</p>
+              <p className="muted">Revise el resumen de su solicitud antes de enviarla.</p>
               {creada ? (
                 <>
                   <Alert tone="success" title={`Solicitud ${creada.codigo} enviada`}>Le avisaremos por correo y aquí mismo cuando su cotización esté lista.</Alert>

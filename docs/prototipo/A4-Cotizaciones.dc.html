@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A4 Cotizaciones</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.srch{display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-muted);min-width:260px}
+.srch input{border:0;outline:0;background:transparent;font:500 14.5px/1 var(--font-sans);color:var(--ink);width:100%}
+.kp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:1100px){.kp{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.k{display:flex;flex-direction:column;gap:6px;padding:16px 18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);text-align:left;cursor:pointer;font-family:var(--font-sans);color:var(--ink)}
+.k b{font:800 28px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.k small{font-size:12.5px;color:var(--ink-muted)}
+.k.warn{border-color:color-mix(in srgb,var(--warning-500) 50%,var(--line));background:color-mix(in srgb,var(--warning-500) 6%,var(--surface))}
+.k.ok b{color:var(--success-ink)}
+.todo{display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.todo h2{font-size:17px;display:flex;align-items:center;gap:10px}
+.todo h2 em{font-style:normal;font-size:12.5px;font-weight:700;min-width:24px;height:24px;padding:0 8px;border-radius:9999px;display:grid;place-items:center;background:var(--warning-soft,#FEF3C7);color:var(--warning-ink,#92400E)}
+.tgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:1100px){.tgrid{grid-template-columns:1fr}}
+.td{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.td b{display:block;font-size:14px}
+.td small{display:block;font-size:12.5px;color:var(--ink-muted);margin:2px 0 6px}
+.tag{display:inline-block;padding:2px 8px;border-radius:9999px;font-size:11.5px;font-weight:700;background:var(--primary-soft);color:var(--primary)}
+.tag.late{background:var(--warning-soft,#FEF3C7);color:var(--warning-ink,#92400E)}
+.tag.ok{background:var(--success-soft,#DCFCE7);color:var(--success-ink)}
+.due{font-size:13px}
+.due.soon{color:var(--warning-ink,#92400E);font-weight:700}
+.due.late{color:var(--danger-ink);font-weight:700}
+tr.old td{color:var(--ink-muted)}
+@media (hover:hover){.td:hover,.k:hover{border-color:var(--primary)}}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav on" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Comercial › Cotizaciones</div><h1>Cotizaciones</h1></div>
+      <div class="row" style="flex-wrap: wrap">
+        <label class="srch"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 18 }}"></x-import><input type="search" placeholder="Buscar por cliente o código" aria-label="Buscar cotización" value="{{q}}" onInput="{{onQ}}"></label>
+        <a class="gw-btn gw-btn-primary" href="A3-Solicitudes.dc.html">+ Nueva solicitud</a>
+      </div>
+    </div>
+    <div class="kp">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4"><button class="{{k.cls}}" onClick="{{k.pick}}"><span class="ov">{{k.l}}</span><b>{{k.v}}</b><small>{{k.s}}</small></button></sc-for>
+    </div>
+    <section class="todo">
+      <div class="between" style="flex-wrap: wrap"><h2>Por armar <em>{{nTodo}}</em></h2><span class="muted" style="font-size: 13px">Solicitudes listas para cotizar: nuevas con fotos, o atendidas en el local o en casa del cliente</span></div>
+      <div class="tgrid"><sc-for list="{{todo}}" as="t" hint-placeholder-count="3"><a class="{{t.cls}}" href="A4-Cotizar.dc.html"><div><b>{{t.code}} · {{t.client}}</b><small>{{t.item}}</small><span class="{{t.tagCls}}">{{t.tag}}</span></div><span class="gw-btn gw-btn-sm gw-btn-primary">Armar</span></a></sc-for></div>
+    </section>
+    <x-import component-from-global-scope="Garweb.Tabs" items="{{tabs}}" active="{{tab}}" on-change="{{setTab}}"></x-import>
+    <div class="tbl-box">
+      <table class="t">
+        <thead><tr><th>Cotización</th><th>Cliente</th><th>Mueble</th><th class="r">Total</th><th>Estado</th><th>Vence / fecha</th><th></th></tr></thead>
+        <tbody>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+            <tr class="{{r.cls}}">
+              <td class="num"><b>{{r.code}}</b><div class="muted" style="font-size: 12px">{{r.ver}}</div></td>
+              <td><b>{{r.client}}</b><div class="muted" style="font-size: 12px">{{r.sol}}</div></td>
+              <td>{{r.item}}</td>
+              <td class="r num"><b>{{r.total}}</b></td>
+              <td><x-import component-from-global-scope="Garweb.StatusChip" status="{{r.status}}" tone="{{r.tone}}"></x-import><div class="muted" style="font-size: 12px; margin-top: 4px">{{r.sub}}</div></td>
+              <td class="num"><span class="{{r.dueCls}}">{{r.due}}</span></td>
+              <td><a class="gw-btn gw-btn-sm gw-btn-secondary" href="{{r.href}}">{{r.action}}</a></td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+    <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.EmptyState" icon="quote" title="No hay cotizaciones con este filtro">Las cotizaciones se arman desde una solicitud (Solicitudes o la cita en el local).</x-import></sc-if>
+    <p class="audit">Cada cotización guarda el precio sugerido y el propuesto, quién la armó y cuánto tardó (indicador de tiempo para cotizar).</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { tab: 0, q: '' }; }
+  renderVals() {
+    const s = this.state;
+    // código, versión, cliente, solicitud, mueble, total, estado, detalle, vence, enlace, acción, tono fecha
+    const C = [
+      ['COT-0076', 'V1 · borrador', 'Laura Méndez', 'SOL-0076 · cita hoy', 'Sofá 3 cuerpos', 1140, 'Borrador', 'Armando hace 11 min', 'sin publicar', 'A4-Cotizar.dc.html', 'Seguir armando', ''],
+      ['COT-0077', 'V2 · recotización', 'Robert King', 'PED-0077 · revisión inicial', 'Sillón Berger', 960, 'Pendiente de respuesta', 'Orden OS-0077 anulada', 'responde dom 18 oct', 'A4-Cotizar.dc.html?modo=v2', 'Ver recotización', 'soon'],
+      ['COT-0078', 'V1', 'Kevin Park', 'SOL-0078', 'Sillón · espuma', 420, 'Pendiente de respuesta', 'Publicada el 4 oct', 'vence mié 4 nov', 'A4-Cotizar.dc.html?modo=publicada', 'Registrar respuesta', ''],
+      ['COT-0081', 'V1', 'Hotel Willow', 'SOL-0081', '12 sillas · 2 telas por partes', 3360, 'Pendiente de respuesta', 'Publicada el 5 oct', 'vence jue 5 nov', 'A4-Cotizar.dc.html?modo=publicada', 'Registrar respuesta', ''],
+      ['COT-0083', 'V1', 'Ana Ruiz', 'SOL-0083', 'Puff', 780, 'Aceptada', 'Falta el adelanto (40 %)', 'aceptó vie 2 oct', 'A5-Pagos.dc.html', 'Ver pago', ''],
+      ['COT-0075', 'V1', 'Sara Cohen', 'SOL-0075', 'Loveseat', 890, 'Aceptada', 'Pedido PED-0075 generado', 'aceptó 28 sep', 'A6b-FichaPedido.dc.html', 'Ver pedido', ''],
+      ['COT-0071', 'V1', 'Tom Becker', 'SOL-0071', 'Cabecera', 360, 'Vencida', 'Motivo: sin respuesta', 'venció 1 oct', 'A4-Cotizar.dc.html?modo=vencida', 'Renovar', 'late'],
+      ['COT-0069', 'V1', 'Nora Díaz', 'SOL-0069', 'Silla de comedor × 4', 520, 'Rechazada', 'Motivo: precio', 'rechazó 30 sep', 'A17-Clientes.dc.html', 'Ver cliente', ''],
+      ['COT-0077', 'V1 · reemplazada', 'Robert King', 'PED-0077', 'Sillón Berger', 780, 'Reemplazada', 'Por la V2 tras la revisión', '13 oct', 'A4-Cotizar.dc.html?modo=v2', 'Ver V2', '']
+    ];
+    const tones = { 'Borrador': 'neutral', 'Pendiente de respuesta': 'info', 'Aceptada': 'success', 'Rechazada': 'danger', 'Vencida': 'neutral', 'Reemplazada': 'neutral' };
+    const ST = ['Borrador', 'Pendiente de respuesta', 'Aceptada', 'Rechazada', 'Vencida', 'Reemplazada'];
+    const q = s.q.trim().toLowerCase();
+    const f = s.tab === 0 ? null : ST[s.tab - 1];
+    const rows = C.filter(r => !f || r[6] === f).filter(r => !q || (r[0] + ' ' + r[2] + ' ' + r[4]).toLowerCase().indexOf(q) >= 0)
+      .map(r => ({ code: r[0], ver: r[1], client: r[2], sol: r[3], item: r[4], total: '$' + r[5].toLocaleString('en-US'), status: r[6], tone: tones[r[6]], sub: r[7], due: r[8], dueCls: r[11] === 'soon' ? 'due soon' : r[11] === 'late' ? 'due late' : 'due', href: r[9], action: r[10], cls: r[6] === 'Reemplazada' ? 'old' : '' }));
+    const n = x => C.filter(r => r[6] === x).length;
+    const pend = C.filter(r => r[6] === 'Pendiente de respuesta');
+    const TODO = [['SOL-0084', 'Rosa Díaz', 'Sillón · tela en línea · Pana Gris', 'Nueva · hace 3 días', 'tag late'], ['SOL-0080', 'Grace Lin', 'Cabecera · la trae la clienta', 'Nueva · hoy', 'tag'], ['SOL-0074', 'Mark Ellison', 'Sillón · tela elegida en la cita', 'Atendida lun 5', 'tag ok'], ['SOL-0089', 'Linda Park', 'Sofá en L · tela y medidas tomadas en su casa', 'Visita a domicilio · atendida hoy', 'tag ok']];
+    return {
+      tema: this.props.tema ?? 'light',
+      q: s.q, onQ: e => this.setState({ q: e.target.value }),
+      kpis: [
+        { l: 'Por armar', v: String(TODO.length), s: '1 lleva 3 días', cls: 'k warn', pick: () => {} },
+        { l: 'Esperando respuesta', v: String(pend.length), s: '$' + pend.reduce((t, r) => t + r[5], 0).toLocaleString('en-US') + ' en juego', cls: 'k', pick: () => this.setState({ tab: 2 }) },
+        { l: 'Aceptadas en octubre', v: '99', s: 'Conversión 90 % · meta 230 / mes', cls: 'k ok', pick: () => this.setState({ tab: 3 }) },
+        { l: 'Tiempo prom. para cotizar', v: '12 min', s: 'Meta < 15 min · antes 30–60 min', cls: 'k', pick: () => {} }
+      ],
+      nTodo: String(TODO.length),
+      todo: TODO.map(t => ({ code: t[0], client: t[1], item: t[2], tag: t[3], tagCls: t[4], cls: 'td' })),
+      tab: s.tab, setTab: i => this.setState({ tab: i }),
+      tabs: [{ label: 'Todas', count: C.length }].concat(ST.map(x => ({ label: x, count: n(x) }))),
+      rows, empty: rows.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>
