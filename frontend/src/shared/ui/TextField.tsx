@@ -1,17 +1,19 @@
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react';
 import { Icon } from './Icon';
 
-interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
+interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'prefix'> {
   label: string;
   hint?: ReactNode;
   error?: string;
   optional?: boolean;
+  /** Contenido a la izquierda dentro del campo (p. ej. "$" en un monto). */
+  prefix?: ReactNode;
   /** Contenido a la derecha dentro del campo (p. ej. botón Mostrar). */
   suffix?: ReactNode;
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { label, hint, error, optional, required, suffix, id, className, ...input },
+  { label, hint, error, optional, required, prefix, suffix, id, className, ...input },
   ref,
 ) {
   const autoId = useId();
@@ -27,6 +29,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
         {optional && <span className="gw-optional"> (opcional)</span>}
       </label>
       <div className="gw-input-wrap">
+        {prefix && <span className="gw-input-prefix" aria-hidden="true">{prefix}</span>}
         <input
           ref={ref}
           id={fieldId}

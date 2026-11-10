@@ -44,7 +44,7 @@ export const exigirRol =
 
 export const manejarErrores: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof ReglaNegocioError) {
-    res.status(err.status).json({ mensaje: err.message });
+    res.status(err.status).json(err.errores ? { mensaje: err.message, errores: err.errores } : { mensaje: err.message });
     return;
   }
   if (err?.type === 'entity.parse.failed') {

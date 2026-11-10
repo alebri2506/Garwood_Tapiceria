@@ -1,6 +1,9 @@
-/** Error de negocio con un mensaje en español listo para mostrar al usuario. */
+/**
+ * Error de negocio con un mensaje en español listo para mostrar al usuario.
+ * `errores` (opcional): el mensaje de cada campo, para marcarlo en la pantalla.
+ */
 export class ReglaNegocioError extends Error {
-  constructor(message: string, readonly status = 400) {
+  constructor(message: string, readonly status = 400, readonly errores?: Record<string, string>) {
     super(message);
     this.name = 'ReglaNegocioError';
   }
