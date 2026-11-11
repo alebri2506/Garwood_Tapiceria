@@ -37,6 +37,8 @@ export interface AuthApi {
   cerrarSesion(): Promise<void>;
   /** D.1.3: reemplaza la contraseña temporal y devuelve la sesión nueva. */
   cambiarContrasenaTemporal(contrasena: string): Promise<Sesion>;
+  /** W10 (E.4.1): cambia la contraseña con la actual; cierra las sesiones en otros equipos y devuelve la de este. */
+  cambiarContrasena(actual: string, contrasena: string): Promise<Sesion>;
 }
 
 const httpAuthApi: AuthApi = {
@@ -47,6 +49,7 @@ const httpAuthApi: AuthApi = {
   refrescarSesion: () => apiPost<Sesion>('/auth/refresh', {}),
   cerrarSesion: () => apiPost<void>('/auth/logout', {}),
   cambiarContrasenaTemporal: (contrasena) => apiFetch<Sesion>('/auth/cambiar-contrasena', { method: 'POST', body: JSON.stringify({ contrasena }) }),
+  cambiarContrasena: (actual, contrasena) => apiFetch<Sesion>('/auth/contrasena', { method: 'POST', body: JSON.stringify({ actual, contrasena }) }),
 };
 
 // Sin backend configurado se usa la API simulada para poder recorrer las pantallas.

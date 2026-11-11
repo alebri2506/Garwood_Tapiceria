@@ -93,6 +93,16 @@ export const authMock: AuthApi = {
     try { sessionStorage.removeItem(CLAVE_MOCK); } catch { /* sin almacenamiento */ }
   },
 
+  async cambiarContrasena(actual, contrasena) {
+    await esperar();
+    const s = await this.refrescarSesion();
+    const u = usuarios.find((x) => x.id === s.usuario.id);
+    if (!u || u.contrasena !== actual) throw new ApiError('La contraseña actual no es correcta.', 400, { actual: 'La contraseña actual no es correcta.' });
+    if (actual === contrasena) throw new ApiError('Use una contraseña distinta de la actual.', 400, { contrasena: 'Use una contraseña distinta de la actual.' });
+    u.contrasena = contrasena;
+    return s;
+  },
+
   async cambiarContrasenaTemporal() {
     await esperar();
     const s = await this.refrescarSesion();

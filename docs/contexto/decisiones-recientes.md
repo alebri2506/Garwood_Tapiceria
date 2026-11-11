@@ -167,14 +167,19 @@ Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más ad
 1. **Obligatorios** (siempre llegan por correo y a la campana; no se pueden apagar):
    - **citas y visitas**: programada, reprogramada, inasistencia y sus recordatorios;
    - solicitud **vencida** y **descartada**;
-   - cuando existan: recojo, entrega, retiro en el taller y daño oculto (V2);
-   - en W10 se listan: Citas y visitas · Recojo del mueble en su casa · Entrega del pedido · Retiro en el taller · Daño oculto (V2).
+   - cuando existan: recojo, entrega, retiro en el taller y daño oculto (V2).
 2. **Informativos por correo** (el cliente puede apagarlos):
    - "Recibimos su solicitud" y "Recibimos sus fotos";
    - luego, el avance del pedido, la cotización y los pagos;
    - es la preferencia que ya se elige al registrarse ("Quiero recibir avisos de mis pedidos por correo").
-3. **Recordatorios y novedades del taller:** por ahora **solo se guarda la preferencia**, para promociones o novedades a futuro. Viene **apagado**. Los recordatorios de una cita **no** van aquí: son obligatorios.
-4. **Campana:** dentro de GARWEB (W11) el cliente **siempre ve todos** sus avisos; los interruptores solo afectan al correo.
+3. **Bloque en W10, simplificado por el equipo el 10/11.** El bloque del prototipo se veía recargado; queda solo:
+   - el título **"Avisos por correo"**;
+   - un interruptor: **"Avance de mis pedidos, cotizaciones y pagos"** (los informativos);
+   - la línea *"Los avisos de citas, recojos y entregas siempre le llegan."*;
+   - el enlace **"Ver mis notificaciones"**.
+
+   Ya **no se muestran** la lista de obligatorios con candado, el texto sobre el conductor ni el interruptor "Recordatorios y novedades del taller". Como hoy no se envían promociones, ese interruptor no hacía nada. La columna `acepta_novedades` queda en la base, apagada y sin uso, por si más adelante hay promociones (entonces se vuelve a mostrar).
+4. **Campana:** dentro de GARWEB (W11) el cliente **siempre ve todos** sus avisos; el interruptor solo afecta al correo.
 
 ### E.4 Seguridad
 1. **Cambiar contraseña:** en una **pantalla aparte con el estilo de G1**:
