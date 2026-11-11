@@ -5,12 +5,14 @@ import { registrarBitacora } from '../../../shared/infrastructure/bitacora.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { hoyNegocio, leerFecha } from '../../comercial/domain/calendario.js';
 import { enNY, instanteNY, sumarDias } from '../../comercial/domain/agenda.js';
-import { MODULOS, armarCsv, describir, type Referencias } from '../domain/auditoria.js';
+import { ACCIONES_DEL_SISTEMA, MODULOS, TIPOS_ACTOR, armarCsv, describir, type Referencias } from '../domain/auditoria.js';
 
 export interface FiltrosAuditoria {
   desde?: string;
   hasta?: string;
   usuarioId?: number;
+  /** Filtro "Quién": personal del taller, clientes o sistema. */
+  tipo?: (typeof TIPOS_ACTOR)[number]['codigo'];
   modulo?: string;
   q?: string;
 }
@@ -57,12 +59,17 @@ async function consultar(f: FiltrosAuditoria) {
   const where: Prisma.BitacoraWhereInput = { fecha: { gte: instanteNY(desde), lt: instanteNY(sumarDias(hasta, 1)) } };
   if (f.usuarioId) where.usuarioId = f.usuarioId;
   if (f.modulo) where.modulo = f.modulo;
+  if (f.tipo === 'sistema') where.OR = [{ usuarioId: null }, { accion: { in: ACCIONES_DEL_SISTEMA } }];
+  if (f.tipo === 'personal' || f.tipo === 'clientes') {
+    where.accion = { notIn: ACCIONES_DEL_SISTEMA };
+    where.usuario = { rol: { nombre: f.tipo === 'clientes' ? 'Cliente' : { not: 'Cliente' } } };
+  }
 
   const filas = await prisma.bitacora.findMany({
     where,
     orderBy: [{ fecha: 'desc' }, { id: 'desc' }],
     take: LIMITE_FILAS + 1,
-    include: { usuario: { select: { nombreUsuario: true } } },
+    include: { usuario: { select: { nombreUsuario: true, nombre: true, cliente: { select: { tipoPersona: true, razonSocial: true, nombres: true, apellidos: true } } } } },
   });
   const truncado = filas.length > LIMITE_FILAS;
   if (truncado) filas.pop();
@@ -70,27 +77,24 @@ async function consultar(f: FiltrosAuditoria) {
   const refs = await referencias(filas);
   let registros = filas.map((b) => ({
     id: b.id, fecha: b.fecha, ip: b.ip,
-    ...describir({ ...b, usuario: b.usuario?.nombreUsuario ?? null }, refs),
+    ...describir({ ...b, usuario: b.usuario?.nombreUsuario ?? null, nombre: b.usuario && (b.usuario.cliente ? nombreCliente(b.usuario.cliente) : b.usuario.nombre) }, refs),
   }));
-  // "Buscar por usuario, pedido o acción": sobre el texto que ve el Administrador, sin importar tildes ni mayúsculas.
+  // "Buscar por nombre, correo, solicitud o acción": sobre el texto que ve el Administrador, sin importar tildes ni
+  // mayúsculas. Así se encuentra a una persona aunque haya muchos clientes.
   const q = sinTildes(f.q?.trim() ?? '');
-  if (q) registros = registros.filter((r) => sinTildes([r.usuario, r.modulo, r.accion, r.registro, r.cambio].join(' ')).includes(q));
+  if (q) registros = registros.filter((r) => sinTildes([r.nombre, r.usuario, r.modulo, r.accion, r.registro, r.cambio].join(' ')).includes(q));
   return { desde, hasta, registros, truncado };
 }
 
 /** A20 › Registro de actividad: una página de resultados y las opciones de los filtros. */
 export async function listarActividad(f: FiltrosAuditoria, pagina = 1, porPagina = 50) {
-  const [r, personal] = await Promise.all([
-    consultar(f),
-    // Filtro "Usuario": el personal del taller. A un cliente se le encuentra con el buscador.
-    prisma.usuario.findMany({ where: { rol: { nombre: { not: 'Cliente' } } }, orderBy: { nombreUsuario: 'asc' }, select: { id: true, nombreUsuario: true, nombre: true } }),
-  ]);
+  const r = await consultar(f);
   const inicio = (pagina - 1) * porPagina;
   return {
     desde: r.desde, hasta: r.hasta, truncado: r.truncado,
     total: r.registros.length, pagina, porPagina,
     registros: r.registros.slice(inicio, inicio + porPagina).map((x) => ({ ...x, fecha: x.fecha.toISOString() })),
-    opciones: { usuarios: personal, modulos: MODULOS },
+    opciones: { tipos: TIPOS_ACTOR, modulos: MODULOS },
   };
 }
 
@@ -101,15 +105,15 @@ export async function listarActividad(f: FiltrosAuditoria, pagina = 1, porPagina
 export async function exportarActividad(usuarioId: number, f: FiltrosAuditoria, ip?: string) {
   const r = await consultar(f);
   const csv = armarCsv(
-    ['Fecha y hora', 'Usuario', 'Módulo', 'Acción', 'Registro', 'Antes → después', 'IP'],
+    ['Fecha y hora', 'Nombre', 'Correo o usuario', 'Módulo', 'Acción', 'Registro', 'Antes → después', 'IP'],
     r.registros.map((x) => {
       const { fecha, hora } = enNY(x.fecha);
-      return [`${fecha} ${hora}`, x.usuario, x.modulo, x.accion, x.registro, x.cambio, x.ip ?? ''];
+      return [`${fecha} ${hora}`, x.nombre, x.usuario, x.modulo, x.accion, x.registro, x.cambio, x.ip ?? ''];
     }),
   );
   await registrarBitacora(prisma, {
     usuarioId, modulo: 'seguridad', accion: 'auditoria_exportada', entidad: 'bitacora',
-    valorNuevo: { desde: r.desde, hasta: r.hasta, filas: r.registros.length, usuarioId: f.usuarioId ?? null, modulo: f.modulo ?? null, q: f.q ?? null },
+    valorNuevo: { desde: r.desde, hasta: r.hasta, filas: r.registros.length, usuarioId: f.usuarioId ?? null, tipo: f.tipo ?? null, modulo: f.modulo ?? null, q: f.q ?? null },
     ip,
   });
   return { csv, nombre: `garweb-actividad-${r.desde}-a-${r.hasta}.csv`, truncado: r.truncado };

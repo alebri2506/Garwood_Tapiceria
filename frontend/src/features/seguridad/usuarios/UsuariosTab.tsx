@@ -46,7 +46,7 @@ function Entrega({ datos, alCerrar }: { datos: ConTemporal; alCerrar(): void }) 
   return (
     <div className="card stack us-entrega" role="status">
       <h2 style={{ fontSize: 17 }}>Contraseña temporal de {datos.usuario.nombre}</h2>
-      <p className="muted">Usuario: <b>{datos.usuario.nombreUsuario}</b></p>
+      <p className="muted">Entra con su correo <b>{datos.usuario.email}</b> y esta contraseña:</p>
       <div className="us-clave">
         <code>{datos.contrasenaTemporal}</code>
         <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" onClick={copiar}>{copiada ? 'Copiada' : 'Copiar'}</button>
@@ -57,7 +57,20 @@ function Entrega({ datos, alCerrar }: { datos: ConTemporal; alCerrar(): void }) 
   );
 }
 
-const VACIO = { nombre: '', nombreUsuario: '', rol: 'Tapicero' as RolPersonal, email: '', dispositivo: 'Celular' };
+// Decisión del equipo (10/11): nombres y apellidos + correo obligatorio (con él entra); sin nombre de usuario aparte.
+const VACIO = { nombre: '', email: '', rol: 'Tapicero' as RolPersonal, dispositivo: 'Celular' };
+const CORREO_OBLIGATORIO = 'Ingrese el correo: con él la persona entra a GARWEB.';
+const CORREO_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** Las mismas reglas que valida el backend, para avisar antes de enviar. */
+function revisar(nombre: string, email: string) {
+  const errores: Record<string, string> = {};
+  const n = nombre.trim().replace(/\s+/g, ' ');
+  if (!n) errores.nombre = 'Ingrese nombres y apellidos';
+  else if (n.split(' ').length < 2) errores.nombre = 'Ingrese nombres y apellidos (por ejemplo, Pedro Ruiz)';
+  if (!email.trim()) errores.email = CORREO_OBLIGATORIO;
+  else if (!CORREO_VALIDO.test(email.trim())) errores.email = 'El correo no es válido';
+  return errores;
+}
 
 function CrearUsuario({ opciones, alCrear }: { opciones: ListaUsuarios['opciones']; alCrear(d: ConTemporal): void }) {
   const [f, setF] = useState(VACIO);
@@ -68,10 +81,7 @@ function CrearUsuario({ opciones, alCrear }: { opciones: ListaUsuarios['opciones
 
   const enviar = async (e: FormEvent) => {
     e.preventDefault();
-    const faltan: Record<string, string> = {};
-    if (!f.nombre.trim()) faltan.nombre = 'Ingrese el nombre';
-    if (!f.nombreUsuario.trim()) faltan.nombreUsuario = 'Ingrese el usuario';
-    if (f.rol === 'Administrador' && !f.email.trim()) faltan.email = 'El correo es obligatorio para un Administrador.';
+    const faltan = revisar(f.nombre, f.email);
     if (Object.keys(faltan).length) { setErrores(faltan); return; }
     setEnviando(true);
     setError(null);
@@ -89,20 +99,15 @@ function CrearUsuario({ opciones, alCrear }: { opciones: ListaUsuarios['opciones
   return (
     <form className="card stack" onSubmit={enviar} noValidate>
       <h2 style={{ fontSize: 17 }}>Crear usuario</h2>
-      <TextField label="Nombre" required placeholder="Ej.: Pedro" value={f.nombre} onChange={(e) => poner('nombre')(e.target.value)} error={errores.nombre} />
+      <TextField label="Nombres y apellidos" required placeholder="Ej.: Pedro Ruiz" autoComplete="off" value={f.nombre} onChange={(e) => poner('nombre')(e.target.value)} error={errores.nombre} />
       <TextField
-        label="Usuario" required placeholder="pedro.taller" autoCapitalize="none" autoCorrect="off" spellCheck={false}
-        value={f.nombreUsuario} onChange={(e) => poner('nombreUsuario')(e.target.value)} error={errores.nombreUsuario}
-        hint="Letras sin tilde, números y . - _ · No se puede cambiar después"
+        label="Correo" type="email" required placeholder="pedro@garwood.com" autoComplete="off" autoCapitalize="none" spellCheck={false}
+        value={f.email} onChange={(e) => poner('email')(e.target.value)} error={errores.email}
+        hint="Con este correo entrará a GARWEB y podrá recuperar su contraseña"
       />
       <Seleccion label="Rol" value={f.rol} onChange={poner('rol')} error={errores.rol}>
         {opciones.roles.map((r) => <option key={r.nombre} value={r.nombre}>{r.etiqueta}</option>)}
       </Seleccion>
-      <TextField
-        label="Correo" type="email" required={f.rol === 'Administrador'} optional={f.rol !== 'Administrador'} value={f.email}
-        onChange={(e) => poner('email')(e.target.value)} error={errores.email}
-        hint={f.rol === 'Administrador' ? 'Obligatorio para un Administrador' : 'Sin correo no podrá usar “¿Olvidó su contraseña?”: usted le genera una nueva'}
-      />
       <Seleccion label="Dispositivo" value={f.dispositivo} onChange={poner('dispositivo')}>
         {opciones.dispositivos.map((d) => <option key={d}>{d}</option>)}
       </Seleccion>
@@ -140,6 +145,8 @@ function EditarUsuario({ u, opciones, esUnoMismo, alGuardar, alTemporal, alCerra
   const guardar = (e: FormEvent) => {
     e.preventDefault();
     if (!hayCambios) return;
+    const faltan = revisar(f.nombre, f.email);
+    if (Object.keys(faltan).length) { setErrores(faltan); return; }
     void hacer(async () => {
       const r = await usuariosApi.editar(u.id, cambios);
       alGuardar(r, cambios.rol ? `${r.nombre} usará el rol ${r.rolEtiqueta} desde su próximo ingreso (en máximo 15 minutos).` : 'Los cambios quedaron registrados.');
@@ -149,19 +156,19 @@ function EditarUsuario({ u, opciones, esUnoMismo, alGuardar, alTemporal, alCerra
   return (
     <form className="card stack" onSubmit={guardar} noValidate>
       <div className="between"><h2 style={{ fontSize: 17 }}>Editar usuario</h2><button type="button" className="gw-btn gw-btn-ghost gw-btn-sm" onClick={alCerrar}>Cerrar</button></div>
-      <TextField label="Nombre" required value={f.nombre} onChange={(e) => poner('nombre')(e.target.value)} error={errores.nombre} />
-      <TextField label="Usuario" value={u.nombreUsuario} readOnly disabled suffix={<Icon name="lock" size={16} />} hint="No se puede cambiar: identifica a la persona en el registro de actividad" />
+      {!u.email && <Alert tone="warning" compact>Esta cuenta no tiene correo. Complételo: con él la persona entra a GARWEB.</Alert>}
+      <TextField label="Nombres y apellidos" required value={f.nombre} onChange={(e) => poner('nombre')(e.target.value)} error={errores.nombre} />
+      <TextField
+        label="Correo" type="email" required autoCapitalize="none" spellCheck={false} value={f.email}
+        onChange={(e) => poner('email')(e.target.value)} error={errores.email}
+        hint={u.email && f.email.trim().toLowerCase() !== u.email ? 'Al guardar, entrará con este correo nuevo; el anterior dejará de servir.' : 'Con este correo entra a GARWEB'}
+      />
       <Seleccion
         label="Rol" value={f.rol} onChange={(v) => poner('rol')(v)} error={errores.rol}
         hint={f.rol !== u.rol ? 'Al guardar, deberá volver a entrar para usar su nuevo rol (en máximo 15 minutos).' : undefined}
       >
         {opciones.roles.map((r) => <option key={r.nombre} value={r.nombre}>{r.etiqueta}</option>)}
       </Seleccion>
-      <TextField
-        label="Correo" type="email" required={f.rol === 'Administrador'} optional={f.rol !== 'Administrador'} value={f.email}
-        onChange={(e) => poner('email')(e.target.value)} error={errores.email}
-        hint={f.rol === 'Administrador' ? 'Obligatorio para un Administrador' : undefined}
-      />
       <Seleccion label="Dispositivo" value={f.dispositivo} onChange={poner('dispositivo')}>
         {!u.dispositivo && <option value="">Sin indicar</option>}
         {opciones.dispositivos.map((d) => <option key={d}>{d}</option>)}
@@ -228,12 +235,12 @@ export function UsuariosTab({ datos, recargar }: { datos: ListaUsuarios; recarga
         {error && <Alert tone="danger">{error}</Alert>}
         <div className="tbl-box">
           <table className="t">
-            <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Dispositivo</th><th>Último acceso</th><th>Estado</th><th><span className="sr-only">Acción</span></th></tr></thead>
+            <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Dispositivo</th><th>Último acceso</th><th>Estado</th><th><span className="sr-only">Acción</span></th></tr></thead>
             <tbody>
               {datos.usuarios.map((u) => (
                 <tr key={u.id} className={u.id === editando ? 'sel' : undefined}>
                   <td><b>{u.nombre}</b>{u.id === yo && <span className="muted"> (usted)</span>}</td>
-                  <td>{u.nombreUsuario}</td>
+                  <td>{u.email ?? <span className="us-falta">Falta el correo</span>}</td>
                   <td>{u.rolEtiqueta}</td>
                   <td>{u.dispositivo ?? <span className="muted">—</span>}</td>
                   <td className="num">{ultimoAcceso(u.ultimoAcceso)}</td>

@@ -15,6 +15,7 @@ import { notificacionesRoutes } from './modules/seguridad/http/notificaciones.ro
 import { parametrosRoutes } from './modules/seguridad/http/parametros.routes.js';
 import { auditoriaRoutes } from './modules/seguridad/http/auditoria.routes.js';
 import { usuariosRoutes } from './modules/seguridad/http/usuarios.routes.js';
+import { perfilRoutes } from './modules/historial/http/perfil.routes.js';
 import { crearAlmacen, firmaDeArchivoValida, rutaEnDisco, type AlmacenArchivos } from './shared/infrastructure/archivos.js';
 
 export interface Dependencias {
@@ -41,6 +42,7 @@ export function crearApp({ correo = crearCorreo(), almacen = crearAlmacen() }: P
   app.use('/api/admin/parametros', parametrosRoutes());
   app.use('/api/admin/auditoria', auditoriaRoutes());
   app.use('/api/admin/usuarios', usuariosRoutes());
+  app.use('/api/cliente/perfil', perfilRoutes(deps));
   app.use('/api/admin', adminComercialRoutes(deps));
   app.use('/api/notificaciones', notificacionesRoutes());
 

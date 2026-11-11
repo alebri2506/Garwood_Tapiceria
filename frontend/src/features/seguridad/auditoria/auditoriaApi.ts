@@ -2,21 +2,25 @@ import { API_URL, apiDescargar, apiFetch, guardarArchivo } from '../../../shared
 
 // CU-S06 · A20 › Registro de actividad: consultar con filtros y exportar a CSV (decisiones D.2).
 
+/** Filtro "Quién" (equipo, 10/11): por tipo, porque una lista con cada persona no sirve cuando hay muchos clientes. */
+export type TipoActor = 'personal' | 'clientes' | 'sistema';
+
 export interface FiltrosActividad {
   desde?: string;
   hasta?: string;
-  usuarioId?: number;
+  tipo?: TipoActor;
   modulo?: string;
   q?: string;
   pagina?: number;
 }
 export interface RegistroActividad {
-  id: number; fecha: string; usuario: string; modulo: string; accion: string; registro: string; cambio: string; ip: string | null;
+  /** `nombre`: quién lo hizo ("Laura Méndez"); `usuario`: su correo o usuario, para distinguir a dos personas con el mismo nombre. */
+  id: number; fecha: string; nombre: string; usuario: string; modulo: string; accion: string; registro: string; cambio: string; ip: string | null;
 }
 export interface PaginaActividad {
   desde: string; hasta: string; truncado: boolean; total: number; pagina: number; porPagina: number;
   registros: RegistroActividad[];
-  opciones: { usuarios: { id: number; nombreUsuario: string; nombre: string | null }[]; modulos: { codigo: string; nombre: string }[] };
+  opciones: { tipos: { codigo: TipoActor; nombre: string }[]; modulos: { codigo: string; nombre: string }[] };
 }
 
 interface AuditoriaApi {
@@ -39,17 +43,20 @@ const http: AuditoriaApi = {
 
 // ---------------------------------------------------------------- Sin API: unas filas de ejemplo.
 const hace = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
-const ejemplo: RegistroActividad[] = [
-  { id: 6, fecha: hace(5), usuario: 'admin', modulo: 'Configuración', accion: 'Parámetro', registro: 'Duración del turno de cita', cambio: '45 min → 30 min', ip: null },
-  { id: 5, fecha: hace(60), usuario: 'admin', modulo: 'Comercial', accion: 'Cita programada', registro: 'SOL-0012', cambio: 'lun 16 nov, 10:00', ip: null },
-  { id: 4, fecha: hace(180), usuario: 'sistema', modulo: 'Seguridad', accion: 'Intentos fallidos', registro: 'tapicero', cambio: 'Cuenta bloqueada por intentos fallidos', ip: null },
-  { id: 3, fecha: hace(600), usuario: 'laura.mendez@correo.com', modulo: 'Comercial', accion: 'Solicitud registrada', registro: 'SOL-0012', cambio: 'Nueva · 1 mueble · 3 archivos · por la web', ip: null },
-  { id: 2, fecha: hace(1500), usuario: 'admin', modulo: 'Seguridad', accion: 'Inicio de sesión', registro: 'admin', cambio: '', ip: null },
+type Ejemplo = RegistroActividad & { tipo: TipoActor };
+const ejemplo: Ejemplo[] = [
+  { id: 6, tipo: 'personal', fecha: hace(5), nombre: 'Administrador Gerencia', usuario: 'admin@garwood.test', modulo: 'Configuración', accion: 'Parámetro', registro: 'Duración del turno de cita', cambio: '45 min → 30 min', ip: null },
+  { id: 5, tipo: 'personal', fecha: hace(60), nombre: 'Administrador Gerencia', usuario: 'admin@garwood.test', modulo: 'Comercial', accion: 'Cita programada', registro: 'SOL-0012', cambio: 'lun 16 nov, 10:00', ip: null },
+  { id: 4, tipo: 'sistema', fecha: hace(180), nombre: 'Sistema', usuario: 'sistema', modulo: 'Seguridad', accion: 'Intentos fallidos', registro: 'carlos@garwood.test', cambio: 'Cuenta bloqueada por intentos fallidos', ip: null },
+  { id: 3, tipo: 'clientes', fecha: hace(600), nombre: 'Laura Méndez', usuario: 'laura.mendez@correo.com', modulo: 'Comercial', accion: 'Solicitud registrada', registro: 'SOL-0012', cambio: 'Nueva · 1 mueble · 3 archivos · por la web', ip: null },
+  { id: 2, tipo: 'personal', fecha: hace(1500), nombre: 'Carlos Ramos', usuario: 'carlos@garwood.test', modulo: 'Seguridad', accion: 'Inicio de sesión', registro: 'carlos@garwood.test', cambio: '', ip: null },
 ];
-const filtrar = (f: FiltrosActividad) => {
+const filtrar = (f: FiltrosActividad): RegistroActividad[] => {
   const q = (f.q ?? '').toLowerCase();
   const modulo = f.modulo && { comercial: 'Comercial', historial: 'Historial', configuracion: 'Configuración', seguridad: 'Seguridad' }[f.modulo];
-  return ejemplo.filter((r) => (!modulo || r.modulo === modulo) && (!q || Object.values(r).join(' ').toLowerCase().includes(q)));
+  return ejemplo
+    .filter((r) => (!f.tipo || r.tipo === f.tipo) && (!modulo || r.modulo === modulo) && (!q || Object.values(r).join(' ').toLowerCase().includes(q)))
+    .map(({ tipo: _, ...r }) => r);
 };
 const simulada: AuditoriaApi = {
   listar: async (f) => {
@@ -57,14 +64,14 @@ const simulada: AuditoriaApi = {
     return {
       desde: f.desde ?? '', hasta: f.hasta ?? '', truncado: false, total: registros.length, pagina: 1, porPagina: 50, registros,
       opciones: {
-        usuarios: [{ id: 1, nombreUsuario: 'admin', nombre: 'Administrador' }, { id: 2, nombreUsuario: 'tapicero', nombre: 'Carlos' }],
+        tipos: [{ codigo: 'personal', nombre: 'Personal del taller' }, { codigo: 'clientes', nombre: 'Clientes' }, { codigo: 'sistema', nombre: 'Sistema' }],
         modulos: [{ codigo: 'comercial', nombre: 'Comercial' }, { codigo: 'historial', nombre: 'Historial' }, { codigo: 'configuracion', nombre: 'Configuración' }, { codigo: 'seguridad', nombre: 'Seguridad' }],
       },
     };
   },
   exportar: async (f) => {
     const celda = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
-    const filas = [['Fecha y hora', 'Usuario', 'Módulo', 'Acción', 'Registro', 'Antes → después'], ...filtrar(f).map((r) => [r.fecha, r.usuario, r.modulo, r.accion, r.registro, r.cambio])];
+    const filas = [['Fecha y hora', 'Nombre', 'Correo o usuario', 'Módulo', 'Acción', 'Registro', 'Antes → después'], ...filtrar(f).map((r) => [r.fecha, r.nombre, r.usuario, r.modulo, r.accion, r.registro, r.cambio])];
     guardarArchivo(new Blob(['﻿' + filas.map((x) => x.map(celda).join(',')).join('\r\n')], { type: 'text/csv' }), 'garweb-actividad-ejemplo.csv');
   },
 };

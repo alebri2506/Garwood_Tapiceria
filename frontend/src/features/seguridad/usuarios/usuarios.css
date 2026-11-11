@@ -9,9 +9,5 @@
 .us-clave { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface-sunken); }
 .us-clave code { font: 700 22px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .06em; user-select: all; }
 
-/* Matriz de permisos (como en el prototipo). */
-.us-roles { min-width: 820px; }
-table.us-roles td.c, table.us-roles th.c { text-align: center; }
-.us-roles .y { color: var(--success-ink); font-weight: 700; }
-.us-roles .r { color: var(--progress-ink); font-weight: 600; }
-.us-roles .n { color: var(--ink-muted); }
+/* Cuenta antigua sin correo: hay que completarlo al editarla. */
+.us-falta { color: var(--warning-ink); font-weight: 600; }

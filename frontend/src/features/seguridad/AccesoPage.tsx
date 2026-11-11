@@ -5,9 +5,10 @@ import { LoginForm } from './components/LoginForm';
 import { RegistroForm } from './components/RegistroForm';
 import { RecuperarForm } from './components/RecuperarForm';
 import { RestablecerForm } from './components/RestablecerForm';
+import { CambiarContrasenaForm } from './components/CambiarContrasenaForm';
 import './components/acceso.css';
 
-type Modo = 'login' | 'registro' | 'restablecer';
+type Modo = 'login' | 'registro' | 'restablecer' | 'cambiar';
 
 const PESTANAS: { modo: Modo; texto: string; ruta: string }[] = [
   { modo: 'login', texto: 'Iniciar sesión', ruta: '/acceso' },
@@ -40,7 +41,9 @@ export function AccesoPage({ modo }: { modo: Modo }) {
 
       <main className="acceso-panel">
         <div className="card acceso-card">
-          {modo === 'restablecer' ? (
+          {modo === 'cambiar' ? (
+            <CambiarContrasenaForm />
+          ) : modo === 'restablecer' ? (
             <RestablecerForm token={params.get('token')} />
           ) : recuperando ? (
             <RecuperarForm onVolver={() => irA('login')} />

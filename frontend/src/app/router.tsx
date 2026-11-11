@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AccesoPage } from '../features/seguridad/AccesoPage';
-import { RutaRol, SoloInvitado } from './auth/guards';
+import { RutaRol, SoloContrasenaTemporal, SoloInvitado } from './auth/guards';
 import { PanelRol } from './layout/PanelRol';
 import { ClienteLayout } from './layout/ClienteLayout';
 import { AdminLayout } from './layout/AdminLayout';
@@ -27,7 +27,8 @@ const PANTALLAS_ADMIN: [string, string][] = [
   ['pagos', 'A5 Pagos'],
   ['pedidos', 'A6 Pedidos'], ['plantillas', 'A16 Plantillas'], ['inventario', 'A8 Inventario'], ['catalogo', 'A15 Catálogo de materiales y telas'],
   ['historial', 'A12 Historial'], ['clientes', 'A17 Clientes y expediente'], ['salidas', 'A13 Planificar salidas'],
-  ['taller', 'A18 Taller: recepciones y retiros'], ['reclamos', 'A19 Reclamos e incidencias'],
+  ['taller', 'A18 Taller: recepciones y retiros'], ['reclamos', 'A19 Reclamos e incidencias'],
+
 ];
 
 export const router = createBrowserRouter([
@@ -42,6 +43,8 @@ export const router = createBrowserRouter([
     ],
   },
   { path: '/restablecer', element: <AccesoPage modo="restablecer" /> },
+  // D.1.3: primer ingreso con contraseña temporal.
+  { element: <SoloContrasenaTemporal />, children: [{ path: '/cambiar-contrasena', element: <AccesoPage modo="cambiar" /> }] },
   { path: '/terminos', element: <PendientePage titulo="Términos y condiciones" /> },
   { path: '/privacidad', element: <PendientePage titulo="Política de privacidad" /> },
 

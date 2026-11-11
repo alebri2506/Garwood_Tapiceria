@@ -12,8 +12,11 @@ export const etiquetaRol = (rol: string) => ETIQUETA_ROL[rol] ?? rol;
 /** D.1.7: lista fija, solo informativa. */
 export const DISPOSITIVOS = ['Computadora', 'Celular', 'Tablet'] as const;
 
-/** D.1.2: el correo es obligatorio para el Administrador (y el Cliente); opcional para Producción y Conductor. */
-export const exigeCorreo = (rol: string) => rol === 'Administrador' || rol === 'Cliente';
+/**
+ * D.1.2 (equipo, 10/11): el correo es obligatorio para todos. Con él la persona entra a GARWEB y puede usar
+ * “¿Olvidó su contraseña?”; ya no hay un nombre de usuario aparte.
+ */
+export const CORREO_OBLIGATORIO = 'Ingrese el correo: con él la persona entra a GARWEB.';
 
 // Sin letras ni números que se confunden al dictarla (l, i, o, 0, 1).
 const LETRAS = 'abcdefghjkmnpqrstuvwxyz';

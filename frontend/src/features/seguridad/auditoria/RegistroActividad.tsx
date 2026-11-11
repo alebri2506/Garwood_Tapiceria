@@ -4,7 +4,7 @@ import { Alert } from '../../../shared/ui/Alert';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { Icon } from '../../../shared/ui/Icon';
 import { MESES } from '../../comercial/fechas';
-import { auditoriaApi, type FiltrosActividad, type PaginaActividad } from './auditoriaApi';
+import { auditoriaApi, type FiltrosActividad, type PaginaActividad, type TipoActor } from './auditoriaApi';
 import './auditoria.css';
 
 type Periodo = '30' | '7' | 'hoy' | 'rango';
@@ -21,7 +21,8 @@ const dia = (s: string) => { const [a, m, d] = s.split('-').map(Number) as [numb
 export function RegistroActividad() {
   const [busca, setBusca] = useState('');
   const [q, setQ] = useState('');
-  const [usuarioId, setUsuarioId] = useState('');
+  // "Quién" (equipo, 10/11): por tipo. A una persona concreta se la busca por su nombre o correo.
+  const [tipo, setTipo] = useState<TipoActor | ''>('');
   const [modulo, setModulo] = useState('');
   const [periodo, setPeriodo] = useState<Periodo>('30');
   const [rango, setRango] = useState({ desde: haceDias(29), hasta: iso(new Date()) });
@@ -43,7 +44,7 @@ export function RegistroActividad() {
   // D.2.1: por defecto, los últimos 30 días (sin fechas, el backend los calcula en hora de Nueva Jersey).
   const fechas: Pick<FiltrosActividad, 'desde' | 'hasta'> =
     periodo === '7' ? { desde: haceDias(6) } : periodo === 'hoy' ? { desde: iso(new Date()), hasta: iso(new Date()) } : periodo === 'rango' ? rango : {};
-  const filtros: FiltrosActividad = { ...fechas, usuarioId: usuarioId ? Number(usuarioId) : undefined, modulo: modulo || undefined, q: q || undefined };
+  const filtros: FiltrosActividad = { ...fechas, tipo: tipo || undefined, modulo: modulo || undefined, q: q || undefined };
   const clave = JSON.stringify({ ...filtros, pagina });
 
   useEffect(() => {
@@ -82,13 +83,13 @@ export function RegistroActividad() {
       <div className="row au-filtros">
         <label className="search au-search">
           <Icon name="search" size={18} />
-          <input type="search" aria-label="Buscar por usuario, pedido o acción" placeholder="Buscar por usuario, pedido o acción" value={busca} onChange={(e) => setBusca(e.target.value)} />
+          <input type="search" aria-label="Buscar por nombre, correo, solicitud o acción" placeholder="Buscar por nombre, correo, solicitud o acción" value={busca} onChange={(e) => setBusca(e.target.value)} />
         </label>
         <label className="au-sel">
-          <span className="sr-only">Usuario</span>
-          <select className="gw-input" value={usuarioId} onChange={(e) => cambiar(setUsuarioId)(e.target.value)}>
-            <option value="">Usuario: todos</option>
-            {datos?.opciones.usuarios.map((u) => <option key={u.id} value={u.id}>{u.nombre ? `${u.nombre} (${u.nombreUsuario})` : u.nombreUsuario}</option>)}
+          <span className="sr-only">Quién</span>
+          <select className="gw-input" value={tipo} onChange={(e) => cambiar(setTipo)(e.target.value as TipoActor | '')}>
+            <option value="">Quién: todos</option>
+            {datos?.opciones.tipos.map((t) => <option key={t.codigo} value={t.codigo}>{t.nombre}</option>)}
           </select>
         </label>
         <label className="au-sel">
@@ -143,7 +144,10 @@ export function RegistroActividad() {
               {registros.map((r) => (
                 <tr key={r.id}>
                   <td className="num au-fecha"><time dateTime={r.fecha}>{fechaHora(r.fecha)}</time></td>
-                  <td>{r.usuario}</td>
+                  <td className="au-quien">
+                    <b>{r.nombre}</b>
+                    {r.usuario !== 'sistema' && r.usuario !== r.nombre && <small>{r.usuario}</small>}
+                  </td>
                   <td>{r.modulo}</td>
                   <td>{r.accion}</td>
                   <td>{r.registro || <span className="muted">—</span>}</td>

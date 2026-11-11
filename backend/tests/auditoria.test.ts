@@ -30,7 +30,7 @@ describe('Texto legible de cada registro (sin base de datos)', () => {
     const refs = vacias();
     refs.parametros.set(7, { etiqueta: 'Duración del turno de cita', unidad: 'min' });
     expect(describir(entrada({ accion: 'parametro_modificado', modulo: 'configuracion', entidad: 'parametro', entidadId: 7, valorAnterior: { valor: '45' }, valorNuevo: { valor: '30' } }), refs))
-      .toEqual({ usuario: 'admin', modulo: 'Configuración', accion: 'Parámetro', registro: 'Duración del turno de cita', cambio: '45 min → 30 min' });
+      .toEqual({ nombre: 'admin', usuario: 'admin', modulo: 'Configuración', accion: 'Parámetro', registro: 'Duración del turno de cita', cambio: '45 min → 30 min' });
   });
 
   it('los intentos fallidos los registra "sistema" sobre la cuenta afectada', () => {
@@ -83,12 +83,35 @@ describe('CU-S06 API del registro de actividad', () => {
     const r = await actividad();
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({ hasta: hoyNegocio(), desde: sumarDias(hoyNegocio(), -29), pagina: 1, porPagina: 50 });
-    expect(r.body.registros[0]).toMatchObject({ usuario: 'sistema', modulo: 'Seguridad', accion: 'Intento fallido', registro: 'conductor', cambio: 'Contraseña incorrecta' });
-    expect(r.body.registros).toContainEqual(expect.objectContaining({ usuario: 'admin', accion: 'Inicio de sesión', registro: 'admin' }));
-    // El filtro "Usuario" lista al personal, no a los clientes.
-    const usuarios = r.body.opciones.usuarios.map((u: { nombreUsuario: string }) => u.nombreUsuario);
-    expect(usuarios).toEqual(expect.arrayContaining(['admin', 'conductor', 'tapicero']));
-    expect(usuarios).not.toContain('laura.mendez@correo.com');
+    expect(r.body.registros[0]).toMatchObject({ nombre: 'Sistema', usuario: 'sistema', modulo: 'Seguridad', accion: 'Intento fallido', registro: 'conductor', cambio: 'Contraseña incorrecta' });
+    // Se ve el nombre de la persona (y su usuario o correo para distinguirla).
+    expect(r.body.registros).toContainEqual(expect.objectContaining({ nombre: 'Administrador', usuario: 'admin', accion: 'Inicio de sesión', registro: 'admin' }));
+    // Filtro "Quién" (equipo, 10/11): por tipo, no una lista con cada persona.
+    expect(r.body.opciones.tipos.map((t: { nombre: string }) => t.nombre)).toEqual(['Personal del taller', 'Clientes', 'Sistema']);
+  });
+
+  it('filtra por quién lo hizo: personal, clientes o sistema; y busca a una persona por su nombre', async () => {
+    await login('laura.mendez@correo.com');
+    const de = async (tipo: string) => (await actividad(`?tipo=${tipo}`)).body.registros as { nombre: string; usuario: string; accion: string }[];
+
+    // Otras pruebas registran más clientes: se comprueba que estén los de Laura y que no se cuele el personal.
+    const clientes = await de('clientes');
+    expect(clientes).toContainEqual(expect.objectContaining({ nombre: 'Laura Méndez', usuario: 'laura.mendez@correo.com' }));
+    expect(clientes.some((x) => ['admin', 'tapicero', 'conductor', 'sistema'].includes(x.usuario))).toBe(false);
+
+    const personal = await de('personal');
+    expect(personal.some((x) => x.usuario === 'admin')).toBe(true);
+    expect(personal.some((x) => x.usuario === 'laura.mendez@correo.com' || x.usuario === 'sistema')).toBe(false);
+
+    const sistema = await de('sistema');
+    expect(sistema.length).toBeGreaterThan(0);
+    expect(sistema.every((x) => x.nombre === 'Sistema')).toBe(true);
+
+    // Sin lista de 50 clientes: se escribe el nombre.
+    const laura = (await actividad('?q=laura%20mendez')).body.registros as { nombre: string }[];
+    expect(laura.length).toBeGreaterThan(0);
+    expect(laura.some((x) => x.nombre === 'Laura Méndez')).toBe(true);
+    expect((await actividad('?tipo=otro')).body.mensaje).toBe('Elija quién de la lista');
   });
 
   it('filtra por módulo, usuario y texto (sin importar tildes ni mayúsculas)', async () => {
@@ -134,8 +157,8 @@ describe('CU-S06 API del registro de actividad', () => {
     expect(r.headers['content-type']).toMatch(/^text\/csv/);
     expect(r.headers['content-disposition']).toBe(`attachment; filename="garweb-actividad-${sumarDias(hoyNegocio(), -29)}-a-${hoyNegocio()}.csv"`);
     const lineas = r.text.replace(/^﻿/, '').split('\r\n');
-    expect(lineas[0]).toBe('Fecha y hora,Usuario,Módulo,Acción,Registro,Antes → después,IP');
-    expect(lineas.some((l) => l.includes(',sistema,Seguridad,Intento fallido,conductor,'))).toBe(true);
+    expect(lineas[0]).toBe('Fecha y hora,Nombre,Correo o usuario,Módulo,Acción,Registro,Antes → después,IP');
+    expect(lineas.some((l) => l.includes(',Sistema,sistema,Seguridad,Intento fallido,conductor,'))).toBe(true);
     expect(lineas.slice(1).filter(Boolean).every((l) => l.includes(',Seguridad,'))).toBe(true);
 
     const exportado = (await actividad('?q=exporto')).body.registros[0];

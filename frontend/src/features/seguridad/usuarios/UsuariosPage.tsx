@@ -5,13 +5,13 @@ import { ApiError } from '../../../shared/api/http';
 import { Alert } from '../../../shared/ui/Alert';
 import { Tabs } from '../../../shared/ui/Tabs';
 import { RegistroActividad } from '../auditoria/RegistroActividad';
-import { RolesTab } from './RolesTab';
 import { UsuariosTab } from './UsuariosTab';
 import { usuariosApi, type ListaUsuarios } from './usuariosApi';
 import './usuarios.css';
 
 // La pestaña se guarda en la URL (?tab=actividad) para poder enlazarla, p. ej. desde A14 › Relacionado.
-const PESTANAS = ['usuarios', 'roles', 'actividad'] as const;
+// Decisión del equipo (10/11): sin pestaña "Roles y permisos"; los roles son fijos y solo se asignan a cada persona.
+const PESTANAS = ['usuarios', 'actividad'] as const;
 
 /** A20 Usuarios, roles y auditoría (CU-S03, S04, S06 · decisiones D.1 y D.2). */
 export function UsuariosPage() {
@@ -28,7 +28,7 @@ export function UsuariosPage() {
   }, []);
   useEffect(cargar, [cargar]);
 
-  const items = [{ label: 'Usuarios', count: datos?.usuarios.filter((u) => u.activo).length }, { label: 'Roles y permisos' }, { label: 'Registro de actividad' }];
+  const items = [{ label: 'Usuarios', count: datos?.usuarios.filter((u) => u.activo).length }, { label: 'Registro de actividad' }];
 
   return (
     <>
@@ -46,8 +46,7 @@ export function UsuariosPage() {
           {datos && <UsuariosTab datos={datos} recargar={cargar} />}
         </>
       )}
-      {activa === 1 && <RolesTab />}
-      {activa === 2 && <RegistroActividad />}
+      {activa === 1 && <RegistroActividad />}
     </>
   );
 }

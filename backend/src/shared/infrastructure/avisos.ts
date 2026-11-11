@@ -1,3 +1,4 @@
+import { correoPermitido, type TipoAvisoCliente } from '../domain/tiposAviso.js';
 import type { Correo } from './correo.js';
 import { logger } from './logger.js';
 import { prisma, type Db } from './prisma.js';
@@ -43,10 +44,15 @@ export async function avisosAlTaller(db: Db, a: Omit<Aviso, 'usuarioId' | 'corre
   return (await administradores(db)).map((u) => ({ ...a, usuarioId: u.id }));
 }
 
-/** Aviso al cliente de una solicitud: notificación si tiene usuario y correo si lo tiene y acepta avisos. */
-export async function avisoAlCliente(db: Db, clienteId: number, a: Omit<Aviso, 'usuarioId' | 'correo'>, asunto: string, texto: string): Promise<Aviso[]> {
+/**
+ * Aviso al cliente: siempre queda en su campana si tiene usuario (RG-05). El correo depende del tipo (decisiones E.3):
+ * los obligatorios llegan siempre; los informativos, solo si no los apagó en Mi perfil.
+ */
+export async function avisoAlCliente(
+  db: Db, clienteId: number, a: Omit<Aviso, 'usuarioId' | 'correo' | 'tipo'> & { tipo: TipoAvisoCliente }, asunto: string, texto: string,
+): Promise<Aviso[]> {
   const cliente = await db.cliente.findUnique({ where: { id: clienteId }, include: { usuario: true } });
   if (!cliente?.usuario) return [];
-  const correo = cliente.email && cliente.aceptaAvisosCorreo ? { para: cliente.email, asunto, texto } : undefined;
+  const correo = correoPermitido(a.tipo, cliente) ? { para: cliente.email!, asunto, texto } : undefined;
   return [{ ...a, usuarioId: cliente.usuario.id, correo }];
 }

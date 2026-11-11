@@ -48,6 +48,7 @@ model Usuario {
   rol                   Rol                  @relation(fields: [rolId], references: [id])
   cliente               Cliente?             @relation(fields: [clienteId], references: [id])
   tokens                TokenRecuperacion[]
+  cambiosCorreo         CambioCorreo[]
   bitacora              Bitacora[]
   solicitudes           Solicitud[]
   descartadas           Solicitud[]          @relation("SolicitudDescartadaPor")
@@ -70,7 +71,10 @@ model Cliente {
   // Opcional: el Administrador puede registrar por teléfono a un cliente que no tiene correo (A3).
   email              String?     @unique @db.VarChar(160)
   telefono           String      @db.VarChar(20) // E.164: +1XXXXXXXXXX
+  // W10 (decisiones E.3): avisos INFORMATIVOS por correo (avance, cotización, pagos). Los obligatorios llegan siempre.
   aceptaAvisosCorreo Boolean     @default(true) @map("acepta_avisos_correo")
+  // W10: "Recordatorios y novedades del taller". Por ahora solo se guarda (promociones a futuro); viene apagado.
+  aceptaNovedades    Boolean     @default(false) @map("acepta_novedades")
   canalRegistro      String      @map("canal_registro") @db.VarChar(20) // web | local | telefono
   activo             Boolean     @default(true)
   fechaRegistro      DateTime    @default(now()) @map("fecha_registro") @db.Timestamptz
@@ -93,6 +97,24 @@ model TokenRecuperacion {
 
   @@index([usuarioId])
   @@map("token_recuperacion")
+}
+
+// W10 (decisiones E.1.4): el cliente pidió cambiar su correo. El cambio se aplica recién cuando abre el enlace enviado
+// al correo nuevo; mientras tanto sigue entrando con el de siempre. Un pedido nuevo anula el anterior (fecha_uso).
+model CambioCorreo {
+  id              Int       @id @default(autoincrement())
+  usuarioId       Int       @map("usuario_id")
+  emailNuevo      String    @map("email_nuevo") @db.VarChar(160)
+  // Solo el SHA-256 del token; el token en claro viaja únicamente en el correo.
+  tokenHash       String    @unique @map("token_hash") @db.Char(64)
+  fechaExpiracion DateTime  @map("fecha_expiracion") @db.Timestamptz
+  fechaUso        DateTime? @map("fecha_uso") @db.Timestamptz
+  confirmado      Boolean   @default(false)
+  fechaCreacion   DateTime  @default(now()) @map("fecha_creacion") @db.Timestamptz
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+  @@map("cambio_correo")
 }
 
 // RG-02: auditoría total.
@@ -215,6 +237,8 @@ model Direccion {
   ciudad        String?     @db.VarChar(80)
   latitud       Decimal?    @db.Decimal(9, 6)
   longitud      Decimal?    @db.Decimal(9, 6)
+  // Una sola principal activa por cliente: lo garantiza el trigger `direccion_una_principal` (migración
+  // 20261110180000_perfil_cliente), porque Prisma no maneja índices parciales.
   esPrincipal   Boolean     @default(false) @map("es_principal")
   // Solo las guardadas aparecen en Mi perfil y como opción en la próxima solicitud.
   guardada      Boolean     @default(false)

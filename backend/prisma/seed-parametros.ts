@@ -87,6 +87,7 @@ export const GRUPOS_PARAMETROS: { grupo: string; parametros: DefParametro[] }[] 
       { clave: 'login.max_intentos', valor: '5', unidad: 'intentos', tipo: 'entero', minimo: 1, etiqueta: 'Intentos fallidos antes de bloquear', descripcion: 'Intentos fallidos de inicio de sesión antes de bloquear la cuenta (CU-S01)' },
       { clave: 'login.minutos_bloqueo', valor: '15', unidad: 'min', tipo: 'entero', minimo: 1, etiqueta: 'Minutos de bloqueo', descripcion: 'Duración del bloqueo por intentos fallidos (CU-S01)' },
       { clave: 'recuperacion.minutos_vigencia', valor: '30', unidad: 'min', tipo: 'entero', minimo: 1, etiqueta: 'Duración del enlace de recuperación', descripcion: 'Vigencia del enlace para recuperar la contraseña (CU-S02)' },
+      { clave: 'correo.horas_confirmacion', valor: '24', unidad: 'h', tipo: 'entero', minimo: 1, etiqueta: 'Duración del enlace para confirmar un correo nuevo', descripcion: 'Horas que vale el enlace enviado al correo nuevo cuando el cliente cambia su correo en Mi perfil (W10 · E.1.4)' },
     ],
   },
 ];

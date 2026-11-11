@@ -9,25 +9,29 @@ export interface UsuarioToken {
   id: number;
   rol: NombreRol;
   clienteId: number | null;
+  /** D.1.3: entró con una contraseña temporal; la API solo le deja cambiarla (ver `autenticar`). */
+  debeCambiarContrasena: boolean;
 }
 
 /** Respuesta de login y registro: la misma forma que espera el frontend. */
 export interface SesionDto {
   token: string;
-  usuario: { id: string; nombre: string; rol: NombreRol };
+  usuario: { id: string; nombre: string; rol: NombreRol; debeCambiarContrasena: boolean };
 }
 
 type UsuarioCompleto = Usuario & { rol: Rol; cliente: Cliente | null };
 
+/** El personal se muestra con su nombre ("Carlos"); el cliente, con su nombre o el de su empresa. */
 export function nombreVisible(u: UsuarioCompleto) {
-  if (!u.cliente) return u.nombreUsuario;
+  if (!u.cliente) return u.nombre ?? u.nombreUsuario;
   return u.cliente.tipoPersona === 'empresa' && u.cliente.razonSocial
     ? u.cliente.razonSocial
     : `${u.cliente.nombres} ${u.cliente.apellidos}`;
 }
 
 export function emitirAccessToken(u: UsuarioToken) {
-  return jwt.sign({ rol: u.rol, clienteId: u.clienteId }, env.JWT_ACCESS_SECRET, {
+  // `cc` (cambiar contraseña) solo va cuando hace falta.
+  return jwt.sign({ rol: u.rol, clienteId: u.clienteId, ...(u.debeCambiarContrasena && { cc: true }) }, env.JWT_ACCESS_SECRET, {
     subject: String(u.id),
     expiresIn: env.JWT_ACCESS_MINUTOS * 60,
   });
@@ -49,8 +53,8 @@ export function crearSesion(u: UsuarioCompleto, recordarme: boolean): { sesion: 
   const rol = u.rol.nombre as NombreRol;
   return {
     sesion: {
-      token: emitirAccessToken({ id: u.id, rol, clienteId: u.clienteId }),
-      usuario: { id: String(u.id), nombre: nombreVisible(u), rol },
+      token: emitirAccessToken({ id: u.id, rol, clienteId: u.clienteId, debeCambiarContrasena: u.debeCambiarContrasena }),
+      usuario: { id: String(u.id), nombre: nombreVisible(u), rol, debeCambiarContrasena: u.debeCambiarContrasena },
     },
     refreshToken: emitirRefreshToken(u.id, recordarme, u.versionSesion),
   };
@@ -59,7 +63,7 @@ export function crearSesion(u: UsuarioCompleto, recordarme: boolean): { sesion: 
 export function verificarAccessToken(token: string): UsuarioToken {
   try {
     const p = jwt.verify(token, env.JWT_ACCESS_SECRET) as jwt.JwtPayload;
-    return { id: Number(p.sub), rol: p.rol, clienteId: p.clienteId ?? null };
+    return { id: Number(p.sub), rol: p.rol, clienteId: p.clienteId ?? null, debeCambiarContrasena: p.cc === true };
   } catch {
     throw new NoAutorizadoError();
   }

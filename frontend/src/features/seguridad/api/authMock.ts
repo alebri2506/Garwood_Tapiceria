@@ -20,8 +20,8 @@ interface UsuarioMock {
 const usuarios: UsuarioMock[] = [
   { id: 'u1', usuario: 'laura.mendez', email: 'laura.mendez@correo.com', contrasena: 'Sofa2026', nombre: 'Laura Méndez', rol: 'Cliente', fallidos: 0 },
   { id: 'u2', usuario: 'admin', email: 'admin@garwood.com', contrasena: 'Sofa2026', nombre: 'Administrador', rol: 'Administrador', fallidos: 0 },
-  { id: 'u3', usuario: 'tapicero', email: 'tapicero@garwood.com', contrasena: 'Sofa2026', nombre: 'Tapicero', rol: 'Tapicero', fallidos: 0 },
-  { id: 'u4', usuario: 'conductor', email: 'conductor@garwood.com', contrasena: 'Sofa2026', nombre: 'Conductor', rol: 'Conductor', fallidos: 0 },
+  { id: 'u3', usuario: 'tapicero', email: 'tapicero@garwood.com', contrasena: 'Sofa2026', nombre: 'Carlos', rol: 'Tapicero', fallidos: 0 },
+  { id: 'u4', usuario: 'conductor', email: 'conductor@garwood.com', contrasena: 'Sofa2026', nombre: 'Luis', rol: 'Conductor', fallidos: 0 },
 ];
 
 // En el backend real estos valores vienen de la tabla `parametro` (RG-04).
@@ -91,5 +91,13 @@ export const authMock: AuthApi = {
 
   async cerrarSesion() {
     try { sessionStorage.removeItem(CLAVE_MOCK); } catch { /* sin almacenamiento */ }
+  },
+
+  async cambiarContrasenaTemporal() {
+    await esperar();
+    const s = await this.refrescarSesion();
+    const nueva: Sesion = { ...s, usuario: { ...s.usuario, debeCambiarContrasena: false } };
+    try { sessionStorage.setItem(CLAVE_MOCK, JSON.stringify(nueva)); } catch { /* sin almacenamiento */ }
+    return nueva;
   },
 };

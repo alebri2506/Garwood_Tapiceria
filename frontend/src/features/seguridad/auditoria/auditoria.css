@@ -17,3 +17,7 @@
   .au-search { min-width: 0; }
   .au-sel, .au-sel .gw-input { flex: 1 1 100%; width: 100%; }
 }
+
+/* Columna "Usuario": el nombre y, debajo, su correo o usuario. */
+.au-quien b { display: block; font-weight: 600; }
+.au-quien small { display: block; color: var(--ink-muted); font-size: 12.5px; }

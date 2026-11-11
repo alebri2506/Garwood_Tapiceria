@@ -12,7 +12,8 @@ export interface ListaUsuarios {
   usuarios: UsuarioPersonal[];
   opciones: { roles: { nombre: RolPersonal; etiqueta: string }[]; dispositivos: string[] };
 }
-export interface DatosUsuario { nombre: string; nombreUsuario: string; rol: RolPersonal; email: string; dispositivo: string }
+/** Decisión del equipo (10/11): nombres y apellidos + correo obligatorio (con él entra); sin nombre de usuario aparte. */
+export interface DatosUsuario { nombre: string; rol: RolPersonal; email: string; dispositivo: string }
 export type EdicionUsuario = Partial<Pick<DatosUsuario, 'nombre' | 'rol' | 'email' | 'dispositivo'>>;
 /** La contraseña temporal llega solo en esta respuesta (D.1.3). */
 export interface ConTemporal { usuario: UsuarioPersonal; contrasenaTemporal: string }
@@ -38,14 +39,14 @@ const http: UsuariosApi = {
 // ---------------------------------------------------------------- Sin API: el personal de ejemplo del prototipo.
 const ETIQUETA: Record<RolPersonal, string> = { Tapicero: 'Producción', Conductor: 'Conductor', Administrador: 'Administrador' };
 const hace = (horas: number) => new Date(Date.now() - horas * 3_600_000).toISOString();
-const u = (id: number, nombre: string, nombreUsuario: string, rol: RolPersonal, dispositivo: string, ultimoAcceso: string | null, activo = true, email: string | null = null): UsuarioPersonal =>
-  ({ id, nombre, nombreUsuario, email, rol, rolEtiqueta: ETIQUETA[rol], dispositivo, activo, debeCambiarContrasena: false, bloqueado: false, ultimoAcceso });
+const u = (id: number, nombre: string, email: string, rol: RolPersonal, dispositivo: string, ultimoAcceso: string | null, activo = true): UsuarioPersonal =>
+  ({ id, nombre, nombreUsuario: email, email, rol, rolEtiqueta: ETIQUETA[rol], dispositivo, activo, debeCambiarContrasena: false, bloqueado: false, ultimoAcceso });
 const ejemplo: UsuarioPersonal[] = [
-  u(1, 'Administrador', 'admin', 'Administrador', 'Computadora', hace(1), true, 'admin@garwood.test'),
-  u(2, 'Carlos', 'carlos.taller', 'Tapicero', 'Celular', hace(2)),
-  u(3, 'María', 'maria.taller', 'Tapicero', 'Celular', hace(3)),
-  u(4, 'Luis', 'luis.ruta', 'Conductor', 'Celular', hace(24 * 19)),
-  u(5, 'Ayudante temporal', 'temp.taller', 'Tapicero', 'Celular', hace(24 * 70), false),
+  u(1, 'Administrador Gerencia', 'admin@garwood.test', 'Administrador', 'Computadora', hace(1)),
+  u(2, 'Carlos Ramos', 'carlos@garwood.test', 'Tapicero', 'Celular', hace(2)),
+  u(3, 'María Díaz', 'maria@garwood.test', 'Tapicero', 'Celular', hace(3)),
+  u(4, 'Luis Pérez', 'luis@garwood.test', 'Conductor', 'Celular', hace(24 * 19)),
+  u(5, 'Ayudante Temporal', 'temporal@garwood.test', 'Tapicero', 'Celular', hace(24 * 70), false),
 ];
 const temporal = () => `${Math.random().toString(36).slice(2, 7).replace(/[0-9]/g, 'k')}-${String(Math.floor(2000 + Math.random() * 7000))}`;
 const buscar = (id: number) => {
@@ -59,15 +60,15 @@ const simulada: UsuariosApi = {
     opciones: { roles: (['Tapicero', 'Conductor', 'Administrador'] as RolPersonal[]).map((nombre) => ({ nombre, etiqueta: ETIQUETA[nombre] })), dispositivos: ['Computadora', 'Celular', 'Tablet'] },
   }),
   crear: async (d) => {
-    if (d.rol === 'Administrador' && !d.email) throw new ApiError('Ingrese el correo: es obligatorio para un Administrador.', 400, { email: 'El correo es obligatorio para un Administrador.' });
-    if (ejemplo.some((e) => e.nombreUsuario === d.nombreUsuario.trim().toLowerCase())) throw new ApiError('Ese usuario ya existe. Elija otro.', 409, { nombreUsuario: 'Ese usuario ya existe. Elija otro.' });
-    const nuevo = { ...u(ejemplo.length + 1, d.nombre, d.nombreUsuario.trim().toLowerCase(), d.rol, d.dispositivo, null, true, d.email || null), debeCambiarContrasena: true };
+    const email = d.email.trim().toLowerCase();
+    if (ejemplo.some((e) => e.email === email)) throw new ApiError('Ya existe una cuenta con ese correo.', 409, { email: 'Ya existe una cuenta con ese correo.' });
+    const nuevo = { ...u(ejemplo.length + 1, d.nombre.trim(), email, d.rol, d.dispositivo, null), debeCambiarContrasena: true };
     ejemplo.push(nuevo);
     return { usuario: structuredClone(nuevo), contrasenaTemporal: temporal() };
   },
   editar: async (id, d) => {
     const x = buscar(id);
-    Object.assign(x, { ...d, email: d.email === undefined ? x.email : d.email || null }, d.rol ? { rolEtiqueta: ETIQUETA[d.rol] } : {});
+    Object.assign(x, d, d.email ? { nombreUsuario: d.email } : {}, d.rol ? { rolEtiqueta: ETIQUETA[d.rol] } : {});
     return structuredClone(x);
   },
   desactivar: async (id) => {

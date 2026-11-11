@@ -41,3 +41,12 @@ export const restablecerSchema = z.object({
   token: z.string().min(20).max(100),
   contrasena: contrasenaNueva,
 });
+
+// D.1.3: reemplazar la contraseña temporal en el primer ingreso.
+export const cambiarContrasenaSchema = z.object({ contrasena: contrasenaNueva });
+
+// W10 › Seguridad (decisiones E.4.1): cambiar la contraseña pidiendo la actual.
+export const cambioContrasenaSchema = z.object({
+  actual: z.string({ required_error: 'Ingrese su contraseña actual' }).min(1, 'Ingrese su contraseña actual').max(200),
+  contrasena: contrasenaNueva,
+});

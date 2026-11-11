@@ -2,8 +2,12 @@ export type Rol = 'Administrador' | 'Tapicero' | 'Conductor' | 'Cliente';
 
 export interface Sesion {
   token: string;
-  usuario: { id: string; nombre: string; rol: Rol };
+  /** debeCambiarContrasena: entró con una contraseña temporal y debe crear una propia (decisiones D.1.3). */
+  usuario: { id: string; nombre: string; rol: Rol; debeCambiarContrasena?: boolean };
 }
+
+/** Pantalla obligatoria tras ingresar con una contraseña temporal. */
+export const RUTA_CAMBIO_CONTRASENA = '/cambiar-contrasena';
 
 /** Zona de la app de cada rol (RG-07: cada rol ve solo lo suyo). */
 export const ZONA_POR_ROL: Record<Rol, string> = {

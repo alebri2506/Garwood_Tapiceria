@@ -24,13 +24,22 @@ export const validar =
     next();
   };
 
-/** Exige un access token válido en `Authorization: Bearer`. */
+/**
+ * Exige un access token válido en `Authorization: Bearer`.
+ * D.1.3: con una contraseña temporal solo se puede usar /api/auth (cambiarla, ver la sesión, salir):
+ * el resto de la API responde 403 aunque alguien se salte la pantalla escribiendo otra dirección.
+ */
 export const autenticar: RequestHandler = (req, _res, next) => {
   const [tipo, token] = (req.headers.authorization ?? '').split(' ');
   if (tipo !== 'Bearer' || !token) return next(new NoAutorizadoError());
   req.usuario = verificarAccessToken(token);
+  if (req.usuario.debeCambiarContrasena && !req.originalUrl.startsWith('/api/auth/')) {
+    return next(new ReglaNegocioError(DEBE_CAMBIAR_CONTRASENA, 403));
+  }
   next();
 };
+
+export const DEBE_CAMBIAR_CONTRASENA = 'Debe cambiar su contraseña temporal antes de continuar.';
 
 /** RG-07: cada rol ve solo lo suyo. */
 export const exigirRol =

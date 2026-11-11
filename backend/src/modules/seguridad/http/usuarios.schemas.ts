@@ -1,30 +1,23 @@
 import { z } from 'zod';
-import { DISPOSITIVOS, ROLES_PERSONAL } from '../domain/usuarios.js';
+import { CORREO_OBLIGATORIO, DISPOSITIVOS, ROLES_PERSONAL } from '../domain/usuarios.js';
 
-// CU-S03 · A20 › Usuarios (decisiones D.1).
-const nombre = z.string().trim().min(1, 'Ingrese el nombre').max(80, 'El nombre es muy largo');
+// CU-S03 · A20 › Usuarios (decisiones D.1). Decisión del equipo (10/11): sin nombre de usuario aparte; la persona se
+// registra con nombres y apellidos y entra con su correo, que es obligatorio.
+const nombre = z
+  .string({ required_error: 'Ingrese nombres y apellidos' })
+  .trim()
+  .max(80, 'El nombre es muy largo')
+  .transform((v) => v.replace(/\s+/g, ' '))
+  .refine((v) => v.length > 0, 'Ingrese nombres y apellidos')
+  .refine((v) => v.split(' ').length >= 2, 'Ingrese nombres y apellidos (por ejemplo, Pedro Ruiz)');
+const correo = z.string({ required_error: CORREO_OBLIGATORIO }).trim().toLowerCase().min(1, CORREO_OBLIGATORIO).max(160).email('El correo no es válido');
 const rol = z.enum(ROLES_PERSONAL, { errorMap: () => ({ message: 'Elija un rol de la lista' }) });
 const dispositivo = z.enum(DISPOSITIVOS, { errorMap: () => ({ message: 'Elija Computadora, Celular o Tablet' }) });
 
 export const crearUsuarioSchema = z.object({
   nombre,
-  // Como en el prototipo: "pedro.taller". Sin "@" para no confundirse con el correo de un cliente.
-  nombreUsuario: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .min(3, 'Use 3 caracteres o más')
-    .max(40, 'Use 40 caracteres o menos')
-    .regex(/^[a-z0-9]+([._-][a-z0-9]+)*$/, 'Use solo letras sin tilde, números y . - _ (por ejemplo, pedro.taller)'),
+  email: correo,
   rol,
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .max(160)
-    .email('El correo no es válido')
-    .optional()
-    .or(z.literal('').transform(() => undefined)),
   dispositivo: dispositivo.optional().or(z.literal('').transform(() => undefined)),
 });
 
@@ -32,8 +25,7 @@ export const editarUsuarioSchema = z.object({
   nombre: nombre.optional(),
   rol: rol.optional(),
   dispositivo: dispositivo.nullable().optional().or(z.literal('').transform(() => null)),
-  // Vacío = quitar el correo (no se permite a un Administrador).
-  email: z.string().trim().toLowerCase().max(160).email('El correo no es válido').nullable().optional().or(z.literal('').transform(() => null)),
-  // D.1.4: identifica a la persona en la bitácora.
-  nombreUsuario: z.undefined({ errorMap: () => ({ message: 'El nombre de usuario no se puede cambiar.' }) }).optional(),
+  email: correo.optional(),
+  // Ya no hay un nombre de usuario aparte: la cuenta se identifica por su correo.
+  nombreUsuario: z.undefined({ errorMap: () => ({ message: 'La cuenta se identifica por su correo: cambie el correo.' }) }).optional(),
 });

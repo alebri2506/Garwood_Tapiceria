@@ -19,8 +19,10 @@ export interface EntradaBitacora {
   entidadId: number | null;
   valorAnterior: unknown;
   valorNuevo: unknown;
-  /** Nombre de usuario de quien hizo la acción (null si no había sesión). */
+  /** Correo o usuario de quien hizo la acción (null si no había sesión). */
   usuario: string | null;
+  /** Su nombre visible (“Carlos Ruiz”, “Laura Méndez”), si se conoce. */
+  nombre?: string | null;
 }
 
 export interface Referencias {
@@ -32,7 +34,15 @@ export interface Referencias {
   clientes: Map<number, string>;
 }
 
-export interface EntradaLegible { usuario: string; modulo: string; accion: string; registro: string; cambio: string }
+/** `nombre`: quién lo hizo, para leer; `usuario`: su correo o usuario, para distinguir a dos personas con el mismo nombre. */
+export interface EntradaLegible { nombre: string; usuario: string; modulo: string; accion: string; registro: string; cambio: string }
+
+/** Filtro “Quién” de A20 (equipo, 10/11): una lista con cada persona no sirve cuando hay muchos clientes. */
+export const TIPOS_ACTOR: { codigo: 'personal' | 'clientes' | 'sistema'; nombre: string }[] = [
+  { codigo: 'personal', nombre: 'Personal del taller' },
+  { codigo: 'clientes', nombre: 'Clientes' },
+  { codigo: 'sistema', nombre: 'Sistema' },
+];
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const DIAS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
@@ -84,7 +94,8 @@ function cambioGenerico(antes: Record<string, unknown>, despues: Record<string, 
     .join(' · ');
 }
 
-const ACCIONES_DEL_SISTEMA = new Set(['login_fallido', 'cuenta_bloqueada']);
+/** Las registra el sistema sobre la cuenta afectada (como en el prototipo). */
+export const ACCIONES_DEL_SISTEMA = ['login_fallido', 'cuenta_bloqueada'];
 
 /** Un registro de la bitácora como se muestra en A20 y en el CSV. */
 export function describir(e: EntradaBitacora, r: Referencias): EntradaLegible {
@@ -92,11 +103,13 @@ export function describir(e: EntradaBitacora, r: Referencias): EntradaLegible {
   const id = e.entidadId ?? -1;
   const modulo = MODULOS.find((m) => m.codigo === e.modulo)?.nombre ?? e.modulo.charAt(0).toUpperCase() + e.modulo.slice(1);
   // Los intentos fallidos y el bloqueo los registra el sistema sobre la cuenta afectada (como en el prototipo).
-  const usuario = ACCIONES_DEL_SISTEMA.has(e.accion) ? 'sistema' : e.usuario ?? 'sistema';
+  const delSistema = ACCIONES_DEL_SISTEMA.includes(e.accion) || !e.usuario;
+  const usuario = delSistema ? 'sistema' : e.usuario!;
+  const nombre = delSistema ? 'Sistema' : e.nombre || e.usuario!;
   const cuenta = r.usuarios.get(id) ?? '';
   const solicitud = r.solicitudes.get(id) ?? '';
   const deCita = texto(despues.solicitud) && e.accion === 'cita_programada' ? texto(despues.solicitud) : r.citas.get(id) ?? '';
-  const l = (accion: string, registro: string, cambio: string): EntradaLegible => ({ usuario, modulo, accion, registro, cambio });
+  const l = (accion: string, registro: string, cambio: string): EntradaLegible => ({ nombre, usuario, modulo, accion, registro, cambio });
 
   switch (e.accion) {
     case 'login': return l('Inicio de sesión', cuenta, '');
@@ -105,6 +118,7 @@ export function describir(e: EntradaBitacora, r: Referencias): EntradaLegible {
     case 'cuenta_bloqueada': return l('Intentos fallidos', cuenta, 'Cuenta bloqueada por intentos fallidos');
     case 'recuperacion_solicitada': return l('Pidió cambiar su contraseña', cuenta, 'Se envió el enlace por correo');
     case 'contrasena_restablecida': return l('Contraseña cambiada', cuenta, 'Con el enlace de recuperación');
+    case 'contrasena_cambiada': return l('Contraseña cambiada', cuenta, despues.temporal ? 'Reemplazó la contraseña temporal' : 'Cambió su contraseña');
     case 'auditoria_exportada': return l('Exportó el registro de actividad', 'Registro de actividad',
       `${diaCorto(texto(despues.desde))} – ${diaCorto(texto(despues.hasta))} · ${plural(despues.filas, 'fila', 'filas')}`);
 
@@ -132,8 +146,8 @@ export function describir(e: EntradaBitacora, r: Referencias): EntradaLegible {
     case 'agenda_bloqueo': return l('Turno bloqueado', 'Agenda', `${cuandoCita(despues)} · ${texto(despues.motivo)}`);
 
     case 'usuario_creado': {
-      const partes = [etiquetaRol(texto(despues.rol)), texto(despues.dispositivo), despues.email ? 'con correo' : 'sin correo'].filter(Boolean);
-      return l('Usuario creado', texto(despues.nombreUsuario) || cuenta, `${partes.join(' · ')} · contraseña temporal`);
+      const partes = [texto(despues.nombre), etiquetaRol(texto(despues.rol)), texto(despues.dispositivo)].filter(Boolean);
+      return l('Usuario creado', texto(despues.email) || texto(despues.nombreUsuario) || cuenta, `${partes.join(' · ')} · contraseña temporal`);
     }
     case 'usuario_modificado': {
       const CAMPOS: Record<string, string> = { nombre: 'Nombre', rol: 'Rol', dispositivo: 'Dispositivo', email: 'Correo' };
@@ -146,6 +160,32 @@ export function describir(e: EntradaBitacora, r: Referencias): EntradaLegible {
     case 'usuario_desactivado': return l('Usuario desactivado', cuenta, 'Activo → Desactivado');
     case 'usuario_reactivado': return l('Usuario reactivado', cuenta, 'Desactivado → Activo');
     case 'contrasena_temporal': return l('Contraseña temporal', cuenta, 'Se generó una nueva; debe cambiarla al ingresar');
+
+    // W10 Mi perfil (decisiones E.1).
+    case 'cliente_actualizado': {
+      const CAMPOS: Record<string, string> = { nombres: 'Nombres', apellidos: 'Apellidos', telefono: 'Teléfono', razonSocial: 'Empresa', cargo: 'Cargo' };
+      const campos = Object.keys(CAMPOS).filter((c) => c in despues);
+      return l('Datos del cliente', r.clientes.get(id) ?? '', campos.map((c) => `${CAMPOS[c]}: ${texto(antes[c]) || '—'} → ${texto(despues[c]) || '—'}`).join(' · '));
+    }
+    case 'correo_cambio_solicitado': return l('Pidió cambiar su correo', r.clientes.get(id) ?? '', `${texto(antes.email)} → ${texto(despues.email)} · falta confirmar`);
+    case 'correo_cambiado': return l('Correo cambiado', r.clientes.get(id) ?? '', `${texto(antes.email)} → ${texto(despues.email)}`);
+    // W10 › Avisos (E.3).
+    case 'avisos_actualizados': {
+      const NOMBRES: Record<string, string> = { informativos: 'Avisos informativos por correo', novedades: 'Recordatorios y novedades' };
+      const siNo = (v: unknown) => (v ? 'Sí' : 'No');
+      const campos = Object.keys(NOMBRES).filter((c) => c in despues);
+      return l('Preferencias de avisos', r.clientes.get(id) ?? '', campos.map((c) => `${NOMBRES[c]}: ${siNo(antes[c])} → ${siNo(despues[c])}`).join(' · '));
+    }
+    // W10 › Direcciones de entrega (E.2).
+    case 'direccion_agregada': return l('Dirección agregada', r.clientes.get(id) ?? '',
+      `${[texto(despues.etiqueta), texto(despues.direccion)].filter(Boolean).join(' · ')}${despues.principal ? ' · principal' : ''}`);
+    case 'direccion_principal': return l('Dirección principal', r.clientes.get(id) ?? '',
+      `${texto(obj(antes).etiqueta) || texto(obj(antes).direccion) || '—'} → ${texto(despues.etiqueta) || texto(despues.direccion)}`);
+    case 'direccion_quitada': {
+      const nueva = obj(despues.nuevaPrincipal);
+      const quitada = [texto(antes.etiqueta), texto(antes.direccion)].filter(Boolean).join(' · ');
+      return l('Dirección quitada', r.clientes.get(id) ?? '', nueva.direccionId ? `${quitada} · nueva principal: ${texto(nueva.etiqueta) || texto(nueva.direccion)}` : quitada);
+    }
 
     case 'cliente_registrado': {
       const tipo = despues.tipoPersona === 'empresa' ? 'Empresa' : 'Persona';

@@ -35,7 +35,7 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
      - franja **mañana 9:00–12:00** o **tarde 15:00–17:00** (parámetros `taller.franja_manana` y `taller.franja_tarde`); de 12:00 a 15:00 está cerrado;
      - de lunes a sábado, sin domingos ni feriados;
      - se puede elegir hasta 4 semanas adelante;
-     - cada franja tiene un **cupo** de recojos; una franja llena aparece como «Llena» y no se puede elegir (valor del cupo: ver E);
+     - cada franja tiene un **cupo** de recojos; una franja llena aparece como «Llena» y no se puede elegir (valor del cupo: ver F);
      - es una **preferencia**: la hora exacta la fija el administrador al planificar la salida (A13), y el recojo ocurre después de aceptar la cotización;
      - los recojos **no** van en la Agenda de citas (ver `agenda.md`).
      - *Decidido con el asesor (clase del 04/11): el cliente indica en qué parte del día estará en casa; se descartó elegir una hora exacta.*
@@ -89,27 +89,34 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
 
 ### D.1 Usuarios y roles (CU-S03, S04)
 1. **Rol "Producción":** en pantalla se muestra **"Producción"** (incluye tapiceros y costureras, como en A20). En la base el rol sigue llamándose `Tapicero`; solo cambia la etiqueta visible.
-2. **Correo:**
-   - obligatorio para **Administrador** y **Cliente**;
-   - opcional para **Producción** y **Conductor**;
-   - quien no tiene correo no usa "¿Olvidó su contraseña?": el Administrador le genera una contraseña temporal nueva.
+2. **Correo y nombre** (cambiado por el equipo el 10/11):
+   - el personal se registra con **nombres y apellidos** y **correo**, ambos obligatorios para todos los roles;
+   - **no hay un nombre de usuario aparte** (como "pedro.taller"), porque se podía confundir: la persona **entra con su correo**, igual que los clientes; por dentro, el nombre de usuario de la cuenta es el mismo correo;
+   - con correo, todo el personal puede usar "¿Olvidó su contraseña?"; el Administrador igual puede generarle una contraseña temporal nueva;
+   - las cuentas de prueba del seed (`admin`, `tapicero`, `conductor`) siguen entrando con ese usuario o con su correo.
 3. **Contraseña temporal:**
    - el sistema la genera y se le **muestra una sola vez al Administrador**, que la entrega en persona (no se envía por correo);
    - no vence;
    - el usuario **debe cambiarla en su primer ingreso**, en una pantalla nueva con el estilo de G1.
 4. **Editar un usuario:**
-   - se puede cambiar **nombre, rol, dispositivo y correo** (el correo se agregó el 10/11, para poder subir a Administrador a alguien que no tenía; a un Administrador no se le puede quitar);
-   - el **nombre de usuario no se cambia** (identifica a la persona en la bitácora);
+   - se puede cambiar **nombres y apellidos, rol, dispositivo y correo**; el correo no se puede dejar vacío;
+   - si se cambia el correo, la persona entra con el nuevo y el anterior deja de servir; el historial se conserva (la bitácora guarda a la persona, no su correo);
    - el Administrador puede generarle una contraseña temporal nueva.
 5. **Protecciones:** nadie puede desactivarse a sí mismo, y siempre debe quedar **al menos un Administrador activo**.
 6. **Desactivar o cambiar de rol:** el acceso se corta cuando vence el token de acceso (`JWT_ACCESS_MINUTOS` = 15 min). Al renovar la sesión se compara `version_sesion`, que sube al desactivar, cambiar el rol o cambiar la contraseña.
 7. **Dispositivo:** lista fija **Computadora · Celular · Tablet**, solo informativa.
 8. **Último acceso:** se calcula desde la bitácora (último inicio de sesión); no se guarda aparte.
+9. **Roles fijos, sin pestaña "Roles y permisos"** (equipo, 10/11): los roles (Administrador, Producción, Conductor, Cliente) y lo que puede hacer cada uno son fijos según la tesis y se validan en el backend (RG-07). No se configuran ni se muestran en una pestaña aparte: A20 queda con **Usuarios** y **Registro de actividad**, y el Administrador solo elige el rol de cada persona.
 
 ### D.2 Auditoría (CU-S06)
 1. **Exportar:** en **CSV**. Período por defecto: **últimos 30 días**.
 2. **Qué se registra:** cerrar sesión también va a la bitácora.
 3. **Protección:** la bitácora **no se puede editar ni borrar**; la base de datos lo impide.
+4. **Filtros del registro de actividad** (equipo, 10/11): en lugar de una lista con cada usuario (no sirve con decenas de clientes):
+   - **Quién:** todos · Personal del taller · Clientes · Sistema;
+   - **Módulo** y **Período** (últimos 30 días, 7 días, hoy o fechas elegidas);
+   - **buscador** por nombre, correo, solicitud o acción, para encontrar a una persona concreta;
+   - la columna Usuario muestra el **nombre** y, debajo, el correo.
 
 ### D.3 Parámetros (CU-S05, A14)
 1. **Qué se muestra en A14:**
@@ -132,7 +139,52 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
 5. **Cambiar el horario o las franjas con citas ya agendadas fuera del nuevo horario:** **no se bloquea**. Se guarda y se muestra un aviso con la lista de citas afectadas para que el Administrador las reprograme; las citas existentes se mantienen.
 6. **Solo hacia adelante:** lo existente (citas, solicitudes y, luego, cotizaciones) conserva los valores con que se creó; el cambio aplica solo a lo nuevo. Cada cambio queda en `parametro_historial` y en la bitácora.
 
-## E. Pendientes por confirmar con el dueño (vía Alejandro)
+## E. Mi perfil del cliente (W10 · decidido el 10/11)
+Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más adelante.
+
+### E.1 Datos
+1. **Persona o empresa:** se muestra, pero **no se cambia** desde el perfil; si el cliente lo necesita, lo pide al taller.
+2. **Empresa:**
+   - el **EIN** se muestra sin poder cambiarlo;
+   - se pueden editar el nombre de la empresa, la persona de contacto, el cargo y el teléfono.
+3. **Nombre:** dos campos, **Nombres** y **Apellidos**, igual que en el registro (G1).
+4. **Correo** (con él entra a GARWEB). El cliente puede cambiarlo:
+   - se le pide su **contraseña actual**;
+   - se envía un **enlace de confirmación al correo nuevo**, y el cambio **solo se aplica cuando lo confirma** (un error de tipeo no lo deja sin acceso);
+   - se avisa al **correo anterior** que se pidió el cambio;
+   - mientras no confirme, sigue entrando con el correo de siempre.
+
+### E.2 Direcciones de entrega
+1. **Agregar:** con etiqueta (Casa, Oficina…) y Google Maps. La primera dirección guardada queda como **principal**.
+2. **Quitar:** sí, pero **se oculta, no se borra**; las solicitudes que la usaron la conservan.
+3. **Editar:** no. Si la dirección cambió, se agrega otra.
+4. **Principal:**
+   - se propone al pedir delivery en W2 y en el despacho;
+   - si se quita la principal, la siguiente pasa a ser principal;
+   - mientras tenga direcciones, siempre hay **una sola** principal.
+
+### E.3 Avisos
+1. **Obligatorios** (siempre llegan por correo y a la campana; no se pueden apagar):
+   - **citas y visitas**: programada, reprogramada, inasistencia y sus recordatorios;
+   - solicitud **vencida** y **descartada**;
+   - cuando existan: recojo, entrega, retiro en el taller y daño oculto (V2);
+   - en W10 se listan: Citas y visitas · Recojo del mueble en su casa · Entrega del pedido · Retiro en el taller · Daño oculto (V2).
+2. **Informativos por correo** (el cliente puede apagarlos):
+   - "Recibimos su solicitud" y "Recibimos sus fotos";
+   - luego, el avance del pedido, la cotización y los pagos;
+   - es la preferencia que ya se elige al registrarse ("Quiero recibir avisos de mis pedidos por correo").
+3. **Recordatorios y novedades del taller:** por ahora **solo se guarda la preferencia**, para promociones o novedades a futuro. Viene **apagado**. Los recordatorios de una cita **no** van aquí: son obligatorios.
+4. **Campana:** dentro de GARWEB (W11) el cliente **siempre ve todos** sus avisos; los interruptores solo afectan al correo.
+
+### E.4 Seguridad
+1. **Cambiar contraseña:** en una **pantalla aparte con el estilo de G1**:
+   - pide la contraseña actual;
+   - cierra las sesiones en otros equipos (`version_sesion`);
+   - avisa por correo y en la campana: "Su contraseña cambió".
+2. **Último ingreso:** solo fecha y hora ("Último ingreso: hoy 09:12"), sacado de la bitácora. Es el ingreso anterior al actual.
+3. **Desactivar la cuenta:** no está en W10; lo hará el Administrador en A17 (H02).
+
+## F. Pendientes por confirmar con el dueño (vía Alejandro)
 - Duración real de la cita para ver telas (prototipo: 30 min).
 - Límite de distancia para la visita a domicilio gratuita.
 - Tarifas reales de transporte por tamaño de carga.
@@ -141,7 +193,7 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
 - **Cupo de recojos por franja** (cuántos caben en la mañana y en la tarde). Mientras no se confirme, el sistema no limita el cupo.
 - Fotos y códigos reales de las telas: están en los libros del dueño; por ahora el catálogo usa datos de prueba.
 
-## F. Por decidir en el equipo (reunión del 08/11)
+## G. Por decidir en el equipo (reunión del 08/11)
 - A3: quitar «Pedírselas por enlace» y el estado «Esperando fotos».
 - A3: «¿Por dónde se comunicó?» como lista desplegable en vez de tarjetas.
 - Menú: si «Cotizaciones» se junta con «Solicitudes».

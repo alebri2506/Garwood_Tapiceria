@@ -6,7 +6,7 @@ import { registrarBitacora } from '../../../shared/infrastructure/bitacora.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { COSTO_BCRYPT } from './recuperarContrasena.js';
 import {
-  DISPOSITIVOS, ROLES_PERSONAL, etiquetaRol, exigeCorreo, generarContrasenaTemporal, motivoNoCambiarRol, motivoNoDesactivar,
+  CORREO_OBLIGATORIO, DISPOSITIVOS, ROLES_PERSONAL, etiquetaRol, generarContrasenaTemporal, motivoNoCambiarRol, motivoNoDesactivar,
   type RolPersonal,
 } from '../domain/usuarios.js';
 
@@ -60,23 +60,21 @@ export async function listarUsuarios() {
   };
 }
 
-export interface NuevoUsuario { nombre: string; nombreUsuario: string; rol: RolPersonal; email?: string; dispositivo?: string }
+export interface NuevoUsuario { nombre: string; rol: RolPersonal; email: string; dispositivo?: string }
+
+const CORREO_REPETIDO = 'Ya existe una cuenta con ese correo.';
+/** El correo identifica a la cuenta: no puede ser el correo ni el usuario de otra (incluidos los clientes). */
+const correoOcupado = (db: Db, email: string, salvoId?: number) =>
+  db.usuario.findFirst({ where: { OR: [{ email }, { nombreUsuario: email }], ...(salvoId && { NOT: { id: salvoId } }) } });
 
 /**
  * Crea un usuario del personal con una contraseña temporal (D.1.3): se devuelve UNA sola vez para que el
  * Administrador la entregue en persona; en la base solo queda su hash y nunca va a la bitácora.
+ * D.1.2 y D.1.4 (equipo, 10/11): se registra con nombres y apellidos y correo; entra con su correo, como los
+ * clientes. Por eso su nombre de usuario interno es el mismo correo.
  */
 export async function crearUsuario(quien: Quien, e: NuevoUsuario) {
-  if (exigeCorreo(e.rol) && !e.email) {
-    throw new ReglaNegocioError('Ingrese el correo: es obligatorio para un Administrador.', 400, { email: 'El correo es obligatorio para un Administrador.' });
-  }
-  const repetido = await prisma.usuario.findFirst({
-    where: { OR: [{ nombreUsuario: e.nombreUsuario }, ...(e.email ? [{ email: e.email }, { nombreUsuario: e.email }] : [])] },
-  });
-  if (repetido?.nombreUsuario === e.nombreUsuario) {
-    throw new ReglaNegocioError('Ese usuario ya existe. Elija otro.', 409, { nombreUsuario: 'Ese usuario ya existe. Elija otro.' });
-  }
-  if (repetido) throw new ReglaNegocioError('Ya existe una cuenta con ese correo.', 409, { email: 'Ya existe una cuenta con ese correo.' });
+  if (await correoOcupado(prisma, e.email)) throw new ReglaNegocioError(CORREO_REPETIDO, 409, { email: CORREO_REPETIDO });
 
   const contrasenaTemporal = generarContrasenaTemporal();
   const contrasenaHash = await bcrypt.hash(contrasenaTemporal, COSTO_BCRYPT);
@@ -84,14 +82,14 @@ export async function crearUsuario(quien: Quien, e: NuevoUsuario) {
     const rol = await tx.rol.findUniqueOrThrow({ where: { nombre: e.rol } });
     const creado = await tx.usuario.create({
       data: {
-        nombre: e.nombre, nombreUsuario: e.nombreUsuario, email: e.email ?? null, dispositivo: e.dispositivo ?? null,
+        nombre: e.nombre, nombreUsuario: e.email, email: e.email, dispositivo: e.dispositivo ?? null,
         rolId: rol.id, contrasenaHash, debeCambiarContrasena: true,
       },
       include: { rol: true },
     });
     await registrarBitacora(tx, {
       usuarioId: quien.usuarioId, modulo: 'seguridad', accion: 'usuario_creado', entidad: 'usuario', entidadId: creado.id,
-      valorNuevo: { nombreUsuario: e.nombreUsuario, nombre: e.nombre, rol: e.rol, email: e.email ?? null, dispositivo: e.dispositivo ?? null },
+      valorNuevo: { nombre: e.nombre, email: e.email, rol: e.rol, dispositivo: e.dispositivo ?? null },
       ip: quien.ip,
     });
     return creado;
@@ -102,7 +100,8 @@ export async function crearUsuario(quien: Quien, e: NuevoUsuario) {
 export interface EdicionUsuario { nombre?: string; rol?: RolPersonal; dispositivo?: string | null; email?: string | null }
 
 /**
- * D.1.4: se cambia nombre, rol, dispositivo y correo; el nombre de usuario no (identifica a la persona en la bitácora).
+ * D.1.4: se cambia nombre, rol, dispositivo y correo (obligatorio, D.1.2). Si entra con su correo, el correo nuevo
+ * pasa a ser con el que entra y el anterior deja de servir.
  * Cambiar el rol sube `version_sesion`: su sesión no se renueva y vuelve a entrar con el rol nuevo (D.1.6).
  */
 export async function editarUsuario(quien: Quien, id: number, e: EdicionUsuario) {
@@ -114,19 +113,14 @@ export async function editarUsuario(quien: Quien, id: number, e: EdicionUsuario)
     if (e.nombre !== undefined && e.nombre !== actual.nombre) anotar('nombre', actual.nombre, e.nombre);
     if (e.dispositivo !== undefined && e.dispositivo !== actual.dispositivo) anotar('dispositivo', actual.dispositivo, e.dispositivo);
     if (e.email !== undefined && e.email !== actual.email) {
-      if (e.email) {
-        const repetido = await tx.usuario.findFirst({ where: { OR: [{ email: e.email }, { nombreUsuario: e.email }], NOT: { id } } });
-        if (repetido) throw new ReglaNegocioError('Ya existe una cuenta con ese correo.', 409, { email: 'Ya existe una cuenta con ese correo.' });
-      }
+      if (e.email && (await correoOcupado(tx, e.email, id))) throw new ReglaNegocioError(CORREO_REPETIDO, 409, { email: CORREO_REPETIDO });
       anotar('email', actual.email, e.email);
     }
-    // D.1.2: con el rol y el correo que quedarán, el Administrador debe tener correo.
-    const rolFinal = e.rol ?? actual.rol.nombre;
+    // D.1.2: todo el personal debe quedar con correo (a una cuenta antigua sin correo se le pide al editarla).
     const correoFinal = e.email !== undefined ? e.email : actual.email;
-    if (exigeCorreo(rolFinal) && !correoFinal) {
-      const m = 'El correo es obligatorio para un Administrador.';
-      throw new ReglaNegocioError(m, 400, { email: m });
-    }
+    if (!correoFinal) throw new ReglaNegocioError(CORREO_OBLIGATORIO, 400, { email: CORREO_OBLIGATORIO });
+    // Quien entra con su correo, entra con el nuevo (el anterior ya no sirve para iniciar sesión).
+    const sincronizarUsuario = 'email' in despues && (actual.nombreUsuario === actual.email || !actual.email);
     let rolId: number | undefined;
     if (e.rol !== undefined && e.rol !== actual.rol.nombre) {
       const motivo = motivoNoCambiarRol({
@@ -147,6 +141,7 @@ export async function editarUsuario(quien: Quien, id: number, e: EdicionUsuario)
         ...('nombre' in despues && { nombre: e.nombre }),
         ...('dispositivo' in despues && { dispositivo: e.dispositivo }),
         ...('email' in despues && { email: e.email }),
+        ...(sincronizarUsuario && { nombreUsuario: e.email! }),
         ...(rolId && { rolId, versionSesion: { increment: 1 } }),
       },
       include: { rol: true },

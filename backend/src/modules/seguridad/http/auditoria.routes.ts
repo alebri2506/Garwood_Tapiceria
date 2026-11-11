@@ -2,7 +2,7 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { autenticar, exigirRol } from '../../../shared/http/middlewares.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
-import { MODULOS } from '../domain/auditoria.js';
+import { MODULOS, TIPOS_ACTOR } from '../domain/auditoria.js';
 import { exportarActividad, listarActividad } from '../application/auditoria.js';
 
 const fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha no es válida').optional();
@@ -11,6 +11,7 @@ const filtrosSchema = z.object({
   hasta: fecha,
   usuarioId: z.coerce.number().int().positive('Elija un usuario de la lista').optional(),
   modulo: z.enum(MODULOS.map((m) => m.codigo) as [string, ...string[]], { errorMap: () => ({ message: 'Elija un módulo de la lista' }) }).optional(),
+  tipo: z.enum(TIPOS_ACTOR.map((t) => t.codigo) as ['personal', 'clientes', 'sistema'], { errorMap: () => ({ message: 'Elija quién de la lista' }) }).optional(),
   q: z.string().trim().max(100, 'La búsqueda es muy larga').optional(),
   pagina: z.coerce.number().int().min(1).max(1000).default(1),
 });

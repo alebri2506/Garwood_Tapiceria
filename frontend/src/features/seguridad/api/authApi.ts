@@ -1,4 +1,4 @@
-import { API_URL, apiPost } from '../../../shared/api/http';
+import { API_URL, apiFetch, apiPost } from '../../../shared/api/http';
 import type { Sesion } from '../../../shared/api/sesion';
 import { authMock } from './authMock';
 
@@ -35,6 +35,8 @@ export interface AuthApi {
   refrescarSesion(): Promise<Sesion>;
   /** Borra la cookie de refresh en el servidor. */
   cerrarSesion(): Promise<void>;
+  /** D.1.3: reemplaza la contraseña temporal y devuelve la sesión nueva. */
+  cambiarContrasenaTemporal(contrasena: string): Promise<Sesion>;
 }
 
 const httpAuthApi: AuthApi = {
@@ -44,6 +46,7 @@ const httpAuthApi: AuthApi = {
   restablecerContrasena: (token, contrasena) => apiPost<void>('/auth/restablecer', { token, contrasena }),
   refrescarSesion: () => apiPost<Sesion>('/auth/refresh', {}),
   cerrarSesion: () => apiPost<void>('/auth/logout', {}),
+  cambiarContrasenaTemporal: (contrasena) => apiFetch<Sesion>('/auth/cambiar-contrasena', { method: 'POST', body: JSON.stringify({ contrasena }) }),
 };
 
 // Sin backend configurado se usa la API simulada para poder recorrer las pantallas.
