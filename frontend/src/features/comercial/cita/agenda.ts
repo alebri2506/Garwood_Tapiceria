@@ -4,11 +4,8 @@ import { DIAS, MESES, feriadoDe, hoy, mismoDia } from '../fechas';
 
 /** Inicio de cada turno de 30 min (parámetro "duración del turno de cita"). */
 export const TURNOS = ['09:30', '10:00', '10:30', '11:00', '11:30', '15:00', '15:30', '16:00', '16:30'];
-export const PRIMER_TURNO_TARDE = 5;
 export const MINUTOS_TURNO = 30;
 export const SEMANAS_VISIBLES = 12;
-/** Pendiente: la dirección del local sale de los parámetros del taller. */
-export const DIRECCION_LOCAL = '[dirección del local]';
 
 export interface Turno {
   fecha: Date;
@@ -42,21 +39,8 @@ export function libre(d: Date, j: number) {
   return (dia * 7 + j * 13) % 9 >= carga + 1;
 }
 
-export const libresDelDia = (d: Date) => TURNOS.filter((_, j) => libre(d, j)).length;
-
-/** Primer turno libre desde mañana. */
-export function primerTurnoLibre(): Turno | null {
-  for (let d = sumarDias(hoy(), 1); d <= ultimoDiaAgendable(); d = sumarDias(d, 1)) {
-    const j = TURNOS.findIndex((_, i) => libre(d, i));
-    if (j >= 0) return { fecha: d, hora: TURNOS[j]! };
-  }
-  return null;
-}
-
 export const mismoTurno = (a: Turno | null, fecha: Date, hora: string) => Boolean(a && a.hora === hora && mismoDia(a.fecha, fecha));
 
-export const textoTurno = (t: Turno) =>
-  `${DIAS[t.fecha.getDay()]} ${t.fecha.getDate()} de ${MESES[t.fecha.getMonth()]} · ${t.hora}–${finDeTurno(t.hora)}`;
 export const textoTurnoCorto = (t: Turno) =>
   `${DIAS[t.fecha.getDay()]!.slice(0, 3)} ${t.fecha.getDate()} ${MESES[t.fecha.getMonth()]!.slice(0, 3)} · ${t.hora}`;
 

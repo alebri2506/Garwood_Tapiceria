@@ -55,13 +55,6 @@ export function diaCorto(fecha: string) {
   return d ? `${DIAS[d.getUTCDay()]} ${d.getUTCDate()} ${MESES[d.getUTCMonth()]}` : fecha;
 }
 
-/** Instante → "13 oct 10:05" en hora de Nueva Jersey (columna "Fecha y hora"). */
-export function fechaHoraCorta(instante: Date) {
-  const { fecha, hora } = enNY(instante);
-  const [, m, d] = fecha.split('-').map(Number) as [number, number, number];
-  return `${d} ${MESES[m - 1]} ${hora}`;
-}
-
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 const texto = (v: unknown) => (v == null ? '' : String(v));
 const plural = (n: unknown, uno: string, varios: string) => `${n} ${Number(n) === 1 ? uno : varios}`;

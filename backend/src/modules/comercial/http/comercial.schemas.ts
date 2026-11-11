@@ -54,4 +54,3 @@ export const solicitudAdminSchema = z.object({
   avisar: z.boolean().default(true),
   solicitud: solicitudSchema,
 });
-export type SolicitudAdminEntrada = z.infer<typeof solicitudAdminSchema>;

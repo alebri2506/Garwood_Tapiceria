@@ -34,13 +34,6 @@ export const TIPOS_MUEBLE: TipoMueble[] = [
   },
 ];
 
-export const SERVICIOS = [
-  { id: 'completo', nombre: 'Retapizado completo + cambio de espuma', corto: 'Retapizado + espuma' },
-  { id: 'retapizado', nombre: 'Solo retapizado', corto: 'Solo retapizado' },
-  { id: 'espuma', nombre: 'Solo cambio de espuma', corto: 'Solo espuma' },
-  { id: 'estructura', nombre: 'Reparación de estructura', corto: 'Reparación de estructura' },
-];
-
 export type OpcionTela = 'trae' | 'catalogo' | 'local' | 'sin';
 
 export const OPCIONES_TELA: { id: OpcionTela; titulo: string; detalle: string; icono: IconName; requiereCita: boolean }[] = [
@@ -50,15 +43,7 @@ export const OPCIONES_TELA: { id: OpcionTela; titulo: string; detalle: string; i
   { id: 'sin', titulo: 'No lleva tela', detalle: 'Solo espuma o estructura', icono: 'x', requiereCita: false },
 ];
 
-export type Traslado = 'delivery' | 'propio';
-
-export const OPCIONES_TRASLADO: { id: Traslado; titulo: string; detalle: string; icono: IconName }[] = [
-  { id: 'delivery', titulo: 'Delivery (recojo y entrega)', detalle: 'Ida y vuelta, un solo costo', icono: 'truck' },
-  { id: 'propio', titulo: 'Lo llevo y lo recojo yo', detalle: 'Con turno libre de la agenda', icono: 'map-pin' },
-];
-
 export type Familia = 'Lino' | 'Pana' | 'Chenille' | 'Cuero sint.' | 'Terciopelo';
-export const FAMILIAS: ('Todas' | Familia)[] = ['Todas', 'Lino', 'Pana', 'Chenille', 'Cuero sint.', 'Terciopelo'];
 
 export interface Tela {
   id: number;
