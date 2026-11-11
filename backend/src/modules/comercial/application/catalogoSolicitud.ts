@@ -22,7 +22,8 @@ export async function consultarCatalogo() {
     telas: telas.map((t) => ({
       id: t.id, nombre: t.nombre, familia: t.familia, pattern: t.pattern, numeroColor: t.numeroColor, colorHex: t.colorHex, descripcion: t.descripcion,
     })),
-    franjas: [{ codigo: 'manana', nombre: `Mañana · ${manana}` }, { codigo: 'tarde', nombre: `Tarde · ${tarde}` }],
+    // A14 guarda el horario como "09:00-12:00"; al cliente se le muestra "09:00–12:00".
+    franjas: [{ codigo: 'manana', nombre: `Mañana · ${manana.replace('-', '–')}` }, { codigo: 'tarde', nombre: `Tarde · ${tarde.replace('-', '–')}` }],
     limites: {
       muebles: maxMuebles,
       archivosPorMueble: maxArchivos,

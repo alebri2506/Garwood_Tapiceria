@@ -54,6 +54,7 @@ Places API (New). Configure en `.env` (y en `../.env` para `docker compose`):
 
 - `VITE_GOOGLE_MAPS_API_KEY`: clave de navegador de Google Cloud, con las APIs **Maps JavaScript API** y
   **Places API (New)** habilitadas y restringida a sus dominios (`localhost:5173`, `localhost:8090`, el de producción).
+  Al tocar el mapa, la dirección se busca en OpenStreetMap (Nominatim): no necesita clave ni Geocoding API.
 - `VITE_GOOGLE_MAPS_MAP_ID`: opcional; vacío usa `DEMO_MAP_ID`.
 
 Sin clave, la pantalla muestra el mapa ilustrado del diseño y un campo de dirección normal.

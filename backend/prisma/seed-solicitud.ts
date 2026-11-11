@@ -20,23 +20,7 @@ export const TIPOS_MUEBLE: { codigo: string; nombre: string; partes: string[] }[
   { codigo: 'gen', nombre: 'Otro mueble de interior', partes: ['Parte principal', 'Otra parte'] },
 ];
 
-export const PARAMETROS_SOLICITUD = [
-  { clave: 'solicitud.max_muebles', valor: '8', unidad: 'muebles', descripcion: 'Muebles que puede traer una sola solicitud (CU-C01)' },
-  { clave: 'solicitud.max_archivos_mueble', valor: '10', unidad: 'archivos', descripcion: 'Fotos o videos por mueble en una solicitud (CU-C01)' },
-  { clave: 'recojo.dias_anticipacion_max', valor: '60', unidad: 'días', descripcion: 'Hasta cuántos días adelante se puede pedir el recojo (CU-C01)' },
-  { clave: 'taller.franja_manana', valor: '9:00–12:00', unidad: 'horario', descripcion: 'Franja de la mañana para recojos y entregas' },
-  { clave: 'taller.franja_tarde', valor: '15:00–17:00', unidad: 'horario', descripcion: 'Franja de la tarde para recojos y entregas (el taller cierra al mediodía)' },
-  { clave: 'solicitud.dias_atraso', valor: '2', unidad: 'días', descripcion: 'Una solicitud Nueva con estos días sin atender aparece como atrasada (CU-C02)' },
-  { clave: 'cita.duracion_min', valor: '30', unidad: 'minutos', descripcion: 'Duración de un turno de cita en el local; un cliente por turno (CU-C03)' },
-  { clave: 'agenda.turnos_manana', valor: '09:30-12:00', unidad: 'horario', descripcion: 'Horario de citas en el local por la mañana (CU-C03)' },
-  { clave: 'agenda.turnos_tarde', valor: '15:00-17:00', unidad: 'horario', descripcion: 'Horario de citas en el local por la tarde (CU-C03)' },
-  { clave: 'agenda.dias_adelante', valor: '84', unidad: 'días', descripcion: 'Hasta cuántos días adelante se puede agendar una cita o visita (CU-C04)' },
-  { clave: 'visita.duracion_min', valor: '60', unidad: 'minutos', descripcion: 'Duración aproximada de una visita a domicilio (CU-C04)' },
-  { clave: 'visita.franja_manana', valor: '09:00-12:00', unidad: 'horario', descripcion: 'Franja de la mañana de las visitas a domicilio; una visita por franja (CU-C04)' },
-  { clave: 'visita.franja_tarde', valor: '15:00-17:00', unidad: 'horario', descripcion: 'Franja de la tarde de las visitas a domicilio; una visita por franja (CU-C04)' },
-  { clave: 'cita.reprogramaciones_inasistencia', valor: '1', unidad: 'veces', descripcion: 'Reprogramaciones permitidas tras no asistir; la siguiente falta vence la solicitud (CU-C04)' },
-  { clave: 'invitacion.dias_vigencia', valor: '7', unidad: 'días', descripcion: 'Vigencia del enlace para que un cliente registrado por el taller cree su contraseña' },
-];
+// Los parámetros de la solicitud (muebles por solicitud, franjas, agenda…) están en seed-parametros.ts.
 
 // DATOS DE PRUEBA · telas del catálogo en línea (código TP-… = tela de prueba).
 export const TELAS_PRUEBA = [
@@ -54,9 +38,6 @@ export const TELAS_PRUEBA = [
 ];
 
 export async function sembrarCatalogoSolicitud(prisma: PrismaClient) {
-  for (const p of PARAMETROS_SOLICITUD) {
-    await prisma.parametro.upsert({ where: { clave: p.clave }, update: {}, create: p });
-  }
   for (const [orden, t] of TIPOS_MUEBLE.entries()) {
     const tipo = await prisma.tipoMueble.upsert({
       where: { codigo: t.codigo },

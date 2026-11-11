@@ -24,7 +24,6 @@ export const OPCIONES_TELA = ['trae', 'catalogo', 'local', 'domicilio', 'sin'] a
 export type OpcionTela = (typeof OPCIONES_TELA)[number];
 
 export const TRASLADOS = ['delivery', 'propio'] as const;
-export type Traslado = (typeof TRASLADOS)[number];
 
 export const FRANJAS = ['manana', 'tarde'] as const;
 export type Franja = (typeof FRANJAS)[number];

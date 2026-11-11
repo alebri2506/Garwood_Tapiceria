@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A20 Usuarios, roles y auditoría</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.y{color:var(--success-ink);font-weight:700}
+.r{color:var(--progress-ink);font-weight:600}
+.n{color:var(--ink-muted)}
+table.t td.c, table.t th.c{text-align:center}
+.chg{font-variant-numeric:tabular-nums}
+.chg s{color:var(--ink-muted)}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav on" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Seguridad y Administración · módulo transversal</div><h1>Usuarios, roles y auditoría</h1></div>
+      <x-import component-from-global-scope="Garweb.Tabs" items="{{tabs}}" active="{{tab}}" on-change="{{setTab}}"></x-import>
+    </div>
+
+    <sc-if value="{{t0}}" hint-placeholder-val="{{ true }}">
+      <div class="split">
+        <div class="wide">
+          <div class="tbl-box">
+            <table class="t">
+              <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Dispositivo</th><th>Último acceso</th><th>Estado</th><th></th></tr></thead>
+              <tbody>
+                <tr><td><b>Administrador</b></td><td>admin@garwood</td><td>Administrador</td><td>Escritorio</td><td class="num">hoy 08:01</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Activo</x-import></td><td><button class="gw-btn gw-btn-ghost gw-btn-sm">Editar</button></td></tr>
+                <tr><td><b>Asistente de gerencia</b></td><td>asistente@garwood</td><td>Administrador</td><td>Escritorio</td><td class="num">ayer 17:42</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Activo</x-import></td><td><button class="gw-btn gw-btn-ghost gw-btn-sm">Editar</button></td></tr>
+                <tr><td><b>Carlos</b></td><td>carlos.taller</td><td>Producción</td><td>Celular</td><td class="num">hoy 08:02</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Activo</x-import></td><td><button class="gw-btn gw-btn-ghost gw-btn-sm">Editar</button></td></tr>
+                <tr><td><b>María</b></td><td>maria.taller</td><td>Producción</td><td>Celular</td><td class="num">hoy 08:05</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Activo</x-import></td><td><button class="gw-btn gw-btn-ghost gw-btn-sm">Editar</button></td></tr>
+                <tr><td><b>Luis</b></td><td>luis.ruta</td><td>Conductor</td><td>Celular</td><td class="num">jue 22 oct</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Activo</x-import></td><td><button class="gw-btn gw-btn-ghost gw-btn-sm">Editar</button></td></tr>
+                <tr><td><b>Ayudante temporal</b></td><td>temp.taller</td><td>Producción</td><td>Celular</td><td class="num">31 ago</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="neutral">Desactivado</x-import></td><td><button class="gw-btn gw-btn-ghost gw-btn-sm">Reactivar</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="audit">Los clientes crean su propia cuenta desde la web; el Administrador puede registrarlos por teléfono en Clientes (A17).</p>
+        </div>
+        <aside class="aside">
+          <div class="card stack">
+            <h2 style="font-size: 17px">Crear usuario</h2>
+            <x-import component-from-global-scope="Garweb.TextField" label="Nombre" required="{{ true }}" placeholder="Ej.: Pedro"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Usuario" required="{{ true }}" placeholder="pedro.taller"></x-import>
+            <label class="gw-field" style="display: flex; flex-direction: column; gap: 6px"><span class="gw-field-label">Rol</span><select class="gw-input"><option>Producción</option><option>Conductor</option><option>Administrador</option></select></label>
+            <x-import component-from-global-scope="Garweb.TextField" label="Contraseña temporal" value="Se genera automáticamente" locked="{{ true }}" hint="Se le pedirá cambiarla al primer ingreso"></x-import>
+            <button class="gw-btn gw-btn-primary">Crear usuario</button>
+          </div>
+        </aside>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{t1}}" hint-placeholder-val="{{ false }}">
+      <div class="tbl-box">
+        <table class="t" style="min-width: 820px">
+          <thead><tr><th>Funcionalidad</th><th class="c">Administrador</th><th class="c">Producción</th><th class="c">Conductor</th><th class="c">Cliente</th></tr></thead>
+          <tbody>
+            <tr><td>Solicitudes y citas</td><td class="c y">Gestiona</td><td class="c n">—</td><td class="c n">—</td><td class="c y">Propias</td></tr>
+            <tr><td>Cotización: costos, sugerido y margen</td><td class="c y">Gestiona</td><td class="c n">—</td><td class="c n">—</td><td class="c n">—</td></tr>
+            <tr><td>Cotización: trabajos, precio y total</td><td class="c y">Gestiona</td><td class="c n">—</td><td class="c n">—</td><td class="c r">Ve la suya</td></tr>
+            <tr><td>Pagos</td><td class="c y">Confirma y registra</td><td class="c n">—</td><td class="c r">Cobra en ruta</td><td class="c y">Informa</td></tr>
+            <tr><td>Órdenes de trabajo</td><td class="c y">Planifica</td><td class="c y">Todas las del taller</td><td class="c n">—</td><td class="c n">—</td></tr>
+            <tr><td>Retiros de material</td><td class="c r">Consulta</td><td class="c y">De órdenes en producción</td><td class="c n">—</td><td class="c n">—</td></tr>
+            <tr><td>Inventario, conteo y compras</td><td class="c y">Gestiona</td><td class="c n">—</td><td class="c n">—</td><td class="c n">—</td></tr>
+            <tr><td>Historial y clientes</td><td class="c y">Gestiona</td><td class="c n">—</td><td class="c n">—</td><td class="c r">Sus pedidos</td></tr>
+            <tr><td>Salidas, recojos y entregas</td><td class="c y">Planifica</td><td class="c n">—</td><td class="c y">Registra</td><td class="c r">Confirma fecha</td></tr>
+            <tr><td>Reclamos</td><td class="c y">Gestiona</td><td class="c n">—</td><td class="c r">Incidencias</td><td class="c y">Reporta</td></tr>
+            <tr><td>Parámetros, usuarios y auditoría</td><td class="c y">Gestiona</td><td class="c n">—</td><td class="c n">—</td><td class="c n">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="audit">Los roles son fijos según la tesis; el Administrador asigna el rol a cada usuario.</p>
+    </sc-if>
+
+    <sc-if value="{{t2}}" hint-placeholder-val="{{ false }}">
+      <div class="row" style="flex-wrap: wrap">
+        <div class="search" style="min-width: 320px"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 18 }}"></x-import>Buscar por usuario, pedido o acción</div>
+        <span class="pill">Usuario: todos</span><span class="pill">Módulo: todos</span><span class="pill">Últimos 30 días</span>
+        <button class="gw-btn gw-btn-secondary gw-btn-sm">Exportar</button>
+      </div>
+      <div class="tbl-box">
+        <table class="t" style="min-width: 900px">
+          <thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Registro</th><th>Antes → después</th></tr></thead>
+          <tbody>
+            <tr><td class="num">13 oct 10:05</td><td>carlos.taller</td><td>Inventario</td><td>Retiro de material</td><td>PED-0076</td><td class="chg">Espuma HD 2" retirada: 6 → 7 (adicional)</td></tr>
+            <tr><td class="num">9 oct 11:20</td><td>admin@garwood</td><td>Inventario</td><td>Planificar pedido</td><td>PED-0076</td><td class="chg">Fecha objetivo: — → vie 16 oct · OT emitida</td></tr>
+            <tr><td class="num">7 oct 09:31</td><td>admin@garwood</td><td>Comercial</td><td>Confirmar pago</td><td>PED-0076</td><td class="chg">Adelanto $456: Por confirmar → Confirmado</td></tr>
+            <tr><td class="num">6 oct 11:15</td><td>admin@garwood</td><td>Comercial</td><td>Adelanto</td><td>COT-0076</td><td class="chg">Mantuvo sugerido 40 % ($456)</td></tr>
+            <tr><td class="num">6 oct 11:12</td><td>admin@garwood</td><td>Comercial</td><td>Precio propuesto</td><td>COT-0076</td><td class="chg"><s>$1,268</s> → $1,050 · “cliente frecuente”</td></tr>
+            <tr><td class="num">1 oct 09:12</td><td>admin@garwood</td><td>Configuración</td><td>Parámetro</td><td>Duración de cita</td><td class="chg"><s>45 min</s> → 30 min</td></tr>
+            <tr><td class="num">30 sep 18:02</td><td>sistema</td><td>Seguridad</td><td>Intentos fallidos</td><td>temp.taller</td><td class="chg">Cuenta bloqueada 15 min</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="audit">El registro no se puede editar ni borrar. Solicitado por el asesor el 07/10.</p>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { tab: 0 }; }
+  renderVals() {
+    const t = this.state.tab;
+    return {
+      tema: this.props.tema ?? 'light',
+      tabs: [{ label: 'Usuarios', count: 6 }, 'Roles y permisos', 'Registro de actividad'],
+      tab: t, setTab: (i) => this.setState({ tab: i }),
+      t0: t === 0, t1: t === 1, t2: t === 2
+    };
+  }
+}
+</script>
+</body>
+</html>

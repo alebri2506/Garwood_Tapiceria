@@ -19,6 +19,13 @@ export const restablecerSchema = z
   .refine((d) => d.contrasena === d.confirmacion, { path: ['confirmacion'], message: 'Las contraseñas no coinciden' });
 export type RestablecerForm = z.infer<typeof restablecerSchema>;
 
+/** W10 › Seguridad (E.4.1): la actual, la nueva y su repetición. */
+export const cambioContrasenaSchema = z
+  .object({ actual: z.string().min(1, 'Ingrese su contraseña actual'), contrasena: contrasenaNueva, confirmacion: z.string() })
+  .refine((d) => d.contrasena === d.confirmacion, { path: ['confirmacion'], message: 'Las contraseñas no coinciden' })
+  .refine((d) => !d.actual || d.contrasena !== d.actual, { path: ['contrasena'], message: 'Use una contraseña distinta de la actual' });
+export type CambioContrasenaForm = z.infer<typeof cambioContrasenaSchema>;
+
 /** Solo dígitos de un teléfono de EE. UU., sin el +1. */
 export const digitosTelefono = (v: string) => v.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
 export const EIN_RE = /^\d{2}-\d{7}$/;

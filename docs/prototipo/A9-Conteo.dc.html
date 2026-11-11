@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A9 Conteo del martes</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.cnt-in{width:110px;min-height:40px;padding:0 10px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 15px/1 var(--font-sans);font-variant-numeric:tabular-nums;text-align:right}
+.why{width:100%;min-height:40px;padding:0 10px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:400 14px/1 var(--font-sans)}
+.why.err{border:2px solid var(--error-500)}
+tr.diff td{background:var(--warning-soft)}
+.top .gw-wizard{width:520px;max-width:100%}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav on" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb"><a href="A8-Inventario.dc.html">Inventario</a> › Conteo semanal</div><h1>Conteo del martes</h1></div>
+      <x-import component-from-global-scope="Garweb.WizardSteps" steps="{{steps}}" current="{{phase}}" style="min-width: 420px"></x-import>
+    </div>
+
+    <sc-if value="{{counting}}" hint-placeholder-val="{{ true }}">
+      <x-import component-from-global-scope="Garweb.Alert" tone="info" title="Cuente lo que ve en el estante">La lista no muestra la cantidad esperada para no influir en el conteo.</x-import>
+      <div class="tbl-box">
+        <table class="t">
+          <thead><tr><th>Material</th><th>Ubicación</th><th>Unidad</th><th class="r">Cantidad contada</th></tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+              <tr><td><b>{{r.name}}</b></td><td class="muted">{{r.loc}}</td><td class="muted">{{r.unit}}</td><td class="r"><input class="cnt-in" value="{{r.count}}" aria-label="Cantidad contada"></td></tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <div class="row" style="justify-content: flex-end"><button class="gw-btn gw-btn-primary" onClick="{{compare}}">Terminar conteo y comparar</button></div>
+    </sc-if>
+
+    <sc-if value="{{diffs}}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="Garweb.Alert" tone="warning" title="2 diferencias encontradas">Escriba el motivo de cada ajuste. Es obligatorio para guardar.</x-import>
+      <div class="tbl-box">
+        <table class="t">
+          <thead><tr><th>Material</th><th class="r">En sistema</th><th class="r">Contado</th><th class="r">Diferencia</th><th style="width: 34%">Motivo del ajuste</th></tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+              <tr class="{{r.cls}}">
+                <td><b>{{r.name}}</b></td><td class="r">{{r.sys}} {{r.unit}}</td><td class="r">{{r.count}} {{r.unit}}</td>
+                <td class="r"><b style="color: {{r.dColor}}">{{r.dTxt}}</b></td>
+                <td><sc-if value="{{r.hasDiff}}" hint-placeholder-val="{{ false }}"><input class="{{r.whyCls}}" value="{{r.why}}" placeholder="Obligatorio" aria-label="Motivo del ajuste"><sc-if value="{{r.missing}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12px; font-weight: 600; color: var(--danger-ink); margin-top: 4px">Escriba el motivo del ajuste</div></sc-if></sc-if></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <div class="row" style="justify-content: flex-end; flex-wrap: wrap">
+        <button class="gw-btn gw-btn-ghost" onClick="{{back}}">Volver a contar</button>
+        <a class="gw-btn gw-btn-primary" href="A8-Inventario.dc.html?pestana=qué pedir">Guardar ajustes y ver qué pedir</a>
+      </div>
+      <p class="audit" style="text-align: right">Los ajustes quedan con usuario, fecha y hora.</p>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { phase: 0 }; }
+  renderVals() {
+    const R = [
+      ['Espuma HD 2" (plancha)', 'Estante A1', 'u', 7, 7, ''],
+      ['Espuma HD 4" (plancha)', 'Estante A2', 'u', 9, 8, 'Plancha dañada por humedad'],
+      ['Plumas (relleno)', 'Estante B1', 'kg', 3, 3, ''],
+      ['Grapas 71/10', 'Gaveta C3', 'cajas', 24, 24, ''],
+      ['Hilo nylon 40', 'Gaveta C1', 'conos', 11, 10, ''],
+      ['Cierres 60 cm', 'Gaveta C2', 'u', 39, 39, ''],
+      ['Botones forrables', 'Gaveta C4', 'u', 120, 120, '']
+    ];
+    return {
+      tema: this.props.tema ?? 'light',
+      steps: ['Contar', 'Diferencias', 'Qué pedir'],
+      phase: this.state.phase,
+      counting: this.state.phase === 0, diffs: this.state.phase === 1,
+      compare: () => this.setState({ phase: 1 }),
+      back: () => this.setState({ phase: 0 }),
+      rows: R.map(r => {
+        const d = r[4] - r[3], has = d !== 0, missing = has && !r[5];
+        return { name: r[0], loc: r[1], unit: r[2], sys: r[3], count: r[4], why: r[5], hasDiff: has, missing,
+          cls: has ? 'diff' : '', whyCls: missing ? 'why err' : 'why',
+          dTxt: d === 0 ? '0' : (d > 0 ? '+' : '−') + Math.abs(d), dColor: d === 0 ? 'var(--ink-muted)' : 'var(--warning-ink)' };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

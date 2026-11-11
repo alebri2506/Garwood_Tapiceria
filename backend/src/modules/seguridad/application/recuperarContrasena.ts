@@ -16,7 +16,8 @@ const sha256 = (v: string) => createHash('sha256').update(v).digest('hex');
  */
 export async function solicitarRecuperacion(email: string, correo: Correo, ip?: string) {
   const usuario = await prisma.usuario.findUnique({ where: { email: email.trim().toLowerCase() } });
-  if (!usuario || !usuario.activo) return;
+  // Sin correo no hay a dónde enviar el enlace: a ese personal el Administrador le da una contraseña temporal (D.1.2).
+  if (!usuario || !usuario.activo || !usuario.email) return;
 
   const minutos = await parametroNumero(prisma, 'recuperacion.minutos_vigencia');
   const token = randomBytes(32).toString('base64url');
@@ -47,8 +48,12 @@ export async function restablecerContrasena(token: string, contrasena: string, i
   const contrasenaHash = await bcrypt.hash(contrasena, COSTO_BCRYPT);
   await prisma.$transaction([
     prisma.tokenRecuperacion.update({ where: { id: registro.id }, data: { fechaUso: new Date() } }),
-    // Cambiar la contraseña también levanta un bloqueo por intentos fallidos.
-    prisma.usuario.update({ where: { id: registro.usuarioId }, data: { contrasenaHash, intentosFallidos: 0, bloqueadoHasta: null } }),
+    // Cambiar la contraseña también levanta un bloqueo por intentos fallidos y corta la renovación de las sesiones
+    // abiertas en otros equipos (version_sesion, D.1.6). Si tenía una contraseña temporal, ya la reemplazó.
+    prisma.usuario.update({
+      where: { id: registro.usuarioId },
+      data: { contrasenaHash, intentosFallidos: 0, bloqueadoHasta: null, debeCambiarContrasena: false, versionSesion: { increment: 1 } },
+    }),
     registrarBitacora(prisma, { usuarioId: registro.usuarioId, modulo: 'seguridad', accion: 'contrasena_restablecida', entidad: 'usuario', entidadId: registro.usuarioId, ip }),
   ]);
 }

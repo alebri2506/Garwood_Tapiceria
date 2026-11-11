@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A2g Reprogramar cita (administrador)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wk{display:flex;align-items:center;gap:6px}
+.wk button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:700 16px/1 var(--font-sans);cursor:pointer;display:grid;place-items:center}
+.wk .today-btn{width:auto;padding:0 14px;font-size:13.5px}
+.seg{display:flex;padding:4px;gap:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line)}
+.seg button{height:34px;padding:0 14px;border:0;border-radius:9px;background:transparent;color:var(--ink-muted);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.sm{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.sm div{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.sm div > span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);display:flex;align-items:center;gap:6px}
+.sm div > span i{width:8px;height:8px;border-radius:50%}
+.sm b{font:800 26px/1.1 var(--font-display);font-variant-numeric:tabular-nums}
+.calcard{padding:18px 18px 12px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.calhd{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.calhd b{font:700 17px/1.2 var(--font-display)}
+.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-muted)}
+.lg span{display:inline-flex;align-items:center;gap:6px}
+.lg i{width:10px;height:10px;border-radius:3px}
+.cal{display:grid;grid-template-columns:58px repeat(6,minmax(0,1fr));min-width:620px}
+.cal .h{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0 10px;border:0;background:transparent;cursor:pointer;font-family:var(--font-sans);border-bottom:1px solid var(--line)}
+.cal .h small{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted)}
+.cal .h b{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;font:700 18px/1 var(--font-display);color:var(--ink)}
+.cal .h.today small{color:var(--primary)}
+.cal .h.today b{background:var(--primary);color:var(--on-primary,#fff)}
+.cal .corner{border-bottom:1px solid var(--line)}
+.cal .t{font-size:11.5px;color:var(--ink-muted);font-variant-numeric:tabular-nums;padding:6px 8px 0 0;text-align:right;border-right:1px solid var(--line)}
+.cell{position:relative;height:62px;padding:4px;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
+.cell.td{background:color-mix(in srgb,var(--primary) 4%,transparent)}
+.ap{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;gap:1px;width:100%;height:100%;padding:6px 10px 6px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow-sm);text-align:left;font-family:var(--font-sans);cursor:pointer;overflow:hidden;transition:box-shadow 160ms var(--ease-out,ease),transform 160ms var(--ease-out,ease)}
+.ap::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+.ap b{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap span{font-size:12px;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap.done{--c:var(--success-500);background:color-mix(in srgb,var(--success-500) 7%,var(--surface))}
+.ap.appt{--c:var(--primary);background:color-mix(in srgb,var(--primary) 7%,var(--surface))}
+.ap.miss{--c:var(--error-500);background:color-mix(in srgb,var(--error-500) 7%,var(--surface))}
+.ap.miss b{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--error-500) 60%,transparent)}
+.ap.pick{--c:var(--warning-500);background:color-mix(in srgb,var(--warning-500) 10%,var(--surface))}
+.ap.home{--c:#7C3AED;background:color-mix(in srgb,#7C3AED 8%,var(--surface))}
+.ap.sel{box-shadow:0 0 0 2px var(--primary),var(--shadow-md)}
+.free{width:100%;height:100%;border:0;border-radius:10px;background:transparent;color:transparent;font:600 12.5px/1 var(--font-sans);cursor:pointer;transition:background 160ms var(--ease-out,ease),color 160ms var(--ease-out,ease)}
+.off{display:flex;align-items:center;gap:6px;width:100%;height:100%;padding:0 10px;border-radius:10px;background:repeating-linear-gradient(135deg,var(--surface-sunken) 0 6px,transparent 6px 12px);color:var(--ink-muted);font-size:12px;font-weight:600}
+.lunch{grid-column:1/-1;display:flex;align-items:center;gap:10px;height:30px;padding-left:10px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);background:var(--surface-sunken);border-bottom:1px solid var(--line)}
+.now{position:absolute;left:-5px;right:0;height:2px;background:var(--error-500);z-index:0;pointer-events:none}
+.now::before{content:"";position:absolute;left:0;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--error-500)}
+@media (hover:hover){.free:hover{background:var(--primary-soft);color:var(--primary)}.ap:hover{box-shadow:var(--shadow-md)}.ap.sel:hover{box-shadow:0 0 0 2px var(--primary),var(--shadow-md)}}
+.ap:active{transform:scale(.98)}
+/* vista día */
+.day{display:flex;flex-direction:column}
+.drow{display:grid;grid-template-columns:70px minmax(0,1fr);gap:12px;align-items:stretch;padding:6px 0;border-bottom:1px solid var(--line)}
+.drow .t{font-size:13px;font-weight:600;color:var(--ink-muted);padding-top:12px;font-variant-numeric:tabular-nums}
+.drow .ap{height:auto;min-height:58px;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px 10px 16px}
+.drow .ap b{font-size:15px}
+.drow .ap span{font-size:13px}
+.drow .free{height:46px;border:1.5px dashed var(--line);color:var(--ink-muted);text-align:left;padding:0 14px}
+.drow .off{height:46px}
+/* configurar agenda */
+.hrs{display:flex;flex-direction:column;gap:6px}
+.hr{display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;align-items:center;font-size:13px}
+.hr span{padding:6px 8px;border-radius:8px;background:var(--surface-sunken);border:1px solid var(--line);font-variant-numeric:tabular-nums;text-align:center}
+.hr span.closed{color:var(--ink-muted);background:transparent;border-style:dashed}
+.blk{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:repeating-linear-gradient(135deg,var(--surface-sunken) 0 6px,transparent 6px 12px);border:1px solid var(--line);color:var(--ink-muted)}
+.blk b{display:block;font-size:13.5px;color:var(--ink)}
+.blk small{font-size:12.5px}
+.bform{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--line)}
+.mchip{min-height:34px;padding:0 12px;border-radius:9999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 13px/1 var(--font-sans);cursor:pointer}
+.mchip.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+/* panel derecho */
+.det{display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-md)}
+.who{display:flex;align-items:center;gap:12px}
+.who .av{width:48px;height:48px;flex:none;border-radius:14px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font:800 17px/1 var(--font-display)}
+.who h2{font-size:20px;line-height:1.2}
+.who small{font-size:13px;color:var(--ink-muted)}
+.facts{display:flex;flex-direction:column;gap:2px;padding:6px 0}
+.facts div{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.facts div:last-child{border-bottom:0}
+.facts div > span{color:var(--ink-muted)}
+.facts b{font-variant-numeric:tabular-nums;text-align:right}
+.facts .ic{color:var(--ink-muted);display:grid;place-items:center}
+.rep{display:inline-flex;gap:4px;vertical-align:middle;margin-left:6px}
+.rep i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--line-strong)}
+.rep i.on{background:var(--warning-500);border-color:var(--warning-500)}
+.av-card{display:flex;flex-direction:column;gap:12px;padding:18px 20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.shift{display:grid;grid-template-columns:70px minmax(0,1fr) auto;align-items:center;gap:10px;font-size:13.5px}
+.shift > span{color:var(--ink-muted)}
+.shift .bars{display:flex;gap:3px}
+.shift .bars i{flex:1;height:10px;border-radius:3px;background:var(--primary-soft)}
+.shift .bars i.b{background:var(--primary)}
+.shift .bars i.x{background:repeating-linear-gradient(135deg,var(--line-strong) 0 3px,transparent 3px 6px)}
+.shift b{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink-muted);font-weight:600}
+.sub{font-size:14px;margin-top:4px}
+.sub b{color:var(--ink)}
+/* franja superior: ahora + semana */
+.hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px}
+@media (max-width:1100px){.hero{grid-template-columns:1fr}}
+.nowc{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:14px;padding:20px 22px;border-radius:18px;color:#fff;background:radial-gradient(70% 90% at 100% 0%,#38BDF866 0%,#38BDF800 70%),linear-gradient(135deg,#0B1B3A 0%,#13306A 55%,#1D4ED8 100%);box-shadow:var(--shadow-md)}
+.nowtop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.live{display:inline-flex;align-items:center;gap:8px;height:26px;padding:0 11px;border-radius:9999px;background:#FFFFFF1F;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.live i{width:8px;height:8px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 4px #4ADE8040}
+.nowtime{font:700 14px/1 var(--font-sans);font-variant-numeric:tabular-nums;color:#C7D6F2}
+.nowwho{display:flex;align-items:center;gap:14px}
+.nowwho .av{width:52px;height:52px;flex:none;border-radius:15px;display:grid;place-items:center;background:#FFFFFF24;font:800 18px/1 var(--font-display)}
+.nowwho b{display:block;font:800 22px/1.15 var(--font-display);letter-spacing:-.01em}
+.nowwho small{font-size:13.5px;color:#C7D6F2}
+.prog{height:6px;border-radius:9999px;background:#FFFFFF26;overflow:hidden}
+.prog i{display:block;height:100%;width:66%;border-radius:inherit;background:linear-gradient(90deg,#67E8F9,#FFFFFF)}
+.nowft{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:#C7D6F2}
+.nowft b{color:#fff}
+.nb1{background:#fff;color:#0B1B3A;border:0}
+.nb2{background:#FFFFFF1A;color:#fff;border:1px solid #FFFFFF40}
+.wkc{display:flex;flex-direction:column;gap:12px;padding:18px 20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.pct{font:800 13px/1 var(--font-sans);color:var(--primary);font-variant-numeric:tabular-nums}
+.strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.strip > div{display:flex;flex-direction:column;gap:3px}
+.strip small{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);text-align:center}
+.strip small.td{color:var(--primary)}
+.strip i{height:7px;border-radius:3px;background:var(--surface-sunken);border:1px solid var(--line)}
+.strip i.done{background:var(--success-500);border-color:transparent}
+.strip i.appt{background:var(--primary);border-color:transparent}
+.strip i.miss{background:var(--error-500);border-color:transparent}
+.strip i.pick{background:var(--warning-500);border-color:transparent}
+.strip i.off{background:repeating-linear-gradient(135deg,var(--line-strong) 0 2px,transparent 2px 4px);border-color:var(--line)}
+.wnums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.wnums div{display:flex;flex-direction:column;gap:2px}
+.wnums b{font:800 22px/1.1 var(--font-display);font-variant-numeric:tabular-nums}
+.wnums span{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-muted)}
+.wnums i{width:8px;height:8px;border-radius:50%}
+/* filtros y extras del calendario */
+.fchips{display:flex;gap:6px;flex-wrap:wrap}
+.fchip{height:32px;padding:0 12px;border-radius:9999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink-muted);font:600 12.5px/1 var(--font-sans);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.fchip em{font-style:normal;min-width:20px;height:20px;padding:0 6px;border-radius:9999px;background:var(--surface-sunken);display:grid;place-items:center;font-size:11.5px;color:var(--ink)}
+.fchip.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.fchip.on em{background:var(--primary);color:#fff}
+.cal .h em{font-style:normal;font-size:11px;font-weight:600;color:var(--ink-muted);margin-top:2px}
+.cal .h.today em{color:var(--primary)}
+.ap.dim{opacity:.28;box-shadow:none}
+.ap.pick{padding-right:28px}
+.ap .ty{position:absolute;right:8px;top:8px;color:var(--c);opacity:.85}
+.past{width:100%;height:100%;border-radius:10px;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--line) 55%,transparent) 0 1px,transparent 1px 7px)}
+.now::after{content:"10:20";position:absolute;right:2px;top:-9px;height:18px;padding:0 6px;border-radius:9999px;background:var(--error-500);color:#fff;font:700 10.5px/18px var(--font-sans)}
+.lgf{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-muted)}
+.lgf span{display:inline-flex;align-items:center;gap:6px}
+.lgf i{width:10px;height:10px;border-radius:3px}
+/* en espera de cita */
+.wait{display:flex;flex-direction:column;gap:10px;padding:18px 20px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.wi{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 0;border-top:1px dashed var(--line)}
+.wi .av{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--warning-soft,#FEF3C7);color:var(--warning-ink,#92400E);font:800 13px/1 var(--font-display)}
+.wi b{display:block;font-size:14px}
+.wi small{display:block;font-size:12.5px;color:var(--ink-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wcnt{min-width:22px;height:22px;padding:0 7px;border-radius:9999px;background:var(--warning-500);color:#fff;font:700 12px/22px var(--font-sans);text-align:center}
+.free.hl{background:var(--primary-soft);color:var(--primary);outline:1.5px dashed var(--primary);outline-offset:-3px}
+.free.pk{background:var(--primary);color:#fff}
+.bk-slot{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--primary-soft);color:var(--primary)}
+.bk-slot b{display:block;font:700 15px/1.3 var(--font-display);color:var(--ink)}.bk-slot small{color:var(--ink-muted);font-size:12.5px}
+.bk-q{display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-muted)}
+.bk-q input{border:0;outline:0;background:transparent;font:500 14px/1 var(--font-sans);color:var(--ink);width:100%}
+.bk-l{display:flex;flex-direction:column;gap:8px}
+.bk-r{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.bk-r.on{border-color:var(--primary);background:var(--primary-soft)}
+.bk-r i{flex:none;width:18px;height:18px;margin-top:2px;border-radius:50%;border:2px solid var(--line-strong)}
+.bk-r.on i{border:5px solid var(--primary)}
+.bk-r b{display:block;font-size:14px}.bk-r small{display:block;font-size:12.5px;color:var(--ink-muted);line-height:17px}
+.bk-r em{font-style:normal;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:9999px;background:var(--surface-sunken);color:var(--ink-muted);margin-left:6px}
+.bk-r em.home{background:color-mix(in srgb,#7C3AED 12%,var(--surface));color:#6D28D9}
+.free0{display:block;width:100%;height:100%}
+button.off{border:0;font:inherit;text-align:left;cursor:pointer}
+button.off.on{outline:2px solid #334155;outline-offset:-2px}
+@media (hover:hover){button.off:hover{outline:1.5px solid #94A3B8;outline-offset:-2px}}
+.drow .free0{height:46px;border-radius:10px;border:1.5px dashed var(--line)}
+.free.no{cursor:not-allowed;color:transparent;background:transparent}
+.agbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;border-radius:16px;background:var(--primary);color:#fff;box-shadow:var(--shadow-md)}
+.agbar .agi{width:38px;height:38px;border-radius:12px;background:#FFFFFF26;display:grid;place-items:center;flex:none}
+.agbar b{display:block;font:700 15.5px/1.3 var(--font-display)}.agbar small{display:block;font-size:13px;opacity:.9}
+.agbar .gw-btn{margin-left:auto;background:#fff;color:var(--primary);border-color:#fff}
+.agbar.gray{background:#334155}.agbar.gray .gw-btn{color:#334155}
+.free.blk{background:repeating-linear-gradient(135deg,#33415522 0 6px,transparent 6px 12px);color:#1E293B;outline:2px solid #334155;outline-offset:-3px;font-weight:700}
+.free.bhl{background:transparent;color:#475569;outline:1.5px dashed #94A3B8;outline-offset:-3px}
+.bsel{display:flex;flex-wrap:wrap;gap:6px}.bsel span{height:28px;padding:0 10px;border-radius:9999px;background:var(--surface-sunken);border:1px solid var(--line);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav on" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+    <main class="main">
+    <div class="top">
+      <div><div class="crumb">Comercial › Agenda</div><h1>Agenda de citas</h1><p class="muted sub">Martes 6 de octubre · 10:20 · <b>{{todayLine}}</b></p></div>
+      <div class="tools">
+        <div class="wk"><button aria-label="Semana anterior">‹</button><button class="today-btn">Hoy</button><button aria-label="Semana siguiente">›</button></div>
+        <div class="seg" role="group" aria-label="Vista"><button class="{{vWeek}}" aria-pressed="{{isWeek}}" onClick="{{toWeek}}">Semana</button><button class="{{vDay}}" aria-pressed="{{isDay}}" onClick="{{toDay}}">Día</button></div>
+        <button class="{{cfgBtn}}" aria-pressed="{{cfg}}" onClick="{{toggleCfg}}">Configurar agenda</button>
+        
+      </div>
+    </div>
+    <sc-if value="{{agOn}}" hint-placeholder-val="{{ false }}"><div class="agbar"><span class="agi"><x-import component-from-global-scope="Garweb.Icon" name="calendar" size="{{ 20 }}"></x-import></span><div><b>{{agTitle}}</b><small>{{agSub}}</small></div><sc-if value="{{agIsRp}}" hint-placeholder-val="{{ false }}"><button class="gw-btn gw-btn-sm" onClick="{{agCancel}}">Cancelar</button></sc-if><sc-if value="{{agCanBack}}" hint-placeholder-val="{{ true }}"><a class="gw-btn gw-btn-sm" href="A3-Solicitudes.dc.html">Cancelar y volver a Solicitudes</a></sc-if></div></sc-if>
+    <sc-if value="{{blkOn}}" hint-placeholder-val="{{ false }}"><div class="agbar gray"><span class="agi"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 20 }}"></x-import></span><div><b>Bloqueando horarios</b><small>Toque los bloques libres que quiere bloquear; puede elegir varios, en distintos días.</small></div><button class="gw-btn gw-btn-sm" onClick="{{blkCancel}}">Cancelar</button></div></sc-if>
+    <div class="split">
+      <div class="wide">
+        <div class="calcard">
+          <div class="calhd"><b>{{calTitle}}</b><div class="fchips" role="group" aria-label="Filtrar"><sc-for list="{{filters}}" as="f" hint-placeholder-count="3"><button class="{{f.cls}}" aria-pressed="{{f.on}}" onClick="{{f.pick}}">{{f.label}}<em>{{f.n}}</em></button></sc-for></div></div>
+          <sc-if value="{{isWeek}}" hint-placeholder-val="{{ true }}">
+            <div style="overflow-x: auto">
+              <div class="cal">
+                <span class="corner"></span>
+                <sc-for list="{{days}}" as="d" hint-placeholder-count="5"><button class="{{d.cls}}" onClick="{{d.open}}" aria-label="{{d.aria}}"><small>{{d.w}}</small><b>{{d.n}}</b><em>{{d.cnt}}</em></button></sc-for>
+                <sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+                  <sc-if value="{{r.lunch}}" hint-placeholder-val="{{ false }}"><div class="lunch">12:00 – 15:00 · almuerzo, sin atención</div></sc-if>
+                  <sc-if value="{{r.slot}}" hint-placeholder-val="{{ true }}">
+                    <span class="t">{{r.time}}</span>
+                    <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="5">
+                      <div class="{{c.wrap}}">
+                        <sc-if value="{{c.isAp}}" hint-placeholder-val="{{ false }}"><button class="{{c.cls}}" onClick="{{c.pick}}"><sc-if value="{{c.isPick}}" hint-placeholder-val="{{ false }}"><span class="ty"><x-import component-from-global-scope="Garweb.Icon" name="truck" size="{{ 14 }}"></x-import></span></sc-if><b>{{c.name}}</b><span>{{c.sub}}</span></button></sc-if>
+                        <sc-if value="{{c.canBook}}" hint-placeholder-val="{{ false }}"><button class="{{c.fcls}}" aria-label="{{c.aria}}" title="{{c.tip}}" onClick="{{c.book}}">{{c.ftxt}}</button></sc-if><sc-if value="{{c.idle}}" hint-placeholder-val="{{ true }}"><span class="free0"></span></sc-if>
+                        <sc-if value="{{c.isPast}}" hint-placeholder-val="{{ false }}"><div class="past" title="Turno pasado"></div></sc-if>
+                        <sc-if value="{{c.isOff}}" hint-placeholder-val="{{ false }}"><button class="{{c.offCls}}" onClick="{{c.pickOff}}" title="Ver o quitar el bloqueo"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 14 }}"></x-import><span>{{c.offTxt}}</span></button></sc-if>
+                        <sc-if value="{{c.now}}" hint-placeholder-val="{{ false }}"><span class="now" style="top: 66%" title="Ahora · 10:20"></span></sc-if>
+                      </div>
+                    </sc-for>
+                  </sc-if>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{isDay}}" hint-placeholder-val="{{ false }}">
+            <div class="day">
+              <sc-for list="{{dayRows}}" as="r" hint-placeholder-count="9">
+                <div class="drow"><span class="t">{{r.time}}</span>
+                  <sc-if value="{{r.isAp}}" hint-placeholder-val="{{ false }}"><button class="{{r.cls}}" onClick="{{r.pick}}"><div style="display: flex; flex-direction: column; min-width: 0"><b>{{r.name}}</b><span>{{r.sub}}</span></div><x-import component-from-global-scope="Garweb.StatusChip" status="{{r.status}}"></x-import></button></sc-if>
+                  <sc-if value="{{r.canBook}}" hint-placeholder-val="{{ false }}"><button class="{{r.fcls}}" title="{{r.tip}}" onClick="{{r.book}}">{{r.dtxt}}</button></sc-if><sc-if value="{{r.idle}}" hint-placeholder-val="{{ true }}"><span class="free0"></span></sc-if>
+                  <sc-if value="{{r.isPast}}" hint-placeholder-val="{{ false }}"><div class="past" style="height: 46px"></div></sc-if>
+                  <sc-if value="{{r.isOff}}" hint-placeholder-val="{{ false }}"><button class="{{r.offCls}}" onClick="{{r.pickOff}}" title="Ver o quitar el bloqueo"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 14 }}"></x-import>Bloqueado · {{r.offTxt}}</button></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div class="lgf"><span><i style="background: var(--primary)"></i>Programada</span><span><i style="background: var(--success-500)"></i>Atendida</span><span><i style="background: var(--error-500)"></i>No asistió</span><span><i style="background: #7C3AED"></i>Visita a domicilio</span><span><i style="background: var(--warning-500)"></i>Retiro en taller</span><span><i style="background: repeating-linear-gradient(135deg,var(--line-strong) 0 2px,transparent 2px 4px)"></i>Bloqueado</span><span>Las citas se agendan desde la solicitud (Solicitudes › Agendar cita); aquí se elige el turno</span></div>
+        </div>
+      </div>
+      <aside class="aside">
+        <sc-if value="{{cfg}}" hint-placeholder-val="{{ false }}">
+        <div class="det" style="border: 2px solid var(--primary)">
+          <div class="between"><span class="ov">Configurar la agenda</span><button class="gw-btn gw-btn-sm gw-btn-ghost" onClick="{{toggleCfg}}">Cerrar</button></div>
+          <b style="font-size: 15px">Horario de atención</b>
+          <div class="hrs"><sc-for list="{{hours}}" as="h" hint-placeholder-count="6"><div class="hr"><b>{{h.d}}</b><span class="{{h.cls}}">{{h.m}}</span><span class="{{h.cls}}">{{h.t}}</span></div></sc-for></div>
+          <p class="audit">Turnos de 30 min (parámetro, en Parámetros). Un turno = un cliente. El cliente solo ve los turnos libres.</p>
+          <hr class="stitch">
+          <div class="between"><b style="font-size: 15px">Bloqueos</b><button class="gw-btn gw-btn-sm gw-btn-secondary" onClick="{{openBlock}}">+ Bloquear horario</button></div>
+          <sc-if value="{{blkOk}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Alert" tone="success" title="{{blkOkT}}" compact="{{ true }}">{{blkOkTxt}}</x-import></sc-if>
+          <sc-for list="{{blocks}}" as="k" hint-placeholder-count="1"><div class="blk"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 16 }}"></x-import><div style="flex: 1"><b>{{k.when}}</b><small>{{k.why}}</small></div><button class="gw-btn gw-btn-sm gw-btn-ghost" onClick="{{k.del}}">Quitar</button></div></sc-for>
+          <sc-if value="{{noBlocks}}" hint-placeholder-val="{{ false }}"><p class="muted" style="font-size: 13px; margin: 0">No hay horarios bloqueados.</p></sc-if>
+        </div>
+        </sc-if>
+        <sc-if value="{{blkOn}}" hint-placeholder-val="{{ false }}">
+        <div class="det" style="border: 2px solid #334155">
+          <span class="ov">Bloquear horario</span>
+          <sc-if value="{{blkNone}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Garweb.Alert" tone="info" title="Elija los bloques en el calendario" compact="{{ true }}">Solo se pueden bloquear turnos libres. Si un turno ya tiene cita, primero reprográmela.</x-import></sc-if>
+          <sc-if value="{{blkSome}}" hint-placeholder-val="{{ false }}"><span class="gw-field-label">{{blkCount}}</span><div class="bsel"><sc-for list="{{blkList}}" as="b" hint-placeholder-count="2"><span>{{b}}</span></sc-for></div></sc-if>
+          <button class="gw-btn gw-btn-primary gw-btn-block" disabled="{{blkNoOk}}" onClick="{{saveBlock}}">{{blkBtn}}</button>
+          <p class="audit" style="margin: 0">El cliente deja de ver estos turnos en la web. Queda registrado quién bloqueó y cuándo.</p>
+        </div>
+        </sc-if>
+        <sc-if value="{{offPanel}}" hint-placeholder-val="{{ false }}">
+        <div class="det" style="border: 2px solid #334155">
+          <div class="between"><span class="ov">Horario bloqueado</span><button class="gw-btn gw-btn-sm gw-btn-ghost" onClick="{{offClose}}">Cerrar</button></div>
+          <div class="bk-slot" style="background: var(--surface-sunken); color: var(--ink)"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 22 }}"></x-import><div><b>{{offWhen}}</b><small>{{offWho}}</small></div></div>
+          <p class="muted" style="font-size: 13.5px; line-height: 19px; margin: 0">Mientras esté bloqueado, los clientes no ven este turno en la web y no se puede agendar.</p>
+          <button class="gw-btn gw-btn-primary gw-btn-block" onClick="{{unblock}}">{{unbLbl}}</button>
+          <p class="audit" style="margin: 0">El turno vuelve a quedar libre al instante. Queda registrado quién lo desbloqueó.</p>
+        </div>
+        </sc-if>
+        <sc-if value="{{bkOn}}" hint-placeholder-val="{{ false }}">
+        <div class="det" style="border: 2px solid var(--primary)">
+          <div class="between"><span class="ov">{{agPanelT}}</span><x-import component-from-global-scope="Garweb.StatusChip" tone="info">{{agSt}}</x-import></div>
+          <div class="who"><span class="av">{{agIni}}</span><div><h2>{{agName}}</h2><small>{{agPhone}} · {{agMail}}</small></div></div>
+          <span class="ov" style="margin-top: 4px">Solicitud vinculada</span>
+          <div class="facts">
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="inbox" size="{{ 16 }}"></x-import></span><span>Solicitud</span><b>{{agId}}</b></div>
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="sofa" size="{{ 16 }}"></x-import></span><span>Mueble</span><b>{{agItem}}</b></div>
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="scissors" size="{{ 16 }}"></x-import></span><span>Servicio</span><b>{{agSvc}}</b></div>
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 16 }}"></x-import></span><span>Tela</span><b>{{agHow}}</b></div>
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="camera" size="{{ 16 }}"></x-import></span><span>Fotos</span><b>{{agFotos}}</b></div>
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="user" size="{{ 16 }}"></x-import></span><span>Contacto</span><b>{{agMedio}}</b></div>
+            <sc-if value="{{agHasAddr}}" hint-placeholder-val="{{ false }}"><div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="map-pin" size="{{ 16 }}"></x-import></span><span>Dirección</span><b>{{agAddr}}</b></div></sc-if>
+            <sc-if value="{{agRpOn}}" hint-placeholder-val="{{ false }}"><div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="clock" size="{{ 16 }}"></x-import></span><span>Turno actual</span><b>{{agOld}}</b></div></sc-if>
+          </div>
+          <sc-if value="{{agHasBusca}}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 13.5px; line-height: 19px; padding: 10px 12px; border-radius: 12px; background: var(--surface-sunken)"><b>Tela que busca:</b> «{{agBusca}}»</p></sc-if>
+          <a class="gw-btn gw-btn-ghost gw-btn-sm" style="align-self: flex-start" href="A3-Solicitudes.dc.html">Ver la solicitud completa</a>
+          <sc-if value="{{bkNoSlot}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Garweb.Alert" tone="info" title="Elija un turno libre en el calendario" compact="{{ true }}">{{agHint}}</x-import></sc-if>
+          <sc-if value="{{bkHasSlot}}" hint-placeholder-val="{{ false }}"><div class="bk-slot"><x-import component-from-global-scope="Garweb.Icon" name="calendar" size="{{ 22 }}"></x-import><div><b>{{bkWhen}}</b><small>{{bkLen}}</small></div></div></sc-if>
+          <sc-if value="{{agLast}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Alert" tone="warning" title="Es su última reprogramación" compact="{{ true }}">Si vuelve a faltar, la solicitud vence.</x-import></sc-if>
+          <button class="gw-btn gw-btn-primary gw-btn-block" disabled="{{bkNoOk}}" onClick="{{bkConfirm}}">{{bkBtn}}</button>
+          <p class="audit" style="margin: 0">{{agAudit}}</p>
+        </div>
+        </sc-if>
+        <sc-if value="{{notBk}}" hint-placeholder-val="{{ true }}">
+        <div class="det">
+          <sc-if value="{{bkOk}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="{{okT}}">Le avisamos al cliente por correo y en su cuenta. La solicitud {{okId}} pasa a «{{okSt}}».</x-import></sc-if>
+          <div class="between"><span class="ov">Cita seleccionada</span><x-import component-from-global-scope="Garweb.StatusChip" status="{{selStatus}}"></x-import></div>
+          <div class="who"><span class="av">{{selIni}}</span><div><h2>{{selName}}</h2><small>{{selWhen}}</small></div></div>
+          <div class="facts">
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="calendar" size="{{ 16 }}"></x-import></span><span>Tipo</span><b>{{selType}}</b></div>
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="inbox" size="{{ 16 }}"></x-import></span><span>{{selRefLbl}}</span><b>{{selReq}}</b></div>
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="sofa" size="{{ 16 }}"></x-import></span><span>Mueble</span><b>{{selItem}}</b></div>
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="user" size="{{ 16 }}"></x-import></span><span>Teléfono</span><b>{{selPhone}}</b></div>
+            <div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="calendar" size="{{ 16 }}"></x-import></span><span>Reprogramaciones</span><b>{{selRep}} de 1<span class="rep"><i class="{{repDot}}"></i></span></b></div>
+          </div>
+          <sc-if value="{{attSaved}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Atención registrada">La solicitud pasa a Atendida. Puede armar la cotización desde Cotizaciones › Por armar.</x-import></sc-if>
+          <sc-if value="{{stAppt}}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{selHome}}" hint-placeholder-val="{{ false }}"><div class="facts" style="grid-template-columns: 1fr"><div><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="map-pin" size="{{ 16 }}"></x-import></span><span>Dirección</span><b>48 Park St, Montclair, NJ 07042</b></div></div></sc-if>
+            <a class="gw-btn gw-btn-primary gw-btn-block" href="{{attHref}}">{{attLbl}}</a>
+            <p class="audit" style="margin: 0">{{attHelp}}</p>
+            <div class="row"><button class="gw-btn gw-btn-secondary" style="flex: 1" onClick="{{startRp}}">Reprogramar</button><button class="gw-btn gw-btn-danger" style="flex: 1" onClick="{{markMiss}}">{{missLbl}}</button></div>
+            <p class="audit">{{missHelp}}</p>
+          </sc-if>
+          <sc-if value="{{stDone}}" hint-placeholder-val="{{ false }}">
+            <a class="gw-btn gw-btn-primary gw-btn-block" href="A4-Cotizar.dc.html">Ver su cotización</a>
+            <p class="audit">Cita atendida. La cotización se arma desde esta visita y el cliente la recibe en su cuenta (W4).</p>
+          </sc-if>
+          <sc-if value="{{stMiss}}" hint-placeholder-val="{{ false }}">
+            <sc-if value="{{missFirst}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Alert" tone="warning" title="{{missFirstT}}" compact="{{ true }}">Le avisamos al cliente por correo y en su cuenta. Puede reprogramar una sola vez; si vuelve a faltar, la solicitud vence.</x-import>
+            <span class="gw-field-label">¿Qué sigue?</span>
+            <button class="gw-btn gw-btn-primary gw-btn-block" onClick="{{startRp}}">Reprogramar con el cliente</button>
+            <p class="audit" style="margin: 0">Úselo si el cliente llamó o le contestó. Si no, él mismo puede elegir otro turno desde su cuenta (Mis pedidos › Reprogramar).</p></sc-if>
+            <sc-if value="{{missUsed}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Garweb.Alert" tone="danger" title="Faltó por segunda vez" compact="{{ true }}">Ya usó su única reprogramación. Por regla, la solicitud vence; si el cliente insiste, puede ofrecerle un último turno.</x-import>
+            <div class="row" style="gap: 8px"><button class="gw-btn gw-btn-danger" style="flex: 1" onClick="{{expire}}">Dar por vencida</button><button class="gw-btn gw-btn-secondary" style="flex: 1" onClick="{{startRp}}">Ofrecer último turno</button></div></sc-if>
+            <sc-if value="{{expired}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Alert" tone="info" title="Solicitud vencida" compact="{{ true }}">Se le avisó al cliente. Si más adelante quiere el servicio, envía una nueva solicitud.</x-import></sc-if>
+          </sc-if>
+          <sc-if value="{{stPick}}" hint-placeholder-val="{{ false }}">
+            <a class="gw-btn gw-btn-primary gw-btn-block" href="A18-Taller.dc.html">Registrar retiro en el taller</a>
+            <p class="audit">El cliente recoge su pedido terminado. Se registra quién retira y el saldo cobrado.</p>
+          </sc-if>
+        </div>
+        </sc-if>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"vista":{"editor":"enum","options":["semana","día"],"default":"semana"},"modo":{"editor":"enum","options":["ver","agendar","agendar-nueva","agendar-visita","no-asistio","reprogramar"],"default":"reprogramar"},"$preview":{"width":1440,"height":1280}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { agKey: null, ag: null, bk: null, booked: {}, moved: {}, bkOk: false, sel: p.modo === 'no-asistio' || p.modo === 'reprogramar' ? 'r3c0' : 'r1c1', missSol: p.modo === 'no-asistio' || p.modo === 'reprogramar' ? 'SOL-0079' : undefined, view: null, day: 1, cfg: false, blk: false, bsel: [], bm: -1, blocked: {}, blkOk: false, unb: {}, offSel: null, att: false, attSaved: false, f: 0, wp: [] }; }
+  renderVals() {
+    const mk = this.props.modo || 'ver';
+    const AGS = {
+      agendar: { id: 'SOL-0093', name: 'María Gómez', item: 'Sofá de 2 cuerpos', svc: 'Retapizado', home: false, phone: '(908) 555-0188', mail: 'maria.gomez@correo.com', medio: 'Teléfono · llamó el lun 5', tela: 'Ver en el local', busca: 'Gris o beige, que no se manche fácil', fotos: '3 fotos', st: 'En espera de cita', addr: '' },
+      'agendar-nueva': { id: 'SOL-0088', name: 'Mark Ellison', item: 'Sillón', svc: 'Retapizado', home: false, nueva: true, phone: '(973) 555-0177', mail: 'mark.ellison@correo.com', medio: 'Teléfono · registrada hace un momento', tela: 'Ver en el local', busca: '—', fotos: '2 fotos', st: 'En espera de cita', addr: '' },
+      'agendar-visita': { id: 'SOL-0088', name: 'Mark Ellison', item: 'Sillón', svc: 'Retapizado', home: true, nueva: true, phone: '(973) 555-0177', mail: 'mark.ellison@correo.com', medio: 'Teléfono · registrada hace un momento', tela: 'Visita a domicilio', busca: '—', fotos: '2 fotos', st: 'En espera de visita', addr: '22 Orchard Rd, Bloomfield, NJ' },
+      reprogramar: { id: 'SOL-0079', name: 'Priya Shah', item: '6 sillas de comedor', svc: 'Retapizado', home: false, rp: 'r3c0', rpN: 0, fromMiss: true, phone: '(908) 555-0126', mail: 'priya.shah@correo.com', medio: 'No asistió el lun 5 · llamó para reprogramar', tela: 'Ver en el local', busca: '—', fotos: '4 fotos', st: 'No asistió', addr: '' }
+    };
+    const s0 = this.state;
+    const s = s0.agKey === mk ? s0 : { ...s0, ag: AGS[mk] || null, bk: null };
+    const times = ['09:30', '10:00', '10:30', '11:00', '11:30', '15:00', '15:30', '16:00', '16:30'];
+    const A = {
+      'r0c0': ['Mark Ellison', 'Sillón · catálogo en el local', 'done', 'Atendida', 'SOL-0074', 0],
+      'r1c1': ['Laura Méndez', 'Sofá 3 cuerpos · visita en el local', 'appt', 'Programada', 'SOL-0076', 0],
+      'r3c0': ['Priya Shah', '6 sillas de comedor', 'appt', 'Programada', 'SOL-0079', 0],
+      'r0c2': ['Bloqueado', 'Compras', 'off'],
+      'r1c2': ['Bloqueado', 'Compras', 'off'],
+      'r2c2': ['Tom Becker', 'Cabecera · no asistió', 'miss', 'No asistió', 'SOL-0071', 1],
+      'r5c3': ['Daniel Cruz', 'Silla escritorio · retiro PED-0078', 'pick', 'Programada', 'PED-0078', 0],
+      'r6c4': ['Hotel Willow', '12 sillas', 'appt', 'Programada', 'SOL-0081', 0],
+      'r6c1': ['Carla Ortiz', 'Butaca · visita en el local', 'appt', 'Programada', 'SOL-0082', 0],
+      'r4c3': ['Jorge Vela', 'Sofá cama · visita en el local', 'appt', 'Programada', 'SOL-0086', 0],
+      'r0c4': ['Grace Kim', 'Otomana · visita en el local', 'appt', 'Programada', 'SOL-0087', 0],
+      'r2c4': ['Ana Ruiz', 'Puff', 'done', 'Atendida', 'SOL-0083', 0],
+      'r7c1': ['Linda Park', 'Sofá en L · visita a domicilio · medir y llevar libros de telas', 'appt', 'Programada', 'SOL-0089', 0, 1],
+      'r8c1': ['Linda Park', 'Sofá en L · visita a domicilio · continúa (1 hora)', 'appt', 'Programada', 'SOL-0089', 0, 1]
+    };
+    Object.keys(s.moved || {}).forEach(k => { delete A[k]; });
+    Object.assign(A, s.booked || {});
+    Object.keys(s.blocked || {}).forEach(k => { A[k] = ['Bloqueado', s.blocked[k], 'off']; });
+    Object.keys(s.unb || {}).forEach(k => { if (A[k] && A[k][2] === 'off' && !(s.blocked || {})[k]) delete A[k]; });
+    const DW = [['lun', 5], ['mar', 6], ['mié', 7], ['jue', 8], ['vie', 9], ['sáb', 10]], TODAY = 1;
+    const view = s.view || (this.props.vista === 'día' ? 'day' : 'week');
+    if (s.missSol) Object.keys(A).forEach(k => { const a = A[k]; if (a[4] === s.missSol && !(s.booked || {})[k]) A[k] = [a[0], a[1], 'miss', 'No asistió', a[4], a[5], a[6]]; });
+    const sel = A[s.sel] || A['r1c1'];
+    const selPh = ({ 'SOL-0076': '(973) 555-0142', 'SOL-0074': '(973) 555-0177', 'SOL-0088': '(973) 555-0177', 'SOL-0093': '(908) 555-0188', 'SOL-0082': '(908) 555-0150', 'SOL-0086': '(732) 555-0108', 'SOL-0087': '(908) 555-0164', 'SOL-0081': '(973) 555-0190', 'SOL-0083': '(908) 555-0101', 'SOL-0071': '(732) 555-0125' })[sel[4]] || '(908) 555-0126';
+    const whenOf = k => { const r = +k[1], c = +k[3]; return ['lunes 5', 'martes 6', 'miércoles 7', 'jueves 8', 'viernes 9', 'sábado 10'][c] + ' de octubre · ' + times[r]; };
+    const cellOf = (r, c) => {
+      const k = 'r' + r + 'c' + c, a = A[k];
+      const base = { isAp: false, isFree: false, isOff: false, isPast: false, isPick: false };
+      const past = c < TODAY || (c === TODAY && r <= 1);
+      if (!a && past) return { ...base, isPast: true };
+      if (!a) {
+        const ag = s.ag, k2 = 'r' + (r + 1) + 'c' + c;
+        const fits = !ag || !ag.home || (r !== 4 && r !== 8 && !A[k2]);
+        if (s.blk) { const on = (s.bsel || []).includes(k); return { ...base, isFree: true, canBook: true, aria: 'Bloquear ' + DW[c][0] + ' ' + DW[c][1] + ' a las ' + times[r], fcls: 'free ' + (on ? 'blk' : 'bhl'), ftxt: on ? 'Bloquear ✓' : 'Elegir', dtxt: on ? 'Se bloqueará ✓' : 'Libre · elegir para bloquear', tip: '', book: () => this.setState({ bsel: on ? s.bsel.filter(x => x !== k) : (s.bsel || []).concat([k]) }) }; }
+        if (!ag) return { ...base, isFree: true, idle: true };
+        if (!fits) return { ...base, isFree: true, canBook: true, fcls: 'free no', ftxt: '', dtxt: 'No alcanza 1 hora', tip: 'La visita necesita 1 hora seguida', book: () => {} };
+        const on = s.bk === k || (ag.home && s.bk && s.bk === 'r' + (r - 1) + 'c' + c);
+        return { ...base, isFree: true, canBook: true, aria: 'Elegir ' + DW[c][0] + ' ' + DW[c][1] + ' a las ' + times[r], fcls: 'free' + (on ? ' pk' : ' hl'), ftxt: on ? 'Elegido' : 'Elegir', dtxt: on ? 'Elegido' : 'Disponible · elegir', tip: '', book: () => this.setState({ bk: k, cfg: false, agKey: mk, ag: s.ag }) };
+      }
+      if (a[2] === 'off') return { ...base, isOff: true, offTxt: a[1], offCls: 'off' + (s.offSel === k ? ' on' : ''), pickOff: () => this.setState({ offSel: k, cfg: false, bkOk: false, blkOk: false }) };
+      const dim = (s.f === 1 && a[2] === 'pick') || (s.f === 2 && a[2] !== 'pick');
+      return { ...base, isAp: true, isPick: a[2] === 'pick', cls: 'ap ' + a[2] + (a[6] ? ' home' : '') + (s.sel === k ? ' sel' : '') + (dim ? ' dim' : ''), name: a[0], sub: view === 'week' ? a[1].split(' · ')[0] : a[1], status: a[3], pick: () => this.setState({ sel: k, att: false, attSaved: false, bk: null, bkOk: false }) };
+    };
+    const rows = [];
+    times.forEach((t, r) => {
+      if (r === 5) rows.push({ lunch: true, slot: false });
+      rows.push({ lunch: false, slot: true, time: t, cells: DW.map((d, c) => ({ ...cellOf(r, c), wrap: 'cell' + (c === TODAY ? ' td' : ''), now: c === TODAY && r === 1 })) });
+    });
+    let nFree = 0, nOcc = 0; const cnt0 = { done: 0, appt: 0, miss: 0, pick: 0 };
+    times.forEach((t, r) => DW.forEach((d, c) => { const a = A['r' + r + 'c' + c], past = c < TODAY || (c === TODAY && r <= 1); if (!a) { if (!past) nFree++; } else if (a[2] !== 'off') { nOcc++; cnt0[a[2]]++; } }));
+    const perDay = DW.map((d, c) => times.filter((t, r) => { const a = A['r' + r + 'c' + c]; return a && a[2] !== 'off'; }).length);
+    const dayIdx = s.day;
+    const shiftBars = (from, to) => times.slice(from, to).map((t, r) => { const a = A['r' + (r + from) + 'c' + dayIdx]; return !a ? '' : a[2] === 'off' ? 'x' : 'b'; });
+    const cnt = arr => arr.filter(x => x === '').length;
+    const m = shiftBars(0, 5), tt = shiftBars(5, 9);
+    return {
+      tema: this.props.tema ?? 'light',
+      isWeek: view === 'week', isDay: view === 'day', vWeek: view === 'week' ? 'on' : '', vDay: view === 'day' ? 'on' : '',
+      toWeek: () => this.setState({ view: 'week' }), toDay: () => this.setState({ view: 'day' }),
+      calTitle: view === 'week' ? 'Semana del 5 al 10 de octubre' : ['Lunes 5 de octubre', 'Martes 6 de octubre · hoy', 'Miércoles 7 de octubre', 'Jueves 8 de octubre', 'Viernes 9 de octubre', 'Sábado 10 de octubre'][dayIdx],
+      nFree: String(nFree), nDone: String(cnt0.done), nAppt: String(cnt0.appt + cnt0.pick), nMiss: String(cnt0.miss),
+      occTxt: nOcc + ' de ' + (times.length * DW.length) + ' turnos ocupados',
+      todayLine: perDay[TODAY] + ' citas hoy · próxima a las 15:30',
+      strip: DW.map((d, c) => ({ w: d[0] + ' ' + d[1], cls: c === TODAY ? 'td' : '', slots: times.map((t, r) => { const a = A['r' + r + 'c' + c]; return a ? a[2] : ''; }) })),
+      filters: [['Todas', nOcc], ['Visitas al local', nOcc - cnt0.pick], ['Retiros', cnt0.pick]].map((f, i) => ({ label: f[0], n: String(f[1]), on: s.f === i, cls: 'fchip' + (s.f === i ? ' on' : ''), pick: () => this.setState({ f: i }) })),
+      nowAtt: () => this.setState({ sel: 'r1c1', att: true, attSaved: false }), nowSel: () => this.setState({ sel: 'r1c1', att: false }),
+      days: DW.map((d, c) => ({ w: d[0], n: d[1], cnt: perDay[c] === 1 ? '1 cita' : perDay[c] + ' citas', cls: 'h' + (c === TODAY ? ' today' : ''), aria: 'Ver el día ' + d[0] + ' ' + d[1], open: () => this.setState({ view: 'day', day: c }) })),
+      rows,
+      dayRows: times.map((t, r) => ({ time: t, ...cellOf(r, dayIdx) })),
+      ...(() => {
+        const ag = s.ag, slot = !!s.bk;
+        const short = k => { const r = +k[1], c = +k[3]; return DW[c][0] + ' ' + DW[c][1] + ', ' + times[r]; };
+        const W = ag ? (ag.home ? 'visita' : 'cita') : '';
+        return {
+          agOn: !!ag && !s.blk, bkOn: !!ag && !s.blk, notBk: !ag && !s.blk && !(s.offSel && A[s.offSel] && A[s.offSel][2] === 'off'), bkOk: !!s.bkOk && !ag,
+          agIsRp: !!(ag && ag.rp), agNotRp: !!(ag && !ag.rp), agCanBack: !!(ag && !ag.rp && !ag.nueva), agRpOn: !!(ag && ag.rp), agOld: ag && ag.rp ? whenOf(ag.rp) : '',
+          agTitle: ag ? (ag.rp ? 'Reprogramando la ' + W + ' de ' + ag.name : 'Agendando ' + (ag.home ? 'visita a domicilio' : 'cita en el local') + ' para ' + ag.name) : '',
+          agSub: ag ? (ag.nueva ? 'Solicitud ' + ag.id + ' registrada · ' + ag.item + ' · toque el turno que acordó con el cliente' : ag.id + ' · ' + ag.item + ' · toque un turno libre del calendario') + (ag.home ? ' (la visita ocupa 1 hora)' : '') : '', agCancelLbl: ag && ag.nueva ? 'Agendar después' : 'Cancelar y volver a Solicitudes',
+          agPanelT: ag && ag.rp ? 'Reprogramar' : 'Agendar ' + W, agName: ag ? ag.name : '', agIni: ag ? ag.name.split(' ').map(x => x[0]).join('').slice(0, 2) : '',
+          agRef: ag ? 'Solicitud ' + ag.id : '', agHow: ag ? (ag.tela || (ag.home ? 'Visita a domicilio' : 'Ver en el local')) : '', agItem: ag ? ag.item : '',
+          agId: ag ? ag.id : '', agSt: ag ? ag.st || '' : '', agPhone: ag ? ag.phone || '' : '', agMail: ag ? ag.mail || 'correo en su ficha' : '', agSvc: ag ? ag.svc || '' : '', agBusca: ag ? ag.busca || '' : '', agHasBusca: !!(ag && ag.busca && ag.busca !== '—'), agFotos: ag ? ag.fotos || '' : '', agMedio: ag ? ag.medio || '' : '', agAddr: ag ? ag.addr || '' : '', agHasAddr: !!(ag && ag.addr),
+          agHint: ag && ag.home ? 'Los turnos marcados tienen 1 hora libre seguida. La visita es sin costo para el cliente.' : 'Los turnos marcados están libres. Un turno = 30 minutos, un cliente.',
+          agLast: !!(ag && ag.rp && ag.rpN >= 1),
+          agAudit: ag && ag.fromMiss ? 'El turno en que faltó queda en el historial como «No asistió». Cuenta como su única reprogramación.' : ag && ag.rp ? 'El turno anterior se libera. Cuenta como reprogramación de la solicitud.' : 'La cita queda ligada a la solicitud ' + (ag ? ag.id : '') + '. No se crean citas sin solicitud.',
+          agCancel: () => this.setState({ ag: null, bk: null, agKey: mk }),
+          bkNoSlot: !slot, bkHasSlot: slot,
+          bkWhen: slot ? whenOf(s.bk).charAt(0).toUpperCase() + whenOf(s.bk).slice(1) : '', bkLen: ag && ag.home ? 'Visita: 1 hora (2 turnos)' : 'Turno de 30 min',
+          bkNoOk: !slot, bkBtn: !slot ? 'Elija un turno' : (ag && ag.rp ? 'Confirmar nuevo turno · ' : ag && ag.home ? 'Confirmar visita · ' : 'Confirmar cita · ') + short(s.bk),
+          okT: s.okRp ? 'Cita reprogramada' : 'Cita confirmada', okId: s.okId || '', okSt: s.okSt || '',
+          startRp: () => this.setState({ agKey: mk, ag: { id: sel[4], name: sel[0], item: sel[1].split(' · ')[0], home: !!sel[6], rp: s.sel, rpN: sel[5], fromMiss: sel[2] === 'miss', phone: selPh, svc: 'Retapizado', medio: 'Ya tiene cita', tela: sel[6] ? 'Visita a domicilio' : 'Ver en el local', busca: '—', fotos: 'En la solicitud', st: sel[6] ? 'Visita programada' : 'Cita programada', addr: sel[6] ? '48 Park St, Montclair, NJ' : '' }, bk: null, cfg: false, bkOk: false }),
+          bkConfirm: () => {
+            if (!slot || !ag) return;
+            const r = +s.bk[1], c = +s.bk[3], b = Object.assign({}, s.booked), mv = Object.assign({}, s.moved);
+            const rep = ag.rp ? (ag.rpN || 0) + 1 : 0;
+            if (ag.rp && !ag.fromMiss) { const o = +ag.rp[1], oc = +ag.rp[3]; [ag.rp].concat(ag.home ? ['r' + (o + 1) + 'c' + oc] : []).forEach(k => { delete b[k]; mv[k] = true; }); }
+            const ks = [s.bk].concat(ag.home ? ['r' + (r + 1) + 'c' + c] : []);
+            ks.forEach((k, i) => { delete mv[k]; b[k] = [ag.name, ag.item + (ag.home ? ' · visita a domicilio' + (i ? ' · continúa (1 hora)' : '') : ' · ver telas en el local'), 'appt', 'Programada', ag.id, rep, ag.home ? 1 : 0]; });
+            this.setState({ agKey: mk, booked: b, moved: mv, sel: s.bk, ag: null, bk: null, bkOk: true, okRp: !!ag.rp, okId: ag.id, okSt: ag.home ? 'Visita programada' : 'Cita programada' });
+          }
+        };
+      })(),
+      cfg: s.cfg && !s.blk, cfgBtn: 'gw-btn ' + (s.cfg ? 'gw-btn-primary' : 'gw-btn-secondary'), toggleCfg: () => this.setState({ cfg: !s.cfg, bf: false }),
+      hours: [['Lun', '09:30–12:00', '15:00–17:00'], ['Mar', '09:30–12:00', '15:00–17:00'], ['Mié', '09:30–12:00', '15:00–17:00'], ['Jue', '09:30–12:00', '15:00–17:00'], ['Vie', '09:30–12:00', '15:00–17:00'], ['Sáb', '09:30–12:00', '15:00–17:00'], ['Dom', 'Cerrado', 'Cerrado']].map(h => ({ d: h[0], m: h[1], t: h[2], cls: h[1] === 'Cerrado' ? 'closed' : '' })),
+      ...(() => {
+        const GROUP = { r0c2: ['r0c2', 'r1c2'], r1c2: ['r0c2', 'r1c2'] };
+        const ok = s.offSel && A[s.offSel] && A[s.offSel][2] === 'off' && !s.blk && !s.ag;
+        const keys = ok ? (GROUP[s.offSel] || [s.offSel]) : [];
+        const doUnb = ks => { const u = Object.assign({}, s.unb), b = Object.assign({}, s.blocked); ks.forEach(k => { u[k] = true; delete b[k]; }); this.setState({ unb: u, blocked: b, offSel: null, cfg: true, blkOk: true, blkOkT: 'Bloqueo quitado', blkOkTxt: (ks.length === 1 ? 'El turno vuelve' : 'Los ' + ks.length + ' turnos vuelven') + ' a estar libres para los clientes.' }); };
+        const lbl = k => DW[+k[3]][0] + ' ' + DW[+k[3]][1] + ' oct · ' + times[+k[1]];
+        const stat = !(s.unb || {}).r0c2 ? [{ when: 'mié 7 oct · 09:30–10:30', why: 'Compras en el proveedor · Administrador', del: () => doUnb(['r0c2', 'r1c2']) }] : [];
+        const fresh = Object.keys(s.blocked || {}).sort((a, b) => (+a[3] - +b[3]) || (+a[1] - +b[1])).map(k => ({ when: lbl(k), why: 'Administrador · recién creado', del: () => doUnb([k]) }));
+        return {
+          offPanel: !!ok, offClose: () => this.setState({ offSel: null }),
+          offWhen: ok ? (keys.length > 1 ? 'mié 7 oct · 09:30–10:30' : lbl(s.offSel)) : '', offWho: ok ? (keys.length > 1 ? 'Compras en el proveedor · bloqueado por el Administrador' : 'Bloqueado por el Administrador') : '',
+          unbLbl: keys.length > 1 ? 'Quitar bloqueo (' + keys.length + ' turnos)' : 'Quitar bloqueo', unblock: () => doUnb(keys),
+          blocks: stat.concat(fresh), noBlocks: !stat.length && !fresh.length
+        };
+      })(),
+      blkOn: !!s.blk, blkNone: !(s.bsel || []).length, blkSome: !!(s.bsel || []).length,
+      openBlock: () => this.setState({ blk: true, bsel: [], bm: -1, cfg: false, blkOk: false, agKey: mk, ag: null, bk: null }), blkCancel: () => this.setState({ blk: false, bsel: [], cfg: true }),
+      blkCount: (s.bsel || []).length + ((s.bsel || []).length === 1 ? ' bloque elegido' : ' bloques elegidos'),
+      blkList: (s.bsel || []).slice().sort((a, b) => (+a[3] - +b[3]) || (+a[1] - +b[1])).map(k => DW[+k[3]][0] + ' ' + DW[+k[3]][1] + ' · ' + times[+k[1]]),
+      blockMots: ['Compras', 'Entrega o recojo', 'Reunión', 'Personal', 'Feriado'].map((m, i) => ({ label: m, cls: 'mchip' + (s.bm === i ? ' on' : ''), pick: () => this.setState({ bm: i }) })),
+      blkNoOk: !(s.bsel || []).length, blkBtn: !(s.bsel || []).length ? 'Elija al menos un bloque' : 'Bloquear ' + s.bsel.length + (s.bsel.length === 1 ? ' bloque' : ' bloques'),
+      blkOk: !!s.blkOk, blkOkT: s.blkOkT || 'Bloqueo guardado', blkOkTxt: s.blkOkTxt || '',
+      saveBlock: () => { if (!(s.bsel || []).length) return; const why = 'Bloqueado'; const b = Object.assign({}, s.blocked); s.bsel.forEach(k => { b[k] = why; }); this.setState({ blocked: b, blk: false, bsel: [], cfg: true, blkOk: true, blkOkT: 'Bloqueo guardado', blkOkTxt: s.bsel.length + (s.bsel.length === 1 ? ' bloque bloqueado' : ' bloques bloqueados') + '. Los clientes ya no los ven.' }); },
+      attOpen: s.att && sel[2] === 'appt', attSaved: s.attSaved, attFiles: [{ name: 'sofa-local-1.jpg' }, { name: 'medidas.jpg' }],
+      openAtt: () => this.setState({ att: true, attSaved: false }), saveAtt: () => this.setState({ att: false, attSaved: true }),
+      stAppt: sel[2] === 'appt' && !s.att, stDone: sel[2] === 'done', stMiss: sel[2] === 'miss', stPick: sel[2] === 'pick',
+      selName: sel[0], selType: sel[2] === 'pick' ? 'Retiro en taller' : sel[6] ? 'Visita a domicilio' : 'Visita en el local',
+      selPhone: selPh,
+      selHome: !!sel[6], missFirst: sel[2] === 'miss' && !sel[5], missUsed: sel[2] === 'miss' && !!sel[5] && s.expSol !== sel[4], expired: s.expSol === sel[4], expire: () => this.setState({ expSol: sel[4] }), missFirstT: sel[6] ? 'Marcado: no lo encontramos en casa' : 'Marcado: no asistió', attHref: sel[6] ? 'A2b-AtenderCita.dc.html?lugar=domicilio' : 'A2b-AtenderCita.dc.html',
+      attLbl: sel[6] ? 'Atender la visita (en casa del cliente)' : 'Atender la cita en el local',
+      attHelp: sel[6] ? 'Se abre en la tablet o el celular en casa del cliente: la misma guía de telas, medidas, cotización y respuesta. Al terminar, la solicitud pasa a Atendida.' : 'Guía paso a paso: telas, medidas, traslado, cotización y respuesta de la clienta, en el mismo momento.',
+      missLbl: sel[6] ? 'No lo encontramos' : 'No asistió',
+      missHelp: sel[6] ? 'Si no hay nadie en casa, márquelo aquí: el cliente recibe el aviso y puede reprogramar una vez; la segunda vez la solicitud vence.' : 'Si no asiste, el cliente puede reprogramar una vez; la segunda inasistencia vence la solicitud.',
+      markMiss: () => this.setState({ missSol: sel[4] }), selRefLbl: sel[2] === 'pick' ? 'Pedido' : 'Solicitud', selItem: sel[1].split(' · ')[0], selStatus: sel[3], selReq: sel[4], selRep: String(sel[5]), repDot: sel[5] ? 'on' : '',
+      selIni: sel[0].split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+      selWhen: whenOf(s.sel in A ? s.sel : 'r1c1')
+    };
+  }
+}
+</script>
+</body>
+</html>

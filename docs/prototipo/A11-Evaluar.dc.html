@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A11 Cerrar y evaluar orden</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.cmp{display:grid;grid-template-columns:120px minmax(0,1fr);gap:6px 14px;align-items:center}
+.cmp .lb{font-size:13.5px;font-weight:600}
+.bars{display:flex;flex-direction:column;gap:4px}
+.b{height:16px;border-radius:0 6px 6px 0;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;min-width:44px}
+.b.q{background:var(--chart-4);color:var(--navy-950)}
+.b.e{background:var(--chart-1);color:var(--surface)}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-muted)}
+.lg i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.gauge{display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:16px;background:var(--surface-sunken);border:1.5px dashed var(--line-strong)}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav on" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div>
+        <div class="crumb">Almacén e Inventario › <a href="A6b-FichaPedido.dc.html">PED-0076</a> › Cerrar y evaluar</div>
+        <div class="row" style="flex-wrap: wrap"><h1>Cerrar y evaluar PED-0076</h1><x-import component-from-global-scope="Garweb.StatusChip" status="{{status}}"></x-import></div>
+      </div>
+      <span class="muted" style="font-size: 14px">Equipo de producción (Carlos y María) · terminado a tiempo (objetivo vie 16 oct)</span>
+    </div>
+
+    <div class="grid4">
+      <div class="gauge"><span class="ov">Costo cotizado</span><b class="num" style="font-family: var(--font-display); font-size: 28px">$725</b></div>
+      <div class="gauge"><span class="ov">Costo ejecutado</span><b class="num" style="font-family: var(--font-display); font-size: 28px; color: var(--warning-ink)">$773</b><span style="font-size: 12.5px; color: var(--warning-ink); font-weight: 600">+$48 · +6.6 %</span></div>
+      <div class="gauge"><span class="ov">Margen esperado · sobre costo</span><b class="num" style="font-family: var(--font-display); font-size: 28px">45 %</b><span style="font-size: 12.5px; color: var(--ink-muted); font-weight: 600">precio $1,050 vs costo $725</span></div>
+      <div class="gauge" style="border-color: var(--warning-500); background: var(--warning-soft)"><span class="ov" style="color: var(--warning-ink)">Margen real · sobre costo</span><b class="num" style="font-family: var(--font-display); font-size: 28px; color: var(--warning-ink)">36 %</b><span style="font-size: 12.5px; color: var(--warning-ink); font-weight: 600">−9 puntos</span></div>
+    </div>
+
+    <div class="split">
+      <div class="wide">
+        <div class="card stack">
+          <div class="between" style="flex-wrap: wrap"><h2 style="font-size: 18px">Cotizado vs. ejecutado</h2><div class="row"><span class="lg"><i style="background: var(--chart-4)"></i>Cotizado</span><span class="lg"><i style="background: var(--chart-1)"></i>Ejecutado</span></div></div>
+          <div class="cmp" role="img" aria-label="Materiales 415 contra 451; mano de obra 210 contra 222; maquinaria 40 contra 40; costos fijos 60 contra 60">
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+              <span class="lb">{{r.label}}</span>
+              <div class="bars"><span class="b q" style="width: {{r.qw}}">{{r.q}}</span><span class="b e" style="width: {{r.ew}}">{{r.e}}</span></div>
+            </sc-for>
+          </div>
+          <hr class="stitch">
+          <div class="grid3" style="gap: 12px">
+            <div class="kv"><span>Horas persona</span><b>14 h → 14.8 h</b></div>
+            <div class="kv"><span>Tela</span><b>14 yd → 14 yd</b></div>
+            <div class="kv"><span>Espuma</span><b>6 → 7 planchas</b></div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="card stack">
+            <h3 style="font-size: 16px">Mermas por causa</h3>
+            <div class="between"><div><b>Merma útil · Lino Navy 204</b><div class="muted" style="font-size: 13px">0.8 yd → retazo de la clienta · va con la entrega</div></div><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Retazo</x-import></div>
+            <div class="between"><div><b>Merma no útil · Espuma HD 2"</b><div class="muted" style="font-size: 13px">1 plancha · causa: corte mal medido</div></div><x-import component-from-global-scope="Garweb.StatusChip" tone="danger">Pérdida $24</x-import></div>
+            <div class="between"><div><b>Consumo menor · Cierres</b><div class="muted" style="font-size: 13px">0 devueltos al almacén</div></div><x-import component-from-global-scope="Garweb.StatusChip" tone="neutral">Sin sobrante</x-import></div>
+          </div>
+          <div class="card stack">
+            <h3 style="font-size: 16px">Lista final de piezas = lista de empaque</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+              <span class="thumb c" style="height: 64px"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import></span><span class="thumb" style="height: 64px"><x-import component-from-global-scope="Garweb.Icon" name="image"></x-import></span><span class="thumb b" style="height: 64px"><x-import component-from-global-scope="Garweb.Icon" name="image"></x-import></span><span class="thumb c" style="height: 64px"><x-import component-from-global-scope="Garweb.Icon" name="image"></x-import></span>
+            </div>
+            <p style="font-size: 14px; line-height: 21px">Estructura del sofá (1) · cojines de asiento (3) · cojines de respaldo (3) · cojines decorativos (2) — <b>9 piezas</b></p>
+          </div>
+        </div>
+      </div>
+      <aside class="aside">
+        <x-import component-from-global-scope="Garweb.Alert" tone="warning" title="Revisar plantilla: sofá 3 cuerpos">Es la 3.ª vez seguida que la espuma y la tela superan lo cotizado. Sugerencia: +1 plancha y +12 % de tela en la plantilla.</x-import>
+        <x-import component-from-global-scope="Garweb.Alert" tone="info" title="Sin alerta de calidad">La causa “corte mal medido” aparece 1 vez este mes.</x-import>
+        <div class="card stack">
+          <span class="ov">Al cerrar</span>
+          <p class="muted" style="font-size: 13px; line-height: 19px">Se descuentan insumos de proceso (grapas, hilo, pegamento) según plantilla y el pedido pasa a Terminado, listo para una salida.</p>
+          <sc-if value="{{open}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-primary gw-btn-block" onClick="{{close}}">Cerrar orden y marcar terminado</button></sc-if>
+          <sc-if value="{{closed}}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Orden cerrada">PED-0076 está listo para la próxima salida.</x-import>
+            <a class="gw-btn gw-btn-primary gw-btn-block" href="A13-Salida.dc.html">Planificar salida</a>
+          </sc-if>
+          <a class="gw-btn gw-btn-ghost gw-btn-block" href="A16-Plantillas.dc.html">Revisar plantilla</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { closed: false }; }
+  renderVals() {
+    const max = 500;
+    const R = [['Materiales', 415, 451], ['Mano de obra', 210, 222], ['Maquinaria', 40, 40], ['Costos fijos', 60, 60]];
+    return {
+      tema: this.props.tema ?? 'light',
+      rows: R.map(r => ({ label: r[0], q: '$' + r[1], e: '$' + r[2], qw: (r[1] / max * 100) + '%', ew: (r[2] / max * 100) + '%' })),
+      status: this.state.closed ? 'Terminado' : 'En producción',
+      open: !this.state.closed, closed: this.state.closed,
+      close: () => this.setState({ closed: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

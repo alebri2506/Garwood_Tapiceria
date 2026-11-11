@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>T3 Terminar trabajo — PED-0076 (celular)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.mat{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface)}
+.mat .r{display:flex;justify-content:space-between;font-size:13.5px;color:var(--ink-muted)}
+.mat .r b{color:var(--ink);font-variant-numeric:tabular-nums}
+.step{display:flex;align-items:center;gap:10px}
+.step button{width:48px;height:48px;border-radius:14px;border:2px solid var(--line-strong);background:var(--surface);color:var(--ink);font:800 22px/1 var(--font-display);cursor:pointer}
+.step span{min-width:52px;text-align:center;font:800 26px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.cons{display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:9999px;background:var(--primary-soft);color:var(--primary);font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+.sum{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;font-size:14px}
+.sum span{color:var(--ink-muted)}
+</style>
+</helmet>
+<div class="phone" style="width: 390px; min-height: 1150px">
+  <div class="ph-head">
+    <a class="ph-back" href="T2-Orden.dc.html" aria-label="Volver a la orden"><x-import component-from-global-scope="Garweb.Icon" name="arrow-right" style="transform: rotate(180deg)"></x-import></a>
+    <h1>Terminar trabajo</h1>
+    <span class="pill">PED-0076</span>
+  </div>
+  <div class="ph-body">
+    <sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+      <x-import component-from-global-scope="Garweb.WizardSteps" steps="{{steps}}" current="{{ 1 }}"></x-import>
+      <div class="ph-card" style="gap: 6px">
+        <div class="between"><b style="font-size: 16px">Actividades</b><x-import component-from-global-scope="Garweb.StatusChip" tone="success">6 de 6 ✓</x-import></div>
+        <span class="muted" style="font-size: 13.5px">Horas reales: 14.8 h (planificado 14 h)</span>
+      </div>
+      <div>
+        <h2 style="font-size: 20px">¿Te sobró material?</h2>
+        <p class="muted" style="font-size: 14px; line-height: 20px">Paso obligatorio. Ponga 0 si no sobró nada. Lo que sobra vuelve al almacén.</p>
+      </div>
+      <sc-for list="{{mats}}" as="m" hint-placeholder-count="3">
+        <div class="mat">
+          <div class="between"><b style="font-size: 15.5px">{{m.name}}</b><span class="cons">Consumo {{m.cons}}</span></div>
+          <div class="r"><span>Retiró {{m.ret}} · retazos {{m.retazo}}</span><b>{{m.unit}}</b></div>
+          <div class="between"><span style="font-size: 15px">Sobrante</span><div class="step"><button aria-label="{{m.minusLabel}}" onClick="{{m.minus}}">−</button><span>{{m.left}}</span><button aria-label="{{m.plusLabel}}" onClick="{{m.plus}}">+</button></div></div>
+        </div>
+      </sc-for>
+      <x-import component-from-global-scope="Garweb.Alert" tone="info" title="Insumos de proceso" compact="{{ true }}">Grapas, hilo y pegamento se descuentan solos según la plantilla al cerrar la orden.</x-import>
+      <div class="ph-card">
+        <b style="font-size: 16px">Resumen para el Administrador</b>
+        <div class="sum"><span>Consumo real</span><b>retirado − devuelto − retazos</b><span>Adicional</span><b>+1 plancha de espuma</b><span>Retazo</span><b>0.8 yd Lino Navy 204 (de la clienta, va con la entrega)</b><span>Fotos finales</span><b>3 (antes de embalar)</b></div>
+      </div>
+      <x-import component-from-global-scope="Garweb.UploadZone" icon="camera" title="Fotos del trabajo terminado" hint="Se usan como “después” para el cliente" files="{{photos}}"></x-import>
+    </sc-if>
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Trabajo terminado">PED-0076 pasa a Terminado. El Administrador lo cierra y lo evalúa (A11).</x-import>
+      <div class="ph-card">
+        <div class="between"><b style="font-size: 16px">PED-0076</b><x-import component-from-global-scope="Garweb.StatusChip" status="Terminado"></x-import></div>
+        <div class="sum"><span>Devuelto</span><b>{{returned}}</b><span>Horas reales</span><b>14.8 h</b><span>Terminado</span><b>vie 16 oct · 16:45 · Carlos</b></div>
+      </div>
+      <a class="big-btn pri" href="T1-Ordenes.dc.html">Volver a las órdenes del taller</a>
+    </sc-if>
+  </div>
+  <sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+    <div class="ph-foot"><button class="big-btn pri" onClick="{{finish}}">Confirmar y marcar terminado</button></div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { left: [0, 0, 1], done: false }; }
+  renderVals() {
+    const s = this.state;
+    const M = [['Lino Navy 204', 'yd', 14, 0.8, 0.1], ['Espuma HD 2"', 'planchas', 7, 0, 1], ['Cierres 60 cm', 'u', 3, 0, 1]];
+    const fmt = n => String(Math.round(n * 10) / 10);
+    return {
+      steps: ['Actividades', 'Sobrante', 'Terminado'],
+      open: !s.done, done: s.done,
+      mats: M.map((m, i) => {
+        const set = d => { const l = s.left.slice(); l[i] = Math.max(0, Math.round((l[i] + d) * 10) / 10); this.setState({ left: l }); };
+        return { name: m[0], unit: m[1], ret: fmt(m[2]), retazo: fmt(m[3]), left: fmt(s.left[i]), cons: fmt(m[2] - s.left[i] - m[3]) + ' ' + m[1],
+          minus: () => set(-m[4]), plus: () => set(m[4]), minusLabel: 'Menos ' + m[0], plusLabel: 'Más ' + m[0] };
+      }),
+      photos: [{ name: 'final-frente.jpg' }, { name: 'final-lado.jpg' }, { name: 'cojines.jpg' }],
+      returned: M.map((m, i) => s.left[i] ? fmt(s.left[i]) + ' ' + m[1] + ' ' + m[0] : '').filter(Boolean).join(' · ') || 'Nada',
+      finish: () => this.setState({ done: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

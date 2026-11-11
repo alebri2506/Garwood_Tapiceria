@@ -16,7 +16,7 @@ import { NuevaSolicitudAdmin } from './NuevaSolicitudAdmin';
 import './bandeja.css';
 
 const CANAL: Record<string, string> = { web: 'Web', telefono: 'Teléfono', local: 'En persona', correo: 'Correo', mensaje: 'Mensaje de texto' };
-const TELA: Record<string, string> = { trae: 'La trae', catalogo: 'Catálogo en línea', local: 'Ver en el local', domicilio: 'Visita a domicilio', sin: 'No lleva' };
+const TELA: Record<string, string> = { trae: 'La trae', catalogo: 'Telas en línea', local: 'Ver en el local', domicilio: 'Visita a domicilio', sin: 'No lleva' };
 const fecha = (iso: string) => { const d = new Date(iso); return `${DIAS[d.getDay()]!.slice(0, 3)} ${d.getDate()} ${MESES[d.getMonth()]!.slice(0, 3)}`; };
 
 /** Lo que pasa con la solicitud en una línea, debajo del estado. */

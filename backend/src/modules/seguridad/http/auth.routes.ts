@@ -8,9 +8,12 @@ import { NoAutorizadoError } from '../../../shared/domain/errores.js';
 import { iniciarSesion } from '../application/iniciarSesion.js';
 import { solicitarRecuperacion, restablecerContrasena } from '../application/recuperarContrasena.js';
 import { refrescarSesion } from '../application/refrescarSesion.js';
+import { cambiarContrasena, cambiarContrasenaTemporal, registrarCierreSesion } from '../application/cambiarContrasena.js';
 import { nombreVisible } from '../application/tokens.js';
 import { registrarCliente } from '../../historial/application/registrarCliente.js';
-import { loginSchema, recuperarSchema, registroSchema, restablecerSchema } from './auth.schemas.js';
+import { confirmarCambioCorreo } from '../../historial/application/perfilCliente.js';
+import { confirmarCorreoSchema } from '../../historial/http/perfil.schemas.js';
+import { cambiarContrasenaSchema, cambioContrasenaSchema, loginSchema, recuperarSchema, registroSchema, restablecerSchema } from './auth.schemas.js';
 
 const COOKIE_REFRESH = 'garweb_refresh';
 const cookieBase: CookieOptions = { httpOnly: true, sameSite: 'lax', secure: esProduccion, path: '/api/auth' };
@@ -62,7 +65,30 @@ export function authRoutes(deps: { correo: Correo }) {
     res.json(sesion);
   });
 
-  r.post('/logout', (_req, res) => {
+  // W10 (E.1.4): el cliente abre el enlace enviado a su correo nuevo. Sin sesión: puede abrirlo en otro equipo.
+  r.post('/confirmar-correo', limitador, validar(confirmarCorreoSchema), async (req, res) => {
+    const { email } = await confirmarCambioCorreo(req.body.token, req.ip);
+    res.json({ mensaje: `Listo: desde ahora entra a GARWEB con ${email}.`, email });
+  });
+
+  // W10 › Seguridad (E.4.1): cambiar la contraseña con la actual. Aquí (y no en /api/cliente/perfil) porque necesita la
+  // cookie de sesión, que solo viaja a /api/auth: este equipo sigue con sesión y los demás se cierran.
+  r.post('/contrasena', limitador, autenticar, validar(cambioContrasenaSchema), async (req, res) => {
+    const { sesion, refreshToken, recordarme } = await cambiarContrasena(req.usuario!.id, req.body.actual, req.body.contrasena, req.cookies?.[COOKIE_REFRESH], deps.correo, req.ip);
+    guardarRefresh(res, refreshToken, recordarme);
+    res.json(sesion);
+  });
+
+  // D.1.3: primer ingreso con contraseña temporal → crea una propia y recibe una sesión nueva.
+  r.post('/cambiar-contrasena', limitador, autenticar, validar(cambiarContrasenaSchema), async (req, res) => {
+    const { sesion, refreshToken, recordarme } = await cambiarContrasenaTemporal(req.usuario!.id, req.body.contrasena, req.cookies?.[COOKIE_REFRESH], req.ip);
+    guardarRefresh(res, refreshToken, recordarme);
+    res.json(sesion);
+  });
+
+  // D.2.2: cerrar sesión queda en la bitácora.
+  r.post('/logout', async (req, res) => {
+    await registrarCierreSesion(req.cookies?.[COOKIE_REFRESH], req.ip);
     res.clearCookie(COOKIE_REFRESH, cookieBase);
     res.status(204).end();
   });
@@ -70,7 +96,7 @@ export function authRoutes(deps: { correo: Correo }) {
   r.get('/me', autenticar, async (req, res) => {
     const u = await prisma.usuario.findUnique({ where: { id: req.usuario!.id }, include: { rol: true, cliente: true } });
     if (!u || !u.activo) throw new NoAutorizadoError();
-    res.json({ id: String(u.id), nombre: nombreVisible(u), rol: u.rol.nombre, email: u.email });
+    res.json({ id: String(u.id), nombre: nombreVisible(u), rol: u.rol.nombre, email: u.email, debeCambiarContrasena: u.debeCambiarContrasena });
   });
 
   return r;

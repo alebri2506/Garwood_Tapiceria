@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A18 Taller: recepciones y retiros</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.q{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.q.on{border-color:var(--primary);background:var(--primary-soft)}
+.step{display:flex;align-items:center;gap:12px}
+.step button{width:48px;height:48px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:800 22px/1 var(--font-display);cursor:pointer}
+.step span{min-width:56px;text-align:center;font:800 32px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.meth{display:flex;flex-wrap:wrap;gap:8px}
+.meth button{min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1 var(--font-sans);cursor:pointer}
+.meth button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.rev{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:14px;border:2px solid var(--primary);background:color-mix(in srgb,var(--primary) 4%,var(--surface))}
+.steps3{display:flex;flex-direction:column;gap:8px}
+.steps3 > div{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;font-size:13.5px;line-height:1.45}
+.steps3 b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--warning-soft,#FEF3C7);color:var(--warning-ink,#92400E);font-size:13px}
+.sign{position:relative;height:120px;border-radius:12px;border:2px dashed var(--line-strong);background:var(--surface-sunken)}
+.sign svg{position:absolute;inset:0;width:100%;height:100%}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav on" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Despacho › Taller · mar 13 oct</div><h1>Taller: recepciones y retiros</h1></div>
+      <x-import component-from-global-scope="Garweb.Tabs" items="{{tabs}}" active="{{tab}}" on-change="{{setTab}}"></x-import>
+    </div>
+    <div class="split">
+      <div class="aside" style="max-width: 380px">
+        <span class="ov">Hoy en el taller</span>
+        <button class="{{q1}}" onClick="{{pickRec}}"><span><b>PED-0085 · Grace Lin</b><span class="muted" style="display: block; font-size: 12.5px">Trae su cabecera · sin hora fija</span></span><x-import component-from-global-scope="Garweb.StatusChip" status="Esperando mueble"></x-import></button>
+        <button class="{{q2}}" onClick="{{pickRet}}"><span><b>PED-0078 · Daniel Cruz</b><span class="muted" style="display: block; font-size: 12.5px">Retiro con turno · 15:00</span></span><x-import component-from-global-scope="Garweb.StatusChip" status="Listo para retiro"></x-import></button>
+        <p class="audit">Los retiros usan un turno libre de la agenda (A2). Las recepciones no necesitan turno.</p>
+      </div>
+      <div class="wide">
+        <sc-if value="{{rec}}" hint-placeholder-val="{{ true }}">
+          <div class="card stack">
+            <div class="between"><div><span class="ov">Recibir mueble en el taller</span><h2 style="font-size: 20px">PED-0085 · Cabecera · Grace Lin</h2></div><x-import component-from-global-scope="Garweb.StatusChip" status="{{recStatus}}"></x-import></div>
+            <div class="between" style="flex-wrap: wrap"><span style="font-weight: 600">Número de piezas</span><div class="step"><button aria-label="Menos" onClick="{{minus}}">−</button><span>{{n}}</span><button aria-label="Más" onClick="{{plus}}">+</button></div></div>
+            <x-import component-from-global-scope="Garweb.UploadZone" icon="camera" title="Fotos del mueble al recibirlo" hint="Mínimo 1 · frente, costados y daños visibles" files="{{recFotos}}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Observaciones" optional="{{ true }}" value="Tela original con mancha en la esquina inferior derecha."></x-import>
+            <div class="rev">
+              <div class="between" style="flex-wrap: wrap"><div><span class="ov">Revisión inicial · antes de tocar el mueble</span><b style="display: block; font-size: 15px; margin-top: 4px">¿El mueble está como se cotizó en COT-0085?</b></div><span class="pill">Orden OS-0085 · $520</span></div>
+              <p class="muted" style="font-size: 13px; line-height: 1.45">Compare con las fotos de la solicitud y los trabajos cotizados. Si hay algo distinto (más daño, estructura floja, polilla), no se empieza: se recotiza.</p>
+              <div class="meth"><sc-for list="{{revOpts}}" as="m" hint-placeholder-count="2"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for></div>
+              <sc-if value="{{revNo}}" hint-placeholder-val="{{ false }}">
+                <x-import component-from-global-scope="Garweb.TextField" label="¿Qué encontró?" multiline="{{ true }}" value="La base de madera tiene polilla en el travesaño inferior. No resiste el retapizado sin cambiarla."></x-import>
+                <x-import component-from-global-scope="Garweb.UploadZone" icon="camera" title="Fotos de lo encontrado" hint="Se envían al cliente con la recotización" files="{{revFotos}}"></x-import>
+                <div class="steps3">
+                  <div><b>1</b><span>Se <strong>anula la orden OS-0085</strong> y el pedido queda detenido. Nadie trabaja en el mueble.</span></div>
+                  <div><b>2</b><span>Se arma la <strong>recotización (V2)</strong> en Cotizaciones con el trabajo adicional. El cliente tiene 5 días para responder.</span></div>
+                  <div><b>3</b><span>Si acepta, se genera una orden nueva. Si no, se cobra el <strong>cargo por revisión ($45)</strong> y se le devuelve el mueble.</span></div>
+                </div>
+              </sc-if>
+            </div>
+            <sc-if value="{{recOpen}}" hint-placeholder-val="{{ true }}">
+              <sc-if value="{{revYes}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-primary" onClick="{{doRec}}">Registrar recepción y pasar a producción</button></sc-if>
+              <sc-if value="{{revNo}}" hint-placeholder-val="{{ false }}"><div class="row" style="flex-wrap: wrap"><a class="gw-btn gw-btn-primary" href="A4-Cotizar.dc.html?modo=v2">Anular la orden y armar la recotización</a><button class="gw-btn gw-btn-ghost" onClick="{{revBack}}">Volver</button></div></sc-if>
+            </sc-if>
+            <sc-if value="{{recDone}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Mueble recibido y revisado">Coincide con lo cotizado. PED-0085 pasa a Listo para producir y aparece en el Planning. Se avisó a la clienta.</x-import></sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{ret}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack">
+            <div class="between"><div><span class="ov">Entregar en el taller · turno 15:00</span><h2 style="font-size: 20px">PED-0078 · Silla de escritorio · Daniel Cruz</h2></div><x-import component-from-global-scope="Garweb.StatusChip" status="{{retStatus}}"></x-import></div>
+            <span class="ov">1. Validar piezas con el cliente</span>
+            <x-import component-from-global-scope="Garweb.ChecklistItem" label="Silla completa" meta="Pieza 1 de 2" done="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.ChecklistItem" label="Cojín lumbar" meta="Pieza 2 de 2" done="{{ true }}"></x-import>
+            <div class="between"><span class="ov">2. Cobrar saldo</span><b class="num" style="font-family: var(--font-display); font-size: 22px">$95</b></div>
+            <div class="meth"><sc-for list="{{methods}}" as="m" hint-placeholder-count="4"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for></div>
+            <span class="ov">3. Conformidad del cliente</span>
+            <div class="sign" aria-label="Firma del cliente"><svg viewBox="0 0 600 120" preserveAspectRatio="none" aria-hidden="true"><path d="M40 80 C 80 30, 110 40, 130 78 S 180 96, 200 50 S 260 40, 280 82 C 300 100, 330 50, 360 66 S 420 88, 470 52" fill="none" stroke="#0F172A" stroke-width="3" stroke-linecap="round"/></svg></div>
+            <sc-if value="{{retOpen}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-primary" onClick="{{doRet}}">Registrar entrega en el taller</button></sc-if>
+            <sc-if value="{{retDone}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Entregado completo">Cobro $95 en efectivo · PED-0078 pasa a Entregado.</x-import></sc-if>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1530}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { tab: 0, n: 1, m: 0, rv: 0, recDone: false, retDone: false }; }
+  renderVals() {
+    const s = this.state;
+    const M = ['Efectivo', 'Tarjeta', 'Zelle', 'Cheque'];
+    return {
+      tema: this.props.tema ?? 'light',
+      tabs: ['Recibir mueble', 'Entregar en el taller'],
+      tab: s.tab, setTab: (i) => this.setState({ tab: i }),
+      rec: s.tab === 0, ret: s.tab === 1,
+      q1: s.tab === 0 ? 'q on' : 'q', q2: s.tab === 1 ? 'q on' : 'q',
+      pickRec: () => this.setState({ tab: 0 }), pickRet: () => this.setState({ tab: 1 }),
+      n: s.n, minus: () => this.setState({ n: Math.max(1, s.n - 1) }), plus: () => this.setState({ n: s.n + 1 }),
+      recFotos: [{ name: 'cabecera-frente.jpg' }, { name: 'cabecera-mancha.jpg' }],
+      recOpen: !s.recDone, recDone: s.recDone, recStatus: s.recDone ? 'Listo para producir' : 'Esperando mueble',
+      doRec: () => this.setState({ recDone: true }),
+      revOpts: ['Sí, coincide', 'No, encontré algo distinto'].map((l, i) => ({ label: l, on: s.rv === i, cls: s.rv === i ? 'on' : '', pick: () => this.setState({ rv: i }) })),
+      revYes: s.rv === 0, revNo: s.rv === 1, revBack: () => this.setState({ rv: 0 }),
+      revFotos: [{ name: 'base-polilla-1.jpg' }, { name: 'base-polilla-2.jpg' }],
+      methods: M.map((l, i) => ({ label: l, on: s.m === i, cls: s.m === i ? 'on' : '', pick: () => this.setState({ m: i }) })),
+      retOpen: !s.retDone, retDone: s.retDone, retStatus: s.retDone ? 'Entregado' : 'Listo para retiro',
+      doRet: () => this.setState({ retDone: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

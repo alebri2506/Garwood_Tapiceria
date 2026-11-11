@@ -146,7 +146,7 @@ const CATALOGO_EJEMPLO: Catalogo = {
     ['Estampado Floral', 'Estampado', '760', '2', '#9C6B5B', 'floral'],
   ] as const).map(([nombre, familia, pattern, numeroColor, colorHex, color], i) => ({ id: i + 1, nombre, familia, pattern, numeroColor, colorHex, descripcion: color })),
   franjas: [{ codigo: 'manana', nombre: 'Mañana · 9:00–12:00' }, { codigo: 'tarde', nombre: 'Tarde · 15:00–17:00' }],
-  limites: { muebles: 8, archivosPorMueble: 10, diasRecojo: 60, mbFoto: 10, mbVideo: 50, formatos: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm'] },
+  limites: { muebles: 8, archivosPorMueble: 10, diasRecojo: 28, mbFoto: 10, mbVideo: 50, formatos: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm'] },
 };
 let siguienteCodigo = 88;
 /** Solicitudes de la API simulada: las de ejemplo del diseño más las que se envían en esta visita. */

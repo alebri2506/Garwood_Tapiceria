@@ -1,0 +1,13 @@
+/* A20 › Usuarios y Roles */
+.us-estado { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.us-acciones { border-top: 1px solid var(--line); padding-top: 14px; gap: 10px; }
+.us-confirmar { margin-top: 10px; gap: 8px; flex-wrap: wrap; }
+.us-desactivar { color: var(--danger-ink, var(--ink)); }
+
+/* Contraseña temporal: grande y fácil de dictar. */
+.us-entrega { border: 2px solid var(--warning-500); }
+.us-clave { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface-sunken); }
+.us-clave code { font: 700 22px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .06em; user-select: all; }
+
+/* Cuenta antigua sin correo: hay que completarlo al editarla. */
+.us-falta { color: var(--warning-ink); font-weight: 600; }

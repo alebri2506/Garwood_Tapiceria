@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A6 Pedidos</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.srch{display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-muted);min-width:260px}
+.srch input{border:0;outline:0;background:transparent;font:500 14.5px/1 var(--font-sans);color:var(--ink);width:100%}
+.srch:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.vw{display:flex;padding:4px;gap:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line)}
+.vw button{display:flex;align-items:center;gap:6px;height:36px;padding:0 14px;border:0;border-radius:9px;background:transparent;color:var(--ink-muted);font:600 14px/1 var(--font-sans);cursor:pointer}
+.vw button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.st{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.st .ic{width:46px;height:46px;flex:none;border-radius:14px;display:grid;place-items:center}
+.st .v{font:800 28px/1 var(--font-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.st .l{font-size:13.5px;color:var(--ink-muted);margin-top:4px}
+.att{display:flex;flex-direction:column;gap:12px;padding:18px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.att h2{font-size:17px;display:flex;align-items:center;gap:10px}
+.att h2 em{font-style:normal;font-size:12.5px;font-weight:700;min-width:24px;height:24px;padding:0 8px;border-radius:9999px;display:grid;place-items:center;background:var(--danger-soft);color:var(--danger-ink)}
+.ai-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ai{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--surface-sunken);border:1px solid var(--line);text-decoration:none;color:var(--ink);transition:border-color 160ms var(--ease-out,ease),transform 160ms var(--ease-out,ease)}
+.ai .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center}
+.ai b{font-size:14px;display:block}
+.ai small{font-size:12.5px;color:var(--ink-muted);display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai .go{color:var(--ink-muted)}
+.danger .ic,.ic.danger{background:var(--danger-soft);color:var(--danger-ink)}
+.warn .ic,.ic.warn{background:var(--warning-soft);color:var(--warning-ink)}
+.info .ic,.ic.info{background:var(--primary-soft);color:var(--primary)}
+.ic.ok{background:var(--success-soft);color:var(--success-ink)}
+.flt{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.flt button{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border-radius:9999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.flt button i{font-style:normal;font-size:12px;color:var(--ink-muted)}
+.flt button.on{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.flt button.on i{color:inherit;opacity:.7}
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:18px;background:var(--surface-sunken);border:1px solid var(--line);min-height:220px}
+.col header{display:flex;flex-direction:column;gap:4px;padding:2px 2px 6px}
+.col header div{display:flex;align-items:center;gap:8px}
+.col header b{font:700 15.5px/1.2 var(--font-display)}
+.col header .dot{width:10px;height:10px;border-radius:50%}
+.col header .n{margin-left:auto;font-size:12.5px;font-weight:700;min-width:24px;height:24px;padding:0 8px;border-radius:9999px;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.col header small{font-size:12px;color:var(--ink-muted)}
+.kc{position:relative;display:flex;flex-direction:column;gap:10px;padding:14px 14px 14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);text-decoration:none;color:var(--ink);overflow:hidden;transition:border-color 160ms var(--ease-out,ease),box-shadow 160ms var(--ease-out,ease)}
+.kc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:transparent}
+.kc.danger::before{background:var(--error-500)}
+.kc.warn::before{background:var(--warning-500)}
+.kc .head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 8px}
+.kc .code{white-space:nowrap;font:700 12.5px/1 var(--font-sans);letter-spacing:.02em;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.kc .it{font:700 16px/1.25 var(--font-display);color:var(--ink)}
+.kc .cl{font-size:13.5px;color:var(--ink-muted);margin-top:-6px}
+.pg{display:flex;align-items:center;gap:10px}
+.pg .bar{flex:1;height:6px;border-radius:9999px;background:var(--primary-soft);overflow:hidden}
+.pg .bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--primary),var(--accent))}
+.pg .bar.pause i{background:var(--warning-500)}
+.pg .bar.full i{background:var(--success-500)}
+.pg span{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);min-width:34px;text-align:right}
+.ft{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--ink-muted)}
+.ft span{display:inline-flex;align-items:center;gap:5px}
+.flag{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:9px;font-size:12.5px;font-weight:600;line-height:1.3}
+.flag.danger{background:var(--danger-soft);color:var(--danger-ink)}
+.flag.warn{background:var(--warning-soft);color:var(--warning-ink)}
+.flag.info{background:var(--primary-soft);color:var(--primary)}
+.empty{display:grid;place-items:center;text-align:center;min-height:90px;border:1.5px dashed var(--line-strong);border-radius:14px;font-size:13px;color:var(--ink-muted);padding:12px}
+.note{font-size:13px;color:var(--ink-muted)}
+.lst td .it{font-weight:700}
+.lst td small{display:block;font-size:12.5px;color:var(--ink-muted)}
+.lst .pg{min-width:140px}
+.lst tr.danger td:first-child{box-shadow:inset 4px 0 0 var(--error-500)}
+.lst tr.warn td:first-child{box-shadow:inset 4px 0 0 var(--warning-500)}
+.lst a{color:var(--ink);text-decoration:none}
+/* Planning */
+.pl{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-sm);overflow-x:auto}
+.plg{display:grid;grid-template-columns:230px repeat(6,minmax(96px,1fr)) 128px;min-width:1000px}
+.plg > .h{padding:14px 10px 12px;border-bottom:1px solid var(--line);background:var(--surface-sunken);display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center}
+.plg > .h.l{align-items:flex-start;text-align:left;padding-left:16px}
+.plg > .h b{font:700 13.5px/1.2 var(--font-display)}
+.plg > .h small{font-size:11.5px;color:var(--ink-muted)}
+.plg > .h .ld{display:flex;gap:3px}
+.plg > .h .ld i{width:12px;height:6px;border-radius:3px;background:var(--line)}
+.plg > .h .ld i.on{background:var(--primary)}
+.plg > .h.hot{background:color-mix(in srgb,var(--warning-500) 12%,var(--surface))}
+.plg > .h.hot .ld i.on{background:var(--warning-500)}
+.plg > .r{padding:12px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;min-height:66px}
+.plg > .r.l{justify-content:flex-start;padding-left:16px;text-decoration:none;color:var(--ink);display:block}
+.plg > .r.l b{display:block;font-size:14px}
+.plg > .r.l small{display:block;font-size:12px;color:var(--ink-muted);margin-top:2px}
+.plg > .r.l em{font-style:normal;font-size:11.5px;font-weight:700;color:var(--ink-muted)}
+.cl::before{content:"";position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;background:var(--line)}
+.cl.first::before{left:50%}
+.cl.last::before{right:50%}
+.cl.done::before,.cl.cur::before{background:var(--success-500)}
+.cl.cur::before{right:50%}
+.cl.cur.first::before{display:none}
+.cl .nd{position:relative;z-index:1;width:14px;height:14px;border-radius:50%;background:var(--surface);border:2px solid var(--line-strong)}
+.cl.done .nd{background:var(--success-500);border-color:var(--success-500)}
+.cl .pin{position:relative;z-index:1;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:9999px;font:700 12px/28px var(--font-sans);white-space:nowrap;box-shadow:var(--shadow-sm)}
+.cl .pin i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.cl.cur .pin{background:var(--primary);color:#fff}
+.cl.pause .pin{background:var(--warning-soft,#FEF3C7);color:var(--warning-ink,#92400E);border:1px solid var(--warning-500)}
+.cl.block .pin{background:var(--danger-soft);color:var(--danger-ink);border:1px solid var(--error-500)}
+.cl.wait .pin{background:var(--surface-sunken);color:var(--ink-muted);border:1px dashed var(--line-strong);box-shadow:none}
+.ctl{flex-direction:column;gap:2px}
+.ctl b{font:800 15px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.ctl small{font-size:11.5px;color:var(--ink-muted)}
+.ctl.late b{color:var(--danger-ink)}
+.ctl.ok b{color:var(--success-ink)}
+.pvw{display:inline-flex;padding:4px;gap:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line)}
+.pvw button{height:34px;padding:0 14px;border:0;border-radius:9px;background:transparent;color:var(--ink-muted);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.pvw button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.tlw{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-sm);overflow-x:auto}
+.tlg{display:grid;grid-template-columns:220px minmax(780px,1fr) 104px;min-width:1100px}
+.tlg > .hc{padding:12px 10px;border-bottom:1px solid var(--line);background:var(--surface-sunken)}
+.tlg > .hc.l{padding-left:16px}
+.tlg > .hc b{display:block;font:700 13.5px/1.2 var(--font-display)}
+.tlg > .hc small{font-size:11.5px;color:var(--ink-muted)}
+.days{display:grid;grid-template-columns:repeat(12,minmax(0,1fr))}
+.days > span{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;border-bottom:1px solid var(--line);background:var(--surface-sunken);font-size:11px;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.04em}
+.days > span b{font:800 15px/1 var(--font-display);color:var(--ink);letter-spacing:0}
+.days > span.td{background:var(--primary);color:#fff}
+.days > span.td b{color:#fff}
+.days > span.wk{border-left:2px solid var(--line-strong)}
+.trow{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:1fr;align-items:center;border-bottom:1px solid var(--line);min-height:62px;position:relative}
+.trow > i{grid-row:1;align-self:stretch;border-left:1px dashed var(--line)}
+.trow > i.td{background:color-mix(in srgb,var(--primary) 7%,transparent);border-left:2px solid var(--primary)}
+.trow > i.wk{border-left:2px solid var(--line-strong)}
+.seg{grid-row:1;position:relative;z-index:1;height:30px;margin:0 2px;border-radius:8px;display:flex;align-items:center;gap:5px;padding:0 8px;font:700 11.5px/1 var(--font-sans);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:var(--shadow-sm)}
+.seg.pl{background:color-mix(in srgb,var(--c) 14%,var(--surface));color:var(--c);border:1.5px dashed var(--c);box-shadow:none}
+.seg.cur{outline:3px solid #0F172A;outline-offset:1px;opacity:1}
+.seg.done{opacity:.9}
+.seg.blk{background:repeating-linear-gradient(135deg,#DC2626 0 6px,#EF4444 6px 12px)!important}
+.seg.pau{background:repeating-linear-gradient(135deg,#D97706 0 6px,#F59E0B 6px 12px)!important}
+.seg.none{background:transparent!important;border:1.5px dashed var(--line-strong);color:var(--ink-muted);box-shadow:none}
+.s0{--c:#64748B;background:var(--c)}.s1{--c:#8B5CF6;background:var(--c)}.s2{--c:#0EA5E9;background:var(--c)}.s3{--c:#2563EB;background:var(--c)}.s4{--c:#10B981;background:var(--c)}.s5{--c:#D97706;background:var(--c)}
+.tlg > .rl{padding:10px 10px 10px 16px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink);display:flex;flex-direction:column;justify-content:center;gap:2px}
+.tlg > .rl em{font-style:normal;font-size:11.5px;font-weight:700;color:var(--ink-muted)}
+.tlg > .rl b{font-size:14px}
+.tlg > .rl small{font-size:12px;color:var(--ink-muted)}
+.tlg > .rl small.late{color:var(--danger-ink);font-weight:700}
+.tlg > .rc{border-bottom:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}
+.tlg > .rc b{font:800 14px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.tlg > .rc small{font-size:11px;color:var(--ink-muted)}
+.tlg > .rc.late b{color:var(--danger-ink)}
+.tlg > .rc.ok b{color:var(--success-ink)}
+.ldt{display:grid;grid-template-columns:220px minmax(780px,1fr) 104px;min-width:1100px;background:var(--surface-sunken)}
+.ldt > .lh{padding:10px 10px 10px 16px;font:700 12.5px/1.3 var(--font-sans);display:flex;align-items:center;gap:8px;border-top:1px solid var(--line)}
+.ldt > .lh i{width:12px;height:12px;border-radius:4px}
+.ldr{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));border-top:1px solid var(--line)}
+.ldr > span{display:grid;place-items:center;height:36px;font:700 12.5px/1 var(--font-sans);font-variant-numeric:tabular-nums;color:var(--ink-muted)}
+.ldr > span.l1{color:var(--ink)}
+.ldr > span.l2{background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}
+.ldr > span.l3{background:color-mix(in srgb,var(--warning-500) 25%,transparent);color:var(--warning-ink,#92400E)}
+.ldr > span.td{box-shadow:inset 2px 0 0 var(--primary),inset -2px 0 0 var(--primary)}
+.ldt > .le{border-top:1px solid var(--line)}
+.ldcap{padding:12px 16px;font-size:12.5px;color:var(--ink-muted);border-top:1px solid var(--line);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.ldcap span{display:inline-flex;align-items:center;gap:6px}
+.ldcap i{width:12px;height:12px;border-radius:4px}
+.plan-ins{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:1100px){.plan-ins{grid-template-columns:1fr}}
+.pi{display:flex;gap:12px;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.pi .ic{width:38px;height:38px;flex:none;border-radius:11px;display:grid;place-items:center}
+.pi b{display:block;font-size:14px}
+.pi small{display:block;font-size:12.5px;color:var(--ink-muted);line-height:1.45;margin-top:2px}
+.lgd{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-muted);padding:10px 16px}
+.lgd span{display:inline-flex;align-items:center;gap:6px}
+.lgd i{width:12px;height:12px;border-radius:50%}
+@media (hover:hover){.plg > .r.l:hover b{color:var(--primary)}}
+@media (hover:hover){.kc:hover,.ai:hover{border-color:var(--primary);box-shadow:var(--shadow-md)}.ai:hover .go{color:var(--primary)}}
+@media (max-width:1200px){.board{grid-template-columns:repeat(2,minmax(0,1fr))}.ai-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sum{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav on" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+    <main class="main">
+    <div class="top">
+      <div><div class="crumb">Comercial › Pedidos · mar 13 oct</div><h1>Pedidos</h1></div>
+      <div class="tools">
+        <label class="srch"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 18 }}"></x-import><input type="search" placeholder="Buscar pedido o cliente" aria-label="Buscar pedido o cliente" value="{{q}}" onInput="{{onQ}}"></label>
+        <div class="vw" role="group" aria-label="Vista"><button class="{{vPlan}}" aria-pressed="{{isPlan}}" onClick="{{toPlan}}"><x-import component-from-global-scope="Garweb.Icon" name="sliders" size="{{ 18 }}"></x-import>Planning</button><button class="{{vList}}" aria-pressed="{{isList}}" onClick="{{toList}}"><x-import component-from-global-scope="Garweb.Icon" name="clipboard" size="{{ 18 }}"></x-import>Lista</button></div>
+      </div>
+    </div>
+    <div class="sum">
+      <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+        <div class="st"><span class="{{s.cls}}"><x-import component-from-global-scope="Garweb.Icon" name="{{s.icon}}" size="{{ 22 }}"></x-import></span><div><div class="v">{{s.v}}</div><div class="l">{{s.l}}</div></div></div>
+      </sc-for>
+    </div>
+    <section class="att" aria-label="Pedidos que necesitan atención">
+      <div class="between"><h2>Necesitan tu atención <em>{{nAtt}}</em></h2><span class="note">Ordenados por urgencia · toque para resolver</span></div>
+      <div class="ai-grid">
+        <sc-for list="{{att}}" as="a" hint-placeholder-count="6">
+          <a class="{{a.cls}}" href="{{a.href}}"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="{{a.icon}}" size="{{ 18 }}"></x-import></span><div style="min-width: 0"><b>{{a.title}}</b><small>{{a.text}}</small></div><span class="go"><x-import component-from-global-scope="Garweb.Icon" name="arrow-right" size="{{ 18 }}"></x-import></span></a>
+        </sc-for>
+      </div>
+    </section>
+    <div class="between">
+      <div class="flt" role="group" aria-label="Filtrar pedidos">
+        <sc-for list="{{filters}}" as="f" hint-placeholder-count="4"><button class="{{f.cls}}" aria-pressed="{{f.on}}" onClick="{{f.pick}}">{{f.label}} <i>{{f.n}}</i></button></sc-for>
+      </div>
+      <span class="note">Sin responsable único: todo el equipo de producción ve cada orden. Los cerrados están en Historial.</span>
+    </div>
+    <sc-if value="{{isPlan}}" hint-placeholder-val="{{ true }}">
+      <div class="between" style="flex-wrap: wrap"><div class="pvw" role="group" aria-label="Forma del planning"><sc-for list="{{pvs}}" as="v" hint-placeholder-count="2"><button class="{{v.cls}}" aria-pressed="{{v.on}}" onClick="{{v.pick}}">{{v.label}}</button></sc-for></div><span class="note">Semana laboral de lunes a sábado · domingo cerrado</span></div>
+      <div class="plan-ins"><sc-for list="{{ins}}" as="n" hint-placeholder-count="3"><div class="pi"><span class="{{n.cls}}"><x-import component-from-global-scope="Garweb.Icon" name="{{n.icon}}" size="{{ 18 }}"></x-import></span><div><b>{{n.t}}</b><small>{{n.d}}</small></div></div></sc-for></div>
+      <sc-if value="{{pvTime}}" hint-placeholder-val="{{ true }}">
+      <div class="tlw">
+        <div class="tlg">
+          <div class="hc l"><b>Pedido</b><small>Fecha objetivo</small></div>
+          <div class="days"><sc-for list="{{tdays}}" as="d" hint-placeholder-count="12"><span class="{{d.cls}}">{{d.w}}<b>{{d.n}}</b></span></sc-for></div>
+          <div class="hc" style="text-align: center"><b>Control</b><small>reales / plan</small></div>
+          <sc-for list="{{trows}}" as="r" hint-placeholder-count="8">
+            <a class="rl" href="{{r.href}}"><em>{{r.code}}</em><b>{{r.item}}</b><small class="{{r.subCls}}">{{r.sub}}</small></a>
+            <div class="trow"><sc-for list="{{r.bg}}" as="g" hint-placeholder-count="12"><i class="{{g.cls}}" style="{{g.st}}"></i></sc-for><sc-for list="{{r.segs}}" as="g" hint-placeholder-count="4"><span class="{{g.cls}}" style="{{g.st}}" title="{{g.tip}}">{{g.txt}}</span></sc-for></div>
+            <div class="{{r.ctlCls}}"><b>{{r.ctl}}</b><small>{{r.ctlSub}}</small></div>
+          </sc-for>
+        </div>
+        <div class="ldcap"><span><i class="s0"></i>Revisión inicial</span><span><i class="s1"></i>Desarmar</span><span><i class="s2"></i>Cortar</span><span><i class="s3"></i>Coser</span><span><i class="s4"></i>Tapizar y armar</span><span><i class="s5"></i>Acabado</span><span>Relleno = hecho o en curso (con borde = hoy) · punteado = planificado  · rayado rojo = bloqueado · rayado ámbar = detenido</span></div>
+      </div>
+      </sc-if>
+      <sc-if value="{{pvStage}}" hint-placeholder-val="{{ false }}">
+      <div class="pl">
+        <div class="plg">
+          <div class="h l"><b>Pedido</b><small>Fecha objetivo</small></div>
+          <sc-for list="{{stages}}" as="g" hint-placeholder-count="6"><div class="{{g.cls}}"><b>{{g.name}}</b><span class="ld"><sc-for list="{{g.load}}" as="x" hint-placeholder-count="4"><i class="{{x}}"></i></sc-for></span><small>{{g.n}}</small></div></sc-for>
+          <div class="h"><b>Control</b><small>Días reales / plan</small></div>
+          <sc-for list="{{plan}}" as="r" hint-placeholder-count="8">
+            <a class="r l" href="A6b-FichaPedido.dc.html"><em>{{r.code}}</em><b>{{r.item}}</b><small>{{r.client}} · {{r.date}}</small></a>
+            <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="6"><div class="{{c.cls}}"><sc-if value="{{c.node}}" hint-placeholder-val="{{ true }}"><span class="nd"></span></sc-if><sc-if value="{{c.isPin}}" hint-placeholder-val="{{ false }}"><span class="pin"><i></i>{{c.txt}}</span></sc-if></div></sc-for>
+            <div class="{{r.ctlCls}}"><b>{{r.ctl}}</b><small>{{r.ctlSub}}</small></div>
+          </sc-for>
+        </div>
+        <div class="lgd"><span><i style="background: var(--success-500)"></i>Etapa hecha</span><span><i style="background: var(--primary)"></i>Etapa actual</span><span><i style="background: var(--warning-500)"></i>En pausa</span><span><i style="background: var(--error-500)"></i>Bloqueado</span><span>Cada fila es un pedido; cada columna, una etapa del trabajo. Lo marca el equipo del taller desde su celular.</span></div>
+      </div>
+      </sc-if>
+    </sc-if>
+    <sc-if value="{{isList}}" hint-placeholder-val="{{ false }}">
+      <div class="tbl-box">
+        <table class="t lst">
+          <thead><tr><th>Pedido</th><th>Mueble y cliente</th><th>Estado</th><th>Avance</th><th>Fecha objetivo</th><th>Traslado</th><th>Alerta</th></tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="k" hint-placeholder-count="8">
+              <tr class="{{k.tone}}"><td class="num"><a href="A6b-FichaPedido.dc.html"><b>{{k.code}}</b></a></td><td><span class="it">{{k.item}}</span><small>{{k.client}}</small></td><td><x-import component-from-global-scope="Garweb.StatusChip" status="{{k.status}}"></x-import></td><td><div class="pg"><div class="{{k.barCls}}"><i style="width: {{k.pct}}"></i></div><span>{{k.pct}}</span></div></td><td class="num">{{k.date}}</td><td>{{k.tras}}</td><td><sc-if value="{{k.flag}}" hint-placeholder-val="{{ false }}"><span class="{{k.flagCls}}">{{k.flag}}</span></sc-if></td></tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"vista":{"editor":"enum","options":["planning","lista"],"default":"planning"},"$preview":{"width":1440,"height":1960}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { f: 0, view: null, q: '', pv: 'time' }; }
+  renderVals() {
+    const s = this.state;
+    // fase, código, mueble, cliente, estado, avance, fecha objetivo, traslado, alerta, tono de alerta
+    const P = (ph, code, item, client, status, pct, date, tras, flag, tone) => ({ ph, code, item, client, status, pctN: pct, pct: pct + '%', date, tras, flag: flag || '', tone: tone || '' });
+    const all = [
+      P(0, 'PED-0080', 'Banqueta', 'Daniel Cruz', 'Listo para producir', 30, 'vie 9 oct', 'Entrega', 'Atrasado 4 días · no empezó', 'danger'),
+      P(0, 'PED-0082', '6 sillas de comedor', 'Priya Shah', 'Esperando material', 10, 'vie 16 oct', 'Retiro', 'Faltan plumas 2 kg', 'danger'),
+      P(0, 'PED-0084', '12 sillas', 'Hotel Willow', 'Listo para producir', 20, 'por definir', 'Entrega', 'Falta planificar', 'info'),
+      P(0, 'PED-0083', 'Puff', 'Ana Ruiz', 'Esperando mueble', 10, 'por definir', 'Entrega', 'Recojo jue 15 oct', 'info'),
+      P(0, 'PED-0085', 'Cabecera', 'Grace Lin', 'Generado', 5, 'por definir', 'Retiro'),
+      P(1, 'PED-0077', 'Sillón Berger', 'Robert King', 'En pausa', 40, 'mié 14 oct', 'Retiro', 'Recotización · orden anulada en la revisión', 'warn'),
+      P(1, 'PED-0076', 'Sofá 3 cuerpos', 'Laura Méndez', 'En producción', 60, 'vie 16 oct', 'Entrega', 'Consumo adicional: +1 plancha', 'info'),
+      P(1, 'PED-0081', 'Sofá + 3 cojines', 'J. Ortega', 'En producción', 75, 'jue 15 oct', 'Entrega'),
+      P(2, 'PED-0079', 'Mesa de centro tapizada', 'Emily Stone', 'Terminado', 100, 'terminó lun 5 oct', 'Entrega', 'Espera salida hace 8 días', 'warn'),
+      P(2, 'PED-0078', 'Silla escritorio', 'Daniel Cruz', 'Listo para retiro', 100, 'retiro hoy 15:00', 'Retiro'),
+      P(3, 'PED-0072', 'Cabecera', 'Hotel Willow', 'Entregado con saldo', 100, 'entregó lun 5 oct', 'Entrega', 'Debe $380 · vence vie 30 oct', 'warn'),
+      P(3, 'PED-0075', 'Loveseat', 'Sara Cohen', 'Entregado', 100, 'entregó jue 8 oct', 'Entrega', 'Pagado · listo para cerrar', 'info')
+    ];
+    const deco = k => ({ ...k,
+      cls: 'kc' + (k.tone === 'danger' || k.tone === 'warn' ? ' ' + k.tone : ''),
+      flagCls: 'flag ' + (k.tone || 'info'),
+      barCls: 'bar' + (k.status === 'En pausa' ? ' pause' : k.pctN === 100 ? ' full' : ''),
+      tIcon: k.tras === 'Retiro' ? 'sofa' : 'truck' });
+    const F = [['Todos', () => true], ['Con alerta', k => k.tone === 'danger' || k.tone === 'warn'], ['Entrega', k => k.tras === 'Entrega'], ['Retiro', k => k.tras === 'Retiro']];
+    const q = s.q.trim().toLowerCase();
+    const match = k => !q || (k.code + ' ' + k.client + ' ' + k.item).toLowerCase().indexOf(q) >= 0;
+    const vis = all.filter(F[s.f][1]).filter(match).map(deco);
+    const phases = [
+      ['Por iniciar', 'Generado · esperando mueble o material · listo para producir', 'var(--sky-400, #38BDF8)'],
+      ['En taller', 'En producción ⇄ en pausa', 'var(--primary)'],
+      ['Para despacho', 'Terminado · en reparto · listo para retiro', 'var(--warning-500)'],
+      ['Entregados', 'Pendientes de cobro o de cierre', 'var(--success-500)']
+    ];
+    const view = s.view || (this.props.vista === 'lista' ? 'lista' : 'planning');
+    const ST = ['Revisión inicial', 'Desarmar', 'Cortar', 'Coser', 'Tapizar y armar', 'Acabado'];
+    // código, mueble, cliente, fecha, etapa actual (-1 = no empezó, 6 = terminado), tipo de marca, texto, días reales, días plan, nota
+    const PL = [
+      ['PED-0085', 'Cabecera', 'Grace Lin', 'obj. mar 20 oct', 0, 'cur', 'Revisando', 0, 4, 'recién recibido'],
+      ['PED-0077', 'Sillón Berger', 'Robert King', 'obj. mié 14 oct', 0, 'pause', 'Recotización', 2, 5, 'espera respuesta'],
+      ['PED-0082', '6 sillas de comedor', 'Priya Shah', 'obj. vie 16 oct', 2, 'block', 'Falta material', 2, 6, 'plumas 2 kg'],
+      ['PED-0076', 'Sofá 3 cuerpos', 'Laura Méndez', 'obj. vie 16 oct', 3, 'cur', 'Coser · día 2', 4, 6, 'a tiempo'],
+      ['PED-0081', 'Sofá + 3 cojines', 'J. Ortega', 'obj. jue 15 oct', 3, 'cur', 'Coser · día 3', 6, 5, '1 día más'],
+      ['PED-0086', 'Butaca', 'Carla Ortiz', 'obj. lun 19 oct', 4, 'cur', 'Tapizar', 3, 4, 'a tiempo'],
+      ['PED-0080', 'Banqueta', 'Daniel Cruz', 'obj. vie 9 oct', -1, 'wait', 'No empezó', 0, 3, 'atrasado 4 días'],
+      ['PED-0084', '12 sillas', 'Hotel Willow', 'por planificar', -1, 'wait', 'Por planificar', 0, 0, 'sin fecha'],
+      ['PED-0079', 'Mesa de centro', 'Emily Stone', 'terminó lun 5 oct', 6, '', '', 5, 5, 'en plazo']
+    ];
+    const inStage = i => PL.filter(r => r[4] === i).length;
+    // Línea de tiempo: lun 12 a sáb 24 oct (domingo cerrado). Hoy = mar 13 (índice 1).
+    const TD = [['lun', 12], ['mar', 13], ['mié', 14], ['jue', 15], ['vie', 16], ['sáb', 17], ['lun', 19], ['mar', 20], ['mié', 21], ['jue', 22], ['vie', 23], ['sáb', 24]], HOY = 1;
+    // [código, mueble, cliente, objetivo, enlace, días reales, plan, nota, [[etapa, inicio, días, marca]]]  marca: b = bloqueado, p = detenido
+    const TL = [
+      ['PED-0076', 'Sofá 3 cuerpos', 'Laura Méndez', 'obj. vie 16', 'A6b-FichaPedido.dc.html', 4, 6, 'a tiempo', [[3, 0, 2], [4, 2, 2], [5, 4, 1]]],
+      ['PED-0081', 'Sofá + 3 cojines', 'J. Ortega', 'obj. jue 15', 'A6b-FichaPedido.dc.html', 6, 5, '1 día más', [[3, 0, 2], [4, 2, 1], [5, 3, 1]]],
+      ['PED-0086', 'Butaca', 'Carla Ortiz', 'obj. lun 19', 'A6b-FichaPedido.dc.html', 3, 4, 'a tiempo', [[4, 1, 2], [5, 3, 1]]],
+      ['PED-0085', 'Cabecera', 'Grace Lin', 'obj. mar 20', 'A18-Taller.dc.html', 0, 6, 'recién recibido', [[0, 1, 1], [1, 2, 1], [2, 3, 1], [3, 4, 1], [4, 5, 1], [5, 6, 1]]],
+      ['PED-0082', '6 sillas de comedor', 'Priya Shah', 'obj. vie 16', 'A8-Inventario.dc.html?pestana=qué pedir', 2, 6, 'falta plumas 2 kg', [[2, 1, 2, 'b'], [3, 3, 2], [4, 5, 2], [5, 7, 1]]],
+      ['PED-0077', 'Sillón Berger', 'Robert King', 'obj. mié 14', 'A4-Cotizar.dc.html?modo=v2', 2, 5, 'recotización', [[0, 0, 4, 'p']]],
+      ['PED-0080', 'Banqueta', 'Daniel Cruz', 'debía vie 9', 'A7-Planificar.dc.html', 0, 3, 'atrasado 4 días', [[1, 2, 1], [2, 3, 1], [3, 4, 1], [4, 5, 1], [5, 6, 1]]],
+      ['PED-0084', '12 sillas', 'Hotel Willow', 'sin fecha', 'A7-Planificar.dc.html', 0, 0, 'sin planificar', []]
+    ];
+    const NS = ['Revisión', 'Desarmar', 'Cortar', 'Coser', 'Tapizar', 'Acabado'];
+    const load = ST.map(() => TD.map(() => 0));
+    TL.forEach(r => r[8].forEach(g => { if (g[3] === 'p') return; for (let d = g[1]; d < g[1] + g[2]; d++) load[g[0]][d]++; }));
+    const tomorrow = HOY + 1;
+    let hot = 0; ST.forEach((n, i) => { if (load[i][tomorrow] > load[hot][tomorrow]) hot = i; });
+    const freeTomorrow = ST.filter((n, i) => load[i][tomorrow] === 0);
+    const ic = c => 'ic ' + c;
+    return {
+      tema: this.props.tema ?? 'light',
+      q: s.q, onQ: e => this.setState({ q: e.target.value }),
+      isPlan: view === 'planning', isBoard: view === 'tablero', isList: view === 'lista',
+      vPlan: view === 'planning' ? 'on' : '', vBoard: view === 'tablero' ? 'on' : '', vList: view === 'lista' ? 'on' : '',
+      toPlan: () => this.setState({ view: 'planning' }),
+      pvs: [['Línea de tiempo', 'time'], ['Por etapa', 'stage']].map(v => ({ label: v[0], on: s.pv === v[1], cls: s.pv === v[1] ? 'on' : '', pick: () => this.setState({ pv: v[1] }) })),
+      pvTime: s.pv === 'time', pvStage: s.pv === 'stage',
+      ins: [
+        { cls: 'ic warn', icon: 'alert', t: 'Mañana mié 14: ' + load[hot][tomorrow] + ' pedidos en ' + ST[hot], d: 'Es la etapa más cargada de mañana. Conviene mover a quien hoy corta o desarma para apoyar en ' + ST[hot].toLowerCase() + '.' },
+        { cls: 'ic danger', icon: 'clock', t: '2 pedidos van más lentos que lo planificado', d: 'PED-0080 debía terminar el vie 9 y no empezó. PED-0081 lleva 6 días de 5 planificados.' },
+        { cls: 'ic info', icon: 'check', t: 'Libres mañana: ' + freeTomorrow.join(', '), d: 'Buen momento para empezar PED-0084 (12 sillas) apenas se planifique.' }
+      ],
+      tdays: TD.map((d, i) => ({ w: d[0], n: String(d[1]), cls: (i === HOY ? 'td' : '') + (i === 6 ? ' wk' : '') })),
+      trows: TL.filter(r => match({ code: r[0], client: r[2], item: r[1] })).map(r => {
+        const late = r[6] > 0 && (r[5] > r[6] || r[7].indexOf('atrasado') >= 0);
+        const segs = r[8].map(g => {
+          const end = g[1] + g[2] - 1;
+          const st = g[3] === 'b' ? 'blk' : g[3] === 'p' ? 'pau' : end < HOY ? 'done' : g[1] <= HOY ? 'cur' : 'pl';
+          const txt = g[3] === 'b' ? 'Falta material' : g[3] === 'p' ? 'Recotización · detenido' : NS[g[0]];
+          return { cls: 'seg s' + g[0] + ' ' + st, st: 'grid-column: ' + (g[1] + 1) + ' / span ' + g[2], txt, tip: ST[g[0]] + ' · ' + TD[g[1]][0] + ' ' + TD[g[1]][1] + (g[2] > 1 ? ' a ' + TD[end][0] + ' ' + TD[end][1] : '') };
+        });
+        if (!r[8].length) segs.push({ cls: 'seg none', st: 'grid-column: 2 / span 5', txt: 'Sin planificar · toque para planificar', tip: '' });
+        return { code: r[0], item: r[1], sub: r[2] + ' · ' + r[3], subCls: r[3].indexOf('debía') >= 0 ? 'late' : '', href: r[4],
+          bg: TD.map((d, i) => ({ cls: (i === HOY ? 'td' : '') + (i === 6 ? ' wk' : ''), st: 'grid-column: ' + (i + 1) })), segs,
+          ctl: r[6] ? r[5] + ' / ' + r[6] + ' d' : '—', ctlSub: r[7], ctlCls: 'rc' + (late ? ' late' : r[6] ? ' ok' : '') };
+      }),
+      loads: ST.map((n, i) => ({ name: n, sw: 's' + i, cells: load[i].map((v, d) => ({ v: v ? String(v) : '·', cls: (v >= 3 ? 'l3' : v === 2 ? 'l2' : v ? 'l1' : '') + (d === HOY ? ' td' : '') })) })),
+      stages: ST.map((n, i) => { const c = inStage(i); return { name: n, n: c === 0 ? 'libre' : c === 1 ? '1 pedido' : c + ' pedidos', cls: 'h' + (c >= 2 ? ' hot' : ''), load: [0, 1, 2, 3].map(k => k < c ? 'on' : '') }; }),
+      plan: PL.filter(r => match({ code: r[0], client: r[2], item: r[1] })).map(r => {
+        const cur = r[4];
+        const cells = ST.map((n, i) => { const first = i === 0 ? ' first' : '', last = i === ST.length - 1 ? ' last' : '';
+          if (cur === 6 || i < cur) return { cls: 'r cl done' + first + last, node: true, isPin: false, txt: '' };
+          if (i === cur) return { cls: 'r cl ' + r[5] + first + last, node: false, isPin: true, txt: r[6] };
+          if (cur === -1 && i === 0) return { cls: 'r cl wait' + first + last, node: false, isPin: true, txt: r[6] };
+          return { cls: 'r cl' + first + last, node: true, isPin: false, txt: '' }; });
+        const late = r[8] > 0 && (r[7] > r[8] || r[9].indexOf('atrasado') >= 0);
+        return { code: r[0], item: r[1], client: r[2], date: r[3], cells,
+          ctl: r[8] ? r[7] + ' / ' + r[8] + ' d' : '—', ctlSub: r[9], ctlCls: 'r ctl' + (late ? ' late' : r[8] ? ' ok' : '') };
+      }),
+      toList: () => this.setState({ view: 'lista' }),
+      stats: [
+        { v: '12', l: 'Pedidos activos', icon: 'kanban', cls: ic('info') },
+        { v: '3', l: 'En taller ahora', icon: 'sofa', cls: ic('info') },
+        { v: '2', l: 'Para despacho', icon: 'truck', cls: ic('warn') },
+        { v: '$380', l: 'Saldo por cobrar', icon: 'payment', cls: ic('ok') }
+      ],
+      nAtt: '6',
+      att: [
+        { cls: 'ai danger', icon: 'clock', title: 'PED-0080 atrasado 4 días', text: 'Banqueta · Daniel Cruz · reprogramar fecha', href: 'A7-Planificar.dc.html' },
+        { cls: 'ai danger', icon: 'cart', title: 'PED-0082 sin material', text: 'Faltan plumas 2 kg · pedido, llega mié 14', href: 'A8-Inventario.dc.html?pestana=qué pedir' },
+        { cls: 'ai warn', icon: 'truck', title: 'PED-0079 espera salida', text: 'Terminado hace 8 días · aviso a los 7', href: 'A13-Salida.dc.html' },
+        { cls: 'ai warn', icon: 'alert', title: 'PED-0077 en recotización', text: 'Orden anulada en la revisión · espera al cliente', href: 'A4-Cotizar.dc.html?modo=v2' },
+        { cls: 'ai warn', icon: 'payment', title: 'PED-0072 con saldo $380', text: 'Hotel Willow · vence vie 30 oct', href: 'A5-Pagos.dc.html' },
+        { cls: 'ai info', icon: 'calendar', title: 'PED-0084 listo para producir', text: '12 sillas · Hotel Willow · planificar', href: 'A7-Planificar.dc.html' }
+      ],
+      filters: F.map((f, i) => ({ label: f[0], n: String(all.filter(f[1]).length), on: s.f === i, cls: s.f === i ? 'on' : '', pick: () => this.setState({ f: i }) })),
+      cols: phases.map((p, i) => { const cards = vis.filter(k => k.ph === i); return { title: p[0], sub: p[1], color: p[2], n: String(cards.length), cards, empty: cards.length === 0 }; }),
+      rows: vis
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A15 Catálogo de materiales y telas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.sbox{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);position:relative;z-index:6}
+.sq{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:10px;background:var(--surface-sunken);color:var(--ink-muted);flex:1 1 260px;max-width:360px}
+.sq input{flex:1;border:0;outline:none;background:transparent;font:500 14.5px/1 var(--font-sans);color:var(--ink);min-width:0}
+.dd{position:relative;display:inline-flex;align-items:center}
+.ddb{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px 0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink-muted);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.ddb b{color:var(--ink);font-weight:700}
+.ddb.open{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);color:var(--ink)}
+.ddb.on{background:var(--primary-soft);border-color:transparent;color:var(--primary);padding-right:34px}
+.ddb.on b{color:var(--primary)}
+.ddx{position:absolute;right:6px;width:22px;height:22px;border-radius:6px;border:0;background:transparent;color:var(--primary);display:grid;place-items:center;cursor:pointer}
+.pop{position:absolute;top:calc(100% + 6px);left:0;min-width:220px;padding:6px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:0 12px 32px #0A163033;display:flex;flex-direction:column;gap:2px;z-index:8}
+.opt{display:flex;align-items:center;gap:10px;min-height:38px;padding:0 10px;border-radius:9px;border:0;background:transparent;font:500 14px/1 var(--font-sans);color:var(--ink);cursor:pointer;text-align:left}
+.opt:hover{background:var(--surface-sunken)}
+.opt .ol{flex:1}
+.opt small{font-size:12px;color:var(--ink-muted)}
+.opt .rd{width:16px;height:16px;border-radius:50%;border:2px solid var(--line-strong);flex:none}
+.opt.on{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.opt.on .rd{border:5px solid var(--primary)}
+.tgl{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font:600 13.5px/1 var(--font-sans);color:var(--ink-muted);cursor:pointer}
+.tgl i{min-width:20px;height:20px;padding:0 6px;border-radius:9999px;background:var(--warning-soft);color:var(--warning-ink);font-style:normal;font-size:12px;display:grid;place-items:center}
+.tgl.on{background:var(--warning-soft);border-color:transparent;color:var(--warning-ink)}
+.lk{border:0;background:none;padding:0 6px;color:var(--primary);font:600 13px/1 var(--font-sans);cursor:pointer}
+.cnt2{margin-left:auto;font-size:13.5px;color:var(--ink-muted)}
+.ovl{position:fixed;inset:0;z-index:5}
+.tw{border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);overflow:hidden}
+table.ct{width:100%;border-collapse:collapse;font-size:14px}
+.ct th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);font-weight:700;padding:12px 16px;background:var(--surface-sunken);border-bottom:1px solid var(--line);white-space:nowrap}
+.ct td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+.ct tr:last-child td{border-bottom:0}
+.ct tbody tr{cursor:pointer}
+.ct tbody tr:hover td{background:var(--surface-sunken)}
+.ct tr.sel td{background:var(--primary-soft)}
+.ct tr.off td{color:var(--ink-muted)}
+.ct tr.off .nm b{color:var(--ink-muted);text-decoration:line-through;text-decoration-color:var(--line-strong)}
+.ct .r{text-align:right}
+.ct td.muted{white-space:nowrap}
+.nm{display:flex;align-items:center;gap:10px}
+.nm span{display:flex;flex-direction:column;gap:3px}
+.nm b{font-weight:600;white-space:nowrap}
+.tp{display:inline-flex;align-self:flex-start;height:20px;padding:0 8px;border-radius:9999px;font-size:11px;font-weight:700;background:var(--surface-sunken);color:var(--ink-muted);white-space:nowrap}
+.tp.p{background:#EEF2FF;color:#4338CA}
+.sw{width:28px;height:28px;border-radius:8px;border:1px solid #0000001a;flex:none}
+.dsp{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dsp i{width:8px;height:8px;border-radius:50%}
+.pr{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.pr b{font-variant-numeric:tabular-nums}
+.pr small{font-size:12px;color:var(--ink-muted);white-space:nowrap}
+.rvw{display:inline-flex;height:20px;padding:0 8px;border-radius:9999px;background:var(--warning-soft);color:var(--warning-ink);font-size:11px;font-weight:700;align-items:center;white-space:nowrap}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;white-space:nowrap}
+.st i{width:8px;height:8px;border-radius:50%;background:var(--success-500)}
+.st.off i{background:var(--line-strong)}
+.vis{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;white-space:nowrap}
+.sx{width:36px;height:20px;border-radius:9999px;background:var(--line-strong);position:relative;flex:none}
+.sx::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.sx.on{background:var(--success-500)}
+.sx.on::after{left:18px}
+.foot{font-size:12.5px;color:var(--ink-muted);margin-top:-6px}
+.dim{position:fixed;inset:0;background:#0A163059;z-index:20}
+.drw{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);background:var(--surface);z-index:21;display:flex;flex-direction:column;box-shadow:-16px 0 40px #0A163040;animation:sl .2s ease}
+@keyframes sl{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+.dh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:22px 24px 16px;border-bottom:1px solid var(--line)}
+.xb{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;flex:none}
+.db{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+.fl{display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600}
+.fl input{height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 15px/1 var(--font-sans)}
+.fl input:focus{outline:none;border-color:var(--primary);box-shadow:var(--focus-ring)}
+.fl small{font-weight:500;font-size:12px;color:var(--ink-muted)}
+.f2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.f2 > *{min-width:0}
+.fl input{width:100%;box-sizing:border-box}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{display:flex;flex-direction:column;gap:3px;padding:10px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);text-align:left;font:600 13.5px/1.2 var(--font-sans);color:var(--ink);cursor:pointer}
+.seg button small{font-weight:500;font-size:11.5px;color:var(--ink-muted)}
+.seg button.on{border-color:var(--primary);background:var(--primary-soft)}
+.box{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:12px;background:var(--surface-sunken)}
+.hp{display:flex;justify-content:space-between;font-size:13.5px;padding:4px 0}
+.hp span:first-child{color:var(--ink-muted)}
+.df{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 24px;border-top:1px solid var(--line)}
+.vrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);cursor:pointer;background:var(--surface);font:inherit;color:var(--ink);text-align:left;width:100%}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav on" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Almacén e Inventario › Catálogo</div><h1>Catálogo de materiales</h1></div>
+      <div class="row"><x-import component-from-global-scope="Garweb.Tabs" items="{{tabs}}" active="{{tab}}" on-change="{{setTab}}"></x-import><button class="gw-btn gw-btn-primary" onClick="{{openNew}}">{{newLbl}}</button></div>
+    </div>
+    <sc-if value="{{created}}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="Garweb.Toast" tone="success" title="{{createdT}}">{{createdB}}</x-import>
+    </sc-if>
+    <div class="sbox">
+      <label class="sq"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 18 }}"></x-import><input type="search" value="{{q}}" placeholder="{{qPh}}" aria-label="Buscar" onInput="{{onQ}}"></label>
+      <sc-for list="{{dds}}" as="g" hint-placeholder-count="3">
+        <div class="dd">
+          <button class="{{g.btnCls}}" onClick="{{g.toggle}}"><span>{{g.lbl}}</span><sc-if value="{{g.on}}" hint-placeholder-val="{{ false }}"><b>{{g.val}}</b></sc-if><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          <sc-if value="{{g.on}}" hint-placeholder-val="{{ false }}"><button class="ddx" aria-label="Quitar filtro" onClick="{{g.rm}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 14 }}"></x-import></button></sc-if>
+          <sc-if value="{{g.open}}" hint-placeholder-val="{{ false }}"><div class="pop"><sc-for list="{{g.opts}}" as="o" hint-placeholder-count="3"><button class="{{o.cls}}" onClick="{{o.pick}}"><span class="rd"></span><span class="ol">{{o.l}}</span><small>{{o.n}}</small></button></sc-for></div></sc-if>
+        </div>
+      </sc-for>
+      <button class="{{rvCls}}" onClick="{{toggleRv}}">Precio por revisar <i>{{nRv}}</i></button>
+      <sc-if value="{{anyF}}" hint-placeholder-val="{{ false }}"><button class="lk" onClick="{{clear}}">Limpiar</button></sc-if>
+      <span class="cnt2"><b>{{nRes}}</b> {{resW}}</span>
+    </div>
+    <sc-if value="{{anyPop}}" hint-placeholder-val="{{ false }}"><div class="ovl" onClick="{{closePop}}"></div></sc-if>
+
+    <sc-if value="{{t0}}" hint-placeholder-val="{{ true }}">
+    <div class="tw"><table class="ct">
+      <thead><tr><th>Material</th><th>Unidad</th><th class="r">Mínimo</th><th>Disponible</th><th>Proveedor</th><th class="r">Precio</th><th>Estado</th></tr></thead>
+      <tbody><sc-for list="{{rows}}" as="m" hint-placeholder-count="8">
+        <tr class="{{m.cls}}" onClick="{{m.open}}">
+          <td><div class="nm"><span><b>{{m.n}}</b><span class="{{m.tpCls}}">{{m.tp}}</span></span></div></td>
+          <td>{{m.u}}</td>
+          <td class="r num">{{m.min}}</td>
+          <td><span class="dsp" style="color: {{m.dc}}"><i style="background: {{m.dc}}"></i>{{m.disp}}</span></td>
+          <td class="muted">{{m.pv}}</td>
+          <td class="r"><div class="pr"><b>{{m.p}}</b><sc-if value="{{m.rv}}" hint-placeholder-val="{{ false }}"><span class="rvw">Revisar precio</span></sc-if><sc-if value="{{m.okp}}" hint-placeholder-val="{{ true }}"><small>{{m.f}}</small></sc-if></div></td>
+          <td><span class="{{m.stCls}}"><i></i>{{m.st}}</span></td>
+        </tr>
+      </sc-for></tbody>
+    </table></div>
+    <p class="foot">Los precios alimentan las plantillas y el precio sugerido de cada cotización. Un precio con más de 180 días (Parámetros) se marca “Revisar precio”: mientras tanto se usa el último registrado.</p>
+    </sc-if>
+
+    <sc-if value="{{t1}}" hint-placeholder-val="{{ false }}">
+    <div class="tw"><table class="ct">
+      <thead><tr><th>Tela</th><th>Dificultad</th><th>En pedidos</th><th class="r">Precio / yd</th><th>Precio vigente hasta</th><th>Se muestra al cliente</th><th>Estado</th></tr></thead>
+      <tbody><sc-for list="{{rows}}" as="m" hint-placeholder-count="5">
+        <tr class="{{m.cls}}" onClick="{{m.open}}">
+          <td><div class="nm"><i class="sw" style="background: {{m.col}}"></i><span><b>{{m.n}}</b><span class="tp">Bajo pedido · yd</span></span></div></td>
+          <td><span class="{{m.dfCls}}">{{m.dfT}}</span></td>
+          <td class="muted">{{m.ped}}</td>
+          <td class="r"><div class="pr"><b>{{m.p}}</b><sc-if value="{{m.rv}}" hint-placeholder-val="{{ false }}"><span class="rvw">Revisar precio</span></sc-if></div></td>
+          <td>{{m.vig}}</td>
+          <td><span class="vis"><span class="{{m.sxCls}}"></span>{{m.visT}}</span></td>
+          <td><span class="{{m.stCls}}"><i></i>{{m.st}}</span></td>
+        </tr>
+      </sc-for></tbody>
+    </table></div>
+    <p class="foot">Las telas no se guardan en stock: se compran para cada pedido. Solo las activas y visibles aparecen al cliente en la solicitud en línea. La cotización no puede durar más que el precio vigente de su tela. Una tela difícil suma horas de mano de obra al cotizar.</p>
+    </sc-if>
+
+    <sc-if value="{{drawer}}" hint-placeholder-val="{{ false }}">
+      <div class="dim" onClick="{{close}}"></div>
+      <aside class="drw" role="dialog" aria-label="{{dTitle}}">
+        <div class="dh"><div><span class="ov">{{dOv}}</span><h2 style="font-size: 21px">{{dTitle}}</h2></div><button class="xb" aria-label="Cerrar" onClick="{{close}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 20 }}"></x-import></button></div>
+        <div class="db">
+          <sc-if value="{{isNew}}" hint-placeholder-val="{{ false }}">
+            <div class="fl">¿Qué va a registrar?
+              <div class="seg"><button class="{{k0}}" onClick="{{toK0}}">Insumo de stock<small>espuma, cierres…</small></button><button class="{{k1}}" onClick="{{toK1}}">Insumo de proceso<small>grapas, hilo…</small></button><button class="{{k2}}" onClick="{{toK2}}">Tela<small>bajo pedido</small></button></div>
+            </div>
+          </sc-if>
+          <label class="fl">Nombre<input value="{{fN}}" placeholder="{{nPh}}" onInput="{{setN}}"></label>
+          <div class="f2">
+            <label class="fl">Unidad<input value="{{fU}}" onInput="{{setU}}"><small>Una sola unidad en todo el sistema</small></label>
+            <sc-if value="{{showMin}}" hint-placeholder-val="{{ true }}"><label class="fl">Stock mínimo<input inputmode="decimal" value="{{fMin}}" onInput="{{setMin}}"><small>Por debajo salta la alerta</small></label></sc-if>
+            <sc-if value="{{isTela}}" hint-placeholder-val="{{ false }}"><label class="fl">Precio vigente hasta<input value="{{fVig}}" onInput="{{setVig}}"><small>Limita la vigencia de la cotización</small></label></sc-if>
+          </div>
+          <div class="f2">
+            <label class="fl">Proveedor de referencia<input value="{{fPv}}" placeholder="Ej.: Proveedor de espumas" onInput="{{setPv}}"></label>
+            <label class="fl">Precio del proveedor<input inputmode="decimal" value="{{fP}}" onInput="{{setP}}"><small>{{pHint}}</small></label>
+          </div>
+          <sc-if value="{{isTela}}" hint-placeholder-val="{{ false }}">
+            <button class="vrow" onClick="{{toggleDif}}"><span><b>Tela difícil de trabajar</b><br><small class="muted">Seda, terciopelo o cuero: la cotización sugiere +20 % de horas en coser y tapizar</small></span><span class="{{fDifCls}}"></span></button>
+            <button class="vrow" onClick="{{toggleVis}}"><span><b>Se muestra al cliente</b><br><small class="muted">{{visHint}}</small></span><span class="{{fVisCls}}"></span></button>
+          </sc-if>
+          <sc-if value="{{hasHist}}" hint-placeholder-val="{{ true }}">
+            <div class="box"><span class="ov">Historial de precios</span><sc-for list="{{hist}}" as="h" hint-placeholder-count="2"><div class="hp"><span>{{h.d}}</span><b>{{h.p}}</b></div></sc-for></div>
+          </sc-if>
+          <sc-if value="{{hasStock}}" hint-placeholder-val="{{ true }}">
+            <div class="box"><span class="ov">En el inventario</span><div class="hp"><span>Disponible ahora</span><b style="color: {{dDc}}">{{dDisp}}</b></div><a href="A8-Inventario.dc.html" style="font-size: 13.5px; font-weight: 600">Ver en Inventario →</a></div>
+          </sc-if>
+          <sc-if value="{{isNew}}" hint-placeholder-val="{{ false }}">
+            <div class="box"><span class="ov">Al guardar</span><span style="font-size: 13.5px; line-height: 20px">{{newInfo}}</span></div>
+          </sc-if>
+        </div>
+        <div class="df">
+          <sc-if value="{{canOff}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-ghost" onClick="{{toggleOff}}">{{offLbl}}</button></sc-if>
+          <sc-if value="{{isNew}}" hint-placeholder-val="{{ false }}"><button class="gw-btn gw-btn-ghost" onClick="{{close}}">Cancelar</button></sc-if>
+          <button class="gw-btn gw-btn-primary" onClick="{{save}}" disabled="{{noSave}}">{{saveLbl}}</button>
+        </div>
+      </aside>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1000}}'>
+const PV = ['Proveedor de espumas', 'Proveedor de insumos', 'Proveedor de telas'];
+const M0 = [
+  // n, u, tipo(0 stock 1 proceso), min, disp, pv, precio, fecha, revisar, activo, hist
+  ['Espuma HD 2"', 'plancha', 0, 10, 6, 0, 24, '28 sep 2026', false, true, [['2 jun 2026', 22], ['28 sep 2026', 24]]],
+  ['Espuma HD 4"', 'plancha', 0, 4, 6, 0, 39, '28 sep 2026', false, true, [['28 sep 2026', 39]]],
+  ['Espuma HD 1.5"', 'plancha', 0, 4, 5, 0, 18, '15 sep 2026', false, true, [['15 sep 2026', 18]]],
+  ['Plumas (relleno)', 'kg', 0, 4, -2, 0, 18.5, '2 mar 2026', true, true, [['2 mar 2026', 18.5]]],
+  ['Guata', 'yd', 0, 10, 14, 1, 3, '15 sep 2026', false, true, [['15 sep 2026', 3]]],
+  ['Pegamento de madera', 'gal', 0, 1, 2, 1, 20, '15 sep 2026', false, true, [['15 sep 2026', 20]]],
+  ['Cierres 60 cm', 'u', 0, 15, 33, 1, 1.2, '15 sep 2026', false, true, [['3 mar 2026', 1.1], ['15 sep 2026', 1.2]]],
+  ['Botones forrables', 'u', 0, 50, 96, 1, 0.35, '15 sep 2026', false, false, [['15 sep 2026', 0.35]]],
+  ['Grapas 71/10', 'caja', 1, 8, 21, 1, 6, '15 sep 2026', false, true, [['15 sep 2026', 6]]],
+  ['Hilo nylon 40', 'cono', 1, 6, 7, 1, 6, '15 sep 2026', false, true, [['15 sep 2026', 6]]],
+  ['Pegamento de contacto', 'gal', 1, 2, 2, 1, 18, '15 sep 2026', false, true, [['15 sep 2026', 18]]]
+].map(r => ({ n: r[0], u: r[1], k: r[2], min: r[3], disp: r[4], pv: r[5], p: r[6], f: r[7], rv: r[8], on: r[9], hist: r[10] }));
+const T0 = [
+  ['Lino Navy 204', '#1E2A4A', 17, '1 oct 2026', '31 dic 2026', true, true, 'PED-0076 · 14 yd', false, false],
+  ['Terciopelo gris', '#6B7280', 22, '1 oct 2026', '31 dic 2026', true, true, 'PED-0084 · 22 yd', false, true],
+  ['Pana mostaza', '#C9962E', 19, '1 oct 2026', '31 dic 2026', true, true, 'PED-0082 · 9 yd', false, false],
+  ['Terciopelo verde', '#2F5A3C', 22, '1 oct 2026', '31 dic 2026', false, true, '—', false, true],
+  ['Cuero sintético negro', '#151515', 15, '10 mar 2026', '10 jun 2026 · vencido', false, false, '—', true, true]
+].map(r => ({ n: r[0], col: r[1], p: r[2], f: r[3], vig: r[4], vis: r[5], on: r[6], ped: r[7], rv: r[8], dif: r[9], u: 'yd', k: 2, pv: 2, hist: [[r[3], r[2]]] }));
+const pl = (n, u) => (Math.abs(n) === 1 || !/^(plancha|caja|cono)$/.test(u)) ? u : u + 's';
+const money = n => '$' + Number(n).toFixed(2);
+const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { tab: 0, M: M0, T: T0, q: '', pop: '', fk: 0, fp: 0, fe: 0, fv: 0, rv: false, sel: -1, isNew: false, f: null, created: '' }; }
+  openRow(i) { const st = this.state, it = (st.tab === 0 ? st.M : st.T)[i]; this.setState({ sel: i, isNew: false, pop: '', created: '', f: { n: it.n, u: it.u, min: String(it.min ?? ''), pv: PV[it.pv], p: String(it.p), vig: it.vig || '', vis: !!it.vis, dif: !!it.dif, k: it.k } }); }
+  setF(k, v) { this.setState({ f: Object.assign({}, this.state.f, { [k]: v }) }); }
+  renderVals() {
+    const st = this.state, tela = st.tab === 1, L = tela ? st.T : st.M;
+    const qq = norm(st.q.trim());
+    const G = tela ? [
+      { key: 'fv', label: 'Visibilidad', opts: ['Todas', 'Se muestran al cliente', 'Solo en el local'], test: (x, v) => v === 1 ? x.vis : !x.vis },
+      { key: 'fe', label: 'Estado', opts: ['Todos', 'Activos', 'Inactivos'], test: (x, v) => v === 1 ? x.on : !x.on }
+    ] : [
+      { key: 'fk', label: 'Tipo', opts: ['Todos', 'Stock', 'Insumo de proceso'], test: (x, v) => x.k === v - 1 },
+      { key: 'fp', label: 'Proveedor', opts: ['Todos', 'Proveedor de espumas', 'Proveedor de insumos'], test: (x, v) => x.pv === v - 1 },
+      { key: 'fe', label: 'Estado', opts: ['Todos', 'Activos', 'Inactivos'], test: (x, v) => v === 1 ? x.on : !x.on }
+    ];
+    const pass = (x, skip) => (!qq || norm(x.n + ' ' + PV[x.pv]).includes(qq)) && (!st.rv || x.rv) && G.every(g => g.key === skip || st[g.key] === 0 || g.test(x, st[g.key]));
+    const idx = L.map((x, i) => i).filter(i => pass(L[i]));
+    const it = st.sel >= 0 ? L[st.sel] : null, f = st.f || {};
+    const kNew = f.k ?? 0;
+    const dCol = d => d < 0 ? 'var(--danger-ink)' : 'var(--ink)';
+    const lvl = x => x.disp < 0 ? 'var(--danger-ink)' : x.disp < x.min ? 'var(--warning-ink)' : 'var(--success-ink)';
+    const save = () => {
+      if (!f.n || !f.n.trim()) return;
+      if (st.isNew) {
+        const base = { n: f.n.trim(), u: f.u || (kNew === 2 ? 'yd' : 'u'), p: parseFloat(f.p) || 0, f: 'hoy', rv: false, on: true, hist: [['hoy', parseFloat(f.p) || 0]], pv: kNew === 2 ? 2 : (/espuma/i.test(f.n) ? 0 : 1), isNew: true };
+        if (kNew === 2) { const T = st.T.concat([Object.assign(base, { k: 2, col: '#9CA3AF', vig: f.vig || '31 dic 2026', vis: f.vis, dif: !!f.dif, ped: '—' })]); this.setState({ T, tab: 1, sel: -1, isNew: false, created: 'tela' }); }
+        else { const M = st.M.concat([Object.assign(base, { k: kNew, min: parseFloat(f.min) || 0, disp: 0 })]); this.setState({ M, tab: 0, sel: -1, isNew: false, created: 'mat' }); }
+      } else {
+        const key = tela ? 'T' : 'M', arr = st[key].slice(), o = arr[st.sel], np = parseFloat(f.p) || 0;
+        arr[st.sel] = Object.assign({}, o, { n: f.n, u: f.u, min: parseFloat(f.min) || o.min, p: np, vig: f.vig || o.vig, vis: f.vis, dif: f.dif, f: np !== o.p ? 'hoy' : o.f, rv: np !== o.p ? false : o.rv, hist: np !== o.p ? o.hist.concat([['hoy', np]]) : o.hist });
+        this.setState({ [key]: arr, sel: -1 });
+      }
+    };
+    return {
+      tema: this.props.tema ?? 'light',
+      tabs: [{ label: 'Insumos', count: st.M.length }, { label: 'Telas', count: st.T.length }], tab: st.tab,
+      setTab: i => this.setState({ tab: i, sel: -1, pop: '', q: '', rv: false, fe: 0, created: '' }),
+      t0: !tela, t1: tela, newLbl: tela ? '+ Nueva tela' : '+ Nuevo material',
+      openNew: () => this.setState({ sel: -2, isNew: true, pop: '', created: '', f: { n: '', u: tela ? 'yd' : '', min: '', pv: tela ? PV[2] : '', p: '', vig: '31 dic 2026', vis: true, k: tela ? 2 : 0 } }),
+      created: !!st.created, createdT: st.created === 'tela' ? 'Tela registrada' : 'Material registrado',
+      createdB: st.created === 'tela' ? 'Ya se puede elegir en las cotizaciones y, si es visible, en la solicitud del cliente.' : 'Ya aparece en el Inventario con físico 0. Registre el conteo inicial (A9) o al marcar «Llegó» en Qué pedir (A8).',
+      q: st.q, qPh: tela ? 'Buscar tela' : 'Buscar material o proveedor', onQ: e => this.setState({ q: e.target.value }),
+      anyPop: !!st.pop, closePop: () => this.setState({ pop: '' }),
+      dds: G.map(g => { const v = st[g.key], open = st.pop === g.key; return { lbl: v !== 0 ? g.label + ':' : g.label, on: v !== 0, val: g.opts[v], open, btnCls: 'ddb' + (v !== 0 ? ' on' : '') + (open ? ' open' : ''),
+        toggle: () => this.setState({ pop: open ? '' : g.key }), rm: () => this.setState({ [g.key]: 0, pop: '' }),
+        opts: g.opts.map((l, i) => ({ l, n: L.filter(x => pass(x, g.key) && (i === 0 || g.test(x, i))).length, cls: 'opt' + (v === i ? ' on' : ''), pick: () => this.setState({ [g.key]: i, pop: '' }) })) }; }),
+      nRv: L.filter(x => x.rv).length, rvCls: st.rv ? 'tgl on' : 'tgl', toggleRv: () => this.setState({ rv: !st.rv }),
+      anyF: G.some(g => st[g.key] !== 0) || st.rv, clear: () => this.setState({ fk: 0, fp: 0, fe: 0, fv: 0, rv: false }),
+      nRes: idx.length, resW: idx.length === 1 ? 'resultado' : 'resultados',
+      rows: idx.map(i => { const x = L[i]; return {
+        n: x.n, u: x.u, tp: x.k === 1 ? 'Insumo de proceso' : 'Stock', tpCls: x.k === 1 ? 'tp p' : 'tp', min: x.min + ' ' + pl(x.min, x.u),
+        disp: x.isNew ? 'Nuevo · 0' : (x.disp < 0 ? 'Faltan ' + Math.abs(x.disp) : x.disp) + ' ' + pl(x.disp, x.u), dc: x.isNew ? 'var(--primary)' : lvl(x),
+        pv: PV[x.pv], p: money(x.p), f: x.f, rv: x.rv, okp: !x.rv, st: x.on ? 'Activo' : 'Inactivo', stCls: x.on ? 'st' : 'st off',
+        col: x.col, vig: x.vig, dfT: x.dif ? 'Difícil · +20 % horas' : 'Normal', dfCls: x.dif ? 'tp p' : 'tp', ped: x.ped, visT: x.vis ? 'Sí' : 'Solo en el local', sxCls: x.vis ? 'sx on' : 'sx',
+        cls: (st.sel === i ? 'sel ' : '') + (x.on ? '' : 'off'), open: () => this.openRow(i) }; }),
+      drawer: st.sel !== -1, isNew: st.isNew, close: () => this.setState({ sel: -1, isNew: false }),
+      dOv: st.isNew ? 'Registro nuevo' : (tela ? 'Tela · bajo pedido' : (it && it.k === 1 ? 'Insumo de proceso' : 'Insumo de stock')),
+      dTitle: st.isNew ? (kNew === 2 ? 'Nueva tela' : 'Nuevo material') : (it ? it.n : ''),
+      k0: kNew === 0 ? 'on' : '', k1: kNew === 1 ? 'on' : '', k2: kNew === 2 ? 'on' : '',
+      toK0: () => this.setF('k', 0), toK1: () => this.setF('k', 1), toK2: () => this.setState({ f: Object.assign({}, f, { k: 2, u: 'yd', pv: PV[2] }) }),
+      fN: f.n || '', fU: f.u || '', fMin: f.min || '', fPv: f.pv || '', fP: f.p || '', fVig: f.vig || '',
+      nPh: kNew === 2 ? 'Ej.: Lino Arena 110' : 'Ej.: Espuma HD 3" (plancha)',
+      setN: e => this.setF('n', e.target.value), setU: e => this.setF('u', e.target.value), setMin: e => this.setF('min', e.target.value),
+      setPv: e => this.setF('pv', e.target.value), setP: e => this.setF('p', e.target.value), setVig: e => this.setF('vig', e.target.value),
+      showMin: (st.isNew ? kNew : (it ? it.k : 0)) !== 2, isTela: (st.isNew ? kNew : (it ? it.k : 0)) === 2,
+      pHint: st.isNew ? 'La fecha del precio se registra sola' : 'Si lo cambia, se guarda con la fecha de hoy',
+      fVisCls: f.vis ? 'sx on' : 'sx', toggleVis: () => this.setF('vis', !f.vis), fDifCls: f.dif ? 'sx on' : 'sx', toggleDif: () => this.setF('dif', !f.dif),
+      visHint: f.vis ? 'Aparece en la solicitud en línea (W2)' : 'Solo se ofrece en el local',
+      hasHist: !st.isNew && !!it, hist: it ? it.hist.slice().reverse().map(h => ({ d: h[0], p: money(h[1]) })) : [],
+      hasStock: !st.isNew && !!it && !tela && !it.isNew, dDisp: it && !tela ? (it.disp < 0 ? 'Faltan ' + Math.abs(it.disp) : it.disp) + ' ' + pl(it.disp, it.u) : '', dDc: it ? dCol(it.disp) : '',
+      newInfo: kNew === 2 ? 'La tela queda disponible para cotizar. No entra al stock: se compra cuando un pedido la necesita.' : 'El material aparece en el Inventario con físico 0, reservado 0 y disponible 0. Las cantidades solo entran por un conteo inicial (A9) o al marcar «Llegó» en Qué pedir (A8).',
+      canOff: !st.isNew && !!it, offLbl: it && it.on ? 'Desactivar' : 'Reactivar',
+      toggleOff: () => { const key = tela ? 'T' : 'M', arr = st[key].slice(); arr[st.sel] = Object.assign({}, arr[st.sel], { on: !arr[st.sel].on }); this.setState({ [key]: arr, sel: -1 }); },
+      saveLbl: st.isNew ? 'Registrar' : 'Guardar cambios', noSave: !(f.n && f.n.trim()), save
+    };
+  }
+}
+</script>
+</body>
+</html>

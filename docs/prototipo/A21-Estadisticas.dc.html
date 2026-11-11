@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A21 Estadísticas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>body{margin:0}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.today{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.today a{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:9999px;background:var(--surface);border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-sm)}
+.today a b{font-variant-numeric:tabular-nums}
+.today a i{width:8px;height:8px;border-radius:50%}
+/* Ganancias del mes */
+.earn{display:flex;flex-direction:column;gap:14px}
+.earn-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.earn-h h2{font-size:20px}
+.earn-h p{font-size:13px;color:var(--ink-muted);margin-top:2px}
+.seg{display:flex;padding:4px;gap:4px;border-radius:12px;background:var(--surface-sunken);border:1px solid var(--line)}
+.seg button{height:34px;padding:0 14px;border:0;border-radius:9px;background:transparent;color:var(--ink-muted);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.mc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.m{display:flex;flex-direction:column;gap:8px;padding:18px 20px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);min-width:0}
+.m .lb{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted)}
+.m .vl{font:800 32px/1.05 var(--font-display);letter-spacing:-.025em;color:var(--ink);font-variant-numeric:tabular-nums}
+.m .vl.acc{color:var(--primary)}
+.m .ft{font-size:12.5px;color:var(--ink-muted);display:flex;align-items:center;gap:6px}
+.m .up{display:inline-flex;align-items:center;gap:4px;color:var(--success-ink);font-weight:700}
+.m .pb{display:flex;align-items:center;gap:10px}
+.m .pb .tr{flex:1;height:6px;border-radius:9999px;background:var(--primary-soft);overflow:hidden}
+.m .pb .tr i{display:block;height:100%;border-radius:inherit;background:var(--primary)}
+.m .pb b{font-size:12.5px;font-variant-numeric:tabular-nums}
+.chart{display:flex;flex-direction:column;gap:6px;padding:20px 22px 14px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.chart h3{font:700 16px/1.3 var(--font-display)}
+.plot{position:relative;height:250px;margin-top:30px}
+.plot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.plot .peak{position:absolute;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
+.plot .pill{position:absolute;transform:translate(-50%,-150%);margin-top:-8px;padding:5px 9px;border-radius:7px;background:var(--ink);color:var(--surface);font-size:12px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.plot .hit{position:absolute;top:-30px;bottom:0;cursor:crosshair}
+.plot .hit .guide{position:absolute;left:50%;top:30px;bottom:0;border-left:1px dashed var(--line-strong);opacity:0}
+.plot .hit .pt{position:absolute;left:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:var(--surface);border:2.5px solid var(--primary);opacity:0}
+.plot .hit .tip{position:absolute;left:50%;transform:translate(-50%,calc(-100% - 14px));padding:8px 11px;border-radius:10px;background:var(--ink);color:var(--surface);font-size:12px;line-height:1.45;opacity:0;pointer-events:none;z-index:3;white-space:nowrap;box-shadow:var(--shadow-md)}
+.plot .hit .tip.r{transform:translate(-92%,calc(-100% - 14px))}
+.plot .hit .tip.l{transform:translate(-8%,calc(-100% - 14px))}
+.plot .hit .tip b{display:block;font-size:14px;font-variant-numeric:tabular-nums}
+.plot .hit:hover .guide,.plot .hit:hover .pt,.plot .hit:hover .tip{opacity:1}
+.xl{position:relative;height:30px;margin-top:10px}
+.xl > span{position:absolute;top:8px;transform:translateX(-50%);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);white-space:nowrap}
+.xl > span.now{color:var(--primary)}
+.cap{font-size:12px;color:var(--ink-muted);padding-top:8px;border-top:1px solid var(--line)}
+@media (max-width:1100px){.mc{grid-template-columns:1fr}}
+.m .vl small{font:700 16px/1 var(--font-sans);color:var(--ink-muted);letter-spacing:0;margin-left:4px}
+.m .badge{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:9999px;background:var(--success-soft,#DCFCE7);color:var(--success-ink);font:700 12px/1 var(--font-sans);vertical-align:middle;margin-left:8px;letter-spacing:0}
+.m .ft2{font-size:12px;color:var(--ink-muted);line-height:1.45;padding-top:8px;border-top:1px dashed var(--line);margin-top:auto}
+.m .ft2 b{color:var(--ink);font-variant-numeric:tabular-nums}
+.m .warn{display:inline-flex;align-items:center;gap:5px;color:var(--warning-ink,#92400E);font-weight:700;text-decoration:none}
+.m .tag{align-self:flex-start;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:6px;background:var(--primary-soft);color:var(--primary)}
+.m .hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:1100px){.mini{grid-template-columns:1fr}}
+.mini a{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--ink);text-decoration:none;box-shadow:var(--shadow-sm)}
+.mini .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--surface-sunken);color:var(--ink-muted)}
+.mini span{font-size:12.5px;color:var(--ink-muted);line-height:1.35}
+.mini span b{display:block;font-size:13.5px;color:var(--ink)}
+.mini strong{font:800 18px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.mini strong.ok{color:var(--success-ink)}
+.mini strong.wr{color:var(--warning-ink,#92400E)}
+.mc4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:1100px){.mc4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vs div{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;background:var(--surface-sunken)}
+.vs div > span:first-child{font-size:11px;color:var(--ink-muted)}
+.vs small{font-size:11.5px;color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.vs .up,.vs .dn{display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:14px}
+.vs .up{color:var(--success-ink)}.vs .dn{color:var(--error-ink,#991B1B)}
+.stk{display:flex;height:16px;border-radius:9999px;overflow:hidden;gap:2px}
+.stk i{display:block;height:100%}
+.mt{width:100%;border-collapse:collapse;font-size:13.5px}
+.mt th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);padding:6px 8px 6px 0;border-bottom:1px solid var(--line)}
+.mt td{padding:8px 8px 8px 0;border-bottom:1px solid var(--line)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:middle}
+.pos{color:var(--success-ink)}.neg{color:var(--ink-muted)}
+.sh{font:700 12px/1 var(--font-sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-top:4px}
+.rk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rk li{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr) 56px 40px;gap:10px;align-items:center;font-size:13.5px}
+.rk .rb{height:8px;border-radius:9999px;background:var(--surface-sunken);overflow:hidden}.rk .rb i{display:block;height:100%;background:var(--primary);border-radius:inherit}
+.rk b{text-align:right}.rk small{color:var(--ink-muted);text-align:right}
+.li2{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.li2 b{font-size:16px}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav on" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+    <main class="main">
+    <div class="top">
+      <div><div class="crumb">Estadísticas · se actualiza cada noche</div><h1>¿Cómo va octubre?</h1>
+        <p class="muted" style="font-size: 14px; margin-top: 4px">Del 1 al 13 de octubre, comparado con los mismos días de septiembre y de octubre del año pasado.</p></div>
+      <div class="row" style="flex-wrap: wrap"><a class="gw-btn gw-btn-secondary" href="A1-Panel.dc.html">← Volver al panel de hoy</a></div>
+    </div>
+
+    <section class="earn" aria-label="Comparación del mes">
+      <div class="mc4"><div class="m"><span class="lb">Cobrado</span><span class="vl">$63,900</span>
+          <div class="vs"><div><span>vs. 1–13 sep</span><span class="up"><x-import component-from-global-scope="Garweb.Icon" name="trending-up" size="{{ 14 }}"></x-import>+9 %</span><small>$58,600</small></div><div><span>vs. 1–13 oct 2025</span><span class="up"><x-import component-from-global-scope="Garweb.Icon" name="trending-up" size="{{ 14 }}"></x-import>+23 %</span><small>$52,100</small></div></div>
+          <span class="ft2">Adelantos <b>$21,500</b> · saldos <b>$42,400</b></span></div><div class="m"><span class="lb">Ventas cerradas</span><span class="vl">99</span>
+          <div class="vs"><div><span>vs. 1–13 sep</span><span class="up"><x-import component-from-global-scope="Garweb.Icon" name="trending-up" size="{{ 14 }}"></x-import>+9 %</span><small>91</small></div><div><span>vs. 1–13 oct 2025</span><span class="up"><x-import component-from-global-scope="Garweb.Icon" name="trending-up" size="{{ 14 }}"></x-import>+18 %</span><small>84</small></div></div>
+          <span class="ft2">Cotizaciones aceptadas · <b>82 %</b> de las enviadas</span></div><div class="m"><span class="lb">Venta promedio por pedido</span><span class="vl">$640</span>
+          <div class="vs"><div><span>vs. 1–13 sep</span><span class="up"><x-import component-from-global-scope="Garweb.Icon" name="trending-up" size="{{ 14 }}"></x-import>+4 %</span><small>$615</small></div><div><span>vs. 1–13 oct 2025</span><span class="up"><x-import component-from-global-scope="Garweb.Icon" name="trending-up" size="{{ 14 }}"></x-import>+8 %</span><small>$590</small></div></div>
+          <span class="ft2">Lo que paga en promedio un cliente por pedido</span></div><div class="m"><span class="lb">Margen bruto</span><span class="vl acc">$23,750</span>
+          <div class="vs"><div><span>vs. 1–13 sep</span><span class="up"><x-import component-from-global-scope="Garweb.Icon" name="trending-up" size="{{ 14 }}"></x-import>+8 %</span><small>$21,900</small></div><div><span>vs. 1–13 oct 2025</span><span class="up"><x-import component-from-global-scope="Garweb.Icon" name="trending-up" size="{{ 14 }}"></x-import>+22 %</span><small>$19,400</small></div></div>
+          <span class="ft2">Cobrado de 95 pedidos cerrados − materiales − transporte</span></div></div>
+      <div class="mini">
+        <a href="A4-Cotizar.dc.html"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="quote" size="{{ 18 }}"></x-import></span><span><b>Cotizaciones sin respuesta</b>11 publicadas · vencen en 5 días</span><strong>$7,040</strong></a>
+        <a href="A11-Evaluar.dc.html"><span class="ic"><x-import component-from-global-scope="Garweb.Icon" name="package" size="{{ 18 }}"></x-import></span><span><b>Material usado vs. cotizado</b>Se gastó más de lo previsto</span><strong class="wr">+2.1 %</strong></a>
+      </div>
+    </section>
+
+    <div class="grid2">
+      <section class="card stack">
+        <div class="between"><h2 style="font-size: 18px">Formas de pago del mes</h2><span class="muted" style="font-size: 13px">sobre $63,900 cobrados</span></div>
+        <div class="stk" role="img" aria-label="Tarjeta 38 %, Zelle 27 %, Cheque 13 %, ACH 12 %, Efectivo 10 %"><i style="width:38%;background:#2563EB" title="Tarjeta (pasarela) 38 %"></i><i style="width:27%;background:#7C3AED" title="Zelle 27 %"></i><i style="width:13%;background:#0EA5E9" title="Cheque 13 %"></i><i style="width:12%;background:#14B8A6" title="Cuenta bancaria · ACH (pasarela) 12 %"></i><i style="width:10%;background:#F59E0B" title="Efectivo 10 %"></i></div>
+        <table class="mt"><thead><tr><th>Forma de pago</th><th>%</th><th>Monto</th><th>vs. sep</th></tr></thead><tbody><tr><td><span class="sw" style="background:#2563EB"></span>Tarjeta (pasarela)</td><td class="num"><b>38 %</b></td><td class="num">$24,282</td><td class="num pos">+3 pts</td></tr><tr><td><span class="sw" style="background:#7C3AED"></span>Zelle</td><td class="num"><b>27 %</b></td><td class="num">$17,253</td><td class="num neg">−2 pts</td></tr><tr><td><span class="sw" style="background:#0EA5E9"></span>Cheque</td><td class="num"><b>13 %</b></td><td class="num">$8,307</td><td class="num neg">−1 pts</td></tr><tr><td><span class="sw" style="background:#14B8A6"></span>Cuenta bancaria · ACH (pasarela)</td><td class="num"><b>12 %</b></td><td class="num">$7,668</td><td class="num pos">+2 pts</td></tr><tr><td><span class="sw" style="background:#F59E0B"></span>Efectivo</td><td class="num"><b>10 %</b></td><td class="num">$6,390</td><td class="num neg">−2 pts</td></tr></tbody></table>
+        <p class="audit" style="margin: 0">El 50 % ya entra por la pasarela y se confirma solo. Comisión de la pasarela en el mes: <b>$742</b> (la paga el taller).</p>
+      </section>
+      <section class="card stack">
+        <div class="between"><h2 style="font-size: 18px">Lo que más se vende</h2><span class="muted" style="font-size: 13px">99 ventas del mes</span></div>
+        <h3 class="sh">Por tipo de mueble</h3><ol class="rk"><li><span class="rn">Sillas de comedor</span><span class="rb"><i style="width:100%"></i></span><b class="num">31</b><small>31 %</small></li><li><span class="rn">Sofás</span><span class="rb"><i style="width:71%"></i></span><b class="num">22</b><small>22 %</small></li><li><span class="rn">Sillones</span><span class="rb"><i style="width:58%"></i></span><b class="num">18</b><small>18 %</small></li><li><span class="rn">Cabeceras</span><span class="rb"><i style="width:35%"></i></span><b class="num">11</b><small>11 %</small></li><li><span class="rn">Banquetas de restaurante</span><span class="rb"><i style="width:29%"></i></span><b class="num">9</b><small>9 %</small></li><li><span class="rn">Otros (otomán, bancos, cojines)</span><span class="rb"><i style="width:26%"></i></span><b class="num">8</b><small>8 %</small></li></ol>
+        <h3 class="sh">Por servicio</h3><ol class="rk"><li><span class="rn">Retapizado completo</span><span class="rb"><i style="width:100%"></i></span><b class="num">46</b><small>46 %</small></li><li><span class="rn">Retapizado + espuma</span><span class="rb"><i style="width:52%"></i></span><b class="num">24</b><small>24 %</small></li><li><span class="rn">Solo cambio de espuma</span><span class="rb"><i style="width:26%"></i></span><b class="num">12</b><small>12 %</small></li><li><span class="rn">Fabricación a medida</span><span class="rb"><i style="width:22%"></i></span><b class="num">10</b><small>10 %</small></li><li><span class="rn">Reparación de estructura</span><span class="rb"><i style="width:17%"></i></span><b class="num">8</b><small>8 %</small></li></ol>
+      </section>
+      <section class="card stack" style="grid-column: 1 / -1">
+        <div class="between"><h2 style="font-size: 18px">Telas más usadas</h2><span class="muted" style="font-size: 13px">yardas del mes</span></div>
+        <ol class="rk"><li><span class="rn">Velvet Navy</span><span class="rb"><i style="width:100%"></i></span><b class="num">64 yd</b><small></small></li><li><span class="rn">Lino natural</span><span class="rb"><i style="width:75%"></i></span><b class="num">48 yd</b><small></small></li><li><span class="rn">Cuero sintético negro</span><span class="rb"><i style="width:64%"></i></span><b class="num">41 yd</b><small></small></li><li><span class="rn">Chenille gris</span><span class="rb"><i style="width:52%"></i></span><b class="num">33 yd</b><small></small></li></ol>
+        <p class="audit" style="margin: 0">Sirve para decidir qué telas tener siempre en stock y cuáles pedir solo bajo pedido.</p>
+      </section>
+    </div>
+
+    <section class="earn" aria-label="Margen en el tiempo">
+      <div class="earn-h">
+        <div><h2>Margen bruto en el tiempo</h2><p>Margen bruto = lo cobrado de los pedidos cerrados − materiales − transporte. No descuenta sueldos ni alquiler.</p></div>
+        <div class="seg" role="group" aria-label="Periodo del gráfico"><button class="{{tDay}}" aria-pressed="{{isDay}}" onClick="{{toDay}}">Día a día</button><button class="{{tYear}}" aria-pressed="{{isYear}}" onClick="{{toYear}}">12 meses</button></div>
+      </div>
+      <div class="chart">
+        <h3>{{chartTitle}}</h3>
+        <div class="plot" role="img" aria-label="{{aria}}">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <defs><linearGradient id="gwTrendFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563EB" stop-opacity=".22"></stop><stop offset="1" stop-color="#2563EB" stop-opacity="0"></stop></linearGradient></defs>
+            <path d="{{area}}" fill="url(#gwTrendFill)"></path>
+            <path d="{{line}}" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path>
+            <path d="{{proj}}" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-dasharray="5 6" stroke-linecap="round" opacity=".55" vector-effect="non-scaling-stroke"></path>
+          </svg>
+          <span class="peak" style="left: {{peak.x}}%; top: {{peak.y}}%"></span>
+          <span class="pill" style="left: {{peak.x}}%; top: {{peak.y}}%">{{peak.v}}</span>
+          <sc-for list="{{hits}}" as="h" hint-placeholder-count="12"><div class="hit" style="left: {{h.l}}%; width: {{h.w}}%"><span class="guide"></span><span class="pt" style="top: calc({{h.ty}}% + 30px)"></span><span class="{{h.tcls}}" style="top: calc({{h.ty}}% + 30px)"><b>{{h.v}}</b>{{h.t}}<br>{{h.n}}</span></div></sc-for>
+        </div>
+        <div class="xl"><sc-for list="{{xs}}" as="x" hint-placeholder-count="12"><span class="{{x.cls}}" style="left: {{x.x}}%">{{x.label}}</span></sc-for></div>
+        <div class="cap">{{capRight}} · Margen bruto = lo cobrado de los pedidos cerrados − materiales reales − transporte. No descuenta sueldos ni alquiler.</div>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tema&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;},&quot;grafico&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;día a día&quot;,&quot;12 meses&quot;],&quot;default&quot;:&quot;12 meses&quot;},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:2150}}">
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { tab: null }; }
+  renderVals() {
+    const tab = this.state.tab || (this.props.grafico === '12 meses' ? 'year' : 'day');
+    const money = v => '$' + Math.round(v).toLocaleString('en-US');
+    const k = v => v === 0 ? '$0' : '$' + (v / 1000).toFixed(v % 1000 ? 1 : 0) + 'k';
+    let D, lo, hi, ticks, refs = [], projIdx = -1, cap;
+    if (tab === 'day') {
+      const vals = [2250, 2750, 1250, 0, 2500, 2000, 3000, 2250, 3250, 1500, 0, 1750, 1250];
+      const wd = ['jue', 'vie', 'sáb', 'dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom', 'lun', 'mar'];
+      D = vals.map((v, i) => ({ v, x: i === 12 ? 'Hoy' : wd[i] + ' ' + (i + 1), t: wd[i] + ' ' + (i + 1) + ' oct' + (i === 12 ? ' · hoy (en curso)' : ''), n: v ? (v / 250) + ' pedidos cerrados' : 'Domingo · taller cerrado' }));
+      lo = 0; hi = 3500; ticks = [0, 1000, 2000, 3000];
+      refs = [{ v: 2130, label: 'Ritmo para la meta · $2,130 por día hábil', color: 'var(--success-ink)' }];
+      cap = 'Domingos en $0: el taller no atiende';
+    } else {
+      const M = [['nov', 46800], ['dic', 52400], ['ene', 38900], ['feb', 41200], ['mar', 47600], ['abr', 50250], ['may', 53800], ['jun', 49100], ['jul', 44300], ['ago', 47900], ['sep', 51750], ['oct', 58300]];
+      D = M.map((m, i) => ({ v: m[1], x: m[0] + (i === 0 || m[0] === 'ene' ? (i < 2 ? ' 25' : ' 26') : ''), t: m[0] + (i < 2 ? ' 2025' : ' 2026') + (i === 11 ? ' · proyección' : ''), n: i === 11 ? 'Al día 13: $23,750 (95 pedidos)' : Math.round(m[1] / 250) + ' pedidos cerrados' }));
+      lo = 30000; hi = 62000; ticks = [30000, 40000, 50000, 60000];
+      refs = [{ v: 57500, label: 'Meta $57.5k · 230 ventas × $250', color: 'var(--success-ink)' }, { v: 47200, label: 'Octubre 2025 · $47.2k', color: '#94A3B8' }];
+      projIdx = 11;
+      cap = 'Octubre en curso: el tramo punteado es la proyección ($58,300 = 233 pedidos × $250, a 27 días hábiles)';
+    }
+    const n = D.length, X0 = 2, X1 = 98, top = 4, bot = 98;
+    const Y = v => bot - (v - lo) / (hi - lo) * (bot - top);
+    const P = D.map((d, i) => ({ ...d, px: X0 + (X1 - X0) * i / (n - 1), py: Y(d.v) }));
+    const clamp = y => Math.min(bot, Math.max(top - 2, y));
+    const seg = (a, b, pa, pb) => {
+      const t = 1 / 6;
+      const c1x = a.px + (b.px - pa.px) * t, c1y = clamp(a.py + (b.py - pa.py) * t);
+      const c2x = b.px - (pb.px - a.px) * t, c2y = clamp(b.py - (pb.py - a.py) * t);
+      return ' C' + c1x.toFixed(2) + ' ' + c1y.toFixed(2) + ' ' + c2x.toFixed(2) + ' ' + c2y.toFixed(2) + ' ' + b.px.toFixed(2) + ' ' + b.py.toFixed(2);
+    };
+    const curve = (from, to) => { let d = 'M' + P[from].px.toFixed(2) + ' ' + P[from].py.toFixed(2); for (let i = from; i < to; i++) d += seg(P[i], P[i + 1], P[Math.max(0, i - 1)], P[Math.min(n - 1, i + 2)]); return d; };
+    const last = projIdx > 0 ? projIdx - 1 : n - 1;
+    const line = curve(0, last);
+    const proj = projIdx > 0 ? curve(projIdx - 1, projIdx) : '';
+    const area = line + ' L' + P[last].px.toFixed(2) + ' ' + bot + ' L' + P[0].px.toFixed(2) + ' ' + bot + ' Z';
+    const supports = P.slice(0, last + 1).map(p => 'M' + p.px.toFixed(2) + ' ' + (p.py + 2).toFixed(2) + ' L' + p.px.toFixed(2) + ' ' + bot).join(' ');
+    const W = 640, H = 270, a = P[last], b = P[Math.max(0, last - 1)];
+    const ang = Math.atan2((a.py - b.py) * H, (a.px - b.px) * W) * 180 / Math.PI;
+    const step = (X1 - X0) / (n - 1);
+    const total = D.slice(0, last + 1).reduce((s, d) => s + d.v, 0);
+    return {
+      tema: this.props.tema ?? 'light',
+      isDay: tab === 'day', isYear: tab === 'year', tDay: tab === 'day' ? 'on' : '', tYear: tab === 'year' ? 'on' : '',
+      toDay: () => this.setState({ tab: 'day' }), toYear: () => this.setState({ tab: 'year' }),
+      chartTitle: tab === 'day' ? 'Margen bruto día a día' : 'Margen bruto de los últimos 12 meses',
+      aria: tab === 'day' ? 'Margen bruto diario de octubre: suma ' + money(total) + ', pico el viernes 9 con $3,250' : 'Margen bruto mensual de los últimos 12 meses: pico en mayo con $53,800, mínimo en enero con $38,900, octubre proyectado en $56,600',
+      line, proj, area,
+      peak: (() => { let m = P[0]; P.slice(0, last + 1).forEach(p => { if (p.v > m.v) m = p; }); return { x: m.px.toFixed(2), y: m.py.toFixed(2), v: money(m.v) }; })(),
+      hits: P.map(p => ({ tcls: 'tip' + (p.px > 85 ? ' r' : p.px < 15 ? ' l' : ''), l: (p.px - step / 2).toFixed(2), w: step.toFixed(2), ty: p.py.toFixed(2), v: money(p.v), t: p.t, n: p.n })),
+      xs: P.map((p, i) => ({ x: p.px.toFixed(2), label: p.x, cls: i === n - 1 ? 'now' : '' })),
+      capRight: cap
+    };
+  }
+}
+</script>
+</body>
+</html>

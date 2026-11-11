@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>D3 Recojo</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.step{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.step button{width:64px;height:64px;border-radius:16px;border:2px solid var(--line-strong);background:var(--surface);color:var(--ink);font:800 30px/1 var(--font-display);cursor:pointer}
+.step span{font:800 48px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.ang{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ang button{position:relative;height:110px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600}
+.ang .done{background:linear-gradient(135deg,var(--blue-900),var(--blue-500));color:#FFFFFF}
+.ang .todo{border:2px dashed var(--line-strong);color:var(--ink-muted);background:var(--surface)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1 var(--font-sans);cursor:pointer}
+.chips button.on{border-color:var(--error-500);background:var(--danger-soft);color:var(--danger-ink)}
+.ang .done::after{content:'✓';position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--success-500);color:var(--navy-950);font-size:13px;font-weight:800}
+</style>
+</helmet>
+<div class="phone" style="width: 390px; min-height: 1150px">
+  <div class="ph-head">
+    <a class="ph-back" href="D1-Ruta.dc.html" aria-label="Volver a la hoja de ruta"><x-import component-from-global-scope="Garweb.Icon" name="arrow-right" style="transform: rotate(180deg)"></x-import></a>
+    <h1>{{title}}</h1>
+    <x-import component-from-global-scope="Garweb.SyncBadge" state="synced"></x-import>
+  </div>
+  <div class="ph-body">
+    <div class="ph-card" style="gap: 6px">
+      <span class="ov">{{when}}</span>
+      <b style="font-family: var(--font-display); font-size: 20px">{{who}}</b>
+      <span class="muted" style="font-size: 15px">{{what}}</span>
+      <sc-if value="{{isRec}}" hint-placeholder-val="{{ false }}"><span class="muted" style="font-size: 13px">Reposición aprobada en A19 · se devuelve reparado el jue 29 oct.</span></sc-if>
+    </div>
+    <sc-if value="{{ok}}" hint-placeholder-val="{{ true }}">
+      <div class="ph-card">
+        <div class="between"><b style="font-size: 17px">¿Cuántas piezas recoge?</b><span class="pill">Registradas: {{expected}}</span></div>
+        <div class="step"><button aria-label="Menos" onClick="{{minus}}">−</button><span>{{n}}</span><button aria-label="Más" onClick="{{plus}}">+</button></div>
+        <sc-if value="{{diff}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Alert" tone="warning" title="No coincide con lo registrado" compact="{{ true }}">Se guarda como incidencia “piezas distintas” y se avisa al Administrador.</x-import></sc-if>
+        <span class="muted" style="font-size: 13px; text-align: center">Este número se valida pieza por pieza al entregar.</span>
+      </div>
+      <div class="ph-card">
+        <div class="between"><b style="font-size: 17px">Fotos · mínimo 1</b><span class="pill">{{nFotos}} tomadas</span></div>
+        <div class="ang">
+          <sc-for list="{{angles}}" as="a" hint-placeholder-count="4">
+            <button class="{{a.cls}}" onClick="{{a.pick}}" style="border: 0; font: inherit; cursor: pointer"><x-import component-from-global-scope="Garweb.Icon" name="camera" size="{{ 24 }}"></x-import>{{a.label}}</button>
+          </sc-for>
+        </div>
+        <p class="muted" style="font-size: 13px; line-height: 19px">Ángulos sugeridos, no obligatorios. Con una foto ya puede registrar.</p>
+      </div>
+    </sc-if>
+    <sc-if value="{{inc}}" hint-placeholder-val="{{ false }}">
+      <div class="ph-card" style="border: 2px solid var(--error-500)">
+        <b style="font-size: 17px">Registrar incidencia</b>
+        <div class="chips" role="group" aria-label="Tipo de incidencia"><sc-for list="{{incs}}" as="c" hint-placeholder-count="3"><button class="{{c.cls}}" aria-pressed="{{c.on}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for></div>
+        <x-import component-from-global-scope="Garweb.TextField" label="Detalle" optional="{{ true }}" placeholder="Ej.: nadie abrió, llamé 2 veces"></x-import>
+        <x-import component-from-global-scope="Garweb.UploadZone" icon="camera" title="Foto (fachada o lugar)" hint="Opcional" files="{{noFiles}}"></x-import>
+        <x-import component-from-global-scope="Garweb.Alert" tone="info" title="{{incTitle}}" compact="{{ true }}">{{incText}}</x-import>
+      </div>
+    </sc-if>
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="{{doneTone}}" title="{{doneTitle}}">{{doneText}}</x-import></sc-if>
+  </div>
+  <div class="ph-foot">
+    <sc-if value="{{canSave}}" hint-placeholder-val="{{ true }}"><button class="big-btn pri" onClick="{{save}}">{{saveLabel}}</button></sc-if>
+    <sc-if value="{{showIncBtn}}" hint-placeholder-val="{{ true }}"><button class="big-btn" onClick="{{toggleInc}}">{{incBtn}}</button></sc-if>
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><a class="big-btn pri" href="D1-Ruta.dc.html">Siguiente parada</a></sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tipo":{"editor":"enum","options":["recojo","recojo por reclamo"],"default":"recojo"},"$preview":{"width":390,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const rec = p.tipo === 'recojo por reclamo';
+    this.state = { rec, n: rec ? 1 : 9, shots: rec ? [true, false, false, false] : [true, true, false, false], inc: false, ic: 0, done: false };
+  }
+  renderVals() {
+    const s = this.state, exp = s.rec ? 1 : 9;
+    const L = s.rec ? ['Pieza con el problema', 'Detalle de la costura', 'Etiqueta del pedido', 'Otra'] : ['Frente', 'Costado izquierdo', 'Costado derecho', 'Detalle o daño'];
+    const I = ['Cliente ausente', 'Dirección incorrecta', 'Piezas distintas'];
+    const IT = [
+      ['Queda por reprogramar', 'El Administrador acuerda otra fecha con el cliente. El costo del segundo viaje está pendiente de definir con el dueño.'],
+      ['Queda por reprogramar', 'El Administrador corrige la dirección con el cliente y asigna otra salida.'],
+      ['Se recoge con observación', 'Se registra cuántas piezas había de verdad y se avisa al Administrador.']
+    ];
+    const nF = s.shots.filter(Boolean).length;
+    return {
+      title: s.rec ? 'Recojo por reclamo' : 'Recojo',
+      when: s.rec ? 'mar 27 oct · 10:20 · parada 1' : 'jue 8 oct · 14:25 · parada 2',
+      who: s.rec ? 'REC-0012 · Laura Méndez' : 'PED-0076 · Laura Méndez',
+      what: s.rec ? 'Cojín central con costura abierta · 48 Park St, Montclair' : 'Sofá de 3 cuerpos · 48 Park St, Montclair',
+      isRec: s.rec, ok: !s.inc || s.ic === 2, inc: s.inc,
+      expected: String(exp), n: s.n, diff: s.n !== exp,
+      minus: () => this.setState({ n: Math.max(1, s.n - 1) }), plus: () => this.setState({ n: s.n + 1 }),
+      nFotos: String(nF),
+      angles: L.map((l, i) => ({ label: l, cls: s.shots[i] ? 'done' : 'todo', pick: () => { const x = s.shots.slice(); x[i] = !x[i]; this.setState({ shots: x }); } })),
+      incs: I.map((l, i) => ({ label: l, on: s.ic === i, cls: s.ic === i ? 'on' : '', pick: () => this.setState({ ic: i }) })),
+      incTitle: IT[s.ic][0], incText: IT[s.ic][1], noFiles: [],
+      canSave: !s.done && (nF > 0 || (s.inc && s.ic < 2)),
+      saveLabel: s.inc && s.ic < 2 ? 'Guardar incidencia' : 'Registrar recojo',
+      showIncBtn: !s.done, incBtn: s.inc ? 'Cancelar incidencia' : 'Registrar incidencia',
+      toggleInc: () => this.setState({ inc: !s.inc }),
+      done: s.done,
+      doneTone: s.inc && s.ic < 2 ? 'warning' : 'success',
+      doneTitle: s.inc && s.ic < 2 ? 'Parada no realizada' : 'Recojo guardado en el equipo',
+      doneText: s.inc && s.ic < 2 ? I[s.ic] + ' · queda por reprogramar. Quedó registrado.' : (s.rec ? 'REC-0012: cojín en camino al taller (A18).' : 'PED-0076: mueble en camino al taller.'),
+      save: () => this.setState({ done: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A19 Reclamos e incidencias</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.rc{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.rc.on{border-color:var(--primary);background:var(--primary-soft)}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav on" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Despacho › Reclamos · lun 26 oct</div><h1>Reclamos e incidencias</h1></div>
+      <button class="gw-btn gw-btn-primary" onClick="{{newRec}}">+ Registrar reclamo por teléfono</button>
+    </div>
+    <sc-if value="{{creating}}" hint-placeholder-val="{{ false }}">
+      <div class="card stack" style="border: 2px solid var(--primary)">
+        <h2 style="font-size: 18px">Registrar reclamo recibido por teléfono</h2>
+        <div class="grid3" style="gap: 14px">
+          <x-import component-from-global-scope="Garweb.TextField" label="Pedido" value="PED-0081 · J. Ortega" hint="Entregado jue 22 oct · dentro de la semana ✓"></x-import>
+          <label class="gw-field" style="display: flex; flex-direction: column; gap: 6px"><span class="gw-field-label">Tipo</span><select class="gw-input"><option>Costura o tela</option><option>Falta una pieza</option><option>Daño en traslado</option><option>Otro</option></select></label>
+          <x-import component-from-global-scope="Garweb.TextField" label="Qué reporta el cliente" required="{{ true }}" value="El brazo derecho quedó flojo."></x-import>
+        </div>
+        <div class="row"><button class="gw-btn gw-btn-primary" onClick="{{save}}">Guardar reclamo</button><button class="gw-btn gw-btn-ghost" onClick="{{save}}">Cancelar</button></div>
+      </div>
+    </sc-if>
+    <div class="split">
+      <div class="aside" style="max-width: 380px">
+        <button class="rc on"><div class="between"><b>REC-0012 · PED-0076</b><x-import component-from-global-scope="Garweb.StatusChip" tone="warning">Por resolver</x-import></div><span class="muted" style="font-size: 13px">Laura Méndez · costura del cojín central · por la web, 24 oct</span></button>
+        <button class="rc"><div class="between"><b>INC-0004 · PED-0081</b><x-import component-from-global-scope="Garweb.StatusChip" tone="info">Incidencia de ruta</x-import></div><span class="muted" style="font-size: 13px">Conductor · 2 cojines no salieron el 22 oct</span></button>
+        <button class="rc"><div class="between"><b>REC-0011 · PED-0068</b><x-import component-from-global-scope="Garweb.StatusChip" status="Cerrado"></x-import></div><span class="muted" style="font-size: 13px">Sara Cohen · cierre trabado · resuelto 2 oct</span></button>
+        <button class="rc"><div class="between"><b>REC-0010 · PED-0059</b><x-import component-from-global-scope="Garweb.StatusChip" tone="danger">Fuera de plazo</x-import></div><span class="muted" style="font-size: 13px">Llamó a los 12 días · atendido como trabajo nuevo</span></button>
+      </div>
+      <div class="wide">
+        <div class="card stack">
+          <div class="between" style="flex-wrap: wrap"><div><span class="ov">Reclamo REC-0012</span><h2 style="font-size: 20px">Costura abierta en el cojín central</h2><span class="muted" style="font-size: 13px">PED-0076 · Laura Méndez · entregado jue 22 oct</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Dentro del plazo · vence jue 29 oct</x-import></div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px"><span class="thumb b" style="height: 120px"><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 24 }}"></x-import></span><span class="thumb" style="height: 120px"><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 24 }}"></x-import></span><span class="thumb c" style="height: 120px"><x-import component-from-global-scope="Garweb.Icon" name="sofa" size="{{ 24 }}"></x-import></span></div>
+          <p style="font-size: 14px; line-height: 21px">“Una costura del cojín central se abrió en la esquina.” — enviado por la clienta desde Mis pedidos (W9).</p>
+        </div>
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 17px">Reposición con prioridad</h2><x-import component-from-global-scope="Garweb.StatusChip" tone="danger">Prioridad alta</x-import></div>
+          <div class="tbl-box" style="box-shadow: none">
+            <table class="t" style="min-width: 520px">
+              <thead><tr><th>Concepto</th><th>Detalle</th><th class="r">Valor</th></tr></thead>
+              <tbody>
+                <tr><td><b>Mano de obra</b></td><td>Recoser cojín · 0.5 h × $15</td><td class="r">$7.50</td></tr>
+                <tr><td><b>Materiales</b></td><td>Hilo nylon 40 · 0.5 cono</td><td class="r">$3.00</td></tr>
+                <tr><td><b>Transporte</b></td><td>Recojo y devolución del cojín</td><td class="r">$45.00</td></tr>
+                <tr><td><b>Total valorizado</b></td><td class="muted">Lo asume Garwood · cuenta como costo de calidad</td><td class="r"><b>$55.50</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="grid2" style="gap: 14px">
+            <label class="gw-field" style="display: flex; flex-direction: column; gap: 6px"><span class="gw-field-label">Fecha objetivo de la reposición</span><select class="gw-input"><option>jue 29 oct · todo el taller</option><option>vie 30 oct · todo el taller</option></select></label>
+            <x-import component-from-global-scope="Garweb.TextField" label="Fecha objetivo" value="mié 28 oct"></x-import>
+          </div>
+          <sc-if value="{{open}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-primary" onClick="{{create}}">Crear orden de reposición</button></sc-if>
+          <sc-if value="{{done}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Reposición creada">María la ve primero en su celular. El recojo del cojín se suma a la próxima salida.</x-import></sc-if>
+          <p class="audit">Si la misma causa se repite, se genera una alerta de calidad (A11).</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { creating: false, done: false }; }
+  renderVals() {
+    const s = this.state;
+    return {
+      tema: this.props.tema ?? 'light',
+      creating: s.creating, newRec: () => this.setState({ creating: true }), save: () => this.setState({ creating: false }),
+      open: !s.done, done: s.done, create: () => this.setState({ done: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

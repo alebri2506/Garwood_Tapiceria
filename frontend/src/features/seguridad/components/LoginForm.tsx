@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { TextField } from '../../../shared/ui/TextField';
 import { Alert } from '../../../shared/ui/Alert';
 import { ApiError } from '../../../shared/api/http';
-import { destinoTrasIngreso } from '../../../shared/api/sesion';
+import { RUTA_CAMBIO_CONTRASENA, destinoTrasIngreso } from '../../../shared/api/sesion';
 import { useAuth } from '../../../app/auth/AuthProvider';
 import { authApi } from '../api/authApi';
 import { loginSchema, type LoginForm as LoginValues } from '../schemas';
@@ -26,8 +26,8 @@ export function LoginForm({ onOlvido }: { onOlvido: () => void }) {
     try {
       const sesion = await authApi.iniciarSesion(credenciales);
       iniciar(sesion);
-      // Cada rol entra a su propia vista (RG-07).
-      navigate(destinoTrasIngreso(sesion.usuario.rol, desde), { replace: true });
+      // Con una contraseña temporal, primero crea una propia (D.1.3); si no, cada rol entra a su vista (RG-07).
+      navigate(sesion.usuario.debeCambiarContrasena ? RUTA_CAMBIO_CONTRASENA : destinoTrasIngreso(sesion.usuario.rol, desde), { replace: true });
     } catch (e) {
       setErrorApi(e instanceof ApiError ? e.message : 'Ocurrió un error inesperado. Intente de nuevo.');
     }

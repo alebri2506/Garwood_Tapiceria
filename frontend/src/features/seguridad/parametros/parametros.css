@@ -1,0 +1,20 @@
+/* A14 Parámetros */
+.pr-acciones { gap: 8px; flex-wrap: wrap; }
+.pr-pend { margin: 4px 0 0; font-size: 13px; font-weight: 600; color: var(--warning-ink); }
+
+.pr-grid { gap: 16px 20px; }
+/* Que el número no quede debajo de la unidad ("días", "intentos", "/ milla"). */
+.pr-grid .gw-input-wrap:has(.gw-input-suffix) .gw-input { padding-right: 5.5em; }
+/* Campo cambiado y aún sin guardar. */
+.pr-editado .gw-input { border-color: var(--mod, var(--primary)); box-shadow: 0 0 0 1px var(--mod, var(--primary)); }
+
+.pr-fuera { margin: 6px 0 8px; padding-left: 18px; }
+.pr-fuera li { margin: 2px 0; }
+
+.pr-hist { list-style: none; margin: 0; padding: 0; }
+.pr-hist li { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.pr-hist li:last-child { border-bottom: 0; }
+.pr-hist b { font-size: 14px; }
+.pr-hist .audit { margin: 2px 0 0; }
+.pr-vacio { font-size: 13.5px; margin: 0; }
+.pr-rel { font-weight: 600; }

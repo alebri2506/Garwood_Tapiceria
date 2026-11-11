@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W4 Mi cotización (web)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+.obsl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.obsl li{display:grid;grid-template-columns:20px 1fr;gap:10px;font-size:15px;line-height:22px;color:var(--ink)}
+.obsl li > :first-child{color:var(--primary);margin-top:2px}
+.obs{border-left:4px solid var(--primary)}
+.mseg{display:flex;gap:8px;flex-wrap:wrap}
+.mseg button{min-height:44px;padding:0 16px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1 var(--font-sans);cursor:pointer}
+.mseg button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.ord{border:2px solid var(--success-500);background:color-mix(in srgb,var(--success-500) 5%,var(--surface))}
+.paybox{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;border:1.5px dashed var(--line-strong)}
+.mbar{display:none}
+@media (max-width:760px){.mbar{display:flex;position:fixed;left:12px;right:12px;bottom:84px;z-index:55;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px 10px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-lg)}.mbar span{display:block;font-size:12px;color:var(--ink-muted)}.mbar b{font:800 20px/1 var(--font-display)}.wmain{padding-bottom:170px}}
+body{margin:0}
+.jobs{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.jobs li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:22px}
+.jobs li span{color:var(--success-ink);flex:none;margin-top:1px}
+.count{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:16px;background:var(--primary-soft);color:var(--ink)}
+.count b.big{font-family:var(--font-display);font-size:30px;line-height:1;color:var(--primary);font-variant-numeric:tabular-nums}
+.count.late{background:var(--danger-soft)}
+.count.late b.big{color:var(--danger-ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:40px;padding:0 14px;border-radius:9999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 13.5px/1 var(--font-sans);cursor:pointer}
+.chips button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+
+.pm-sec{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);display:flex;align-items:center;gap:8px}
+.pm-sec em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:600;height:20px;padding:0 8px;border-radius:9999px;background:var(--success-soft);color:var(--success-ink);display:inline-flex;align-items:center}
+.pm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pm-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pm{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);text-align:left;font:inherit;color:var(--ink);cursor:pointer;min-height:64px}
+.pm b{font-size:14px}
+.pm small{font-size:12px;color:var(--ink-muted);line-height:16px}
+.pm.on{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 0 0 3px var(--primary-soft)}
+.pm-detail{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;background:var(--surface-sunken)}
+.pm-detail .kv{font-size:14px}
+.pm-lock{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-muted);line-height:18px}
+.co-dim{position:fixed;inset:0;background:#0A163080;z-index:60;display:grid;place-items:center;padding:16px}
+.co{width:min(420px,100%);border-radius:20px;background:var(--surface);box-shadow:0 30px 60px #0A163066;overflow:hidden}
+.co-h{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:#0A1630;color:#fff}
+.co-h b{font:700 15px/1.2 var(--font-display)}
+.co-h small{display:block;font-size:12px;color:#A9BEE3}
+.co-b{display:flex;flex-direction:column;gap:12px;padding:20px}
+.co-f{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:var(--ink-muted)}
+.co-f span.in{height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);display:flex;align-items:center;font:500 15px/1 var(--font-sans);color:var(--ink);letter-spacing:.04em}
+.co-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bank{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:12px;border:1.5px solid var(--line);font-size:14px;font-weight:600;background:var(--surface);cursor:pointer;width:100%;font-family:inherit;color:var(--ink)}
+.bank.on{border-color:var(--primary);background:var(--primary-soft)}
+.co-x{border:0;background:transparent;color:#fff;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;border-radius:8px}
+@media (max-width:640px){.pm-grid.three{grid-template-columns:1fr 1fr}}
+.msc{gap:12px;border:1.5px solid var(--primary)}.msc.ok{border-color:var(--success-500,#16A34A)}
+.mstl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.mstl li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:10px;align-items:start}
+.mstl i{width:14px;height:14px;margin-top:2px;border-radius:50%;border:2px solid var(--line-strong);background:var(--surface)}
+.mstl li.dn i{background:var(--success-500,#16A34A);border-color:var(--success-500,#16A34A)}.mstl li.cur i{border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
+.mstl b{display:block;font-size:13.5px}.mstl small{font-size:12px;color:var(--ink-muted)}
+</style>
+</helmet>
+<div class="wp">
+  <header class="wtop"><div class="wtop-in">
+    <a class="wbrand" href="W1-Inicio.dc.html"><b>Garwood</b><span>Tapicería de Interiores</span></a>
+    <nav class="wnav" aria-label="Portal del cliente"><a class="on" href="W6a-EnCurso.dc.html">Mis pedidos</a><a href="W9-Reclamos.dc.html">Reclamos</a></nav>
+    <a class="gw-btn gw-btn-on-dark gw-btn-sm" href="W2-Solicitud.dc.html">+ Nueva solicitud</a>
+    <a class="wbell" href="W11-Notificaciones.dc.html" aria-label="Notificaciones, 3 nuevas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span>3</span></a>
+    <a class="wav" href="W10-Perfil.dc.html" aria-label="Mi perfil">LM</a>
+  </div></header>
+  <main class="wmain">
+    <div class="whead"><div><div class="crumb"><a href="W6c-Solicitudes.dc.html">Mis pedidos › Solicitudes</a> › {{cotCode}}</div><h1>Mi cotización</h1></div><x-import component-from-global-scope="Garweb.StatusChip" status="{{status}}" size="lg"></x-import></div>
+    <sc-if value="{{showCount}}" hint-placeholder-val="{{ true }}">
+    <div class="{{countCls}}">
+      <x-import component-from-global-scope="Garweb.Icon" name="clock" size="{{ 26 }}"></x-import>
+      <b class="big">{{countBig}}</b>
+      <div><b>{{countTitle}}</b><div class="muted" style="font-size: 13px">{{countText}}</div></div>
+    </div>
+    </sc-if>
+    <div class="wcols">
+      <div class="wl">
+        <div class="card stack">
+          <p style="font-size: 16px; line-height: 24px">{{hello}}</p>
+          <div class="grid2" style="gap: 12px">
+            <span class="thumb b" style="height: 180px; width: 100%"><x-import component-from-global-scope="Garweb.Icon" name="image" size="{{ 28 }}"></x-import></span>
+            <span class="thumb" style="height: 180px; width: 100%; background: linear-gradient(135deg, #1E2A4A, #2B3B66)"><span style="color: #FFFFFF; font-weight: 600">{{fabName}}</span></span>
+          </div>
+        </div>
+        <div class="card stack">
+          <h2 style="font-size: 18px">Trabajos que haremos</h2>
+          <ul class="jobs">
+            <sc-for list="{{jobs}}" as="j" hint-placeholder-count="4"><li><span><x-import component-from-global-scope="Garweb.Icon" name="check" size="{{ 18 }}"></x-import></span><em style="font-style: normal; min-width: 0; color: var(--ink)">{{j}}</em></li></sc-for>
+          </ul>
+          <hr class="stitch">
+          <div class="grid2" style="gap: 10px 32px">
+            <div class="kv"><span>Traslado</span><b>Recojo y entrega a domicilio</b></div>
+            <div class="kv"><span>Dirección</span><b>48 Park St, Montclair</b></div>
+            <div class="kv"><span>Tiempo estimado</span><b>2–3 semanas</b></div>
+          </div>
+          <p class="muted" style="font-size: 13px">El precio del servicio ya incluye tela, materiales y mano de obra.</p>
+        </div>
+        <div class="card stack obs">
+          <div class="between"><h2 style="font-size: 18px">Observaciones del taller</h2><span class="muted" style="font-size: 12.5px">Administrador · mar 6 oct</span></div>
+          <ul class="obsl"><sc-for list="{{obs}}" as="o" hint-placeholder-count="3"><li><x-import component-from-global-scope="Garweb.Icon" name="info" size="{{ 18 }}"></x-import><span>{{o}}</span></li></sc-for></ul>
+          <span class="muted" style="font-size: 13px">¿Dudas? Escríbalas al responder o llámenos al (908) 555-0110.</span>
+        </div>
+        <sc-if value="{{rejecting}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack">
+            <div class="between"><h2 style="font-size: 18px">¿Por qué la rechaza?</h2><span class="pill" style="background: var(--danger-soft); color: var(--danger-ink)">Obligatorio</span></div>
+            <div class="chips" role="group" aria-label="Motivo del rechazo"><sc-for list="{{motivos}}" as="m" hint-placeholder-count="5"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for></div>
+            <x-import component-from-global-scope="Garweb.TextField" label="Comentario" optional="{{ true }}" multiline="{{ true }}" placeholder="Si quiere, cuéntenos más"></x-import>
+            <sc-if value="{{noMot}}" hint-placeholder-val="{{ true }}"><span class="muted" style="font-size: 13px">Elija un motivo para poder confirmar.</span></sc-if>
+            <div class="row"><button class="gw-btn gw-btn-danger" disabled="{{noMot}}" onClick="{{toggleReject}}">Confirmar rechazo</button><button class="gw-btn gw-btn-ghost" onClick="{{toggleReject}}">Volver</button></div>
+          </div>
+        </sc-if>
+      </div>
+      <aside class="wr">
+        <sc-if value="{{msOn}}" hint-placeholder-val="{{ false }}">
+          <div class="{{msCardCls}}">
+            <div class="between"><span class="ov">Su muestra de tela</span><x-import component-from-global-scope="Garweb.StatusChip" tone="{{msTone}}">{{msChip}}</x-import></div>
+            <ol class="mstl"><sc-for list="{{msSteps}}" as="t" hint-placeholder-count="3"><li class="{{t.cls}}"><i></i><span><b>{{t.l}}</b><small>{{t.d}}</small></span></li></sc-for></ol>
+            <sc-if value="{{msWait}}" hint-placeholder-val="{{ true }}"><p class="muted" style="font-size: 13px; margin: 0">Puede revisar el precio desde ya. Para aceptar, primero toque la muestra y confirme la tela.</p><button class="gw-btn gw-btn-secondary gw-btn-block" onClick="{{msGot}}">Ya recibí la muestra</button></sc-if>
+            <sc-if value="{{msDecide}}" hint-placeholder-val="{{ false }}"><b style="font-size: 15px">¿Le gustó la tela al tocarla?</b><button class="gw-btn gw-btn-primary gw-btn-block" onClick="{{msYes}}">Me gusta, confirmo esta tela</button><button class="gw-btn gw-btn-secondary gw-btn-block" onClick="{{msNo}}">Quiero otra tela</button></sc-if>
+            <sc-if value="{{msOther}}" hint-placeholder-val="{{ false }}"><p style="font-size: 13.5px; margin: 0">Le avisamos al taller. Le escribirá para ver otras opciones (o enviarle otra muestra) y le mandará la cotización actualizada.</p></sc-if>
+          </div>
+        </sc-if>
+        <x-import component-from-global-scope="Garweb.TotalCard" code="{{cotFull}}" status="{{status}}" lines="{{lines}}" total="{{total}}" valid-until="vie 6 nov" days-left="{{days}}"></x-import>
+        <div class="card stack" style="gap: 8px">
+          <div class="kv"><span>{{advLabel}}</span><b>{{advValue}}</b></div>
+          <div class="kv"><span>{{saldoLbl}}</span><b>{{saldo}}</b></div>
+          <p class="muted" style="font-size: 13px; line-height: 19px">{{advNote}}</p>
+        </div>
+        <sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+          <span id="decidir"></span>
+          <x-import component-from-global-scope="Garweb.TextField" label="¿Algo que debamos saber?" optional="{{ true }}" multiline="{{ true }}" placeholder="Ej.: prefiero que el recojo sea por la tarde"></x-import>
+          <sc-if value="{{canAcc}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{accept}}">{{acceptLabel}}</button></sc-if>
+          <sc-if value="{{accLocked}}" hint-placeholder-val="{{ false }}"><button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" disabled="">{{acceptLabel}}</button><span class="muted" style="font-size: 12.5px; text-align: center">Se habilita cuando confirme la tela de la muestra.</span></sc-if>
+          <button class="gw-btn gw-btn-ghost gw-btn-block" onClick="{{toggleReject}}">Rechazar</button>
+        </sc-if>
+        <sc-if value="{{payStep}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack ord">
+            <div class="between"><div><span class="ov">Orden de servicio generada</span><h2 style="font-size: 18px">OS-0076 · Aceptada por usted</h2></div><button class="gw-btn gw-btn-secondary gw-btn-sm">Descargar PDF</button></div>
+            <div class="kv"><span>Fecha de aceptación</span><b>mar 6 oct 2026, 16:40</b></div>
+            <div class="kv"><span>Trabajo</span><b>{{trabTxt}}</b></div>
+            <div class="kv"><span>Precio acordado</span><b>{{totTxt}} · incluye traslado</b></div>
+            <div class="kv"><span>Plazo estimado</span><b>2–3 semanas desde el recojo</b></div>
+            <p class="muted" style="font-size: 12.5px; line-height: 1.45">Este documento confirma lo que pidió y el precio. El precio no cambia, salvo que al recibir el mueble encontremos algo distinto a lo cotizado: en ese caso no lo tocamos, anulamos esta orden y le enviamos una recotización.</p>
+          </div>
+          <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Último paso: el adelanto">Su pedido se genera en cuanto el adelanto quede confirmado: al instante con tarjeta, o cuando el taller revise su comprobante.</x-import>
+          <div class="card stack" id="pagar" style="border: 2px solid var(--primary)">
+            <div class="between"><h2 style="font-size: 18px">Pagar el adelanto</h2><b class="num" style="font-family: var(--font-display); font-size: 24px">$456</b></div>
+            <span class="muted" style="font-size: 13px">40 % de $1,140. El saldo de $684 se paga antes o al momento de la entrega.</span>
+            <div class="pm-sec">Pagar en línea <em>se confirma al instante</em></div>
+            <div class="pm-grid"><sc-for list="{{pmOnline}}" as="m" hint-placeholder-count="2"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}"><b>{{m.l}}</b><small>{{m.s}}</small></button></sc-for></div>
+            <div class="pm-sec" style="margin-top: 4px">Otras formas de pago</div>
+            <div class="pm-grid three"><sc-for list="{{pmOther}}" as="m" hint-placeholder-count="3"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}"><b>{{m.l}}</b><small>{{m.s}}</small></button></sc-for></div>
+            <div class="pm-detail">
+              <sc-if value="{{pmIsOnline}}" hint-placeholder-val="{{ true }}">
+                <div class="pm-lock"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 16 }}"></x-import><span>{{pmOnlineTxt}} GARWEB nunca ve ni guarda los datos de su tarjeta o cuenta: los maneja la pasarela de pago.</span></div>
+                <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{pmOpenCo}}">{{pmPayLbl}}</button>
+              </sc-if>
+              <sc-if value="{{pmIsZelle}}" hint-placeholder-val="{{ false }}">
+                <div class="kv"><span>Zelle</span><b>[correo o teléfono Zelle]</b></div><div class="kv"><span>A nombre de</span><b>Garwood LLC</b></div><div class="kv"><span>Concepto</span><b>COT-0076 Méndez</b></div>
+                <x-import component-from-global-scope="Garweb.UploadZone" title="Suba la captura del envío" hint="JPG, PNG o PDF de hasta 5 MB" files="{{files}}"></x-import>
+                <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{pmInform}}">Informar pago por Zelle</button>
+                <span class="muted" style="font-size: 12.5px">El taller lo confirma, normalmente el mismo día.</span>
+              </sc-if>
+              <sc-if value="{{pmIsCheque}}" hint-placeholder-val="{{ false }}">
+                <div class="kv"><span>Páguese a</span><b>Garwood LLC</b></div><div class="kv"><span>Monto</span><b>$456</b></div>
+                <span style="font-size: 13.5px; line-height: 20px">Entréguelo en el taller o al conductor. Si lo envía, suba una foto del cheque firmado.</span>
+                <x-import component-from-global-scope="Garweb.UploadZone" title="Foto del cheque (opcional)" hint="Frente del cheque" files="{{files}}"></x-import>
+                <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{pmInform}}">Informar pago con cheque</button>
+              </sc-if>
+              <sc-if value="{{pmIsCash}}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 13.5px; line-height: 20px">Pague en efectivo en el taller (lun a sáb) o al conductor cuando le entreguemos. Le damos un recibo y el pago queda registrado al momento.</span>
+                <div class="kv"><span>Taller</span><b>Garwood, NJ · lun–sáb</b></div>
+                <button class="gw-btn gw-btn-secondary gw-btn-lg gw-btn-block" onClick="{{pmCash}}">Pagaré en efectivo</button>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{doneCard}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Pago aprobado · pedido PED-0076 generado">La tarjeta aprobó el adelanto de $456. No tiene que esperar: su pedido ya está en marcha y el recibo está en Pagos del pedido.</x-import>
+          <a class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" href="W6a-EnCurso.dc.html">Ver mi pedido</a>
+        </sc-if>
+        <sc-if value="{{doneAch}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Toast" tone="info" title="Débito autorizado · en proceso">Su banco tarda 2 a 3 días hábiles. Cuando la pasarela lo confirme, el pedido PED-0076 se genera solo y le avisamos. No necesita subir nada.</x-import>
+          <a class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" href="W6c-Solicitudes.dc.html">Ir a Mis pedidos</a>
+        </sc-if>
+        <sc-if value="{{informed}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Pago informado · por confirmar">El taller revisa su comprobante, normalmente el mismo día. Cuando lo confirme, se genera su pedido PED-0076.</x-import>
+          <a class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" href="W6c-Solicitudes.dc.html">Ir a Mis pedidos</a>
+        </sc-if>
+        <sc-if value="{{doneCash}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Toast" tone="info" title="Le esperamos en el taller">Lleve $456 en efectivo (lun a sáb). Al recibirlo, el taller lo registra, le da un recibo y se genera su pedido PED-0076.</x-import>
+          <a class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" href="W6c-Solicitudes.dc.html">Ir a Mis pedidos</a>
+        </sc-if>
+        <sc-if value="{{directOrder}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack ord">
+            <div class="between"><div><span class="ov">Orden de servicio generada</span><h2 style="font-size: 18px">OS-0076 · Aceptada por usted</h2></div><button class="gw-btn gw-btn-secondary gw-btn-sm">Descargar PDF</button></div>
+            <div class="kv"><span>Precio acordado</span><b>{{totTxt}} · incluye traslado</b></div>
+            <div class="kv"><span>Plazo estimado</span><b>2–3 semanas desde el recojo</b></div>
+          </div>
+          <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Pedido PED-0076 generado">No necesita adelanto. Le avisaremos la fecha de recojo.</x-import>
+          <a class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" href="W6a-EnCurso.dc.html">Ver mi pedido</a>
+        </sc-if>
+        <sc-if value="{{expired}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Alert" tone="warning" title="Cotización vencida">Los precios pueden haber cambiado. Pida que la renovemos; le avisaremos cuando esté lista.</x-import>
+          <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{askNew}}">Pedir que la renueven</button>
+          <sc-if value="{{asked}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Garweb.Toast" tone="success" title="Solicitud enviada">El taller recalculará la cotización.</x-import></sc-if>
+        </sc-if>
+      </aside>
+    </div>
+    <sc-if value="{{open}}" hint-placeholder-val="{{ true }}"><div class="mbar"><div><span>Total</span><b>{{totTxt}}</b></div><a class="gw-btn gw-btn-primary" href="#decidir">Responder</a></div></sc-if>
+  </main>
+
+    <sc-if value="{{coOpen}}" hint-placeholder-val="{{ false }}">
+      <div class="co-dim">
+        <div class="co" role="dialog" aria-label="Pago seguro">
+          <div class="co-h"><div><b>Pago seguro · Garwood LLC</b><small>{{coSub}}</small></div><button class="co-x" aria-label="Cerrar" onClick="{{coClose}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 18 }}"></x-import></button></div>
+          <div class="co-b">
+            <sc-if value="{{coCard}}" hint-placeholder-val="{{ true }}">
+              <label class="co-f">Número de tarjeta<span class="in">4242 4242 4242 4242</span></label>
+              <div class="co-2"><label class="co-f">Vence<span class="in">08 / 28</span></label><label class="co-f">CVC<span class="in">•••</span></label></div>
+              <label class="co-f">Nombre en la tarjeta<span class="in">Laura Méndez</span></label>
+            </sc-if>
+            <sc-if value="{{coBank}}" hint-placeholder-val="{{ false }}">
+              <span style="font-size: 13.5px">Elija su banco e inicie sesión para autorizar el débito.</span>
+              <sc-for list="{{banks}}" as="b" hint-placeholder-count="3"><button class="{{b.cls}}" onClick="{{b.pick}}"><span>{{b.l}}</span><span class="muted" style="font-size: 12.5px">{{b.s}}</span></button></sc-for>
+            </sc-if>
+            <div class="pm-lock"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 16 }}"></x-import><span>Página de la pasarela de pago. Sus datos no pasan por GARWEB.</span></div>
+            <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{coPay}}">{{coPayLbl}}</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"cliente":{"editor":"enum","options":["nuevo","con historial (pedido cerrado)"],"default":"nuevo"},"estado":{"editor":"enum","options":["vigente","vencida"],"default":"vigente"},"muebles":{"editor":"enum","options":["1 mueble","2 muebles"],"default":"1 mueble"},"$preview":{"width":1280,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { ms: p.estado === 'muestra' ? 'camino' : '', rejecting: false, mot: -1, asked: false, fab: false, acc: false, done: '', pm: 0, co: false, bk: 0 }; }
+  renderVals() {
+    const p = this.props, s = this.state;
+    const nuevo = p.cliente !== 'con historial (pedido cerrado)';
+    const two = p.muebles === '2 muebles';
+    const vencida = p.estado === 'vencida', msOn = !!s.ms, msConf = s.ms === 'ok';
+    const M = ['Precio', 'Plazo de entrega', 'Elegí otro taller', 'Otro motivo'];
+
+    const PMO = [['Tarjeta de crédito o débito', 'Visa, Mastercard, Amex, Discover'], ['Cuenta bancaria', 'Transferencia (ACH) · 2 a 3 días hábiles']];
+    const PMX = [['Zelle', 'Suba la captura'], ['Cheque', 'En el taller o con foto'], ['Efectivo', 'Solo en persona']];
+    const pm = s.pm;
+    const pmV = {
+      pmOnline: PMO.map((x, i) => ({ l: x[0], s: x[1], on: pm === i, cls: pm === i ? 'pm on' : 'pm', pick: () => this.setState({ pm: i }) })),
+      pmOther: PMX.map((x, i) => ({ l: x[0], s: x[1], on: pm === i + 2, cls: pm === i + 2 ? 'pm on' : 'pm', pick: () => this.setState({ pm: i + 2 }) })),
+      pmIsOnline: pm <= 1, pmIsZelle: pm === 2, pmIsCheque: pm === 3, pmIsCash: pm === 4,
+      pmOnlineTxt: pm === 0 ? 'Se abre la página segura de pago y el pago queda confirmado en cuanto la tarjeta lo aprueba.' : 'Se abre la página segura de pago para autorizar el débito desde su cuenta. Su banco lo procesa en 2 a 3 días hábiles.',
+      pmPayLbl: pm === 0 ? 'Pagar $456 con tarjeta' : 'Pagar $456 desde mi banco',
+      pmOpenCo: () => this.setState({ co: true }),
+      coOpen: !!s.co, coClose: () => this.setState({ co: false }), coCard: pm === 0, coBank: pm === 1,
+      coSub: (pm === 0 ? 'Tarjeta' : 'Cuenta bancaria (ACH)') + ' · $456',
+      banks: ['Chase', 'Bank of America', 'Wells Fargo', 'TD Bank'].map((l, i) => ({ l, s: i === (s.bk ?? 0) ? 'Cuenta corriente ••••4821' : '', cls: i === (s.bk ?? 0) ? 'bank on' : 'bank', pick: () => this.setState({ bk: i }) })),
+      coPayLbl: 'Pagar $456',
+      files: []
+    };
+    return {
+      ...pmV,
+      coPay: () => this.setState({ co: false, done: pm === 0 ? 'card' : 'ach' }),
+      pmInform: () => this.setState({ done: 'manual' }), pmCash: () => this.setState({ done: 'cash' }),
+      status: vencida ? 'Vencida' : s.acc ? (nuevo && s.done !== 'card' ? 'Aceptada: pendiente de adelanto' : 'Aceptada') : 'Pendiente de respuesta',
+      countCls: vencida ? 'count late' : 'count',
+      countBig: vencida ? '0' : '24',
+      countTitle: vencida ? 'Venció el vie 6 nov' : 'días para responder',
+      countText: vencida ? 'La vigencia es de 1 mes desde su publicación (mar 6 oct).' : 'Válida hasta el vie 6 nov. La vigencia es de 1 mes desde su publicación (mar 6 oct).',
+      jobs: ['Retapizado completo del sofá de 3 cuerpos con ' + (msOn ? 'Terciopelo Vino (Pattern 220 · color 9)' : 'Lino Navy 204'), 'Cambio de espuma de los asientos'].concat(two ? ['Retapizado del otomán con la misma tela'] : []).concat(['Recojo en su casa y entrega ' + (two ? 'de los dos muebles en un solo viaje' : 'del sofá terminado'), 'Revisión del mueble al recibirlo, antes de empezar']),
+      items: ['Retapizado completo · Lino Navy 204', 'Cambio de espuma de asientos'],
+      lines: two ? [{ label: 'Mueble 1 · Sofá de 3 cuerpos', value: 1050 }, { label: 'Mueble 2 · Otomán (misma tela)', value: 180 }, { label: 'Transporte ida y vuelta (una sola vez)', value: 105 }] : [{ label: 'Precio del servicio', value: 1050 }, { label: 'Transporte ida y vuelta', value: 90 }],
+      total: two ? 1335 : 1140, totTxt: two ? '$1,335' : '$1,140', saldoLbl: two ? 'Saldo al recibir sus muebles' : 'Saldo al recibir el sofá',
+      trabTxt: two ? 'Sofá + otomán · retapizado · Lino Navy 204' : 'Retapizado + espuma · Lino Navy 204',
+      days: vencida ? 0 : 24,
+      advLabel: nuevo ? 'Adelanto para generar el pedido · 40 %' : 'Adelanto',
+      advValue: nuevo ? (two ? '$534' : '$456') : 'No se requiere (0 %)',
+      saldo: nuevo ? (two ? '$801' : '$684') : (two ? '$1,335' : '$1,140'),
+      advNote: nuevo ? 'Aún no tiene un pedido cerrado con nosotros. Su pedido se genera cuando el taller confirma el adelanto.' : 'Ya tiene pedidos cerrados con nosotros: no pedimos adelanto y su pedido se genera en cuanto acepta.',
+      cotCode: msOn ? 'COT-0090' : 'COT-0076', cotFull: msOn ? 'Cotización COT-0090' : 'Cotización COT-0076',
+      msOn, hello: msOn ? 'Hola, Laura. Esta es la cotización para su sofá con la tela que marcó en línea. Su muestra va en camino: puede revisar el precio desde ya.' : 'Hola, Laura. Esta es la cotización para su sofá, con la tela que eligió en el local.',
+      fabName: msOn ? 'Terciopelo Vino · Pattern 220 · color 9' : 'Lino Navy 204',
+      msChip: s.ms === 'camino' ? 'En camino' : s.ms === 'got' ? 'Recibida' : s.ms === 'ok' ? 'Tela confirmada' : 'Pidió otra tela',
+      msTone: s.ms === 'ok' ? 'success' : s.ms === 'otra' ? 'warning' : 'info',
+      msCardCls: 'card stack msc' + (s.ms === 'ok' ? ' ok' : ''),
+      msSteps: [['Pedida a la compañía de telas', 'mié 7 oct'], ['En camino a su casa', 'llega aprox. lun 12 oct'], ['Usted la toca y confirma', s.ms === 'ok' ? 'confirmada hoy' : s.ms === 'otra' ? 'pidió otra tela' : 'pendiente']].map((t, i) => { const lvl = s.ms === 'camino' ? 1 : s.ms === 'got' ? 2 : 3; return { l: t[0], d: t[1], cls: i < lvl ? 'dn' : i === lvl ? 'cur' : '' }; }),
+      msWait: s.ms === 'camino', msDecide: s.ms === 'got', msOther: s.ms === 'otra',
+      msGot: () => this.setState({ ms: 'got' }), msYes: () => this.setState({ ms: 'ok' }), msNo: () => this.setState({ ms: 'otra', fab: true }),
+      canAcc: !msOn || msConf, accLocked: msOn && !msConf, showAskFab: !msOn,
+      accept: () => this.setState({ acc: true, rejecting: false }),
+      payStep: s.acc && nuevo && !s.done, informed: s.acc && nuevo && s.done === 'manual', doneCard: s.acc && nuevo && s.done === 'card', doneAch: s.acc && nuevo && s.done === 'ach', doneCash: s.acc && nuevo && s.done === 'cash', directOrder: s.acc && !nuevo,
+      obs: [msOn ? 'La muestra es un pedacito de la tela real: si al tocarla no le convence, pídanos otra antes de aceptar. El precio se actualiza si cambia la tela.' : 'La tela Lino Navy 204 se pide al aceptar; llega en 1 a 2 días.', 'Al recibir el mueble lo revisamos antes de empezar. Si encontramos algo distinto a lo cotizado, no lo tocamos y le enviamos una recotización para que usted decida.', 'El cojín central tiene una mancha: el retapizado la cubre por completo.'],
+      fabricAsked: s.fab, askFabric: () => this.setState({ fab: true, rejecting: false }),
+      acceptLabel: nuevo ? 'Aceptar y pagar el adelanto' : 'Aceptar y generar el pedido',
+      showCount: !s.acc,
+      open: !vencida && !s.acc, expired: vencida,
+      asked: s.asked, askNew: () => this.setState({ asked: true }),
+      noMot: s.mot < 0,
+      motivos: M.map((l, i) => ({ label: l, on: s.mot === i, cls: s.mot === i ? 'on' : '', pick: () => this.setState({ mot: i }) })),
+      rejecting: s.rejecting && !vencida,
+      toggleReject: () => this.setState({ rejecting: !s.rejecting })
+    };
+  }
+}
+</script>
+</body>
+</html>

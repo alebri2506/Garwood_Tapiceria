@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W6a Mis pedidos en curso (web)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.mh{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.mh h1{margin-top:2px}
+.sumbar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.sb{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.sb i{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;font-style:normal}
+.sb.a i{background:var(--warning-soft);color:var(--warning-ink)}
+.sb.b i{background:var(--primary-soft);color:var(--primary)}
+.sb.c i{background:var(--success-soft);color:var(--success-ink)}
+.sb b{display:block;font:700 15px/1.3 var(--font-display)}
+.sb small{font-size:12.5px;color:var(--ink-muted)}
+.tabsx{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabsx a{white-space:nowrap;flex:none;display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;text-decoration:none;color:var(--ink-muted);font:600 15px/1 var(--font-sans);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabsx a span{min-width:22px;height:22px;padding:0 7px;border-radius:9999px;background:var(--surface-sunken);font-size:12px;display:grid;place-items:center}
+.tabsx a.on{color:var(--ink);border-bottom-color:var(--primary)}
+.tabsx a.on span{background:var(--primary);color:var(--on-primary)}
+.sec{display:flex;align-items:center;gap:10px;font:700 12px/1 var(--font-sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted);margin-top:4px}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.oc{display:grid;grid-template-columns:96px minmax(0,1fr) 260px;gap:20px;padding:20px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);align-items:start}
+.oc.act{border:2px solid var(--primary);box-shadow:var(--shadow-md)}
+.oc .ph{width:96px;height:96px;border-radius:16px}
+.oc .bd{display:flex;flex-direction:column;gap:10px;min-width:0}
+.oc h2{font-size:20px}
+.oc .code{font-size:13px;color:var(--ink-muted)}
+.oc .oside{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.amt{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.amt b{font:800 26px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.amt small{font-size:12.5px;color:var(--ink-muted)}
+.nx{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;font-size:14px;line-height:20px}
+.nx > :first-child{flex:none;margin-top:1px}
+.nx.you{background:var(--warning-soft);color:var(--warning-ink)}
+.nx.us{background:var(--primary-soft);color:var(--ink)}
+.nx.us > :first-child{color:var(--primary)}
+.nx.ok{background:var(--success-soft);color:var(--success-ink)}
+.nx b{font-weight:700}
+.steps{display:flex;align-items:center;gap:0;flex-wrap:wrap;font-size:12.5px;color:var(--ink-muted)}
+.steps .s{display:inline-flex;align-items:center;gap:6px}
+.steps .s i{width:10px;height:10px;border-radius:50%;border:2px solid var(--line-strong);background:var(--surface)}
+.steps .s.d i{background:var(--success-500);border-color:var(--success-500)}
+.steps .s.c{color:var(--ink);font-weight:700}
+.steps .s.c i{background:var(--primary);border-color:var(--primary);box-shadow:0 0 0 4px var(--primary-soft)}
+.steps .ln{width:22px;height:2px;background:var(--line);margin:0 6px}
+.steps .ln.d{background:var(--success-500)}
+.kvs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px}
+.kvs div{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.kvs span{color:var(--ink-muted)}
+.hero{display:flex;flex-direction:column;gap:18px;padding:24px;border-radius:22px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-md)}
+.big{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;position:relative}
+.big .st{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;position:relative}
+.big .st::before{content:"";position:absolute;top:17px;left:-50%;width:100%;height:3px;background:var(--line);z-index:0}
+.big .st:first-child::before{display:none}
+.big .st.d::before,.big .st.c::before{background:var(--success-500)}
+.big .st i{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font:800 14px/1 var(--font-display);font-style:normal;background:var(--surface);border:2px solid var(--line-strong);color:var(--ink-muted);z-index:1}
+.big .st.d i{background:var(--success-500);border-color:var(--success-500);color:#fff}
+.big .st.c i{background:var(--primary);border-color:var(--primary);color:var(--on-primary);box-shadow:0 0 0 6px var(--primary-soft)}
+.big .st b{font-size:13.5px}
+.big .st small{font-size:12px;color:var(--ink-muted)}
+.big .st.c b{color:var(--primary)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.acct{display:flex;flex-direction:column;gap:10px}
+.acct .row2{display:flex;justify-content:space-between;font-size:14.5px}
+.acct .row2 span{color:var(--ink-muted)}
+.meth{display:flex;flex-wrap:wrap;gap:6px}
+.meth span{height:26px;padding:0 10px;border-radius:9999px;background:var(--surface-sunken);border:1px solid var(--line);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center}
+.ph2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ph2 span{height:84px;border-radius:12px}
+.ph2 small{font-size:12px;color:var(--ink-muted)}
+.pc{display:grid;grid-template-columns:260px minmax(0,1fr);gap:22px;padding:20px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.ba{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ba div{display:flex;flex-direction:column;gap:4px}
+.ba span.t{height:120px;border-radius:12px}
+.ba small{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+.rcl{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;font-size:13.5px;font-weight:600}
+.rcl.open{background:var(--success-soft);color:var(--success-ink)}
+.rcl.off{background:var(--surface-sunken);color:var(--ink-muted)}
+@media (max-width:640px){.oc{grid-template-columns:1fr;padding:16px}.oc .ph{width:56px;height:56px;border-radius:12px}.big{grid-template-columns:repeat(2,minmax(0,1fr))}.kvs{grid-template-columns:1fr}.ba span.t{height:100px}}
+@media (max-width:1000px){.oc{grid-template-columns:72px minmax(0,1fr)}.oc .oside{grid-column:1/-1}.oc .ph{width:72px;height:72px}.cols{grid-template-columns:1fr}.pc{grid-template-columns:1fr}.sumbar{grid-template-columns:1fr}.big{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:18px}.big .st::before{display:none}}
+</style>
+</helmet>
+<div class="wp">
+  <header class="wtop"><div class="wtop-in">
+    <a class="wbrand" href="W1-Inicio.dc.html"><b>Garwood</b><span>Tapicería de Interiores</span></a>
+    <nav class="wnav" aria-label="Portal del cliente"><a class="on" href="W6a-EnCurso.dc.html">Mis pedidos</a><a href="W9-Reclamos.dc.html">Reclamos</a></nav>
+    <a class="gw-btn gw-btn-on-dark gw-btn-sm" href="W2-Solicitud.dc.html">+ Nueva solicitud</a>
+    <a class="wbell" href="W11-Notificaciones.dc.html" aria-label="Notificaciones, 3 nuevas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span>3</span></a>
+    <a class="wav" href="W10-Perfil.dc.html" aria-label="Mi perfil">LM</a>
+  </div></header>
+  <main class="wmain">
+    <div class="mh"><div><div class="crumb">Hola, Laura · vista del mar 13 oct</div><h1>Mis pedidos</h1></div></div>
+    <nav class="tabsx" aria-label="Mis pedidos"><a href="W6c-Solicitudes.dc.html">Solicitudes y cotizaciones <span>3</span></a><a href="W6a-EnCurso.dc.html" class="on" aria-current="page">En curso <span>{{nCurso}}</span></a><a href="W6b-Anteriores.dc.html">Anteriores <span>1</span></a></nav>
+    <sc-if value="{{showList}}" hint-placeholder-val="{{ false }}">
+      <p class="muted" style="font-size: 14px; margin-top: -6px">Tiene {{nCurso}} pedidos en marcha. Primero verá los que necesitan algo de usted.</p>
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+        <div class="sec">{{g.t}}</div>
+        <sc-for list="{{g.items}}" as="o" hint-placeholder-count="2">
+          <article class="{{o.cls}}">
+            <span class="{{o.ph}}"><x-import component-from-global-scope="Garweb.Icon" name="{{o.icon}}" size="{{ 30 }}"></x-import></span>
+            <div class="bd">
+              <div class="between" style="flex-wrap: wrap; gap: 8px"><div><h2>{{o.t}}</h2><span class="code">{{o.code}}</span></div><x-import component-from-global-scope="Garweb.StatusChip" status="{{o.st}}"></x-import></div>
+              <div class="steps"><sc-for list="{{o.steps}}" as="x" hint-placeholder-count="6"><sc-if value="{{x.ln}}" hint-placeholder-val="{{ true }}"><span class="{{x.lnCls}}"></span></sc-if><span class="{{x.cls}}"><i></i>{{x.l}}</span></sc-for></div>
+              <div class="{{o.nxCls}}"><x-import component-from-global-scope="Garweb.Icon" name="{{o.nxIcon}}" size="{{ 18 }}"></x-import><span>{{o.nx}}</span></div>
+            </div>
+            <div class="oside">
+              <div class="amt"><b>{{o.amt}}</b><small>{{o.amtSub}}</small></div>
+              <sc-if value="{{o.href}}" hint-placeholder-val="{{ false }}"><a class="gw-btn gw-btn-primary gw-btn-block" href="{{o.href}}">{{o.cta}}</a></sc-if>
+              <button class="{{o.openCls}}" onClick="{{o.open}}">Ver pedido</button>
+            </div>
+          </article>
+        </sc-for>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{showDetail}}" hint-placeholder-val="{{ true }}">
+    <sc-if value="{{multi}}" hint-placeholder-val="{{ false }}"><button class="gw-btn gw-btn-ghost gw-btn-sm" style="align-self: flex-start" onClick="{{back}}">← Todos mis pedidos en curso ({{nCurso}})</button></sc-if>
+    <section class="hero">
+      <div class="between" style="flex-wrap: wrap; gap: 12px">
+        <div class="row" style="gap: 14px"><span class="thumb" style="width: 64px; height: 64px; border-radius: 16px"><x-import component-from-global-scope="Garweb.Icon" name="sofa" size="{{ 28 }}"></x-import></span><div><h2 style="font-size: 22px">Sofá de 3 cuerpos</h2><span class="muted" style="font-size: 14px">PED-0076 · retapizado + espuma · Lino Navy 204</span></div></div>
+        <div class="row" style="gap: 12px"><x-import component-from-global-scope="Garweb.StatusChip" status="{{status}}" size="lg"></x-import><div class="amt"><small>Entrega estimada</small><b style="font-size: 20px">semana del 19 oct</b></div></div>
+      </div>
+      <div class="big"><sc-for list="{{big}}" as="s" hint-placeholder-count="6"><div class="{{s.cls}}"><i>{{s.n}}</i><b>{{s.l}}</b><small>{{s.d}}</small></div></sc-for></div>
+      <div class="{{nxCls}}"><x-import component-from-global-scope="Garweb.Icon" name="{{nxIcon}}" size="{{ 18 }}"></x-import><span>{{nxTxt}}</span></div>
+    </section>
+    <div class="cols">
+      <div class="stack" style="gap: 16px">
+        <div class="card stack">
+          <div class="between"><h3 style="font-size: 17px">Qué estamos haciendo</h3><span class="muted" style="font-size: 13px">actualizado hoy 10:05</span></div>
+          <p style="font-size: 15px; line-height: 23px">El equipo del taller está <b>cambiando la espuma de los asientos</b>. Ya terminamos de desmontar, revisar la estructura y cortar la tela.</p>
+          <div class="gw-progress"><span class="gw-progress-fill" style="width: 50%"></span></div>
+          <span class="muted" style="font-size: 13px">3 de 6 trabajos · terminamos el vie 16 oct (estimado)</span>
+        </div>
+        <div class="card stack">
+          <h3 style="font-size: 17px">Su mueble en el taller</h3>
+          <div class="ph2"><span class="thumb b"></span><span class="thumb"></span><span class="thumb c"></span></div>
+          <small class="muted">Fotos del recojo (jue 8 oct) · 9 piezas contadas: estructura, 3 cojines de asiento, 3 de respaldo y 2 decorativos. Las mismas 9 vuelven en la entrega.</small>
+        </div>
+        <div class="card stack">
+          <h3 style="font-size: 17px">Datos del pedido</h3>
+          <div class="kvs">
+            <div><span>Trabajo</span><b>Retapizado + espuma</b></div>
+            <div><span>Tela</span><b>Lino Navy 204 · 14 yd</b></div>
+            <div><span>Traslado</span><b>Recojo y entrega</b></div>
+            <div><span>Dirección</span><b>48 Park St, Montclair</b></div>
+            <div><span>Orden de servicio</span><b><a href="W4-Cotizacion.dc.html">OS-0076 · PDF</a></b></div>
+            <div><span>Revisión inicial</span><b style="color: var(--success-ink)">Sin sorpresas · 8 oct</b></div>
+          </div>
+        </div>
+      </div>
+      <aside class="stack" style="gap: 16px">
+        <div class="card acct">
+          <span class="ov">Su cuenta</span>
+          <div class="row2"><span>Total</span><b>$1,140</b></div>
+          <div class="row2"><span>Adelanto pagado · Zelle</span><b style="color: var(--success-ink)">$456</b></div>
+          <div class="row2" style="padding-top: 8px; border-top: 1px solid var(--line)"><b>Saldo pendiente</b><b style="font: 800 22px/1 var(--font-display); color: var(--warning-ink)">$684</b></div>
+          <small class="muted">Puede pagarlo antes de la entrega o al recibir el sofá con:</small>
+          <div class="meth"><span>Tarjeta</span><span>Cuenta bancaria</span><span>Zelle</span><span>Cheque</span><span>Efectivo</span></div>
+          <a class="gw-btn gw-btn-primary gw-btn-block" href="W5-Pagos.dc.html">Pagar saldo y ver recibos</a>
+        </div>
+        <div class="card stack" style="gap: 10px">
+          <div class="between"><span class="ov">Fecha y hora de la entrega</span><span class="pill" style="white-space: nowrap">Aún no disponible</span></div>
+          <p style="font-size: 14px; line-height: 21px">La fecha se asigna cuando su sofá esté <b>terminado</b> y el taller lo incluya en una <b>salida de reparto</b>.</p>
+          <ol class="muted" style="font-size: 13px; line-height: 20px; padding-left: 18px; margin: 0"><li>Terminamos su pedido (est. vie 16 oct).</li><li>El taller arma la salida y le asigna día y franja horaria.</li><li>Le avisamos aquí y por correo: usted confirma o reprograma hasta 24 h antes.</li></ol>
+          <a class="gw-btn gw-btn-ghost gw-btn-sm" href="W7-Entrega.dc.html?estado=en%20producci%C3%B3n">Ver cómo funciona</a>
+        </div>
+        <div class="card stack" style="gap: 8px">
+          <span class="ov">¿Necesita algo?</span>
+          <a href="tel:9085550110" style="font-weight: 600; font-size: 14px">Llamar al taller · (908) 555-0110</a>
+          <sc-if value="{{canAsk}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-ghost gw-btn-block" style="color: var(--danger-ink); justify-content: flex-start; padding-left: 0" onClick="{{openCancel}}">Solicitar cancelación</button></sc-if>
+        </div>
+        <sc-if value="{{cancelOpen}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack" style="border: 2px solid var(--error-500)">
+            <h3 style="font-size: 17px">Solicitar cancelación</h3>
+            <p class="muted" style="font-size: 13.5px; line-height: 20px">Como ya recogimos su sofá y empezamos el trabajo, se cobra solo lo hecho (horas, materiales y traslado) y se le devuelve el resto. El taller confirma el monto final con usted.</p>
+            <div class="row2" style="display: flex; justify-content: space-between; font-size: 14px"><span class="muted">Horas trabajadas · 5.8 h</span><b>$87</b></div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px"><span class="muted">Tela comprada para su pedido</span><b>$238</b></div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px"><span class="muted">Espuma usada</span><b>$144</b></div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px"><span class="muted">Recojo realizado</span><b>$45</b></div>
+            <hr class="stitch">
+            <div style="display: flex; justify-content: space-between; font-size: 14px"><b>Cargo estimado</b><b>≈ $514</b></div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px"><span class="muted">Adelanto pagado</span><b>− $456</b></div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px"><b>Le faltaría pagar</b><b style="color: var(--warning-ink)">≈ $58</b></div>
+            <x-import component-from-global-scope="Garweb.TextField" label="¿Por qué quiere cancelar?" required="{{ true }}" value="Me mudo de ciudad."></x-import>
+            <button class="gw-btn gw-btn-danger gw-btn-block" onClick="{{sendCancel}}">Enviar solicitud</button>
+            <button class="gw-btn gw-btn-ghost gw-btn-block" onClick="{{closeCancel}}">Seguir con mi pedido</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{cancelSent}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Alert" tone="warning" title="Solicitud de cancelación enviada">El taller revisará el cargo estimado (≈ $514), lo confirmará o ajustará con usted y le avisará el monto final. Su pedido queda en pausa mientras tanto.</x-import>
+        </sc-if>
+      </aside>
+    </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"pedidos":{"editor":"enum","options":["1 pedido en curso","3 pedidos en curso"],"default":"1 pedido en curso"},"$preview":{"width":1280,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { c: '', open: false }; }
+  renderVals() {
+    const c = this.state.c;
+    const S = [['Pedido confirmado', '7 oct'], ['Recojo', 'jue 8 oct · 9 piezas'], ['Revisión inicial', '8 oct · sin sorpresas'], ['En el taller', 'desde lun 12 oct'], ['Listo', 'vie 16 oct (est.)'], ['Entrega', 'fecha por asignar']];
+    const cur = 3;
+    const multi = this.props.pedidos === '3 pedidos en curso';
+    const stepsOf = (L, k) => L.map((l, i) => ({ l, cls: 's' + (i < k ? ' d' : i === k ? ' c' : ''), ln: i > 0, lnCls: 'ln' + (i <= k ? ' d' : '') }));
+    const go = () => this.setState({ open: true });
+    const L = ['Confirmado', 'Recojo', 'En el taller', 'Listo', 'Entrega'];
+    const A = [
+      { cls: 'oc act', ph: 'thumb ph', icon: 'sofa', t: 'Cojines decorativos × 4', code: 'PED-0071 · retapizado · Lino Navy 204', st: 'Terminado',
+        steps: stepsOf(L, 4), nxCls: 'nx you', nxIcon: 'calendar', nx: 'Le toca a usted: el taller asignó la entrega al jue 15 oct entre 10:00 y 12:00. Confírmela o reprográmela hasta el mié 14, 10:00.',
+        amt: '$96', amtSub: 'saldo a pagar al recibir', href: 'W7-Entrega.dc.html', cta: 'Confirmar o reprogramar', openCls: 'gw-btn gw-btn-ghost gw-btn-block', open: go }
+    ];
+    const B = [
+      { cls: 'oc', ph: 'thumb ph', icon: 'sofa', t: 'Sofá de 3 cuerpos', code: 'PED-0076 · retapizado + espuma · Lino Navy 204', st: 'En producción',
+        steps: stepsOf(L, 2), nxCls: 'nx us', nxIcon: 'info', nx: 'Estamos cambiando la espuma de los asientos (3 de 6 trabajos). Terminamos el vie 16 oct (estimado).',
+        amt: '$684', amtSub: 'saldo pendiente', href: '', cta: '', openCls: 'gw-btn gw-btn-secondary gw-btn-block', open: go },
+      { cls: 'oc', ph: 'thumb b ph', icon: 'package', t: 'Puff a juego (nuevo)', code: 'PED-0086 · fabricación nueva · Lino Navy 204', st: 'Esperando material',
+        steps: stepsOf(['Confirmado', 'Material', 'En el taller', 'Listo', 'Entrega'], 1), nxCls: 'nx us', nxIcon: 'clock', nx: 'La tela llega el jue 15 oct. Ese día empezamos a fabricarlo; no hace falta recoger nada en su casa.',
+        amt: '$288', amtSub: 'saldo pendiente · adelanto $192 pagado', href: '', cta: '', openCls: 'gw-btn gw-btn-secondary gw-btn-block', open: go }
+    ];
+    return {
+      multi, nCurso: multi ? 3 : 1, showList: multi && !this.state.open, showDetail: !multi || this.state.open,
+      back: () => this.setState({ open: false }),
+      groups: [{ t: 'Necesitan su acción · 1', items: A }, { t: 'En el taller · 2', items: B }],
+      status: c === 'sent' ? 'En pausa' : 'En producción',
+      big: S.map((s, i) => ({ l: s[0], d: s[1], n: i < cur ? '✓' : String(i + 1), cls: 'st' + (i < cur ? ' d' : i === cur ? ' c' : '') })),
+      nxCls: c === 'sent' ? 'nx you' : 'nx us', nxIcon: c === 'sent' ? 'pause' : 'info',
+      nxTxt: c === 'sent' ? 'Su pedido está en pausa mientras el taller revisa la solicitud de cancelación.' : 'Por ahora no necesita hacer nada. Cuando su sofá esté terminado y asignado a una salida, le avisaremos la fecha y hora de entrega para que la confirme o la reprograme.',
+      canAsk: c === '', cancelOpen: c === 'open', cancelSent: c === 'sent',
+      openCancel: () => this.setState({ c: 'open' }), closeCancel: () => this.setState({ c: '' }), sendCancel: () => this.setState({ c: 'sent' })
+    };
+  }
+}
+</script>
+</body>
+</html>

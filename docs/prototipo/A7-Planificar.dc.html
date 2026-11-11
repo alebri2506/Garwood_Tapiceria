@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A7 Planificar pedido</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.who{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.who button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-height:64px}
+.who button.on{border-color:var(--primary);background:var(--primary-soft)}
+.who small{color:var(--ink-muted);font-size:12px}
+.req{display:flex;gap:10px;align-items:flex-start}
+.req span{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+.req .ok{background:var(--success-soft);color:var(--success-ink)}
+.req .no{background:var(--error-soft, #FDE8E8);color:var(--danger-ink)}
+.req .na{background:var(--surface-sunken);color:var(--ink-muted)}
+.req div{display:flex;flex-direction:column;gap:2px;font-size:14px}
+.req small{font-size:12.5px;color:var(--ink-muted)}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav on" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div>
+        <div class="crumb">Almacén e Inventario › <a href="A6b-FichaPedido.dc.html">{{code}}</a></div>
+        <div class="row" style="flex-wrap: wrap"><h1>Planificar {{code}}</h1><x-import component-from-global-scope="Garweb.StatusChip" status="{{status}}"></x-import></div>
+      </div>
+      <span class="muted" style="font-size: 14px">{{who}}</span>
+    </div>
+    <x-import component-from-global-scope="Garweb.OrderTimeline" steps="{{steps}}" current="{{step}}"></x-import>
+    <div class="split">
+      <div class="wide">
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 18px">Fecha objetivo</h2><span class="pill">Sin responsable único: trabaja todo el taller</span></div>
+          <div class="grid2" style="gap: 16px">
+            <x-import component-from-global-scope="Garweb.TextField" label="Fecha objetivo" value="vie 16 oct 2026" required="{{ true }}"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Mueble en el taller" value="{{muebleVal}}" locked="{{ true }}" hint="{{muebleHint}}"></x-import>
+          </div>
+        </div>
+        <div class="card stack">
+          <div class="between"><h2 style="font-size: 18px">Materiales del pedido</h2><span class="muted" style="font-size: 13px">La reserva baja el disponible, no el físico</span></div>
+          <div class="tbl-box" style="box-shadow: none; overflow-x: auto">
+            <table class="t">
+              <thead><tr><th>Material</th><th>Origen</th><th class="r">Necesario</th><th class="r">Disponible</th><th>Estado</th><th>Para el</th></tr></thead>
+              <tbody>
+                <tr><td><b>{{tela}}</b></td><td>Bajo pedido</td><td class="r">{{telaQ}}</td><td class="r">0 yd</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="danger">Faltante</x-import></td><td class="num">vie 9 oct</td></tr>
+                <sc-if value="{{fab}}" hint-placeholder-val="{{ false }}"><tr><td><b>Estructura de madera (banco)</b></td><td>Stock</td><td class="r">1 u</td><td class="r">2 u</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Reservado</x-import></td><td class="num">sáb 10 oct</td></tr></sc-if>
+                <tr><td><b>Espuma HD 2" (plancha)</b></td><td>Stock</td><td class="r">6 planchas</td><td class="r">13 planchas</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Reservado</x-import></td><td class="num">sáb 10 oct</td></tr>
+                <tr><td><b>Cierres 60 cm</b></td><td>Stock</td><td class="r">3 u</td><td class="r">42 u</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Reservado</x-import></td><td class="num">sáb 10 oct</td></tr>
+                <tr><td><b>Grapas 71/10</b></td><td>Insumo de proceso</td><td class="r">1 caja</td><td class="r">21 cajas</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="neutral">Al cerrar</x-import></td><td class="muted">—</td></tr>
+                <tr><td><b>Hilo nylon 40</b></td><td>Insumo de proceso</td><td class="r">2 conos</td><td class="r">9 conos</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="neutral">Al cerrar</x-import></td><td class="muted">—</td></tr>
+                <tr><td><b>Pegamento de contacto</b></td><td>Insumo de proceso</td><td class="r">0.5 gal</td><td class="r">3 gal</td><td><x-import component-from-global-scope="Garweb.StatusChip" tone="neutral">Al cerrar</x-import></td><td class="muted">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <aside class="aside">
+        <div class="card stack">
+          <span class="ov">Para entrar a producción</span>
+          <div class="req"><span class="no">✕</span><div><b>Materiales completos</b><small>Falta {{tela}} · llega el jue 8 oct</small></div></div>
+          <sc-if value="{{ret}}" hint-placeholder-val="{{ true }}"><div class="req"><span class="ok">✓</span><div><b>Mueble en el taller</b><small>Recojo jue 8 oct · 9 piezas con fotos</small></div></div></sc-if>
+          <sc-if value="{{fab}}" hint-placeholder-val="{{ false }}"><div class="req"><span class="na">—</span><div><b>Mueble en el taller</b><small>No aplica: es un mueble nuevo (fabricación)</small></div></div></sc-if>
+          <p class="audit">{{reqTxt}}</p>
+        </div>
+        <x-import component-from-global-scope="Garweb.Alert" tone="danger" title="{{faltTitle}}" action="{{ null }}">Requerido para el vie 9 oct. Se agregó a «Qué pedir» en Inventario como compra bajo pedido asignada a {{code}}.</x-import>
+        <x-import component-from-global-scope="Garweb.Alert" tone="success" title="La compra llega a tiempo">Proveedor estima entrega el jue 8 oct.</x-import>
+        <div class="card stack">
+          <span class="ov">Orden de trabajo</span>
+          <p class="muted" style="font-size: 13px; line-height: 19px">Se genera desde la cotización congelada: {{otTxt}}. Todo el equipo de producción la verá en su celular.</p>
+          <sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+            <button class="gw-btn gw-btn-primary gw-btn-block" onClick="{{save}}">Guardar planificación</button>
+          </sc-if>
+          <sc-if value="{{saved}}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Pedido planificado">La orden ya aparece en el celular de todo el taller.</x-import>
+            <a class="gw-btn gw-btn-secondary gw-btn-block" href="T1-Ordenes.dc.html">Ver las órdenes del taller</a>
+            <a class="gw-btn gw-btn-ghost gw-btn-block" href="A8-Inventario.dc.html?pestana=qué pedir">Ver qué pedir</a>
+          </sc-if>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"modo":{"editor":"enum","options":["retapizado","fabricacion"],"default":"retapizado"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { who: 0, saved: false }; }
+  renderVals() {
+    const fab = this.props.modo === 'fabricacion';
+    return {
+      tema: this.props.tema ?? 'light',
+      fab, ret: !fab,
+      code: fab ? 'PED-0052' : 'PED-0076',
+      who: fab ? 'Daniel Cruz · Banco de entrada (fabricación nueva) · adelanto confirmado' : 'Laura Méndez · Sofá 3 cuerpos · adelanto confirmado',
+      muebleVal: fab ? 'No requiere · mueble nuevo' : 'Recojo jue 8 oct · 9 piezas',
+      muebleHint: fab ? 'En fabricación el cliente no entrega mueble' : 'Lo registra el conductor en el recojo',
+      tela: fab ? 'Cuero sintético negro' : 'Lino Navy 204', telaQ: fab ? '3 yd' : '14 yd',
+      faltTitle: fab ? 'Faltante: Cuero sintético negro — 3 yd' : 'Faltante: Lino Navy 204 — 14 yd',
+      reqTxt: fab ? 'Pasa solo a Listo para producir cuando lleguen los materiales.' : 'Pasa solo a Listo para producir cuando se cumplan las dos condiciones.',
+      otTxt: fab ? '5 actividades, 9 h persona' : '6 actividades, 14 h persona',
+      status: 'Esperando material',
+      step: 1,
+      steps: ['Generado', 'Esperando mueble / material', 'Listo para producir', 'En producción', 'Terminado', 'En reparto / retiro', 'Entregado', 'Cerrado'],
+      open: !this.state.saved, saved: this.state.saved,
+      save: () => this.setState({ saved: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

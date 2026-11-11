@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AccesoPage } from '../features/seguridad/AccesoPage';
-import { RutaRol, SoloInvitado } from './auth/guards';
+import { RutaRol, SoloContrasenaTemporal, SoloInvitado } from './auth/guards';
 import { PanelRol } from './layout/PanelRol';
 import { ClienteLayout } from './layout/ClienteLayout';
 import { AdminLayout } from './layout/AdminLayout';
@@ -19,14 +19,17 @@ import { SolicitudesPage } from '../features/comercial/pedidos/SolicitudesPage';
 import { AnterioresPage } from '../features/comercial/pedidos/AnterioresPage';
 import { PendientePage } from './PendientePage';
 import { NotificacionesPage } from '../features/notificaciones/NotificacionesPage';
+import { ParametrosPage } from '../features/seguridad/parametros/ParametrosPage';
+import { UsuariosPage } from '../features/seguridad/usuarios/UsuariosPage';
+import { PerfilPage } from '../features/historial/perfil/PerfilPage';
 
 // Pantallas A del diseño que aún no se implementan (ruta del menú lateral → pantalla).
 const PANTALLAS_ADMIN: [string, string][] = [
   ['pagos', 'A5 Pagos'],
   ['pedidos', 'A6 Pedidos'], ['plantillas', 'A16 Plantillas'], ['inventario', 'A8 Inventario'], ['catalogo', 'A15 Catálogo de materiales y telas'],
   ['historial', 'A12 Historial'], ['clientes', 'A17 Clientes y expediente'], ['salidas', 'A13 Planificar salidas'],
-  ['taller', 'A18 Taller: recepciones y retiros'], ['reclamos', 'A19 Reclamos e incidencias'], ['parametros', 'A14 Parámetros y respaldo'],
-  ['usuarios', 'A20 Usuarios, roles y auditoría'],
+  ['taller', 'A18 Taller: recepciones y retiros'], ['reclamos', 'A19 Reclamos e incidencias'],
+
 ];
 
 export const router = createBrowserRouter([
@@ -41,6 +44,12 @@ export const router = createBrowserRouter([
     ],
   },
   { path: '/restablecer', element: <AccesoPage modo="restablecer" /> },
+  // W10 (E.1.4): enlace del correo nuevo. Sin sesión: puede abrirse en otro equipo.
+  { path: '/confirmar-correo', element: <AccesoPage modo="confirmar-correo" /> },
+  // W10 › Seguridad (E.4.1): cambiar contraseña en una pantalla aparte con el estilo de G1; solo el cliente con sesión.
+  { element: <RutaRol roles={['Cliente']} />, children: [{ path: '/cliente/perfil/contrasena', element: <AccesoPage modo="mi-contrasena" /> }] },
+  // D.1.3: primer ingreso con contraseña temporal.
+  { element: <SoloContrasenaTemporal />, children: [{ path: '/cambiar-contrasena', element: <AccesoPage modo="cambiar" /> }] },
   { path: '/terminos', element: <PendientePage titulo="Términos y condiciones" /> },
   { path: '/privacidad', element: <PendientePage titulo="Política de privacidad" /> },
 
@@ -69,7 +78,7 @@ export const router = createBrowserRouter([
         { path: 'entrega', element: <PendientePage titulo="W7 Aviso de entrega" /> },
         { path: 'reclamos', element: <PendientePage titulo="W9 Reclamos" /> },
         { path: 'notificaciones', element: <NotificacionesPage /> },
-        { path: 'perfil', element: <PendientePage titulo="W10 Mi perfil" conCerrarSesion /> },
+        { path: 'perfil', element: <PerfilPage /> },
       ],
     }],
   },
@@ -86,6 +95,8 @@ export const router = createBrowserRouter([
         { path: 'solicitudes', element: <SolicitudesAdminPage /> },
         { path: 'cotizaciones', element: <CotizacionesPage /> },
         { path: 'cotizaciones/cotizar', element: <CotizarPage /> },
+        { path: 'parametros', element: <ParametrosPage /> },
+        { path: 'usuarios', element: <UsuariosPage /> },
         ...PANTALLAS_ADMIN.map(([path, titulo]) => ({ path, element: <PendientePage titulo={titulo} /> })),
       ],
     }],

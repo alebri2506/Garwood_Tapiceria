@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>GARWEB — Mapa de flujos</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.lane{display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:stretch}
+.who{border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line)}
+.who b{font-family:var(--font-display);font-size:18px}
+.who small{font-size:12.5px;color:var(--ink-muted);line-height:17px}
+.steps{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.step{display:flex;flex-direction:column;gap:2px;min-width:118px;padding:10px 12px;border-radius:12px;background:var(--surface);border:1.5px solid var(--line);text-decoration:none;color:var(--ink);box-shadow:var(--shadow-sm)}
+.step:hover{border-color:var(--primary);box-shadow:var(--shadow-md);color:var(--ink)}
+.step i{font-style:normal;font-size:11px;font-weight:700;color:var(--primary);letter-spacing:.06em}
+.step span{font-size:13.5px;font-weight:600;line-height:18px}
+.arr{color:var(--line-strong);font-weight:700}
+.hand{font-size:12px;color:var(--progress-ink);background:var(--progress-soft);border-radius:9999px;padding:4px 10px;font-weight:600}
+</style>
+</helmet>
+<div style="width: 1440px; min-height: 1450px; background: var(--bg); display: flex; flex-direction: column; gap: 28px; padding: 0 0 40px">
+  <header style="position: relative; overflow: hidden; padding: 40px 48px 36px; color: #FFFFFF; background: radial-gradient(60% 120% at 100% 0%, #38BDF866 0%, #38BDF800 60%), linear-gradient(120deg, #0A1630 0%, #102A5C 50%, #1D4ED8 100%)">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: .1em; color: #A9BEE3">TAPICERÍA DE INTERIORES GARWOOD LLC · PROTOTIPO</span>
+        <h1 style="font-size: 52px; line-height: 56px; font-weight: 800; letter-spacing: -.03em">GARWEB — mapa de flujos</h1>
+        <p style="font-size: 16px; color: #C3D2EE; max-width: 720px">Un mismo caso de principio a fin: Laura Méndez (Montclair, NJ) retapiza un sofá de 3 cuerpos. Toque cualquier pantalla para entrar al flujo; cada pantalla enlaza con la siguiente.</p>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 16px; border-radius: 20px; background: #FFFFFF1F; border: 1px solid #FFFFFF38; min-width: 560px">
+        <div style="display: flex; flex-direction: column"><span style="font-size: 11px; color: #A9BEE3; font-weight: 700">PEDIDO</span><b style="font-family: var(--font-display); font-size: 20px">PED-0076</b></div>
+        <div style="display: flex; flex-direction: column"><span style="font-size: 11px; color: #A9BEE3; font-weight: 700">TOTAL</span><b class="num" style="font-family: var(--font-display); font-size: 20px">$1,140</b></div>
+        <div style="display: flex; flex-direction: column"><span style="font-size: 11px; color: #A9BEE3; font-weight: 700">ADELANTO 40 %</span><b class="num" style="font-family: var(--font-display); font-size: 20px">$456</b></div>
+        <div style="display: flex; flex-direction: column"><span style="font-size: 11px; color: #A9BEE3; font-weight: 700">ENTREGA</span><b style="font-family: var(--font-display); font-size: 20px">jue 22 oct</b></div>
+      </div>
+    </div>
+  </header>
+
+  <div style="padding: 0 48px; display: flex; flex-direction: column; gap: 18px">
+    <div class="lane">
+      <div class="who"><b>Cliente</b><small>Portal web adaptable (se ajusta a computadora, tablet y celular). Menú Mis pedidos · Pagos · Reclamos, campana de avisos y perfil.</small></div>
+      <div class="steps">
+        <a class="step" href="W1-Inicio.dc.html"><i>W1</i><span>Inicio</span></a><span class="arr">→</span>
+        <a class="step" href="G1-Acceso.dc.html"><i>G1</i><span>Crear cuenta / ingresar</span></a><span class="arr">→</span>
+        <a class="step" href="W2-Solicitud.dc.html"><i>W2</i><span>Solicitar cotización</span></a><span class="arr">→</span>
+        <a class="step" href="W3-Cita.dc.html"><i>W3</i><span>Cita en el local</span></a>
+          <a class="step" href="W3b-Visita.dc.html"><i>W3b</i><span>Visita a domicilio</span></a><span class="hand">→ A2 · A4</span>
+        <a class="step" href="W4-Cotizacion.dc.html"><i>W4</i><span>Mi cotización $1,140</span></a><span class="arr">→</span>
+        <a class="step" href="W5-Pagos.dc.html"><i>W5</i><span>Pagos del pedido · saldo $684</span></a><span class="hand">→ A5</span>
+        <a class="step" href="W6a-EnCurso.dc.html"><i>W6a</i><span>En curso · saldo · cancelar</span></a><span class="arr">→</span>
+        <a class="step" href="W7-Entrega.dc.html"><i>W7</i><span>Recojo, entrega o retiro</span></a><span class="arr">→</span>
+        <a class="step" href="W6b-Anteriores.dc.html"><i>W6b</i><span>Anteriores · repetir</span></a>
+        <a class="step" href="W8-DanoOculto.dc.html" style="border-style: dashed"><i>W8</i><span>Daño oculto · PED-0077</span></a>
+        <a class="step" href="W9-Reclamos.dc.html" style="border-style: dashed"><i>W9</i><span>Reclamo y su estado</span></a>
+        <a class="step" href="W10-Perfil.dc.html"><i>W10</i><span>Mi perfil</span></a>
+        <a class="step" href="W11-Notificaciones.dc.html"><i>W11</i><span>Notificaciones</span></a>
+      </div>
+    </div>
+    <hr class="stitch">
+    <div class="lane">
+      <div class="who"><b>Administrador</b><small>Escritorio. 21 pantallas en 5 módulos + seguridad. Entra por G1 Acceso.</small></div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div class="steps"><span class="ov" style="width: 110px">Acceso</span>
+          <a class="step" href="G1-Acceso.dc.html"><i>G1</i><span>Acceso común</span></a><span class="arr">→</span>
+          <a class="step" href="A1-Panel.dc.html"><i>A1</i><span>Panel de hoy</span></a>
+          <a class="step" href="A21-Estadisticas.dc.html"><i>A21</i><span>Estadísticas del mes</span></a>
+        </div>
+        <div class="steps"><span class="ov" style="width: 110px">Comercial</span>
+          <a class="step" href="A2-Agenda.dc.html"><i>A2</i><span>Agenda</span></a>
+          <a class="step" href="A2c-AgendarCita.dc.html" style="border-style: dashed"><i>A2c–e</i><span>Agendar turno desde una solicitud</span></a>
+          <a class="step" href="A2f-NoAsistio.dc.html" style="border-style: dashed"><i>A2f–g</i><span>No asistió · reprogramar</span></a><span class="arr">→</span>
+          <a class="step" href="A3-Solicitudes.dc.html"><i>A3</i><span>Solicitudes + nueva</span></a><span class="arr">→</span>
+          <a class="step" href="A4-Cotizar.dc.html" style="border-color: var(--primary)"><i>A4 ★</i><span>Cotización · según su estado</span></a><span class="hand">→ W4 · W8</span>
+          <a class="step" href="A5-Pagos.dc.html"><i>A5</i><span>Pagos + pago en local</span></a><span class="arr">→</span>
+          <a class="step" href="A6-Pedidos.dc.html"><i>A6</i><span>Pedidos (kanban)</span></a><span class="arr">→</span>
+          <a class="step" href="A6b-FichaPedido.dc.html"><i>A6b</i><span>Ficha del pedido</span></a>
+          <a class="step" href="A16-Plantillas.dc.html"><i>A16</i><span>Plantillas</span></a>
+        </div>
+        <div class="steps"><span class="ov" style="width: 110px">Inventario</span>
+          <a class="step" href="A7-Planificar.dc.html"><i>A7</i><span>Planificar pedido</span></a><span class="hand">→ T1</span>
+          <a class="step" href="A8-Inventario.dc.html"><i>A8</i><span>Stock · qué pedir · movimientos</span></a>
+          <a class="step" href="A9-Conteo.dc.html"><i>A9</i><span>Conteo del martes</span></a><span class="arr">→</span>
+                    <a class="step" href="A11-Evaluar.dc.html"><i>A11</i><span>Cerrar y evaluar</span></a>
+          <a class="step" href="A15-Catalogo.dc.html"><i>A15</i><span>Catálogo</span></a>
+        </div>
+        <div class="steps"><span class="ov" style="width: 110px">Historial</span>
+          <a class="step" href="A12-Historial.dc.html"><i>A12</i><span>Historial + folders</span></a>
+          <a class="step" href="A17-Clientes.dc.html"><i>A17</i><span>Clientes y expediente</span></a>
+        </div>
+        <div class="steps"><span class="ov" style="width: 110px">Despacho</span>
+          <a class="step" href="A13-Salida.dc.html"><i>A13</i><span>Planificar salida</span></a><span class="hand">→ W7 · D1</span>
+          <a class="step" href="A18-Taller.dc.html"><i>A18</i><span>Taller: recepciones</span></a>
+          <a class="step" href="A19-Reclamos.dc.html"><i>A19</i><span>Reclamos</span></a>
+        </div>
+        <div class="steps"><span class="ov" style="width: 110px">Configuración</span>
+          <a class="step" href="A14-Parametros.dc.html"><i>A14</i><span>Parámetros + respaldo</span></a>
+          <a class="step" href="A20-Usuarios.dc.html"><i>A20</i><span>Usuarios y auditoría</span></a>
+        </div>
+      </div>
+    </div>
+    <hr class="stitch">
+    <div class="lane">
+      <div class="who"><b>Producción</b><small>Tapiceros y costureras, cada uno en su celular. Trabajan en equipo sobre las órdenes del taller: inician, pausan, retiran, devuelven y marcan ✓.</small></div>
+      <div class="steps">
+        <a class="step" href="T1-Ordenes.dc.html"><i>T1</i><span>Órdenes del taller</span></a><span class="arr">→</span>
+        <a class="step" href="T2-Orden.dc.html"><i>T2</i><span>Orden PED-0076</span></a><span class="hand">retiro extra → A8 · tela dañada → A8 Qué pedir · daño oculto → A4 · W8</span>
+        <a class="step" href="T3-Terminar.dc.html"><i>T3</i><span>Terminar y devolver sobrante</span></a><span class="hand">terminado → A11</span>
+      </div>
+    </div>
+    <hr class="stitch">
+    <div class="lane">
+      <div class="who"><b>Conductor</b><small>App web en su celular. Valida la carga en el taller, la salida queda congelada en ruta y cobra con 5 métodos y cierra entregando cheques y efectivo.</small></div>
+      <div class="steps">
+        <a class="step" href="D3-Recojo.dc.html"><i>D3</i><span>Recojo · 9 piezas</span></a><span class="arr">⋯</span>
+        <a class="step" href="D1-Ruta.dc.html"><i>D1</i><span>Hoja de ruta · confirmadas</span></a><span class="arr">⇄</span>
+        <a class="step" href="D1b-Mapa.dc.html"><i>D1b</i><span>Mapa con la ruta</span></a><span class="arr">→</span>
+        <a class="step" href="D2-Carga.dc.html"><i>D2</i><span>Validar carga e iniciar salida</span></a><span class="arr">→</span>
+        <a class="step" href="D2b-Bloqueo.dc.html" style="border-style: dashed"><i>D2b</i><span>Pedido bloqueado (alterno)</span></a>
+        <a class="step" href="D4-Entrega.dc.html"><i>D4</i><span>Entrega · cobro $684 (Comercial)</span></a><span class="arr">→</span>
+        <a class="step" href="D5-Cierre.dc.html"><i>D5</i><span>Cierre · cobros a entregar</span></a><span class="hand">incidencias → A13 · daño → A19</span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--ink-muted)">
+      <span style="display: inline-flex; gap: 6px; align-items: center"><span class="step" style="min-width: 0; padding: 2px 10px; box-shadow: none">borde continuo</span> camino principal</span>
+      <span style="display: inline-flex; gap: 6px; align-items: center"><span class="step" style="min-width: 0; padding: 2px 10px; box-shadow: none; border-style: dashed">borde de puntada</span> camino alterno o excepción</span>
+      <span style="display: inline-flex; gap: 6px; align-items: center"><span class="hand">→ A5</span> traspaso a otro rol</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1450}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

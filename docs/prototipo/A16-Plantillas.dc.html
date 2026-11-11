@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A16 Plantillas de cotización</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.cell{width:68px;min-height:36px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 14px/1 var(--font-sans);text-align:right;font-variant-numeric:tabular-nums}
+.cell.nm{width:100%;text-align:left;font-weight:600}
+.cell:focus,.qi:focus,.pn:focus{outline:none;border-color:var(--primary);box-shadow:var(--focus-ring)}
+.cell.chg,.qi.chg{border-color:var(--success-500);background:var(--success-soft);color:var(--success-ink);font-weight:700}
+.mats{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.mat{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:9999px;background:var(--surface-sunken);border:1px solid var(--line);font-size:12.5px;font-weight:500;white-space:nowrap}
+.mq{display:inline-flex;align-items:center;gap:6px;padding:3px 4px 3px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:12.5px;font-weight:500}
+.qi{width:52px;height:28px;padding:0 6px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 13px/1 var(--font-sans);text-align:right}
+.mq i{font-style:normal;color:var(--ink-muted)}
+.xs{width:24px;height:24px;border-radius:6px;border:0;background:transparent;color:var(--ink-muted);display:grid;place-items:center;cursor:pointer;padding:0}
+.x{width:34px;height:34px;border-radius:8px;border:0;background:transparent;color:var(--ink-muted);display:grid;place-items:center;cursor:pointer}
+.sel{height:30px;padding:0 10px;border-radius:8px;border:1px dashed var(--line-strong);background:var(--surface);color:var(--primary);font:600 12.5px/1 var(--font-sans);cursor:pointer}
+.sel.mq2{border-style:solid;color:var(--ink);height:36px;width:100%}
+.tv{min-width:680px}
+.te{table-layout:fixed;width:100%}
+.te td{vertical-align:middle}
+.te th:first-child{width:auto!important}
+.te th:nth-child(3){width:24%}
+.te th:nth-child(2),.te th:nth-child(4){width:126px!important}
+.te th{letter-spacing:.02em}
+.te tr.sub td{padding-top:0;background:var(--surface-sunken)}
+.te tr:has(+ tr.sub) td{border-bottom:0}
+.ml{display:block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin:8px 0 6px}
+.lines{display:flex;flex-direction:column}
+.ln{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.ln:last-child{border-bottom:0}
+.ln .q{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.pn{flex:1;height:32px;padding:0 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 14px/1 var(--font-sans)}
+.sec h3{font-size:15px}
+.cap{font-size:12.5px;color:var(--ink-muted);margin-top:-6px}
+.sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.st{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:14px;background:var(--surface-sunken)}
+.st span{font-size:12.5px;color:var(--ink-muted);font-weight:600}
+.st b{font:700 24px/1.15 var(--font-display);font-variant-numeric:tabular-nums}
+.st small{font-size:12.5px;font-weight:700;color:var(--success-ink);min-height:16px}
+.st.pr{background:var(--primary-soft)}
+.st.pr b{color:var(--primary)}
+.brk{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink-muted)}
+.brk b{color:var(--ink);font-weight:600}
+.hint{font-size:12.5px;color:var(--warning-ink);font-weight:600}
+.lay{display:grid;grid-template-columns:280px minmax(0,1fr);gap:24px;align-items:start}
+.lst{display:flex;flex-direction:column;gap:8px}
+.srch{display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-muted)}
+.srch input{border:0;outline:0;background:transparent;font:500 14px/1 var(--font-sans);color:var(--ink);width:100%}
+.srch:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.fch{display:flex;gap:6px;margin-bottom:4px}
+.fch button{height:32px;padding:0 12px;border-radius:9999px;border:1px solid var(--line);background:var(--surface);font:600 12.5px/1 var(--font-sans);color:var(--ink-muted);cursor:pointer}
+.fch button.on{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.tp{display:flex;flex-direction:column;gap:3px;padding:11px 14px;border-radius:12px;border:1px solid transparent;background:transparent;width:100%;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.tp:hover{background:var(--surface)}
+.tp.on{background:var(--surface);border-color:var(--line);box-shadow:var(--shadow-sm);border-left:3px solid var(--primary)}
+.tp .h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tp small{font-size:12.5px;color:var(--ink-muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--warning-500);flex:none}
+.empty{padding:14px;border-radius:12px;border:1.5px dashed var(--line-strong);color:var(--ink-muted);font-size:13px;text-align:center}
+.rvbar{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--warning-soft);color:var(--warning-ink);font-size:13.5px;line-height:19px}
+.rvbar span{flex:1}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.hd h2{font-size:21px}
+.meta{font-size:13px;color:var(--ink-muted);margin-top:4px}
+.chip{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:9999px;font-size:11.5px;font-weight:700}
+.chip.ok{background:var(--success-soft);color:var(--success-ink)}
+.chip.dr{background:var(--primary-soft);color:var(--primary)}
+.chip.old{background:var(--surface-sunken);color:var(--ink-muted)}
+.ednote{font-size:13px;color:var(--ink-muted);margin-top:-8px}
+.tabs2{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs2 button{height:40px;padding:0 14px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;font:600 14px/1 var(--font-sans);color:var(--ink-muted);cursor:pointer}
+.tabs2 button.on{color:var(--ink);border-bottom-color:var(--primary)}
+.ver{display:flex;flex-direction:column;gap:8px;padding:14px 0;border-bottom:1px solid var(--line)}
+.ver:last-child{border-bottom:0}
+.ver .h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.lk{border:0;background:none;padding:0;color:var(--primary);font:600 13px/1.2 var(--font-sans);cursor:pointer}
+.dif{margin:0;padding:10px 12px 10px 28px;border-radius:10px;background:var(--surface-sunken);font-size:13px;line-height:20px}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav on" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div><div class="crumb">Comercial › Plantillas</div><h1>Plantillas de cotización</h1></div>
+      <a class="gw-btn gw-btn-primary" href="A16b-NuevaPlantilla.dc.html">+ Nueva plantilla</a>
+    </div>
+    <div class="lay">
+      <div class="lst">
+        <label class="srch"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 18 }}"></x-import><input type="search" placeholder="Buscar mueble o servicio" aria-label="Buscar plantilla" value="{{q}}" onInput="{{onQ}}"></label>
+        <div class="fch" role="group" aria-label="Filtro"><button class="{{f0}}" onClick="{{toF0}}">Todas · {{nAll}}</button><button class="{{f1}}" onClick="{{toF1}}">Para revisar · {{nRev}}</button></div>
+        <sc-for list="{{list}}" as="t" hint-placeholder-count="5">
+          <button class="{{t.cls}}" onClick="{{t.pick}}">
+            <span class="h"><b>{{t.name}}</b><sc-if value="{{t.rev}}" hint-placeholder-val="{{ false }}"><span class="dot" title="Para revisar"></span></sc-if></span>
+            <small>{{t.sub}} · {{t.ver}}</small>
+          </button>
+        </sc-for>
+        <sc-if value="{{noList}}" hint-placeholder-val="{{ false }}"><div class="empty">Ninguna plantilla coincide.</div></sc-if>
+      </div>
+
+      <div class="stack" style="gap: 14px; min-width: 0">
+        <sc-if value="{{showAlert}}" hint-placeholder-val="{{ true }}">
+          <div class="rvbar"><x-import component-from-global-scope="Garweb.Icon" name="alert" size="{{ 20 }}"></x-import><span><b>Para revisar.</b> En los últimos 3 pedidos se usó +12 % de tela y +1 plancha de espuma (evaluación de PED-0076).</span><button class="gw-btn gw-btn-primary gw-btn-sm" onClick="{{apply}}">Aplicar en un borrador</button></div>
+        </sc-if>
+        <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Toast" tone="success" title="{{doneT}}">{{doneB}}</x-import>
+        </sc-if>
+
+        <div class="card stack" style="gap: 18px">
+          <div class="hd">
+            <div><div class="row" style="gap: 10px; flex-wrap: wrap"><h2>{{title}}</h2><span class="{{chipCls}}">{{chipTxt}}</span></div><p class="meta">{{meta}}</p></div>
+            <div class="row">
+              <sc-if value="{{canEdit}}" hint-placeholder-val="{{ true }}"><button class="gw-btn gw-btn-secondary gw-btn-sm" onClick="{{edit}}">Editar</button></sc-if>
+              <sc-if value="{{isOld}}" hint-placeholder-val="{{ false }}"><button class="gw-btn gw-btn-secondary gw-btn-sm" onClick="{{backAct}}">Volver a la {{actV}}</button></sc-if>
+              <sc-if value="{{ed}}" hint-placeholder-val="{{ false }}"><button class="gw-btn gw-btn-ghost gw-btn-sm" onClick="{{discard}}">Descartar</button><button class="gw-btn gw-btn-primary gw-btn-sm" onClick="{{activate}}">Activar {{nextV}}</button></sc-if>
+            </div>
+          </div>
+          <sc-if value="{{ed}}" hint-placeholder-val="{{ false }}"><p class="ednote">{{ednote}}</p></sc-if>
+          <div class="sum">
+            <div class="st"><span>Horas persona</span><b>{{c.h}}</b><small>{{c.dh}}</small></div>
+            <div class="st"><span>Costo</span><b>{{c.costo}}</b><small>{{c.dcosto}}</small></div>
+            <div class="st pr"><span>Precio sugerido</span><b>{{c.sug}}</b><small>{{c.dsug}}</small></div>
+            <div class="brk"><span>Materiales <b>{{c.mat}}</b></span><span>Mano de obra <b>{{c.mano}}</b></span><span>Maquinaria <b>{{c.maq}}</b></span><span>Costos fijos <b>{{c.fij}}</b></span><span style="margin-left: auto">Precios del Catálogo · tela de referencia $17/yd · margen 75 % sobre el costo</span></div>
+          </div>
+          <div class="tabs2" role="tablist"><button class="{{tb0}}" onClick="{{toT0}}">Actividades · {{nActs}}</button><button class="{{tb1}}" onClick="{{toT1}}">Insumos de proceso · {{nIns}}</button><button class="{{tb2}}" onClick="{{toT2}}">Versiones · {{nVers}}</button></div>
+          <sc-if value="{{isT0}}" hint-placeholder-val="{{ true }}">
+          <div style="overflow-x: auto">
+            <table class="{{tblCls}}">
+              <thead><tr><th style="width: 28%">Actividad</th><th class="r" style="width: 84px">Horas persona</th><th>Máquina</th><th class="r" style="width: 84px">Horas máq.</th><sc-if value="{{vw}}" hint-placeholder-val="{{ true }}"><th>Materiales (cantidad)</th></sc-if><sc-if value="{{ed}}" hint-placeholder-val="{{ false }}"><th style="width: 44px"></th></sc-if></tr></thead>
+              <tbody>
+                <sc-for list="{{acts}}" as="a" hint-placeholder-count="6">
+                  <tr>
+                    <td><sc-if value="{{a.vw}}" hint-placeholder-val="{{ true }}"><b>{{a.n}}</b></sc-if><sc-if value="{{a.ed}}" hint-placeholder-val="{{ false }}"><input class="cell nm" value="{{a.n}}" aria-label="Nombre de la actividad" onInput="{{a.setN}}"></sc-if></td>
+                    <td class="r"><sc-if value="{{a.vw}}" hint-placeholder-val="{{ true }}"><span class="num">{{a.h}}</span></sc-if><sc-if value="{{a.ed}}" hint-placeholder-val="{{ false }}"><input class="{{a.hCls}}" inputmode="decimal" value="{{a.h}}" aria-label="Horas persona" onInput="{{a.setH}}"></sc-if></td>
+                    <td><sc-if value="{{a.fixM}}" hint-placeholder-val="{{ true }}"><span class="{{a.mCls}}">{{a.m}}</span></sc-if><sc-if value="{{a.pickM}}" hint-placeholder-val="{{ false }}"><select class="sel mq2" aria-label="Máquina" onChange="{{a.setM}}"><option value="—">Sin máquina</option><option>Mesa de corte</option><option>Máquina de coser industrial</option><option>Cortadora de espuma</option><option>Engrapadora neumática</option></select></sc-if></td>
+                    <td class="r"><sc-if value="{{a.vw}}" hint-placeholder-val="{{ true }}"><span class="num">{{a.hm}}</span></sc-if><sc-if value="{{a.ed}}" hint-placeholder-val="{{ false }}"><input class="cell" inputmode="decimal" value="{{a.hm}}" aria-label="Horas máquina" onInput="{{a.setHM}}"></sc-if></td>
+                    <sc-if value="{{a.vw}}" hint-placeholder-val="{{ true }}"><td><div class="mats"><sc-if value="{{a.noMat}}" hint-placeholder-val="{{ false }}"><span class="muted">—</span></sc-if><sc-for list="{{a.mats}}" as="m" hint-placeholder-count="1"><span class="mat">{{m.m}} · {{m.q}} {{m.u}}</span></sc-for></div></td></sc-if>
+                    <sc-if value="{{a.ed}}" hint-placeholder-val="{{ false }}"><td><button class="x" aria-label="Quitar actividad" onClick="{{a.rm}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 16 }}"></x-import></button></td></sc-if>
+                  </tr>
+                  <sc-if value="{{a.ed}}" hint-placeholder-val="{{ false }}"><tr class="sub"><td colspan="5"><span class="ml">Materiales</span><div class="mats"><sc-for list="{{a.mats}}" as="m" hint-placeholder-count="1"><span class="mq">{{m.m}}<input class="{{m.qCls}}" inputmode="decimal" value="{{m.q}}" aria-label="Cantidad" onInput="{{m.setQ}}"><i>{{m.u}}</i><button class="xs" aria-label="Quitar material" onClick="{{m.rm}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 14 }}"></x-import></button></span></sc-for><select class="sel" aria-label="Agregar material" onChange="{{a.addM}}"><option value="">+ Material</option><option>Tela de tapiz</option><option>Espuma HD 2"</option><option>Espuma HD 1.5"</option><option>Guata</option><option>Hilo nylon 40</option><option>Cierre</option><option>Botones forrados</option><option>Pegamento de madera</option></select></div></td></tr></sc-if>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+          <div class="between" style="flex-wrap: wrap; font-size: 14px"><span class="muted">{{nActs}} actividades · total {{c.h}}</span><sc-if value="{{ed}}" hint-placeholder-val="{{ false }}"><button class="gw-btn gw-btn-secondary gw-btn-sm" onClick="{{addAct}}">+ Agregar actividad</button></sc-if></div>
+          </sc-if>
+          <sc-if value="{{isT1}}" hint-placeholder-val="{{ false }}">
+          <div class="stack sec" style="gap: 10px; max-width: 640px">
+            <p class="cap" style="margin-top: 0">Grapas, pegamento o hilo que se gastan en el trabajo pero no se miden pedido por pedido. Entran al costo de la cotización y se descuentan del almacén al cerrar la orden.</p>
+            <div class="lines">
+              <sc-for list="{{ins}}" as="m" hint-placeholder-count="2">
+                <div class="ln"><span>{{m.m}}</span><span class="q"><sc-if value="{{m.vw}}" hint-placeholder-val="{{ true }}"><b>{{m.q}}</b> {{m.u}}</sc-if><sc-if value="{{m.ed}}" hint-placeholder-val="{{ false }}"><input class="qi" inputmode="decimal" value="{{m.q}}" aria-label="Cantidad" onInput="{{m.setQ}}"><span class="muted">{{m.u}}</span><button class="xs" aria-label="Quitar insumo" onClick="{{m.rm}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 14 }}"></x-import></button></sc-if></span></div>
+              </sc-for>
+            </div>
+            <sc-if value="{{noIns}}" hint-placeholder-val="{{ false }}"><span class="muted" style="font-size: 13px">Sin insumos de proceso.</span></sc-if>
+            <sc-if value="{{ed}}" hint-placeholder-val="{{ false }}"><select class="sel" style="align-self: flex-start" aria-label="Agregar insumo" onChange="{{addIns}}"><option value="">+ Insumo</option><option>Grapas</option><option>Pegamento de contacto</option><option>Hilo nylon 40</option></select></sc-if>
+          </div>
+          </sc-if>
+          <sc-if value="{{isT2}}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p class="cap" style="margin: 0 0 4px">{{usesTxt}}</p>
+              <sc-if value="{{ed}}" hint-placeholder-val="{{ false }}">
+                <div class="ver"><div class="h"><span><b>{{nextV}} · borrador</b> <span class="muted" style="font-size: 13px">· cambios frente a la {{actV}}</span></span></div>
+                  <sc-if value="{{hasDraftDif}}" hint-placeholder-val="{{ true }}"><ul class="dif"><sc-for list="{{draftDif}}" as="d" hint-placeholder-count="2"><li>{{d}}</li></sc-for></ul></sc-if>
+                  <sc-if value="{{noDraftDif}}" hint-placeholder-val="{{ false }}"><span class="muted" style="font-size: 13px">Todavía no hay cambios.</span></sc-if>
+                </div>
+              </sc-if>
+              <sc-for list="{{hist}}" as="v" hint-placeholder-count="3">
+                <div class="ver">
+                  <div class="h"><span><b>{{v.lbl}}</b> <span class="muted" style="font-size: 13px">· {{v.date}} · {{v.who}} · {{v.why}}</span></span><span class="row" style="gap: 16px"><sc-if value="{{v.canSee}}" hint-placeholder-val="{{ true }}"><button class="lk" onClick="{{v.see}}">Ver</button></sc-if><sc-if value="{{v.canCmp}}" hint-placeholder-val="{{ true }}"><button class="lk" onClick="{{v.toggle}}">{{v.cmpTxt}}</button></sc-if></span></div>
+                  <sc-if value="{{v.open}}" hint-placeholder-val="{{ false }}"><ul class="dif"><sc-for list="{{v.dif}}" as="d" hint-placeholder-count="2"><li>{{d}}</li></sc-for></ul></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"modo":{"editor":"enum","options":["normal","nueva"],"default":"normal"},"$preview":{"width":1440,"height":1250}}'>
+const MAQ = { '—': 0, 'Mesa de corte': 4, 'Máquina de coser industrial': 6, 'Cortadora de espuma': 8, 'Engrapadora neumática': 5 };
+// Precios del Catálogo (A15); tela de referencia de Parámetros (A14)
+const MAT = { 'Tela de tapiz': [17, 'yd'], 'Espuma HD 2"': [24, 'planchas'], 'Espuma HD 1.5"': [18, 'planchas'], 'Guata': [3, 'yd'], 'Hilo nylon 40': [6, 'conos'], 'Cierre': [1.2, 'u'], 'Botones forrados': [0.35, 'u'], 'Pegamento de madera': [20, 'gal'], 'Grapas': [6, 'cajas'], 'Pegamento de contacto': [18, 'gal'] };
+const cl = o => JSON.parse(JSON.stringify(o));
+const A = (n, h, m, hm, mats) => ({ n, h, m, hm, mats: mats.map(x => ({ m: x[0], q: x[1] })) });
+const L = a => a.map(x => ({ m: x[0], q: x[1] }));
+const num = v => { const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; };
+const fq = n => String(Math.round(num(n) * 100) / 100);
+const $ = n => '$' + Math.round(n).toLocaleString('en-US');
+const sgn = (n, f) => (n > 0 ? '+' : n < 0 ? '−' : '') + f(Math.abs(n));
+function cost(d) {
+  let mat = 0, h = 0, maq = 0;
+  d.acts.forEach(a => { h += num(a.h); maq += num(a.hm) * (MAQ[a.m] || 0); a.mats.forEach(x => { mat += num(x.q) * (MAT[x.m] ? MAT[x.m][0] : 0); }); });
+  d.ins.forEach(x => { mat += num(x.q) * (MAT[x.m] ? MAT[x.m][0] : 0); });
+  const mano = h * 15, fij = 60, costo = mat + mano + maq + fij;
+  return { h, mat, mano, maq, fij, costo, sug: Math.round(costo * 1.75) };
+}
+function diff(o, n) {
+  const out = [];
+  n.acts.forEach(a => {
+    const b = o.acts.find(x => x.n === a.n);
+    if (!b) { out.push('Nueva actividad: ' + a.n + ' (' + fq(a.h) + ' h)'); return; }
+    if (num(a.h) !== num(b.h)) out.push(a.n + ': ' + fq(b.h) + ' → ' + fq(a.h) + ' h persona');
+    if (num(a.hm) !== num(b.hm)) out.push(a.n + ': ' + fq(b.hm) + ' → ' + fq(a.hm) + ' h de máquina');
+    a.mats.forEach(m => { const p = b.mats.find(x => x.m === m.m); const u = MAT[m.m] ? MAT[m.m][1] : '';
+      if (!p) out.push(a.n + ': se agregó ' + m.m + ' (' + fq(m.q) + ' ' + u + ')');
+      else if (num(p.q) !== num(m.q)) out.push(m.m + ': ' + fq(p.q) + ' → ' + fq(m.q) + ' ' + u); });
+    b.mats.forEach(m => { if (!a.mats.find(x => x.m === m.m)) out.push(a.n + ': se quitó ' + m.m); });
+  });
+  o.acts.forEach(b => { if (!n.acts.find(x => x.n === b.n)) out.push('Se quitó la actividad: ' + b.n); });
+  n.ins.forEach(m => { const p = o.ins.find(x => x.m === m.m); if (p && num(p.q) !== num(m.q)) out.push('Insumo ' + m.m + ': ' + fq(p.q) + ' → ' + fq(m.q) + ' ' + MAT[m.m][1]); });
+  n.pz.forEach(m => { const p = o.pz.find(x => x.m === m.m); if (p && num(p.q) !== num(m.q)) out.push(m.m + ': ' + fq(p.q) + ' → ' + fq(m.q) + ' piezas'); });
+  return out;
+}
+function build() {
+  const INS = L([['Grapas', 1], ['Pegamento de contacto', 0.5]]);
+  const PZ = L([['Estructura del sofá', 1], ['Cojines de asiento', 3], ['Cojines de respaldo', 3], ['Cojines decorativos', 2]]);
+  const s3 = { acts: [A('Desmontar tapiz y espuma antigua', 2.5, '—', 0, []), A('Revisar y reforzar estructura', 1.5, '—', 0, [['Pegamento de madera', 0.1]]), A('Cortar tela', 1.5, 'Mesa de corte', 0.5, [['Tela de tapiz', 14]]), A('Coser fundas y cojines', 4, 'Máquina de coser industrial', 4, [['Hilo nylon 40', 2], ['Cierre', 3]]), A('Cambiar espuma de asientos', 1.5, 'Cortadora de espuma', 0.5, [['Espuma HD 2"', 6]]), A('Tapizar y armar', 3, 'Engrapadora neumática', 2, [])], ins: cl(INS), pz: cl(PZ) };
+  const s2 = cl(s3); s2.acts[3].h = 3.5; s2.acts[3].hm = 3.5;
+  const s1 = cl(s2); s1.acts[4].mats[0].m = 'Espuma HD 1.5"';
+  const r2 = { acts: [A('Desmontar tapiz', 1.5, '—', 0, []), A('Cortar tela', 1.5, 'Mesa de corte', 0.5, [['Tela de tapiz', 14]]), A('Coser fundas y cojines', 4, 'Máquina de coser industrial', 4, [['Hilo nylon 40', 2], ['Cierre', 3]]), A('Tapizar y armar', 3, 'Engrapadora neumática', 2, [])], ins: cl(INS), pz: cl(PZ) };
+  const r1 = cl(r2); r1.acts[0].h = 2;
+  const PZS = L([['Estructura del sillón', 1], ['Cojín de asiento', 1], ['Cojín de respaldo', 1]]);
+  const i2 = { acts: [A('Desmontar tapiz', 1, '—', 0, []), A('Cortar tela', 0.75, 'Mesa de corte', 0.25, [['Tela de tapiz', 6]]), A('Coser fundas', 1.5, 'Máquina de coser industrial', 1.5, [['Hilo nylon 40', 1], ['Cierre', 1]]), A('Cambiar espuma', 0.5, 'Cortadora de espuma', 0.25, [['Espuma HD 2"', 2]]), A('Tapizar y armar', 1.5, 'Engrapadora neumática', 1, [])], ins: L([['Grapas', 0.5], ['Pegamento de contacto', 0.25]]), pz: PZS };
+  const i1 = cl(i2); i1.acts.splice(3, 1);
+  const c1 = { acts: [A('Desmontar asiento', 0.25, '—', 0, []), A('Cortar tela', 0.25, 'Mesa de corte', 0.1, [['Tela de tapiz', 0.75]]), A('Cambiar espuma', 0.25, 'Cortadora de espuma', 0.1, [['Espuma HD 2"', 0.25]]), A('Tapizar asiento', 0.5, 'Engrapadora neumática', 0.25, [])], ins: L([['Grapas', 0.1]]), pz: L([['Asiento', 1]]) };
+  const k2 = { acts: [A('Desmontar tapiz', 0.5, '—', 0, []), A('Cortar tela', 0.5, 'Mesa de corte', 0.25, [['Tela de tapiz', 3], ['Guata', 2]]), A('Cambiar espuma', 0.5, 'Cortadora de espuma', 0.25, [['Espuma HD 2"', 1]]), A('Tapizar', 1.5, 'Engrapadora neumática', 1, [])], ins: L([['Grapas', 0.5], ['Pegamento de contacto', 0.25]]), pz: L([['Cabecera', 1]]) };
+  const k1 = cl(k2); k1.acts[1].mats.splice(1, 1);
+  const V = (v, date, why, d) => Object.assign({ v, date, who: 'Administrador', why }, d);
+  return [
+    { name: 'Sofá 3 cuerpos', sub: 'Retapizado completo + espuma', unit: 'Por mueble', uses: 14, marg: 36, rev: true, vers: [V(3, '1 oct 2026', '+0.5 h en costura', s3), V(2, '2 sep 2026', 'Espuma cambiada a HD 2"', s2), V(1, '10 jun 2026', 'Primera versión', s1)] },
+    { name: 'Sofá 3 cuerpos', sub: 'Solo retapizado', unit: 'Por mueble', uses: 9, marg: 61, rev: false, vers: [V(2, '15 ago 2026', '−0.5 h al desmontar', r2), V(1, '10 jun 2026', 'Primera versión', r1)] },
+    { name: 'Sillón', sub: 'Retapizado', unit: 'Por mueble', uses: 11, marg: 58, rev: false, vers: [V(2, '20 sep 2026', 'Se agregó el cambio de espuma', i2), V(1, '10 jun 2026', 'Primera versión', i1)] },
+    { name: 'Silla de comedor', sub: 'Retapizado de asiento', unit: 'Por silla · se multiplica por la cantidad de sillas en la cotización', uses: 6, marg: 70, rev: false, vers: [V(1, '10 jun 2026', 'Primera versión', c1)] },
+    { name: 'Cabecera', sub: 'Retapizado', unit: 'Por mueble', uses: 4, marg: 66, rev: false, vers: [V(2, '1 oct 2026', 'Se agregó guata', k2), V(1, '10 jun 2026', 'Primera versión', k1)] }
+  ];
+}
+const EMPTY = { v: 0, date: '', why: '', acts: [], ins: [], pz: [] };
+const COTS = [
+  { code: 'COT-0079', name: 'COT-0079 · Sofá cama · Retapizado', info: 'Rosa Díaz · armada línea por línea el 12 oct · 5 actividades',
+    d: { acts: [A('Desmontar tapiz', 1.5, '—', 0, []), A('Revisar mecanismo de cama', 1, '—', 0, []), A('Cortar tela', 1.5, 'Mesa de corte', 0.5, [['Tela de tapiz', 12]]), A('Coser fundas', 3.5, 'Máquina de coser industrial', 3.5, [['Hilo nylon 40', 2], ['Cierre', 2]]), A('Tapizar y armar', 3, 'Engrapadora neumática', 2, [])], ins: L([['Grapas', 1], ['Pegamento de contacto', 0.5]]), pz: L([['Estructura del sofá cama', 1], ['Cojines de respaldo', 3]]) } },
+  { code: 'COT-0066', name: 'COT-0066 · Puff · Retapizado', info: 'Hotel Willow · armada línea por línea el 28 sep · 3 actividades',
+    d: { acts: [A('Desmontar tapiz', 0.5, '—', 0, []), A('Cortar tela', 0.5, 'Mesa de corte', 0.25, [['Tela de tapiz', 2]]), A('Tapizar', 1, 'Engrapadora neumática', 0.5, [])], ins: L([['Grapas', 0.25]]), pz: L([['Puff', 1]]) } }
+];
+const words = x => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z0-9]+/).filter(w => w.length > 2);
+const SOFACAMA = { acts: [A('Desmontar tapiz', 1.5, '—', 0, []), A('Revisar mecanismo de cama', 1, '—', 0, []), A('Cortar tela', 1.5, 'Mesa de corte', 0.5, [['Tela de tapiz', 12]]), A('Coser fundas y cojines', 3.5, 'Máquina de coser industrial', 3.5, [['Hilo nylon 40', 2], ['Cierre', 2]]), A('Tapizar y armar', 3, 'Engrapadora neumática', 2, [])], ins: L([['Grapas', 1], ['Pegamento de contacto', 0.5]]), pz: L([['Estructura del sofá cama', 1], ['Cojines de respaldo', 3]]) };
+
+function edVals(self, cur, ed, base) {
+  const chg = (ai, m) => { if (!ed || !base) return false; const b = base.acts.find(x => x.n === cur.acts[ai].n); if (!b) return true; if (!m) return num(b.h) !== num(cur.acts[ai].h); const p = b.mats.find(x => x.m === m.m); return !p || num(p.q) !== num(m.q); };
+  return {
+    tblCls: ed ? 't te' : 't tv', nActs: cur.acts.length,
+    acts: cur.acts.map((a, i) => ({
+      n: a.n, h: fq(a.h), hm: (!ed && !num(a.hm)) ? '—' : fq(a.hm), m: a.m === '—' ? 'Sin máquina' : a.m, mCls: a.m === '—' ? 'muted' : '',
+      vw: !ed, ed, fixM: !(ed && a.isNew), pickM: !!(ed && a.isNew), hCls: chg(i) ? 'cell chg' : 'cell', noMat: !ed && a.mats.length === 0,
+      mats: a.mats.map((m, j) => ({ m: m.m, q: fq(m.q), u: MAT[m.m] ? MAT[m.m][1] : '', qCls: chg(i, m) ? 'qi chg' : 'qi',
+        setQ: e => { const v = e.target.value; self.upd(d => { d.acts[i].mats[j].q = v; }); }, rm: () => self.upd(d => { d.acts[i].mats.splice(j, 1); }) })),
+      setN: e => { const v = e.target.value; self.upd(d => { d.acts[i].n = v; }); },
+      setH: e => { const v = e.target.value; self.upd(d => { d.acts[i].h = v; }); },
+      setHM: e => { const v = e.target.value; self.upd(d => { d.acts[i].hm = v; }); },
+      setM: e => { const v = e.target.value; self.upd(d => { d.acts[i].m = v; }); },
+      addM: e => { const v = e.target.value; e.target.value = ''; if (!v) return; self.upd(d => { if (!d.acts[i].mats.find(x => x.m === v)) d.acts[i].mats.push({ m: v, q: 1 }); }); },
+      rm: () => self.upd(d => { d.acts.splice(i, 1); })
+    })),
+    addAct: () => self.upd(d => { d.acts.push({ n: 'Nueva actividad', h: 1, m: '—', hm: 0, mats: [], isNew: true }); }),
+    ins: cur.ins.map((m, j) => ({ m: m.m, q: fq(m.q), u: MAT[m.m] ? MAT[m.m][1] : '', vw: !ed, ed, setQ: e => { const v = e.target.value; self.upd(d => { d.ins[j].q = v; }); }, rm: () => self.upd(d => { d.ins.splice(j, 1); }) })),
+    noIns: cur.ins.length === 0,
+    addIns: e => { const v = e.target.value; e.target.value = ''; if (!v) return; self.upd(d => { if (!d.ins.find(x => x.m === v)) d.ins.push({ m: v, q: 1 }); }); },
+    pz: cur.pz.map((m, j) => ({ m: m.m, q: fq(m.q), vw: !ed, ed, setQ: e => { const v = e.target.value; self.upd(d => { d.pz[j].q = v; }); }, setN: e => { const v = e.target.value; self.upd(d => { d.pz[j].m = v; }); }, rm: () => self.upd(d => { d.pz.splice(j, 1); }) })),
+    addPz: () => self.upd(d => { d.pz.push({ m: 'Pieza nueva', q: 1 }); }),
+    nPzT: (n => n + (n === 1 ? ' pieza' : ' piezas'))(cur.pz.reduce((s, x) => s + num(x.q), 0))
+  };
+}
+function sumVals(c, c0, showDelta) {
+  const hf = n => fq(n) + ' h';
+  const dl = (a, b, f) => (showDelta && Math.abs(a - b) > 0.001) ? sgn(a - b, f) : '';
+  const pct = c0 && c0.sug ? (c.sug - c0.sug) / c0.sug * 100 : 0;
+  return { h: hf(c.h), mat: $(c.mat), mano: $(c.mano), maq: $(c.maq), fij: $(c.fij), costo: $(c.costo), sug: $(c.sug),
+    dh: c0 ? dl(c.h, c0.h, hf) : '', dcosto: c0 ? dl(c.costo, c0.costo, $) : '',
+    dsug: showDelta && c0 ? (c.sug !== c0.sug ? sgn(c.sug - c0.sug, $) + ' · ' + sgn(pct, n => n.toFixed(1) + ' %') : 'sin cambio') : '' };
+}
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const T = build(); let s = 0, done = '', doneB = '';
+    if (p.modo === 'nueva') {
+      T.push({ name: 'Sofá cama', sub: 'Retapizado', unit: 'Por mueble', uses: 0, marg: 0, rev: false, vers: [Object.assign({ v: 1, date: 'hoy', who: 'Administrador', why: 'Primera versión · copiada de Sofá 3 cuerpos · Solo retapizado' }, cl(SOFACAMA))] });
+      s = T.length - 1; done = 'Plantilla creada · Sofá cama · Retapizado (v1)'; doneB = 'Ya se puede cargar desde Cotizar.';
+    }
+    this.state = { T, s, vi: 0, ed: false, d: null, appl: false, done, doneB, cmp: -1, q: '', f: 0, tb: 0 };
+  }
+  pickT(i) { this.setState({ s: i, vi: 0, ed: false, d: null, appl: false, cmp: -1, done: '', tb: 0 }); }
+  upd(fn) { const d = cl(this.state.d); fn(d); this.setState({ d }); }
+  renderVals() {
+    const st = this.state, T = st.T, t = T[st.s], act = t.vers[0];
+    const ed = !!(st.ed && st.d);
+    const cur = ed ? st.d : t.vers[st.vi];
+    const c = cost(cur), c0 = cost(act);
+    const q = st.q.trim().toLowerCase();
+    const idx = T.map((x, i) => i).filter(i => (st.f === 0 || T[i].rev) && (!q || (T[i].name + ' ' + T[i].sub).toLowerCase().includes(q)));
+    const nextV = 'v' + (act.v + 1), actV = 'v' + act.v;
+    const draftDif = ed ? diff(act, st.d) : [];
+    const old = !ed && st.vi > 0, ov = t.vers[st.vi];
+    const usage = t.uses ? t.uses + ' usos · margen real ' + t.marg + ' % sobre el costo' : 'aún sin usos';
+    return Object.assign({
+      tema: this.props.tema ?? 'light',
+      q: st.q, onQ: e => this.setState({ q: e.target.value }),
+      f0: st.f === 0 ? 'on' : '', f1: st.f === 1 ? 'on' : '', toF0: () => this.setState({ f: 0 }), toF1: () => this.setState({ f: 1 }),
+      nAll: T.length, nRev: T.filter(x => x.rev).length,
+      list: idx.map(i => ({ name: T[i].name, sub: T[i].sub, ver: 'v' + T[i].vers[0].v, rev: T[i].rev, cls: st.s === i ? 'tp on' : 'tp', pick: () => this.pickT(i) })),
+      noList: idx.length === 0,
+      showAlert: t.rev && !ed, done: !!st.done, doneT: st.done, doneB: st.doneB,
+      apply: () => { const d = cl(act); d.acts.forEach(a => a.mats.forEach(m => { if (m.m === 'Tela de tapiz') m.q = Math.round(num(m.q) * 1.12 * 10) / 10; if (m.m === 'Espuma HD 2"') m.q = num(m.q) + 1; })); this.setState({ ed: true, d, appl: true, vi: 0, done: '', tb: 0 }); },
+      title: t.name + ' · ' + t.sub,
+      chipCls: ed ? 'chip dr' : old ? 'chip old' : 'chip ok', chipTxt: ed ? 'Borrador ' + nextV : old ? 'Versión anterior' : 'Activa',
+      meta: ed ? 'Basado en la ' + actV + ' · ' + t.unit : old ? 'v' + ov.v + ' · ' + ov.date + ' · ya no se usa en cotizaciones nuevas' : actV + ' desde ' + act.date + ' · ' + t.unit + ' · ' + usage,
+      ednote: 'La ' + actV + ' sigue activa hasta que active la ' + nextV + '. ' + (st.appl ? 'Sugerencia aplicada: los cambios están en verde.' : 'Los cambios se marcan en verde.'),
+      vw: !ed, ed, canEdit: !ed && !old, isOld: old, actV, nextV,
+      edit: () => this.setState({ ed: true, d: cl(act), appl: false, done: '' }),
+      backAct: () => this.setState({ vi: 0 }),
+      discard: () => this.setState({ ed: false, d: null, appl: false }),
+      activate: () => { const nv = Object.assign(cl(st.d), { v: act.v + 1, date: 'hoy', who: 'Administrador', why: st.appl ? 'Sugerencia de la evaluación de PED-0076 (+12 % tela, +1 plancha)' : 'Ajuste manual' }); nv.acts.forEach(a => { delete a.isNew; }); const T2 = T.slice(); T2[st.s] = Object.assign({}, t, { vers: [nv].concat(t.vers), rev: false }); this.setState({ T: T2, ed: false, d: null, appl: false, vi: 0, cmp: 0, tb: 2, done: 'Versión ' + nv.v + ' activa', doneB: 'Las cotizaciones nuevas la usan; las ya publicadas conservan su versión.' }); },
+      c: sumVals(c, c0, ed),
+      tb0: st.tb === 0 ? 'on' : '', tb1: st.tb === 1 ? 'on' : '', tb2: st.tb === 2 ? 'on' : '',
+      toT0: () => this.setState({ tb: 0 }), toT1: () => this.setState({ tb: 1 }), toT2: () => this.setState({ tb: 2 }),
+      isT0: st.tb === 0, isT1: st.tb === 1, nIns: cur.ins.length, isT2: st.tb === 2, nVers: t.vers.length,
+      usesTxt: t.uses ? 'Usada en ' + t.uses + ' cotizaciones · margen real promedio ' + t.marg + ' % sobre el costo (meta: 75 %).' : 'Aún sin cotizaciones: el margen real aparece tras los primeros pedidos.',
+      hasDraftDif: draftDif.length > 0, noDraftDif: ed && draftDif.length === 0, draftDif,
+      hist: t.vers.map((v, i) => ({ lbl: 'v' + v.v + (i === 0 ? ' · activa' : ''), date: v.date, who: v.who, why: v.why,
+        canSee: !ed && i !== st.vi, see: () => this.setState({ vi: i, tb: 0 }),
+        canCmp: i < t.vers.length - 1, open: st.cmp === i && i < t.vers.length - 1, cmpTxt: st.cmp === i ? 'Ocultar cambios' : 'Cambios',
+        dif: i < t.vers.length - 1 ? diff(t.vers[i + 1], v) : [],
+        toggle: () => this.setState({ cmp: st.cmp === i ? -1 : i }) }))
+    }, edVals(this, cur, ed, act));
+  }
+}
+</script>
+</body>
+</html>

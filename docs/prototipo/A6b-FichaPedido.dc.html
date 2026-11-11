@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A6b Ficha del pedido PED-0076</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.sec{display:flex;flex-direction:column;gap:12px}
+.ver{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-sunken)}
+.mov{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:10px;font-size:13.5px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.mov > span:first-child{color:var(--ink-muted);font-variant-numeric:tabular-nums}
+.actbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav on" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+  <main class="main">
+    <div class="top">
+      <div>
+        <div class="crumb"><a href="A6-Pedidos.dc.html">Comercial › Pedidos</a> › PED-0076 · mar 13 oct</div>
+        <div class="row" style="flex-wrap: wrap"><h1>Sofá de 3 cuerpos · PED-0076</h1><x-import component-from-global-scope="Garweb.StatusChip" status="{{status}}"></x-import></div>
+        <div class="muted" style="font-size: 14px; margin-top: 4px"><a href="A17-Clientes.dc.html">Laura Méndez</a> · (973) 555-0142 · 48 Park St, Montclair · delivery ida y vuelta · <b style="color: var(--ink)">saldo total del cliente: $684</b> (1 pedido abierto)</div>
+      </div>
+    </div>
+
+    <div class="actbar">
+      <span class="ov" style="margin-right: 6px">Acciones según el estado</span>
+      <a class="gw-btn gw-btn-secondary gw-btn-sm" href="A5-Pagos.dc.html">Registrar pago</a>
+      <a class="gw-btn gw-btn-secondary gw-btn-sm" href="A4-Cotizar.dc.html">Crear V2 (daño oculto)</a>
+      <a class="gw-btn gw-btn-secondary gw-btn-sm" href="A7-Planificar.dc.html">Replanificar</a>
+      <button class="gw-btn gw-btn-danger gw-btn-sm" onClick="{{openCancel}}">Cancelar pedido</button>
+    </div>
+
+    <div class="card" style="padding: 20px">
+      <x-import component-from-global-scope="Garweb.OrderTimeline" steps="{{steps}}" current="{{step}}" dates="{{dates}}"></x-import>
+    </div>
+
+    <sc-if value="{{cancelOpen}}" hint-placeholder-val="{{ false }}">
+      <div class="card stack" style="border: 2px solid var(--error-500)">
+        <div class="between"><h2 style="font-size: 18px">Cancelar pedido</h2><x-import component-from-global-scope="Garweb.StatusChip" tone="warning">No es automática</x-import></div>
+        <div class="grid2" style="gap: 20px">
+          <div class="stack" style="gap: 8px">
+            <span class="ov">Cargo calculado por el sistema</span>
+            <div class="kv"><span>Horas trabajadas · 5.8 h × $15</span><b>$87</b></div>
+            <div class="kv"><span>Tela comprada (Lino Navy 204 · 14 yd)</span><b>$238</b></div>
+            <div class="kv"><span>Espuma usada · 7 planchas</span><b>$168</b></div>
+            <div class="kv"><span>Transporte hecho (recojo)</span><b>$45</b></div>
+            <hr class="stitch">
+            <div class="kv"><span><b style="color: var(--ink)">Cargo calculado</b></span><b>$538</b></div>
+            <div class="kv"><span>Adelanto pagado</span><b>$456</b></div>
+          </div>
+          <div class="stack" style="gap: 10px">
+            <span class="ov">Lo que se acuerda con el cliente</span>
+            <x-import component-from-global-scope="Garweb.TextField" label="Cargo acordado" value="456.00" prefix="$" numeric="{{ true }}" hint="Puede negociarse; queda la diferencia y quién la aprobó"></x-import>
+            <x-import component-from-global-scope="Garweb.TextField" label="Motivo de la cancelación y del acuerdo" required="{{ true }}" value="Cliente se muda; se acuerda cubrir con el adelanto"></x-import>
+            <div class="kv"><span>Resultado</span><b>Sin cobro adicional · sin devolución</b></div>
+            <div class="row"><button class="gw-btn gw-btn-danger" style="flex: 1" onClick="{{confirmCancel}}">Confirmar cancelación</button><button class="gw-btn gw-btn-ghost" onClick="{{closeCancel}}">Volver</button></div>
+            <p class="audit">Si el adelanto supera el cargo, se emite la devolución por la diferencia y queda registrada.</p>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{cancelled}}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="Garweb.Alert" tone="danger" title="Pedido cancelado (ejemplo)">Cargo acordado $456 cubierto con el adelanto. La tela queda como stock a precio de compra. Registrado por Administrador · 13 oct, 12:10.</x-import>
+    </sc-if>
+
+    <div class="grid2">
+      <section class="card sec">
+        <div class="between"><h2 style="font-size: 17px">Cotización y versiones</h2><a href="A4-Cotizar.dc.html" style="font-size: 13px; font-weight: 600">Abrir</a></div>
+        <div class="ver"><div><b>V1 · COT-0076</b><div class="muted" style="font-size: 13px">Publicada 6 oct · aceptada 6 oct por la web</div></div><div class="row"><b class="num">$1,140</b><x-import component-from-global-scope="Garweb.StatusChip" status="Aceptada"></x-import></div></div>
+        <div class="ver" style="border-style: dashed; background: transparent"><div><b>V2</b><div class="muted" style="font-size: 13px">Se crea solo si producción reporta daño oculto</div></div><a class="gw-btn gw-btn-ghost gw-btn-sm" href="A4-Cotizar.dc.html">Crear V2</a></div>
+        <div class="kv"><span>Precio sugerido · propuesto</span><b>$1,268 · $1,050</b></div>
+        <div class="kv"><span>Transporte</span><b>$90</b></div>
+      </section>
+
+      <section class="card sec">
+        <div class="between"><h2 style="font-size: 17px">Pagos y saldo</h2><a href="A5-Pagos.dc.html" style="font-size: 13px; font-weight: 600">Registrar pago</a></div>
+        <div class="grid3" style="gap: 10px">
+          <div class="stack" style="gap: 2px"><span class="ov">Total</span><b class="num" style="font-family: var(--font-display); font-size: 22px">$1,140</b></div>
+          <div class="stack" style="gap: 2px"><span class="ov">Pagado</span><b class="num" style="font-family: var(--font-display); font-size: 22px; color: var(--success-ink)">$456</b></div>
+          <div class="stack" style="gap: 2px"><span class="ov">Saldo</span><b class="num" style="font-family: var(--font-display); font-size: 22px; color: var(--warning-ink)">$684</b></div>
+        </div>
+        <div class="mov"><span>7 oct 09:10</span><span>Adelanto 40 % · Zelle · comprobante subido por la clienta</span><x-import component-from-global-scope="Garweb.StatusChip" status="Confirmado"></x-import></div>
+        <div class="mov" style="border-bottom: 0"><span>al entregar</span><span>Saldo · se cobra en la entrega</span><x-import component-from-global-scope="Garweb.StatusChip" status="Pendiente"></x-import></div>
+      </section>
+
+      <section class="card sec">
+        <div class="between"><h2 style="font-size: 17px">Planificación y avance de producción</h2><a href="T2-Orden.dc.html" style="font-size: 13px; font-weight: 600">Ver orden</a></div>
+        <div class="kv"><span>Fecha objetivo · equipo</span><b>vie 16 oct · todo el taller</b></div>
+        <div class="kv"><span>Tela del cliente · Lino Navy 204 · 14 yd</span><b>Pedida mié 7 · <span style="color: var(--success-ink)">Llegó jue 8 ✓</span></b></div>
+        <div class="stack" style="gap: 6px"><div class="between" style="font-size: 13px"><span class="muted">Actividades ✓</span><b class="num">3 de 6 · 60 %</b></div><div class="gw-progress"><span class="gw-progress-fill" style="width: 60%"></span></div></div>
+        <div class="kv"><span>Horas reales / planificadas</span><b>5.8 h / 14 h</b></div>
+        <div class="mov"><span>lun 12, 08:40</span><span>Carlos retiró 6 planchas de espuma</span><span class="muted">plan</span></div>
+        <div class="mov" style="border-bottom: 0"><span>hoy 10:05</span><span>Carlos retiró 1 plancha más</span><x-import component-from-global-scope="Garweb.StatusChip" tone="warning">Consumo adicional</x-import></div>
+      </section>
+
+      <section class="card sec">
+        <div class="between"><h2 style="font-size: 17px">Despacho</h2><a href="A13-Salida.dc.html" style="font-size: 13px; font-weight: 600">Salidas</a></div>
+        <div class="mov"><span>jue 8 oct</span><span>Recojo a domicilio · 9 piezas · 4 fotos · conductor</span><x-import component-from-global-scope="Garweb.StatusChip" status="Realizada"></x-import></div>
+        <div class="mov" style="border-bottom: 0"><span>por definir</span><span>Entrega en salida grupal cuando esté terminado</span><x-import component-from-global-scope="Garweb.StatusChip" status="Pendiente"></x-import></div>
+        <div class="kv"><span>Lista de empaque</span><b>se genera al cerrar la orden (A11)</b></div>
+      </section>
+    </div>
+    <section class="card sec">
+      <div class="between"><h2 style="font-size: 17px">Actividad del pedido</h2><a href="A20-Usuarios.dc.html" style="font-size: 13px; font-weight: 600">Auditoría completa</a></div>
+      <div class="mov"><span>hoy 10:05</span><span>Carlos (producción) registró consumo adicional: +1 plancha de espuma</span><x-import component-from-global-scope="Garweb.StatusChip" tone="warning">Aviso</x-import></div>
+      <div class="mov"><span>lun 12 · 08:40</span><span>Estado: Listo para producir → En producción · Carlos inició la orden</span><x-import component-from-global-scope="Garweb.StatusChip" status="En producción"></x-import></div>
+      <div class="mov"><span>vie 9 · 14:10</span><span>Administrador fijó la fecha objetivo: vie 16 oct · OT emitida</span><x-import component-from-global-scope="Garweb.StatusChip" tone="info">Planificación</x-import></div>
+      <div class="mov"><span>jue 8 · 11:30</span><span>Luis (conductor) registró el recojo: 9 piezas y 4 fotos</span><x-import component-from-global-scope="Garweb.StatusChip" status="Realizada"></x-import></div>
+      <div class="mov"><span>mié 7 · 09:20</span><span>Administrador confirmó el adelanto de $456 · se emitió el recibo y se generó PED-0076</span><x-import component-from-global-scope="Garweb.StatusChip" status="Confirmado"></x-import></div>
+      <div class="mov" style="border-bottom: 0"><span>mar 6 · 11:20</span><span>Laura Méndez aceptó la cotización COT-0076 en la web</span><x-import component-from-global-scope="Garweb.StatusChip" status="Aceptada"></x-import></div>
+    </section>
+    <p class="audit">Cada acción de esta ficha queda en la auditoría con usuario, fecha y hora (A20).</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { m: '' }; }
+  renderVals() {
+    const m = this.state.m;
+    return {
+      tema: this.props.tema ?? 'light',
+      status: m === 'done' ? 'Cancelado' : 'En producción',
+      step: 'En producción',
+      steps: ['Generado', 'Esperando mueble / material', 'Listo para producir', 'En producción', 'Terminado', 'En reparto / retiro', 'Entregado', 'Cerrado'],
+      dates: ['2 oct', '6–8 oct', '8 oct', 'desde 12 oct'],
+      cancelOpen: m === 'open', cancelled: m === 'done',
+      openCancel: () => this.setState({ m: 'open' }),
+      closeCancel: () => this.setState({ m: '' }),
+      confirmCancel: () => this.setState({ m: 'done' })
+    };
+  }
+}
+</script>
+</body>
+</html>

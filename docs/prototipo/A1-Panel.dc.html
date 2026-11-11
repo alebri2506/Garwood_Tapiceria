@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>A1 Panel principal</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>body{margin:0}
+.live{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding:2px 8px;border-radius:9999px;background:var(--success-soft,#DCFCE7);color:var(--success-ink);font-size:11.5px;font-weight:700}
+.live i{width:7px;height:7px;border-radius:50%;background:currentColor;animation:gwPulse 1.6s infinite}
+@keyframes gwPulse{50%{opacity:.3}}
+.now{display:flex;flex-direction:column;gap:10px}
+.now-h{display:flex;align-items:baseline;gap:12px}.now-h h2{font-size:20px}.now-h span{font-size:13px}
+.acts{display:flex;flex-direction:column;gap:8px}
+.act{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:14px;padding:12px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--warning-500);box-shadow:var(--shadow-sm)}
+.act.danger{border-left-color:var(--error-500)}
+.act .ai{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--warning-soft,#FEF3C7);color:var(--warning-ink,#92400E)}
+.act.danger .ai{background:var(--error-soft,#FEE2E2);color:var(--error-ink,#991B1B)}
+.act .at{display:flex;flex-direction:column;gap:2px;min-width:0}.act .at b{font-size:14.5px}.act .at span{font-size:13px;color:var(--ink-muted)}
+.act .ab{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:760px){.act{grid-template-columns:40px minmax(0,1fr)}.act .ab{grid-column:1/-1;justify-content:flex-start}}
+.cnt5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+@media (max-width:1100px){.cnt5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.cnt5 .c{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-sm);color:var(--ink);text-decoration:none;min-width:0}
+.cnt5 .lb{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-muted)}
+.cnt5 .vl{font:800 28px/1.05 var(--font-display);font-variant-numeric:tabular-nums}
+.cnt5 .vl small{font:600 13px/1 var(--font-sans);color:var(--ink-muted);margin-left:6px}
+.cnt5 .br{height:6px;border-radius:9999px;background:var(--primary-soft);overflow:hidden}.cnt5 .br i{display:block;height:100%;background:var(--primary);border-radius:inherit}
+.cnt5 .c.bad .vl{color:var(--error-ink,#991B1B)}.cnt5 .c.bad .br{background:var(--error-soft,#FEE2E2)}.cnt5 .c.bad .br i{background:var(--error-500)}
+.cnt5 .ft{font-size:12px;color:var(--ink-muted);line-height:1.4}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.tl li{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.tl li:last-child{border-bottom:0}
+.tl li div{display:flex;flex-direction:column;gap:2px;min-width:0}.tl li div span{font-size:13px;color:var(--ink-muted)}
+.tl li.done{opacity:.6}
+.tl li.nowline{padding:4px 0;border-bottom:0;color:var(--error-500)}
+.tl li.nowline div{border-top:2px solid var(--error-500);height:0}.tl li.nowline div b{display:none}
+.li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none}
+.li:last-of-type{border-bottom:0}
+.li div{display:flex;flex-direction:column;gap:2px;min-width:0}.li div span{font-size:13px;color:var(--ink-muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--line-strong)}
+.dot.ok{background:var(--success-500,#16A34A)}.dot.bad{background:var(--error-500)}.dot.warn{background:var(--warning-500)}.dot.info{background:var(--primary)}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.trio div{padding:10px 12px;border-radius:12px;background:var(--surface-sunken);display:flex;flex-direction:column}
+.trio b{font:800 22px/1.1 var(--font-display)}.trio span{font-size:12.5px;color:var(--ink-muted)}
+.trio .w b{color:var(--warning-ink,#92400E)}
+.mt{width:100%;border-collapse:collapse;font-size:13.5px}
+.mt th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);padding:6px 8px 6px 0;border-bottom:1px solid var(--line)}
+.mt td{padding:9px 8px 9px 0;border-bottom:1px solid var(--line)}
+.mt td a{margin-left:6px;font-weight:600}
+.mt tr.bad td:first-child b{color:var(--error-ink,#991B1B)}
+.go{text-decoration:none;color:var(--ink);background:linear-gradient(135deg,var(--primary-soft),var(--surface) 70%)}
+.go .gi{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--primary);color:#fff}
+</style>
+</helmet>
+<div class="app" data-theme="{{tema}}">
+  <input type="checkbox" id="gwNavT" class="navt" aria-label="Mostrar u ocultar el menú">
+  <label for="gwNavT" class="hbg-m" title="Menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label>
+  <label for="gwNavT" class="nav-dim" aria-hidden="true"></label>
+  <nav class="side" aria-label="Navegación principal">
+    <div class="brand"><label for="gwNavT" class="hbg" title="Contraer o expandir el menú"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></label><span class="bt"><b>GARWEB</b><span>Garwood · Tapicería de Interiores</span></span></div>
+    <a class="nav on" href="A1-Panel.dc.html" title="Panel principal"><x-import component-from-global-scope="Garweb.Icon" name="dashboard"></x-import>Panel principal</a>
+    <a class="nav" href="A21-Estadisticas.dc.html" title="Estadísticas"><x-import component-from-global-scope="Garweb.Icon" name="trending-up"></x-import>Estadísticas</a>
+    <span class="nav-h">Comercial</span>
+    <a class="nav" href="A2-Agenda.dc.html" title="Agenda de citas"><x-import component-from-global-scope="Garweb.Icon" name="calendar"></x-import>Agenda de citas</a>
+    <a class="nav" href="A3-Solicitudes.dc.html" title="Solicitudes"><x-import component-from-global-scope="Garweb.Icon" name="inbox"></x-import>Solicitudes<span class="cnt">6</span></a>
+    <a class="nav" href="A4-Cotizaciones.dc.html" title="Cotizaciones"><x-import component-from-global-scope="Garweb.Icon" name="quote"></x-import>Cotizaciones</a>
+    <a class="nav" href="A5-Pagos.dc.html" title="Pagos"><x-import component-from-global-scope="Garweb.Icon" name="payment"></x-import>Pagos<span class="cnt">3</span></a>
+    <a class="nav" href="A6-Pedidos.dc.html" title="Pedidos"><x-import component-from-global-scope="Garweb.Icon" name="kanban"></x-import>Pedidos</a>
+    <a class="nav" href="A16-Plantillas.dc.html" title="Plantillas"><x-import component-from-global-scope="Garweb.Icon" name="clipboard"></x-import>Plantillas</a>
+    <span class="nav-h">Almacén e Inventario</span>
+    <a class="nav" href="A8-Inventario.dc.html" title="Inventario"><x-import component-from-global-scope="Garweb.Icon" name="package"></x-import>Inventario</a>
+    <a class="nav" href="A15-Catalogo.dc.html" title="Catálogo de materiales"><x-import component-from-global-scope="Garweb.Icon" name="scissors"></x-import>Catálogo de materiales</a>
+    <span class="nav-h">Historial</span>
+    <a class="nav" href="A12-Historial.dc.html" title="Historial"><x-import component-from-global-scope="Garweb.Icon" name="history"></x-import>Historial</a>
+    <a class="nav" href="A17-Clientes.dc.html" title="Clientes"><x-import component-from-global-scope="Garweb.Icon" name="user"></x-import>Clientes</a>
+    <span class="nav-h">Despacho</span>
+    <a class="nav" href="A13-Salida.dc.html" title="Salidas"><x-import component-from-global-scope="Garweb.Icon" name="truck"></x-import>Salidas</a>
+    <a class="nav" href="A18-Taller.dc.html" title="Taller: recepciones"><x-import component-from-global-scope="Garweb.Icon" name="sofa"></x-import>Taller: recepciones</a>
+    <a class="nav" href="A19-Reclamos.dc.html" title="Reclamos"><x-import component-from-global-scope="Garweb.Icon" name="alert"></x-import>Reclamos<span class="cnt">1</span></a>
+    <span class="nav-h">Configuración</span>
+    <a class="nav" href="A14-Parametros.dc.html" title="Parámetros"><x-import component-from-global-scope="Garweb.Icon" name="sliders"></x-import>Parámetros</a>
+    <a class="nav" href="A20-Usuarios.dc.html" title="Usuarios y seguridad"><x-import component-from-global-scope="Garweb.Icon" name="lock"></x-import>Usuarios y seguridad</a>
+    <div class="me"><i>AG</i><div><b>Administrador</b><small>Gerencia</small></div></div>
+  </nav>
+    <main class="main">
+    <div class="top">
+      <div><div class="crumb">Hoy · martes 13 de octubre · <b class="num">4:20 p. m.</b> <span class="live"><i></i>en vivo</span></div><h1>Buenas tardes, Administrador</h1>
+        <p class="muted" style="font-size: 14px; margin-top: 4px">Lo que pasa hoy en el taller y lo que necesita una decisión suya ahora.</p>
+      </div>
+      <div class="row" style="flex-wrap: wrap">
+        <a class="search" href="A12-Historial.dc.html" style="text-decoration: none"><x-import component-from-global-scope="Garweb.Icon" name="search" size="{{ 18 }}"></x-import>Buscar cliente, teléfono, mueble o tela…</a>
+        <a class="gw-btn gw-btn-secondary" href="A21-Estadisticas.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="trending-up" size="{{ 18 }}"></x-import>Estadísticas del mes</a>
+      </div>
+    </div>
+
+    <section class="now" aria-label="Atención ahora">
+      <div class="now-h"><h2>Atención ahora</h2><span class="muted">4 asuntos · ordenados por urgencia</span></div>
+      <div class="acts">
+        <div class="act danger"><span class="ai"><x-import component-from-global-scope="Garweb.Icon" name="truck" size="{{ 20 }}"></x-import></span><div class="at"><b>2 recojos de hoy siguen sin hacerse</b><span>Franja 3:00–5:00 p. m. · quedan 40 min · Diego (conductor) va por la 3.ª entrega</span></div><div class="ab"><a class="gw-btn gw-btn-primary gw-btn-sm" href="D1-Ruta.dc.html">Ver la ruta</a><a class="gw-btn gw-btn-secondary gw-btn-sm" href="A13-Salida.dc.html">Pasar a mañana</a></div></div>
+        <div class="act danger"><span class="ai"><x-import component-from-global-scope="Garweb.Icon" name="payment" size="{{ 20 }}"></x-import></span><div class="at"><b>El banco desconoció un pago con tarjeta · PED-0069 · $420</b><span>Rachel Adams · adelanto pagado el 28 sep · el saldo volvió a «pendiente» · hay plazo para enviar pruebas hasta el vie 23</span></div><div class="ab"><a class="gw-btn gw-btn-primary gw-btn-sm" href="A5-Pagos.dc.html#contracargo">Revisar el caso</a></div></div>
+        <div class="act warning"><span class="ai"><x-import component-from-global-scope="Garweb.Icon" name="package" size="{{ 20 }}"></x-import></span><div class="at"><b>Se acabó la tela Velvet Navy y 2 pedidos la necesitan</b><span>PED-0086 (6 yd) y PED-0088 (3 yd) · el proveedor la trae en 2–3 días si se pide hoy</span></div><div class="ab"><a class="gw-btn gw-btn-primary gw-btn-sm" href="A8-Inventario.dc.html?pestana=qué pedir">Pedir 9 yd</a></div></div>
+        <div class="act warning"><span class="ai"><x-import component-from-global-scope="Garweb.Icon" name="clock" size="{{ 20 }}"></x-import></span><div class="at"><b>PED-0080 · Banqueta va 4 días atrasado</b><span>Prometido para el vie 9 oct · Carlos lo tiene al 70 % · avisar al cliente la nueva fecha</span></div><div class="ab"><a class="gw-btn gw-btn-secondary gw-btn-sm" href="A6b-FichaPedido.dc.html">Abrir pedido</a></div></div>
+      </div>
+    </section>
+
+    <section class="cnt5" aria-label="El día en números">
+      <a class="c" href="A2-Agenda.dc.html"><span class="lb">Citas</span><span class="vl">3<small>de 5</small></span><span class="br"><i style="width: 60%"></i></span><span class="ft">atendidas · próxima 4:30 p. m.</span></a>
+      <a class="c bad" href="D1-Ruta.dc.html"><span class="lb">Recojos</span><span class="vl">0<small>de 2</small></span><span class="br"><i style="width: 2%"></i></span><span class="ft">hechos · franja termina 5:00 p. m.</span></a>
+      <a class="c" href="D1-Ruta.dc.html"><span class="lb">Entregas</span><span class="vl">2<small>de 3</small></span><span class="br"><i style="width: 66%"></i></span><span class="ft">hechas · 1 en camino</span></a>
+      <a class="c" href="A5-Pagos.dc.html"><span class="lb">Cobrado hoy</span><span class="vl">$1,340</span><span class="ft">5 pagos · $1,060 confirmados solos por la pasarela</span></a>
+      <a class="c" href="A3-Solicitudes.dc.html"><span class="lb">Solicitudes</span><span class="vl">4<small>nuevas hoy</small></span><span class="ft">6 sin responder · la más antigua de ayer 10:15 a. m.</span></a>
+    </section>
+
+    <div class="grid2">
+      <section class="card stack">
+        <div class="between"><h2 style="font-size: 18px">Agenda de hoy</h2><a href="A2-Agenda.dc.html" style="font-size: 14px; font-weight: 600">Ver agenda</a></div>
+        <ol class="tl">
+          <li class="done"><b class="num">09:30</b><div><b>Mark Ellison</b><span>Sillón · en el taller · eligió tela del libro</span></div><x-import component-from-global-scope="Garweb.StatusChip" status="Atendida"></x-import></li>
+          <li class="done"><b class="num">11:00</b><div><b>Priya Shah</b><span>6 sillas de comedor · en el taller</span></div><x-import component-from-global-scope="Garweb.StatusChip" status="Atendida"></x-import></li>
+          <li class="done"><b class="num">15:00</b><div><b>Retiro en taller · PED-0078</b><span>Daniel Cruz recogió su sofá</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Hecho</x-import></li>
+          <li class="nowline"><b class="num">16:20</b><div><b>Ahora</b></div></li>
+          <li><b class="num">16:30</b><div><b>Tom Becker</b><span>Cabecera · en el taller · 2.ª reprogramación</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="info">En 10 min</x-import></li>
+          <li><b class="num">17:30</b><div><b>Visita a domicilio · Linda Park</b><span>Medir sofá en L · llevar 3 libros de telas · 48 Elm St, Montclair</span></div><x-import component-from-global-scope="Garweb.StatusChip" status="Programada"></x-import></li>
+        </ol>
+      </section>
+
+      <section class="card stack">
+        <div class="between"><h2 style="font-size: 18px">Salidas de hoy</h2><a href="A13-Salida.dc.html" style="font-size: 14px; font-weight: 600">Ver salida</a></div>
+        <p class="muted" style="font-size: 13px; margin: -4px 0 0">Camión 1 · Diego Ramos · salió 9:05 a. m. · 5 paradas</p>
+        <div class="li"><span class="dot ok"></span><div><b>Entrega · PED-0083 · Ana Torres</b><span>Hecha 10:40 a. m. · firmó y pagó saldo con tarjeta</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Hecha</x-import></div>
+        <div class="li"><span class="dot ok"></span><div><b>Entrega · PED-0084 · Hotel Willow</b><span>Hecha 12:15 p. m. · 8 sillas</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="success">Hecha</x-import></div>
+        <div class="li"><span class="dot info"></span><div><b>Entrega · PED-0087 · Kevin Moss</b><span>En camino · llega aprox. 4:35 p. m.</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="info">En camino</x-import></div>
+        <div class="li"><span class="dot bad"></span><div><b>Recojo · SOL-0142 · Sarah Kim</b><span>Sofá 3 cuerpos · franja 3:00–5:00 p. m.</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="danger">Sin hacer</x-import></div>
+        <div class="li"><span class="dot bad"></span><div><b>Recojo · SOL-0145 · Paul Grant</b><span>2 sillones · franja 3:00–5:00 p. m.</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="danger">Sin hacer</x-import></div>
+      </section>
+
+      <section class="card stack">
+        <div class="between"><h2 style="font-size: 18px">Taller hoy</h2><a href="A6-Pedidos.dc.html" style="font-size: 14px; font-weight: 600">Ver pedidos</a></div>
+        <div class="trio"><div><b class="num">7</b><span>en trabajo</span></div><div><b class="num">2</b><span>terminados hoy</span></div><div class="w"><b class="num">3</b><span>en riesgo</span></div></div>
+        <a href="A6b-FichaPedido.dc.html" class="li"><span class="dot bad"></span><div><b>PED-0080 · Banqueta</b><span>Prometido vie 9 oct · avance 70 %</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="danger">Atrasado 4 días</x-import></a>
+        <a href="A6-Pedidos.dc.html" class="li"><span class="dot warn"></span><div><b>PED-0086 · Sofá · Velvet Navy</b><span>No puede empezar: falta la tela</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="warning">Espera tela</x-import></a>
+        <a href="A13-Salida.dc.html" class="li"><span class="dot warn"></span><div><b>PED-0079 · Mesa de centro tapizada</b><span>Terminado hace 8 días · sin salida asignada</span></div><x-import component-from-global-scope="Garweb.StatusChip" tone="warning">Asignar salida</x-import></a>
+      </section>
+
+      <section class="card stack">
+        <div class="between"><h2 style="font-size: 18px">Material que se acaba</h2><a href="A8-Inventario.dc.html?pestana=qué pedir" style="font-size: 14px; font-weight: 600">Qué pedir</a></div>
+        <table class="mt"><thead><tr><th>Material</th><th>Hay</th><th>Reservado para pedidos</th><th>Llega en</th></tr></thead><tbody>
+          <tr class="bad"><td><b>Velvet Navy</b></td><td class="num">0 yd</td><td class="num">9 yd · 2 pedidos</td><td>2–3 días <a href="A8-Inventario.dc.html?pestana=qué pedir">Pedir</a></td></tr>
+          <tr class="warn"><td><b>Plumas (relleno)</b></td><td class="num">1 kg</td><td class="num">3 kg · PED-0082</td><td>mié 14 · pedido</td></tr>
+          <tr class="warn"><td><b>Espuma HD 2"</b></td><td class="num">7 u</td><td class="num">5 u · 3 pedidos</td><td>3–5 días <a href="A8-Inventario.dc.html?pestana=qué pedir">Pedir</a></td></tr>
+        </tbody></table>
+        <p class="audit" style="margin: 0">«Reservado» = lo que los pedidos aceptados ya necesitan. Si «hay» no alcanza, el material aparece aquí el mismo día.</p>
+      </section>
+
+      <section class="card stack">
+        <div class="between"><h2 style="font-size: 18px">Pagos por confirmar</h2><a href="A5-Pagos.dc.html" style="font-size: 14px; font-weight: 600">Revisar</a></div>
+        <a href="A5-Pagos.dc.html" class="li"><span class="dot warn"></span><div><b>PED-0085 · Grace Lin · $280</b><span>Adelanto 40 % · Zelle · captura subida hoy 08:40</span></div><x-import component-from-global-scope="Garweb.StatusChip" status="Por confirmar"></x-import></a>
+        <a href="A5-Pagos.dc.html" class="li"><span class="dot warn"></span><div><b>PED-0081 · J. Ortega · $520</b><span>Saldo · cheque cobrado por el conductor</span></div><x-import component-from-global-scope="Garweb.StatusChip" status="Por confirmar"></x-import></a>
+        <p class="audit" style="margin: 0">Tarjeta y cuenta bancaria se confirman solas. Solo Zelle y cheque necesitan su revisión.</p>
+      </section>
+
+      <a class="card stack go" href="A21-Estadisticas.dc.html">
+        <span class="gi"><x-import component-from-global-scope="Garweb.Icon" name="trending-up" size="{{ 22 }}"></x-import></span>
+        <h2 style="font-size: 18px">¿Cómo va el mes?</h2>
+        <p class="muted" style="font-size: 14px; margin: 0">Ventas, cobros y margen comparados con el mes anterior y con octubre del año pasado; formas de pago en porcentaje y lo que más se vende.</p>
+        <span style="font-weight: 600; color: var(--primary)">Abrir estadísticas →</span>
+      </a>
+    </div>
+    <p class="audit" style="margin: 0">Este panel muestra solo el día de hoy y se actualiza solo con lo que registran el conductor, el taller y los pagos. Los resultados del mes están en Estadísticas.</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;tema&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1700}}">
+class Component extends DCLogic {
+  renderVals() { return { tema: this.props.tema ?? 'light' }; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>D1b Mapa de la ruta (web en el celular)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.mp{position:relative;width:390px;min-height:900px;background:var(--bg);overflow:hidden;display:flex;flex-direction:column}
+.top{position:absolute;left:12px;right:12px;top:12px;z-index:3;display:flex;flex-direction:column;gap:8px}
+.bar{display:flex;align-items:center;gap:8px;padding:8px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow-md)}
+.bar a.bk{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--line);color:var(--ink);text-decoration:none}
+.seg{flex:1;display:flex;padding:4px;border-radius:12px;background:var(--surface-sunken);gap:4px}
+.seg a{flex:1;min-height:38px;display:grid;place-items:center;border-radius:9px;text-decoration:none;color:var(--ink-muted);font:600 14px/1 var(--font-sans)}
+.seg a.on{background:var(--surface);color:var(--primary);box-shadow:var(--shadow-sm)}
+.chip{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:9999px;background:var(--surface);box-shadow:var(--shadow-sm);font-size:12.5px;font-weight:600;color:var(--ink)}
+.map{position:relative;height:600px;background:#E8EEF7}
+.map > svg{position:absolute;inset:0;width:100%;height:100%}
+.pin{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;border:0;background:transparent;padding:0;cursor:pointer}
+.pin i{width:38px;height:38px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:grid;place-items:center;background:var(--primary);box-shadow:0 4px 10px #0A163055;border:3px solid #FFFFFF}
+.pin i b{transform:rotate(45deg);color:#FFFFFF;font:800 15px/1 var(--font-display)}
+.pin.done i{background:var(--success-500)}
+.pin.done i b{color:var(--navy-950)}
+.pin.pick i{background:var(--sky-400)}
+.pin.pick i b{color:var(--navy-950)}
+.pin.sel i{width:46px;height:46px;box-shadow:0 0 0 6px #2563EB40,0 6px 14px #0A163066}
+.home{position:absolute;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--navy-950);color:#FFFFFF;font:800 14px/1 var(--font-display);border:3px solid #FFFFFF;box-shadow:var(--shadow-md)}
+.me{position:absolute;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#FFFFFF;color:var(--primary);box-shadow:0 0 0 8px #2563EB2E,var(--shadow-md)}
+.fab{position:absolute;right:12px;bottom:36px;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--surface);box-shadow:var(--shadow-md);color:var(--ink);border:0;cursor:pointer}
+.sheet{position:relative;margin-top:-24px;z-index:2;background:var(--surface);border-radius:24px 24px 0 0;box-shadow:0 -8px 24px #0A16301F;padding:10px 16px 20px;display:flex;flex-direction:column;gap:12px;flex:1}
+.grab{width:44px;height:5px;border-radius:9999px;background:var(--line-strong);align-self:center}
+.eta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.eta div{padding:10px;border-radius:12px;background:var(--surface-sunken);display:flex;flex-direction:column;gap:2px}
+.eta div b{display:block;font-family:var(--font-display);font-size:18px !important;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.eta div > span{font-size:11.5px;color:var(--ink-muted);font-weight:600}
+.stops{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.stops button{flex:none;min-height:40px;padding:0 12px;border-radius:9999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 13px/1 var(--font-sans);cursor:pointer;display:flex;align-items:center;gap:6px}
+.stops button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.stops button.ok{color:var(--success-ink)}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.acts .big-btn{min-height:56px;font-size:15px}
+.tag{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:9999px;font-size:12.5px;font-weight:700}
+</style>
+</helmet>
+<div class="mp">
+  <div class="map" role="img" aria-label="Mapa de la ruta del jueves 22 de octubre con 4 paradas y la línea del recorrido">
+    <svg viewBox="0 0 390 600" preserveAspectRatio="none" aria-hidden="true">
+      <rect width="390" height="600" fill="#E8EEF7"/>
+      <path d="M0 330 C 80 300, 120 360, 200 330 S 330 300, 390 340 L 390 372 C 320 336, 260 362, 200 362 S 70 334, 0 362 Z" fill="#C9DCF5"/>
+      <path d="M250 150 C 300 140, 340 170, 350 220 C 330 250, 280 245, 255 215 Z" fill="#D5ECD9"/>
+      <path d="M30 470 C 70 450, 110 470, 120 510 C 90 540, 40 530, 30 470 Z" fill="#D5ECD9"/>
+      <g stroke="#FFFFFF" stroke-width="10" fill="none" stroke-linecap="round">
+        <path d="M0 120 L 390 160"/><path d="M0 255 L 390 230"/><path d="M0 430 L 390 455"/><path d="M60 0 L 120 600"/><path d="M250 0 L 230 600"/><path d="M330 0 L 360 600"/>
+      </g>
+      <g stroke="#FFFFFF" stroke-width="4" fill="none">
+        <path d="M0 60 L 390 90"/><path d="M0 190 L 390 195"/><path d="M0 520 L 390 540"/><path d="M160 0 L 175 600"/><path d="M20 0 L 40 600"/>
+      </g>
+      <g font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#7587A6">
+        <text x="140" y="70">CLIFTON</text><text x="20" y="300">MONTCLAIR</text><text x="255" y="290">BLOOMFIELD</text><text x="260" y="580">GARWOOD</text><text x="270" y="140">Brookdale Park</text>
+      </g>
+      <path d="M262 532 C 230 470, 150 420, 100 300" fill="none" stroke="#94A3B8" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+      <path d="M100 300 C 130 288, 150 278, 168 272" fill="none" stroke="#94A3B8" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+      <path d="M168 272 C 190 266, 210 262, 230 262 C 230 220, 200 150, 170 110 C 150 200, 160 330, 205 480 C 225 520, 250 535, 262 532" fill="none" stroke="#1D4ED8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M168 272 C 190 266, 210 262, 230 262 C 230 220, 200 150, 170 110 C 150 200, 160 330, 205 480 C 225 520, 250 535, 262 532" fill="none" stroke="#67E8F9" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>
+    </svg>
+    <span class="home" style="left: 262px; top: 532px" aria-label="Taller Garwood">G</span>
+    <span class="me" style="left: 168px; top: 272px" aria-label="Su posición"><x-import component-from-global-scope="Garweb.Icon" name="truck" size="{{ 22 }}"></x-import></span>
+    <sc-for list="{{pins}}" as="p" hint-placeholder-count="4">
+      <button class="{{p.cls}}" style="{{p.pos}}" aria-label="{{p.aria}}" onClick="{{p.pick}}"><i><b>{{p.n}}</b></i></button>
+    </sc-for>
+    <button class="fab" aria-label="Centrar en mi posición"><x-import component-from-global-scope="Garweb.Icon" name="map-pin" size="{{ 22 }}"></x-import></button>
+  </div>
+
+  <div class="top">
+    <div class="bar">
+      <a class="bk" href="D1-Ruta.dc.html" aria-label="Volver a la hoja de ruta"><x-import component-from-global-scope="Garweb.Icon" name="arrow-right" style="transform: rotate(180deg)"></x-import></a>
+      <nav class="seg" aria-label="Vista de la ruta"><a href="D1-Ruta.dc.html">Lista</a><a class="on" href="D1b-Mapa.dc.html" aria-current="page">Mapa</a></nav>
+    </div>
+  </div>
+
+  <div class="sheet">
+    <span class="grab"></span>
+    <span class="chip" style="box-shadow: none; background: var(--primary-soft); color: var(--primary)"><x-import component-from-global-scope="Garweb.Icon" name="map-pin" size="{{ 16 }}"></x-import>Ruta con Google Maps · salida congelada</span>
+    <div class="between"><span class="ov">{{kicker}}</span><x-import component-from-global-scope="Garweb.StatusChip" tone="{{tone}}">{{status}}</x-import></div>
+    <div><b style="font-family: var(--font-display); font-size: 21px">{{client}}</b><div class="muted" style="font-size: 14px">{{code}} · {{pieces}} · {{place}}</div></div>
+    <div class="eta"><div><span>FRANJA</span><strong style="display: block; font-family: var(--font-display); font-size: 19px; font-weight: 700; color: var(--ink)">{{time}}</strong></div><div><span>DISTANCIA</span><strong style="display: block; font-family: var(--font-display); font-size: 19px; font-weight: 700; color: var(--ink)">{{dist}}</strong></div><div><span>LLEGADA</span><strong style="display: block; font-family: var(--font-display); font-size: 19px; font-weight: 700; color: var(--ink)">{{eta}}</strong></div></div>
+    <div class="row" style="flex-wrap: wrap"><span class="tag" style="{{payStyle}}">{{pay}}</span><span class="tag" style="background: var(--neutral-soft); color: var(--neutral-ink)">{{conf}}</span></div>
+    <div class="acts">
+      <button class="big-btn pri"><x-import component-from-global-scope="Garweb.Icon" name="arrow-right" size="{{ 20 }}"></x-import>Cómo llegar</button>
+      <button class="big-btn"><x-import component-from-global-scope="Garweb.Icon" name="user" size="{{ 20 }}"></x-import>Llamar</button>
+    </div>
+    <a class="big-btn" href="{{href}}" style="min-height: 52px; font-size: 15px">Abrir parada</a>
+    <div class="stops" role="group" aria-label="Paradas"><sc-for list="{{chips}}" as="c" hint-placeholder-count="4"><button class="{{c.cls}}" aria-pressed="{{c.on}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for></div>
+    <span class="muted" style="font-size: 12px">Ruta total 48 mi · 4 h 10 min aprox. · orden planificado en A13. “Cómo llegar” abre la navegación de Google Maps.</span>
+  </div>
+  <nav class="tabbar" aria-label="Navegación de la app"><a href="D1-Ruta.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="truck" size="{{ 22 }}"></x-import>Ruta</a><a class="on" aria-current="page" href="D1b-Mapa.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="map-pin" size="{{ 22 }}"></x-import>Mapa</a><a href="D2-Carga.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="package" size="{{ 22 }}"></x-import>Carga</a><a href="D5-Cierre.dc.html"><x-import component-from-global-scope="Garweb.Icon" name="payment" size="{{ 22 }}"></x-import>Cierre</a></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1260}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { sel: 1 }; }
+  renderVals() {
+    const paid = 'background: var(--success-soft); color: var(--success-ink)';
+    const due = 'background: var(--warning-soft); color: var(--warning-ink)';
+    const none = 'background: var(--neutral-soft); color: var(--neutral-ink)';
+    const S = [
+      { n: '1', x: 100, y: 300, kind: 'ENTREGA', client: 'Laura Méndez', short: 'Laura', code: 'PED-0076', pieces: '9 piezas', place: '48 Park St, Montclair', time: '10–12', dist: '—', eta: '10:38', pay: 'Cobrado $684', payStyle: paid, conf: 'Confirmó', done: true, href: 'D4-Entrega.dc.html' },
+      { n: '2', x: 230, y: 262, kind: 'ENTREGA', client: 'Emily Stone', short: 'Emily', code: 'PED-0079', pieces: '1 pieza', place: 'Bloomfield', time: '11:30–13', dist: '3.2 mi', eta: '11:52', pay: 'Pagado', payStyle: paid, conf: 'Sin respuesta', done: false, href: 'D4-Entrega.dc.html' },
+      { n: '3', x: 170, y: 110, kind: 'ENTREGA', client: 'J. Ortega', short: 'Ortega', code: 'PED-0081', pieces: '4 piezas', place: 'Clifton', time: '13:30–15', dist: '9.8 mi', eta: '13:40', pay: 'Cobrar $520', payStyle: due, conf: 'Confirmó', done: false, href: 'D4-Entrega.dc.html' },
+      { n: '4', x: 205, y: 480, kind: 'RECOJO', client: 'Ana Ruiz', short: 'Ana', code: 'PED-0083', pieces: '1 pieza · puff', place: 'Garwood', time: '15:30–16:30', dist: '21 mi', eta: '15:35', pay: 'Sin cobro', payStyle: none, conf: 'Confirmó', done: false, href: 'D3-Recojo.dc.html', pick: true }
+    ];
+    const sel = this.state.sel, c = S[sel];
+    const next = S.findIndex(s => !s.done);
+    return {
+      pins: S.map((s, i) => ({ n: s.done ? '✓' : s.n, pos: 'left: ' + s.x + 'px; top: ' + s.y + 'px', aria: 'Parada ' + s.n + ', ' + s.client, cls: 'pin' + (s.done ? ' done' : s.pick ? ' pick' : '') + (sel === i ? ' sel' : ''), pick: () => this.setState({ sel: i }) })),
+      kicker: (sel === next ? 'SIGUIENTE · ' : '') + 'PARADA ' + c.n + ' · ' + c.kind,
+      status: c.done ? 'Realizada' : 'En ruta', tone: c.done ? 'success' : 'progress',
+      client: c.client, code: c.code, pieces: c.pieces, place: c.place, time: c.time, dist: c.dist, eta: c.done ? 'Llegó ' + c.eta : c.eta,
+      pay: c.pay, payStyle: c.payStyle, conf: c.conf, href: c.href,
+      chips: S.map((s, i) => ({ label: (s.done ? '✓ ' : s.n + ' · ') + s.short, on: sel === i, cls: (sel === i ? 'on' : '') + (s.done ? ' ok' : ''), pick: () => this.setState({ sel: i }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

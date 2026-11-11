@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>W5 Pagos del pedido (web)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/garweb/tokens.css">
+<link rel="stylesheet" href="ds/garweb/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+<script src="ds/garweb/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+.meth{display:flex;flex-wrap:wrap;gap:8px}
+.meth button{min-height:44px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1 var(--font-sans);cursor:pointer}
+.meth button.on{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.prow{cursor:pointer}
+.sum{border-radius:20px;padding:20px 24px;color:#FFFFFF;background:radial-gradient(60% 120% at 100% 0%,#38BDF866 0%,#38BDF800 60%),linear-gradient(135deg,#0A1630,#102A5C 55%,#1D4ED8);display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;box-shadow:var(--shadow-lg)}
+.sum span{font-size:11px;font-weight:700;letter-spacing:.08em;color:#A9BEE3}
+.sum b{display:block;font-family:var(--font-display);font-size:28px;font-variant-numeric:tabular-nums}
+
+.pm-sec{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);display:flex;align-items:center;gap:8px}
+.pm-sec em{font-style:normal;text-transform:none;letter-spacing:0;font-weight:600;height:20px;padding:0 8px;border-radius:9999px;background:var(--success-soft);color:var(--success-ink);display:inline-flex;align-items:center}
+.pm-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pm-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pm{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);text-align:left;font:inherit;color:var(--ink);cursor:pointer;min-height:64px}
+.pm b{font-size:14px}
+.pm small{font-size:12px;color:var(--ink-muted);line-height:16px}
+.pm.on{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 0 0 3px var(--primary-soft)}
+.pm-detail{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;background:var(--surface-sunken)}
+.pm-detail .kv{font-size:14px}
+.pm-lock{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-muted);line-height:18px}
+.co-dim{position:fixed;inset:0;background:#0A163080;z-index:60;display:grid;place-items:center;padding:16px}
+.co{width:min(420px,100%);border-radius:20px;background:var(--surface);box-shadow:0 30px 60px #0A163066;overflow:hidden}
+.co-h{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:#0A1630;color:#fff}
+.co-h b{font:700 15px/1.2 var(--font-display)}
+.co-h small{display:block;font-size:12px;color:#A9BEE3}
+.co-b{display:flex;flex-direction:column;gap:12px;padding:20px}
+.co-f{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:var(--ink-muted)}
+.co-f span.in{height:44px;padding:0 12px;border-radius:10px;border:1px solid var(--line-strong);display:flex;align-items:center;font:500 15px/1 var(--font-sans);color:var(--ink);letter-spacing:.04em}
+.co-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bank{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:12px;border:1.5px solid var(--line);font-size:14px;font-weight:600;background:var(--surface);cursor:pointer;width:100%;font-family:inherit;color:var(--ink)}
+.bank.on{border-color:var(--primary);background:var(--primary-soft)}
+.co-x{border:0;background:transparent;color:#fff;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;border-radius:8px}
+@media (max-width:640px){.pm-grid.three{grid-template-columns:1fr 1fr}}
+</style>
+</helmet>
+<div class="wp">
+  <header class="wtop"><div class="wtop-in">
+    <a class="wbrand" href="W1-Inicio.dc.html"><b>Garwood</b><span>Tapicería de Interiores</span></a>
+    <nav class="wnav" aria-label="Portal del cliente"><a class="on" href="W6a-EnCurso.dc.html">Mis pedidos</a><a href="W9-Reclamos.dc.html">Reclamos</a></nav>
+    <a class="gw-btn gw-btn-on-dark gw-btn-sm" href="W2-Solicitud.dc.html">+ Nueva solicitud</a>
+    <a class="wbell" href="W11-Notificaciones.dc.html" aria-label="Notificaciones, 3 nuevas"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span>3</span></a>
+    <a class="wav" href="W10-Perfil.dc.html" aria-label="Mi perfil">LM</a>
+  </div></header>
+  <main class="wmain">
+    <div class="whead"><div><div class="crumb">PED-0076 · Sofá de 3 cuerpos</div><h1>Pagos del pedido</h1></div><a class="gw-btn gw-btn-secondary gw-btn-sm" href="W6a-EnCurso.dc.html">← Volver a mi pedido</a></div>
+    <div class="sum"><div><span>TOTAL</span><b>$1,140</b></div><div><span>PAGADO</span><b>$456</b></div><div><span>SALDO</span><b style="color: #67E8F9">$684</b></div><div><span>PRÓXIMO PAGO</span><b style="font-size: 18px; line-height: 28px">Saldo · al entregar</b></div></div>
+    <div class="wcols">
+      <div class="wl">
+        <div class="tbl-box">
+          <table class="t">
+            <thead><tr><th>Concepto</th><th>Método y fecha</th><th class="r">Monto</th><th>Estado</th></tr></thead>
+            <tbody>
+              <sc-for list="{{pays}}" as="p" hint-placeholder-count="3">
+                <tr class="{{p.cls}}" onClick="{{p.pick}}">
+                  <td><b>{{p.label}}</b><sc-if value="{{p.reason}}" hint-placeholder-val="{{ false }}"><div style="font-size: 12.5px; color: var(--danger-ink); font-weight: 600; margin-top: 2px">Motivo: {{p.reason}}</div></sc-if></td>
+                  <td class="muted">{{p.sub}}</td>
+                  <td class="r"><b>{{p.amount}}</b></td>
+                  <td><x-import component-from-global-scope="Garweb.StatusChip" status="{{p.status}}" tone="{{p.tone}}"></x-import></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <div class="card stack" style="gap: 10px">
+          <div class="between"><b style="font-size: 16px">Recibos y comprobante</b><span class="muted" style="font-size: 13px">Se emiten al confirmar cada pago</span></div>
+          <div class="between" style="padding: 8px 0; border-bottom: 1px dashed var(--line)"><div class="row" style="gap: 10px"><x-import component-from-global-scope="Garweb.Icon" name="clipboard" size="{{ 20 }}"></x-import><div><b>Recibo REC-0076-1</b><div class="muted" style="font-size: 13px">Adelanto · $456 · 7 oct</div></div></div><a class="gw-btn gw-btn-secondary gw-btn-sm" href="#">Descargar PDF</a></div>
+          <div class="between" style="padding: 8px 0"><div class="row" style="gap: 10px"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 20 }}"></x-import><div><b>Comprobante final</b><div class="muted" style="font-size: 13px">Se emite cuando el saldo llega a $0 · reúne todos los pagos</div></div></div><span class="pill">Saldo $684</span></div>
+        </div>
+        <div class="card row" style="gap: 12px; align-items: flex-start"><x-import component-from-global-scope="Garweb.Icon" name="payment" size="{{ 22 }}"></x-import><div><b>Cinco formas de pagar</b><p class="muted" style="font-size: 14px; line-height: 21px">En línea con tarjeta o cuenta bancaria: se confirma solo, sin subir nada. Por Zelle o cheque: suba la captura o foto y el taller lo confirma. En efectivo o con tarjeta en persona: en el taller o al conductor cuando le entreguemos.</p></div></div>
+      </div>
+      <aside class="wr">
+        <sc-if value="{{canInform}}" hint-placeholder-val="{{ true }}">
+          <div class="card stack" style="border: 2px solid var(--primary)">
+            <div class="between"><h2 style="font-size: 18px">{{formTitle}}</h2><b class="num" style="font-family: var(--font-display); font-size: 22px">{{curAmount}}</b></div>
+            <div class="pm-sec">Pagar en línea <em>se confirma al instante</em></div>
+            <div class="pm-grid"><sc-for list="{{pmOnline}}" as="m" hint-placeholder-count="2"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}"><b>{{m.l}}</b><small>{{m.s}}</small></button></sc-for></div>
+            <div class="pm-sec" style="margin-top: 4px">Otras formas de pago</div>
+            <div class="pm-grid three"><sc-for list="{{pmOther}}" as="m" hint-placeholder-count="3"><button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.pick}}"><b>{{m.l}}</b><small>{{m.s}}</small></button></sc-for></div>
+            <div class="pm-detail">
+              <sc-if value="{{pmIsOnline}}" hint-placeholder-val="{{ true }}">
+                <div class="pm-lock"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 16 }}"></x-import><span>{{pmOnlineTxt}} GARWEB nunca ve ni guarda los datos de su tarjeta o cuenta: los maneja la pasarela de pago.</span></div>
+                <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{pmOpenCo}}">{{pmPayLbl}}</button>
+              </sc-if>
+              <sc-if value="{{pmIsZelle}}" hint-placeholder-val="{{ false }}">
+                <div class="kv"><span>Zelle</span><b>[correo o teléfono Zelle]</b></div><div class="kv"><span>A nombre de</span><b>Garwood LLC</b></div><div class="kv"><span>Concepto</span><b>PED-0076 Méndez</b></div>
+                <x-import component-from-global-scope="Garweb.UploadZone" title="Suba la captura del envío" hint="JPG, PNG o PDF de hasta 5 MB" files="{{files}}"></x-import>
+                <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{pmInform}}">Informar pago por Zelle</button>
+                <span class="muted" style="font-size: 12.5px">El taller lo confirma, normalmente el mismo día.</span>
+              </sc-if>
+              <sc-if value="{{pmIsCheque}}" hint-placeholder-val="{{ false }}">
+                <div class="kv"><span>Páguese a</span><b>Garwood LLC</b></div><div class="kv"><span>Monto</span><b>$684</b></div>
+                <span style="font-size: 13.5px; line-height: 20px">Entréguelo en el taller o al conductor. Si lo envía, suba una foto del cheque firmado.</span>
+                <x-import component-from-global-scope="Garweb.UploadZone" title="Foto del cheque (opcional)" hint="Frente del cheque" files="{{files}}"></x-import>
+                <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{pmInform}}">Informar pago con cheque</button>
+              </sc-if>
+              <sc-if value="{{pmIsCash}}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 13.5px; line-height: 20px">Pague en efectivo en el taller (lun a sáb) o al conductor cuando le entreguemos. Le damos un recibo y el pago queda registrado al momento.</span>
+                <div class="kv"><span>Taller</span><b>Garwood, NJ · lun–sáb</b></div>
+                <button class="gw-btn gw-btn-secondary gw-btn-lg gw-btn-block" onClick="{{pmCash}}">Pagaré en efectivo</button>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{sentMsg}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Toast" tone="success" title="Pago informado">Quedó “Por confirmar”. Le avisaremos cuando el taller lo revise.</x-import>
+        </sc-if>
+        <sc-if value="{{cashMsg}}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="Garweb.Toast" tone="info" title="Pagará en efectivo">Entréguelo en el taller o al conductor el día de la entrega. Le damos un recibo al momento.</x-import>
+        </sc-if>
+        <sc-if value="{{cardMsg}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack"><b>Saldo pagado con tarjeta</b><p class="muted" style="font-size: 14px">Aprobado por la pasarela hoy. Su saldo quedó en $0 y ya puede descargar el comprobante final.</p></div>
+        </sc-if>
+        <sc-if value="{{achMsg}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack"><b>Débito bancario en proceso</b><p class="muted" style="font-size: 14px">Su banco tarda 2 a 3 días hábiles. Cuando la pasarela lo confirme, el pago pasa a “Confirmado” solo.</p></div>
+        </sc-if>
+        <sc-if value="{{isReplaced}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack"><b>Comprobante reemplazado</b><p class="muted" style="font-size: 14px">Este comprobante fue rechazado y usted subió uno nuevo el mié 7 oct, que ya fue confirmado.</p></div>
+        </sc-if>
+        <sc-if value="{{isConfirmed}}" hint-placeholder-val="{{ false }}">
+          <div class="card stack"><b>Adelanto confirmado</b><p class="muted" style="font-size: 14px">Zelle · $456 · confirmado el mié 7 oct, 09:31. Con esto se generó su pedido PED-0076.</p></div>
+        </sc-if>
+      </aside>
+    </div>
+  </main>
+
+    <sc-if value="{{coOpen}}" hint-placeholder-val="{{ false }}">
+      <div class="co-dim">
+        <div class="co" role="dialog" aria-label="Pago seguro">
+          <div class="co-h"><div><b>Pago seguro · Garwood LLC</b><small>{{coSub}}</small></div><button class="co-x" aria-label="Cerrar" onClick="{{coClose}}"><x-import component-from-global-scope="Garweb.Icon" name="x" size="{{ 18 }}"></x-import></button></div>
+          <div class="co-b">
+            <sc-if value="{{coCard}}" hint-placeholder-val="{{ true }}">
+              <label class="co-f">Número de tarjeta<span class="in">4242 4242 4242 4242</span></label>
+              <div class="co-2"><label class="co-f">Vence<span class="in">08 / 28</span></label><label class="co-f">CVC<span class="in">•••</span></label></div>
+              <label class="co-f">Nombre en la tarjeta<span class="in">Laura Méndez</span></label>
+            </sc-if>
+            <sc-if value="{{coBank}}" hint-placeholder-val="{{ false }}">
+              <span style="font-size: 13.5px">Elija su banco e inicie sesión para autorizar el débito.</span>
+              <sc-for list="{{banks}}" as="b" hint-placeholder-count="3"><button class="{{b.cls}}" onClick="{{b.pick}}"><span>{{b.l}}</span><span class="muted" style="font-size: 12.5px">{{b.s}}</span></button></sc-for>
+            </sc-if>
+            <div class="pm-lock"><x-import component-from-global-scope="Garweb.Icon" name="lock" size="{{ 16 }}"></x-import><span>Página de la pasarela de pago. Sus datos no pasan por GARWEB.</span></div>
+            <button class="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" onClick="{{coPay}}">{{coPayLbl}}</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"saldo":{"editor":"enum","options":["pendiente","rechazado"],"default":"pendiente"},"$preview":{"width":1280,"height":1200}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { sel: 2, pm: 0, co: false, bk: 0, done: {} }; }
+  renderVals() {
+    const s = this.state;
+    const P = [
+      { label: 'Adelanto 40 % · 1.er comprobante', amount: '$456', sub: 'Zelle · 6 oct', status: 'Rechazado', reason: 'No se lee el monto. Reemplazado el 7 oct.', replaced: true },
+      { label: 'Adelanto 40 %', amount: '$456', sub: 'Zelle · 7 oct', status: 'Confirmado', reason: '' },
+      this.props.saldo === 'rechazado'
+        ? { label: 'Saldo', amount: '$684', sub: 'Cheque · 21 oct', status: 'Rechazado', reason: 'La foto del cheque está cortada. Vuelva a subirla.' }
+        : { label: 'Saldo', amount: '$684', sub: 'Antes de la entrega o al recibir', status: 'Pendiente', reason: '' }
+    ].map((p, i) => { const d = s.done[i]; if (!d) return p;
+      if (d === 'card') return { ...p, status: 'Confirmado', sub: 'Tarjeta en línea · hoy', reason: '' };
+      if (d === 'ach') return { ...p, status: 'En proceso', tone: 'progress', sub: 'Cuenta bancaria (ACH) · hoy', reason: '' };
+      if (d === 'cash') return { ...p, status: 'Pendiente', sub: 'Efectivo · al entregar', reason: '' };
+      return { ...p, status: 'Por confirmar', sub: ['', '', 'Zelle', 'Cheque'][s.pm] + ' · hoy', reason: '' }; });
+    const cur = P[s.sel];
+
+    const PMO = [['Tarjeta de crédito o débito', 'Visa, Mastercard, Amex, Discover'], ['Cuenta bancaria', 'Transferencia (ACH) · 2 a 3 días hábiles']];
+    const PMX = [['Zelle', 'Suba la captura'], ['Cheque', 'En el taller o con foto'], ['Efectivo', 'Solo en persona']];
+    const pm = s.pm;
+    const pmV = {
+      pmOnline: PMO.map((x, i) => ({ l: x[0], s: x[1], on: pm === i, cls: pm === i ? 'pm on' : 'pm', pick: () => this.setState({ pm: i }) })),
+      pmOther: PMX.map((x, i) => ({ l: x[0], s: x[1], on: pm === i + 2, cls: pm === i + 2 ? 'pm on' : 'pm', pick: () => this.setState({ pm: i + 2 }) })),
+      pmIsOnline: pm <= 1, pmIsZelle: pm === 2, pmIsCheque: pm === 3, pmIsCash: pm === 4,
+      pmOnlineTxt: pm === 0 ? 'Se abre la página segura de pago y el pago queda confirmado en cuanto la tarjeta lo aprueba.' : 'Se abre la página segura de pago para autorizar el débito desde su cuenta. Su banco lo procesa en 2 a 3 días hábiles.',
+      pmPayLbl: pm === 0 ? 'Pagar $684 con tarjeta' : 'Pagar $684 desde mi banco',
+      pmOpenCo: () => this.setState({ co: true }),
+      coOpen: !!s.co, coClose: () => this.setState({ co: false }), coCard: pm === 0, coBank: pm === 1,
+      coSub: (pm === 0 ? 'Tarjeta' : 'Cuenta bancaria (ACH)') + ' · $684',
+      banks: ['Chase', 'Bank of America', 'Wells Fargo', 'TD Bank'].map((l, i) => ({ l, s: i === (s.bk ?? 0) ? 'Cuenta corriente ••••4821' : '', cls: i === (s.bk ?? 0) ? 'bank on' : 'bank', pick: () => this.setState({ bk: i }) })),
+      coPayLbl: 'Pagar $684',
+      files: []
+    };
+    const setD = (v, extra) => { const x = Object.assign({}, s.done); x[s.sel] = v; this.setState(Object.assign({ done: x }, extra || {})); };
+    const d = s.done[s.sel];
+    return {
+      ...pmV,
+      coPay: () => setD(pm === 0 ? 'card' : 'ach', { co: false }),
+      pmInform: () => setD('manual'), pmCash: () => setD('cash'),
+      curAmount: cur.amount,
+      cashMsg: d === 'cash', cardMsg: d === 'card', achMsg: d === 'ach',
+      pays: P.map((p, i) => ({ ...p, cls: s.sel === i ? 'prow sel' : 'prow', pick: () => this.setState({ sel: i }) })),
+      canInform: !d && (cur.status === 'Pendiente' || cur.status === 'Rechazado') && !cur.replaced,
+      isReplaced: !!cur.replaced,
+      sentMsg: d === 'manual', isConfirmed: !d && cur.status === 'Confirmado',
+      formTitle: cur.status === 'Rechazado' ? 'Volver a pagar el ' + cur.label.toLowerCase() : 'Pagar el ' + cur.label.toLowerCase(),
+    };
+  }
+}
+</script>
+</body>
+</html>

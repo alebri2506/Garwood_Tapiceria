@@ -9,7 +9,7 @@ import { fondoDe } from '../solicitud/datos';
 import { adminSolicitudesApi, type FichaAdmin } from './adminApi';
 
 const CANAL: Record<string, string> = { web: 'Web', telefono: 'Teléfono', local: 'En persona', correo: 'Correo', mensaje: 'Mensaje de texto' };
-const TELA: Record<string, string> = { trae: 'La trae el cliente', catalogo: 'Catálogo en línea', local: 'Ver en el local', domicilio: 'Visita a domicilio', sin: 'No lleva tela' };
+const TELA: Record<string, string> = { trae: 'La trae el cliente', catalogo: 'Telas en línea', local: 'Ver en el local', domicilio: 'Visita a domicilio', sin: 'No lleva tela' };
 const ACCION: Record<string, string> = {
   solicitud_registrada: 'Solicitud registrada', cita_programada: 'Cita programada', cita_reprogramada: 'Cita reprogramada', cita_cancelada: 'Cita cancelada',
   cita_atendida: 'Cita atendida', cita_inasistencia: 'No asistió', solicitud_descartada: 'Descartada', fotos_recibidas: 'Llegaron las fotos',
