@@ -5,6 +5,7 @@ import type { Correo } from '../../../shared/infrastructure/correo.js';
 import { prisma } from '../../../shared/infrastructure/prisma.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { consultarCatalogo, direccionesDelCliente } from '../application/catalogoSolicitud.js';
+import { disponibilidadRecojo } from '../application/recojo.js';
 import { registrarSolicitud } from '../application/registrarSolicitud.js';
 import { miSolicitud, misSolicitudes, subirFotosPendientes } from '../application/seguimientoSolicitud.js';
 import { solicitudSchema } from './solicitud.schemas.js';
@@ -24,8 +25,13 @@ export function solicitudRoutes(deps: Deps) {
   r.use(autenticar);
 
   // El catálogo también lo usa el Administrador al registrar una solicitud (A3).
-  r.get('/catalogo', exigirRol('Cliente', 'Administrador'), async (_req, res) => {
-    res.json(await consultarCatalogo());
+  r.get('/catalogo', exigirRol('Cliente', 'Administrador'), async (req, res) => {
+    res.json(await consultarCatalogo(req.usuario!.rol === 'Cliente'));
+  });
+
+  // W2 · horas de recojo de las próximas semanas, cruzadas con la agenda del taller.
+  r.get('/recojo/disponibilidad', exigirRol('Cliente', 'Administrador'), async (_req, res) => {
+    res.json(await disponibilidadRecojo());
   });
 
   r.use(exigirRol('Cliente'));

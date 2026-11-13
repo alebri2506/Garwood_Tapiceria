@@ -5,14 +5,25 @@ import { SOLICITUDES_SIMULADAS, type DireccionGuardada, type SolicitudCliente, t
 
 export const ESTADOS_SOLICITUD = ['Nueva', 'En espera de cita', 'Atendida', 'Cotizada', 'Vencida', 'Descartada'] as const;
 
+/** A3 Solicitudes y cotizaciones: las 4 etapas, una por pestaña (la misma regla que el backend: domain/solicitud.ts). */
+export const ETAPAS = ['Cita / visita', 'Por cotizar', 'Esperando al cliente', 'Cerradas'] as const;
+export type Etapa = (typeof ETAPAS)[number];
+export const etapaDe = (estado: string): Etapa =>
+  estado === 'En espera de cita' ? 'Cita / visita' : estado === 'Nueva' || estado === 'Atendida' ? 'Por cotizar' : estado === 'Cotizada' ? 'Esperando al cliente' : 'Cerradas';
+export const estadoVisibleDe = (estado: string, tela: string) =>
+  estado === 'En espera de cita' && tela === 'domicilio' ? 'En espera de visita' : estado === 'Cotizada' ? 'Esperando respuesta' : estado;
+
 export interface FilaBandeja {
-  codigo: string; estado: string; canal: string; fecha: string; dias: number; atrasada: boolean;
+  codigo: string; estado: string; estadoVisible: string; etapa: Etapa; canal: string; fecha: string; hora: string; dias: number; atrasada: boolean;
+  cita: { id: number; fecha: string; hora: string | null; franja: 'manana' | 'tarde' | null; tipo: 'local' | 'domicilio' } | null;
   cliente: string; ciudad: string | null; muebles: string[]; archivos: number;
   tela: SolicitudEnvio['tela']; esperaFotos: boolean; tieneCita: boolean;
 }
 export interface Bandeja { diasAtraso: number; conteo: Record<string, number>; solicitudes: FilaBandeja[]; motivosDescarte: string[] }
 
 export interface FichaAdmin extends SolicitudCliente {
+  estadoVisible: string;
+  etapa: Etapa;
   cliente: { id: number; nombre: string; tipoPersona: string; email: string | null; telefono: string; tieneCuenta: boolean };
   registradaPor: string;
   puedeDescartarse: boolean;
@@ -35,7 +46,8 @@ export interface RegistroAdmin {
 }
 
 export interface AdminSolicitudesApi {
-  bandeja(): Promise<Bandeja>;
+  /** `desde`/`hasta`: días (AAAA-MM-DD) de la fecha de solicitud, ambos incluidos. */
+  bandeja(filtro?: { desde?: string; hasta?: string }): Promise<Bandeja>;
   ficha(codigo: string): Promise<FichaAdmin>;
   descartar(codigo: string, motivo: string): Promise<FichaAdmin>;
   buscarClientes(q: string): Promise<ClienteBuscado[]>;
@@ -44,7 +56,10 @@ export interface AdminSolicitudesApi {
 }
 
 const httpApi: AdminSolicitudesApi = {
-  bandeja: () => apiFetch('/admin/solicitudes'),
+  bandeja: (filtro = {}) => {
+    const q = new URLSearchParams(Object.entries(filtro).filter(([, v]) => v) as [string, string][]).toString();
+    return apiFetch(`/admin/solicitudes${q ? `?${q}` : ''}`);
+  },
   ficha: (codigo) => apiFetch(`/admin/solicitudes/${encodeURIComponent(codigo)}`),
   descartar: (codigo, motivo) => apiFetch(`/admin/solicitudes/${encodeURIComponent(codigo)}/descartar`, { method: 'POST', body: JSON.stringify({ motivo }) }),
   buscarClientes: (q) => apiFetch(`/admin/clientes?q=${encodeURIComponent(q)}`),
@@ -65,7 +80,7 @@ const CLIENTES: ClienteBuscado[] = [
   { id: 2, nombre: 'Mark Ellison', tipoPersona: 'persona', email: 'mark.ellison@correo.com', telefono: '+19735550177', ciudad: 'Bloomfield', solicitudes: 1, direcciones: [] },
 ];
 const fichaDe = (s: SolicitudCliente): FichaAdmin => ({
-  ...s, cliente: { id: 1, nombre: 'Laura Méndez', tipoPersona: 'persona', email: 'laura.mendez@correo.com', telefono: '+19735550142', tieneCuenta: true },
+  ...s, estadoVisible: estadoVisibleDe(s.estado, s.tela), etapa: etapaDe(s.estado), cliente: { id: 1, nombre: 'Laura Méndez', tipoPersona: 'persona', email: 'laura.mendez@correo.com', telefono: '+19735550142', tieneCuenta: true },
   registradaPor: s.canal === 'web' ? 'el cliente' : 'admin', puedeDescartarse: ['Nueva', 'En espera de cita', 'Atendida'].includes(s.estado),
   historial: [{ accion: 'solicitud_registrada', fecha: s.fecha, quien: s.canal === 'web' ? 'Cliente' : 'admin' }],
 });
@@ -75,11 +90,12 @@ const buscar = (codigo: string) => {
   return s;
 };
 const mockApi: AdminSolicitudesApi = {
-  bandeja: async () => ({
+  bandeja: async (filtro = {}) => ({
     diasAtraso: 2, motivosDescarte: MOTIVOS,
     conteo: SOLICITUDES_SIMULADAS.reduce<Record<string, number>>((a, s) => ({ ...a, [s.estado]: (a[s.estado] ?? 0) + 1 }), {}),
-    solicitudes: SOLICITUDES_SIMULADAS.map((s) => ({
-      codigo: s.codigo, estado: s.estado, canal: s.canal, fecha: s.fecha, dias: 0, atrasada: false, cliente: 'Laura Méndez', ciudad: 'Montclair',
+    solicitudes: SOLICITUDES_SIMULADAS.filter((s) => (!filtro.desde || s.fecha.slice(0, 10) >= filtro.desde) && (!filtro.hasta || s.fecha.slice(0, 10) <= filtro.hasta)).map((s) => ({
+      codigo: s.codigo, estado: s.estado, estadoVisible: estadoVisibleDe(s.estado, s.tela), etapa: etapaDe(s.estado), canal: s.canal, fecha: s.fecha, hora: s.fecha.slice(11, 16), dias: 0,
+      cita: s.cita?.estado === 'Programada' ? { id: s.cita.id, fecha: s.cita.fecha, hora: s.cita.hora, franja: s.cita.franja, tipo: s.cita.tipo } : null, atrasada: false, cliente: 'Laura Méndez', ciudad: 'Montclair',
       muebles: s.muebles.map((m) => `${m.cantidad > 1 ? `${m.cantidad} × ` : ''}${m.tipo}`), archivos: s.muebles.reduce((t, m) => t + m.archivos.length, 0),
       tela: s.tela, esperaFotos: s.esperaFotos, tieneCita: s.cita?.estado === 'Programada',
     })),

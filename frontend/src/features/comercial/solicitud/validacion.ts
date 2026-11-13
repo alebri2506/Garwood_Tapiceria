@@ -1,6 +1,5 @@
 // Reglas de los campos obligatorios del asistente W2. Son las mismas que valida la API
 // (backend/src/modules/comercial/http/solicitud.schemas.ts y application/registrarSolicitud.ts).
-import { hoy, motivoNoDisponible } from '../fechas';
 import { hayRecojo, necesitaCita, porPartesPosible, tipoDe, type DireccionW2, type EstadoW2 } from './estadoW2';
 import type { Catalogo } from './solicitudApi';
 
@@ -56,12 +55,8 @@ export function validarPaso(c: Catalogo, e: EstadoW2, paso: number, fotosOpciona
 
   if (paso === 2 && !necesitaCita(e.tela) && e.traslado === 'delivery') {
     revisarDireccion(e.dir, 'direccion', 'Escriba la dirección de recojo y entrega.', errores);
-    if (hayRecojo(e)) {
-      const limite = hoy();
-      limite.setDate(limite.getDate() + limites.diasRecojo);
-      const motivo = motivoNoDisponible(e.fechaRecojo) ?? (e.fechaRecojo > limite ? `Elija una fecha dentro de los próximos ${limites.diasRecojo} días.` : null);
-      if (motivo) errores.fechaPrefRecojo = `No se puede ese día: ${motivo.toLowerCase()}.`;
-    }
+    // La cuadrícula solo deja elegir horas libres; la API vuelve a revisar contra la agenda al enviar.
+    if (hayRecojo(e) && !e.recojo) errores.horaPrefRecojo = 'Elija el día y la hora que prefiere para el recojo.';
   }
   return errores;
 }

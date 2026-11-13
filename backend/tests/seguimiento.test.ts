@@ -223,6 +223,19 @@ describe('A2 · agenda del Administrador', () => {
     await request(app).post('/api/citas').set(auth(admin)).send({ solicitud: s.body.codigo, tipo: 'local', ...t2 });
     expect((await request(app).post('/api/admin/agenda/bloqueos').set(auth(admin)).send({ bloques: [t2] })).body.mensaje).toMatch(/tiene una cita/);
   });
+
+  it('quitar un bloqueo lo anula sin borrarlo y el turno vuelve a estar libre', async () => {
+    const t = await primerLibre('local');
+    await request(app).post('/api/admin/agenda/bloqueos').set(auth(admin)).send({ bloques: [t], motivo: 'Reunión' });
+    const fila = await prisma.agendaBloqueo.findFirstOrThrow({ where: { activo: true, motivo: 'Reunión', horaInicio: t.hora }, orderBy: { id: 'desc' } });
+    expect((await request(app).post(`/api/admin/agenda/bloqueos/${fila.id}/quitar`).set(auth(admin))).status).toBe(204);
+
+    expect(await prisma.agendaBloqueo.findUniqueOrThrow({ where: { id: fila.id } })).toMatchObject({ activo: false, quitadoPor: expect.any(Number) });
+    const dispo = await request(app).get(`/api/citas/disponibilidad?tipo=local&desde=${t.fecha}&dias=1`).set(auth(cliente));
+    expect(dispo.body.dias[0].turnos.find((x: { hora: string }) => x.hora === t.hora).libre).toBe(true);
+    expect((await request(app).post(`/api/admin/agenda/bloqueos/${fila.id}/quitar`).set(auth(admin))).status).toBe(404);
+    expect(await prisma.bitacora.count({ where: { accion: 'agenda_desbloqueo', entidadId: fila.id } })).toBe(1);
+  });
 });
 
 describe('W2 + W3/W3b · la solicitud se envía junto con la cita', () => {
@@ -290,6 +303,18 @@ describe('A3 · el Administrador', () => {
     expect(b.status).toBe(200);
     expect(b.body.solicitudes.some((x: { codigo: string }) => x.codigo === s.body.codigo)).toBe(true);
     expect(b.body.motivosDescarte).toContain('Trabajo que no hacemos');
+
+    // A3 Solicitudes y cotizaciones: cada fila trae su etapa y la fecha filtra por el día en Nueva York.
+    const fila = b.body.solicitudes.find((x: { codigo: string }) => x.codigo === s.body.codigo);
+    expect(fila).toMatchObject({ estado: 'Nueva', estadoVisible: 'Nueva', etapa: 'Por cotizar', hora: expect.stringMatching(/^\d{2}:\d{2}$/) });
+    const hoy = hoyNegocio();
+    const deHoy = await request(app).get(`/api/admin/solicitudes?desde=${hoy}&hasta=${hoy}`).set(auth(admin));
+    expect(deHoy.body.solicitudes.some((x: { codigo: string }) => x.codigo === s.body.codigo)).toBe(true);
+    const deAyer = await request(app).get(`/api/admin/solicitudes?desde=${sumarDias(hoy, -1)}&hasta=${sumarDias(hoy, -1)}`).set(auth(admin));
+    expect(deAyer.body.solicitudes.some((x: { codigo: string }) => x.codigo === s.body.codigo)).toBe(false);
+    const visita = await enEspera('domicilio');
+    const filaVisita = (await request(app).get('/api/admin/solicitudes').set(auth(admin))).body.solicitudes.find((x: { codigo: string }) => x.codigo === visita.body.codigo);
+    expect(filaVisita).toMatchObject({ estadoVisible: 'En espera de visita', etapa: 'Cita / visita' });
 
     const f = await request(app).get(`/api/admin/solicitudes/${s.body.codigo}`).set(auth(admin));
     expect(f.body).toMatchObject({ cliente: { nombre: 'Laura Méndez', email: 'laura.mendez@correo.com' }, puedeDescartarse: true, registradaPor: 'el cliente' });

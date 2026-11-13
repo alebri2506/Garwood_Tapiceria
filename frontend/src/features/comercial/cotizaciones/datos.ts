@@ -3,42 +3,6 @@
 
 export const RUTA_COTIZAR = '/admin/cotizaciones/cotizar';
 
-export const ESTADOS_COTIZACION = ['Borrador', 'Pendiente de respuesta', 'Aceptada', 'Rechazada', 'Vencida', 'Reemplazada'] as const;
-export type EstadoCotizacion = (typeof ESTADOS_COTIZACION)[number];
-
-export interface Cotizacion {
-  codigo: string;
-  version: string;
-  cliente: string;
-  origen: string;
-  mueble: string;
-  total: number;
-  estado: EstadoCotizacion;
-  detalle: string;
-  fecha: string;
-  fechaTono?: 'pronto' | 'tarde';
-  accion: { texto: string; a: string };
-}
-
-export const COTIZACIONES: Cotizacion[] = [
-  { codigo: 'COT-0076', version: 'V1 · borrador', cliente: 'Laura Méndez', origen: 'SOL-0076 · cita hoy', mueble: 'Sofá 3 cuerpos', total: 1140, estado: 'Borrador', detalle: 'Armando hace 11 min', fecha: 'sin publicar', accion: { texto: 'Seguir armando', a: RUTA_COTIZAR } },
-  { codigo: 'COT-0077', version: 'V2 · recotización', cliente: 'Robert King', origen: 'PED-0077 · revisión inicial', mueble: 'Sillón Berger', total: 960, estado: 'Pendiente de respuesta', detalle: 'Orden OS-0077 anulada', fecha: 'responde dom 18 oct', fechaTono: 'pronto', accion: { texto: 'Ver recotización', a: `${RUTA_COTIZAR}?modo=v2` } },
-  { codigo: 'COT-0078', version: 'V1', cliente: 'Kevin Park', origen: 'SOL-0078', mueble: 'Sillón reclinable · espuma', total: 420, estado: 'Pendiente de respuesta', detalle: 'Publicada el 4 oct', fecha: 'vence mié 4 nov', accion: { texto: 'Registrar respuesta', a: `${RUTA_COTIZAR}?modo=respuesta` } },
-  { codigo: 'COT-0081', version: 'V1', cliente: 'Hotel Willow', origen: 'SOL-0081', mueble: '12 sillas · 2 telas por partes', total: 3360, estado: 'Pendiente de respuesta', detalle: 'Publicada el 5 oct', fecha: 'vence jue 5 nov', accion: { texto: 'Registrar respuesta', a: `${RUTA_COTIZAR}?modo=respuesta` } },
-  { codigo: 'COT-0083', version: 'V1', cliente: 'Ana Ruiz', origen: 'SOL-0083', mueble: 'Puff', total: 780, estado: 'Aceptada', detalle: 'Falta el adelanto (40 %)', fecha: 'aceptó vie 2 oct', accion: { texto: 'Ver pago', a: '/admin/pagos' } },
-  { codigo: 'COT-0075', version: 'V1', cliente: 'Sara Cohen', origen: 'SOL-0075', mueble: 'Loveseat', total: 890, estado: 'Aceptada', detalle: 'Pedido PED-0075 generado', fecha: 'aceptó 28 sep', accion: { texto: 'Ver pedido', a: '/admin/pedidos' } },
-  { codigo: 'COT-0071', version: 'V1', cliente: 'Tom Becker', origen: 'SOL-0071', mueble: 'Cabecera', total: 360, estado: 'Vencida', detalle: 'Motivo: sin respuesta', fecha: 'venció 1 oct', fechaTono: 'tarde', accion: { texto: 'Renovar', a: `${RUTA_COTIZAR}?modo=recalcular` } },
-  { codigo: 'COT-0069', version: 'V1', cliente: 'Nora Díaz', origen: 'SOL-0069', mueble: 'Silla de comedor × 4', total: 520, estado: 'Rechazada', detalle: 'Motivo: precio', fecha: 'rechazó 30 sep', accion: { texto: 'Ver cliente', a: '/admin/clientes' } },
-  { codigo: 'COT-0077', version: 'V1 · reemplazada', cliente: 'Robert King', origen: 'PED-0077', mueble: 'Sillón Berger', total: 780, estado: 'Reemplazada', detalle: 'Por la V2 tras la revisión', fecha: '13 oct', accion: { texto: 'Ver V2', a: `${RUTA_COTIZAR}?modo=v2` } },
-];
-
-export const POR_ARMAR = [
-  { codigo: 'SOL-0084', cliente: 'Rosa Díaz', mueble: 'Sillón · 2 telas · comparar precios', etiqueta: 'Nueva · hace 3 días', tono: 'tarde' },
-  { codigo: 'SOL-0080', cliente: 'Grace Lin', mueble: 'Cabecera · la trae la clienta', etiqueta: 'Nueva · hoy', tono: '' },
-  { codigo: 'SOL-0074', cliente: 'Mark Ellison', mueble: 'Sillón · tela elegida en la cita', etiqueta: 'Atendida lun 5', tono: 'ok' },
-];
-
-// ---------------------------------------------------------------- Armar cotización (COT-0076)
 export const PLANTILLA = 'Sofá 3 cuerpos · Retapizado completo + espuma (v3)';
 export const COSTOS = { tarifaHora: 15, fijos: 60, margen: 0.75 };
 export const TRANSPORTE = { costo: 90, direccion: '48 Park St, Montclair', millas: 14 };

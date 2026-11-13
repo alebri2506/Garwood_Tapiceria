@@ -88,7 +88,7 @@ export const METRICAS: Metrica[] = [
 ];
 
 export const MINI: { a: string; icono: IconName; titulo: string; texto: string; valor: string; tono?: 'wr' }[] = [
-  { a: '/admin/cotizaciones', icono: 'quote', titulo: 'Cotizaciones sin respuesta', texto: '11 publicadas · vencen en 5 días', valor: '$7,040' },
+  { a: '/admin/solicitudes?etapa=esperando-al-cliente', icono: 'quote', titulo: 'Cotizaciones sin respuesta', texto: '11 publicadas · vencen en 5 días', valor: '$7,040' },
   { a: '/admin/pedidos', icono: 'package', titulo: 'Material usado vs. cotizado', texto: 'Se gastó más de lo previsto', valor: '+2.1 %', tono: 'wr' },
 ];
 

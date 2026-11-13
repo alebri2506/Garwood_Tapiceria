@@ -37,7 +37,7 @@ export function CotizarPage() {
   return (
     <>
       <TopAdmin
-        crumb={<><Link to="/admin/cotizaciones">Cotizaciones</Link> › {modo.crumb}</>}
+        crumb={<><Link to="/admin/solicitudes">Solicitudes y cotizaciones</Link> › {modo.crumb}</>}
         titulo={modo.titulo}
         debajo={<div style={{ marginTop: 8 }}><StatusChip status={estados[i]} /></div>}
       >

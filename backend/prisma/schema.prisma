@@ -23,39 +23,43 @@ model Rol {
 }
 
 model Usuario {
-  id                    Int                  @id @default(autoincrement())
-  clienteId             Int?                 @unique @map("cliente_id")
-  rolId                 Int                  @map("rol_id")
+  id                    Int                    @id @default(autoincrement())
+  clienteId             Int?                   @unique @map("cliente_id")
+  rolId                 Int                    @map("rol_id")
   // No se puede cambiar: identifica a la persona en la bitácora (decisiones D.1.4).
-  nombreUsuario         String               @unique @map("nombre_usuario") @db.VarChar(120)
+  nombreUsuario         String                 @unique @map("nombre_usuario") @db.VarChar(120)
   // Nombre visible del personal (A20). Los clientes usan el nombre de su ficha de cliente.
-  nombre                String?              @db.VarChar(80)
+  nombre                String?                @db.VarChar(80)
   // Para recuperar la contraseña (CU-S02). Obligatorio para Administrador y Cliente; opcional para
   // Producción y Conductor (decisiones D.1.2): esa regla se valida en el backend.
-  email                 String?              @unique @db.VarChar(160)
-  contrasenaHash        String               @map("contrasena_hash")
+  email                 String?                @unique @db.VarChar(160)
+  contrasenaHash        String                 @map("contrasena_hash")
   // Computadora | Celular | Tablet (solo informativo, decisiones D.1.7).
-  dispositivo           String?              @db.VarChar(20)
-  activo                Boolean              @default(true)
+  dispositivo           String?                @db.VarChar(20)
+  activo                Boolean                @default(true)
   // Bloqueo por intentos fallidos (CU-S01).
-  intentosFallidos      Int                  @default(0) @map("intentos_fallidos")
-  bloqueadoHasta        DateTime?            @map("bloqueado_hasta") @db.Timestamptz
+  intentosFallidos      Int                    @default(0) @map("intentos_fallidos")
+  bloqueadoHasta        DateTime?              @map("bloqueado_hasta") @db.Timestamptz
   // Contraseña temporal dada por el Administrador: se cambia en el primer ingreso (D.1.3).
-  debeCambiarContrasena Boolean              @default(false) @map("debe_cambiar_contrasena")
+  debeCambiarContrasena Boolean                @default(false) @map("debe_cambiar_contrasena")
   // Sube al desactivar, cambiar el rol o la contraseña; una sesión con un número viejo ya no se renueva (D.1.6).
-  versionSesion         Int                  @default(0) @map("version_sesion")
-  fechaCreacion         DateTime             @default(now()) @map("fecha_creacion") @db.Timestamptz
-  rol                   Rol                  @relation(fields: [rolId], references: [id])
-  cliente               Cliente?             @relation(fields: [clienteId], references: [id])
+  versionSesion         Int                    @default(0) @map("version_sesion")
+  fechaCreacion         DateTime               @default(now()) @map("fecha_creacion") @db.Timestamptz
+  rol                   Rol                    @relation(fields: [rolId], references: [id])
+  cliente               Cliente?               @relation(fields: [clienteId], references: [id])
   tokens                TokenRecuperacion[]
   cambiosCorreo         CambioCorreo[]
   bitacora              Bitacora[]
   solicitudes           Solicitud[]
-  descartadas           Solicitud[]          @relation("SolicitudDescartadaPor")
+  descartadas           Solicitud[]            @relation("SolicitudDescartadaPor")
   notificaciones        Notificacion[]
   citas                 Cita[]
-  parametrosModificados Parametro[]          @relation("ParametroModificadoPor")
+  parametrosModificados Parametro[]            @relation("ParametroModificadoPor")
   cambiosParametro      ParametroHistorial[]
+  movimientos           MovimientoInventario[]
+  compras               Compra[]               @relation("CompraRegistradaPor")
+  comprasRecibidas      Compra[]               @relation("CompraRecibidaPor")
+  conteos               Conteo[]
 
   @@map("usuario")
 }
@@ -81,6 +85,7 @@ model Cliente {
   usuario            Usuario?
   direcciones        Direccion[]
   solicitudes        Solicitud[]
+  pedidos            Pedido[]
 
   @@map("cliente")
 }
@@ -154,6 +159,8 @@ model Parametro {
   minimo            Decimal?             @db.Decimal(12, 2)
   maximo            Decimal?             @db.Decimal(12, 2)
   ayuda             String?              @db.VarChar(300)
+  // Solo tipo "opcion": las opciones permitidas, "valor=Etiqueta|valor=Etiqueta" (p. ej. "yd=Yarda|m=Metro").
+  opciones          String?              @db.VarChar(200)
   orden             Int                  @default(0)
   modificadoPor     Int?                 @map("modificado_por")
   fechaModificacion DateTime             @default(now()) @map("fecha_modificacion") @db.Timestamptz
@@ -207,25 +214,212 @@ model TipoMuebleParte {
   @@map("tipo_mueble_parte")
 }
 
-// Catálogo de materiales y telas (A15). Por ahora solo telas, cargadas como datos de prueba.
+// Inventario (A15 Stock y A15b Telas · CU-A01). Una sola unidad por material, que no cambia una vez que tiene movimientos.
+//  - Materiales de stock (espuma, relleno, insumo, pegamento): se cuentan, se reservan y se reponen.
+//  - Telas: NO tienen stock; son la copia digital del libro de muestras y se encargan por pedido (encargo_tela).
 model Material {
-  id            Int             @id @default(autoincrement())
-  codigo        String          @unique @db.VarChar(30)
-  nombre        String          @db.VarChar(80)
-  categoria     String          @db.VarChar(30) // tela | espuma | insumo …
-  familia       String?         @db.VarChar(30) // Lino, Pana, Chenille…
+  id            Int                    @id @default(autoincrement())
+  codigo        String                 @unique @db.VarChar(30)
+  nombre        String                 @db.VarChar(80)
+  categoria     String                 @db.VarChar(30) // tela | espuma | relleno | insumo | pegamento
+  familia       String?                @db.VarChar(30) // Tipo de tela: Terciopelo, Lino, Pana, Chenille…
+  // Color para buscar en el muestrario (Azul, Gris, Beige…).
+  colorFamilia  String?                @map("color_familia") @db.VarChar(20)
+  libro         String?                @db.VarChar(60) // Libro de muestras donde está la tela
   // Cada tela se identifica por su modelo (pattern) y su número de color.
-  pattern       String?         @db.VarChar(20)
-  numeroColor   String?         @map("numero_color") @db.VarChar(10)
-  colorHex      String?         @map("color_hex") @db.Char(7)
-  descripcion   String?         @db.VarChar(160)
-  unidadMedida  String          @map("unidad_medida") @db.VarChar(10)
-  activo        Boolean         @default(true)
-  fechaCreacion DateTime        @default(now()) @map("fecha_creacion") @db.Timestamptz
+  pattern       String?                @db.VarChar(20)
+  numeroColor   String?                @map("numero_color") @db.VarChar(10)
+  colorHex      String?                @map("color_hex") @db.Char(7)
+  descripcion   String?                @db.VarChar(160)
+  unidadMedida  String                 @map("unidad_medida") @db.VarChar(10)
+  proveedorId   Int?                   @map("proveedor_id")
+  // Precio por unidad (las telas: por yarda) y desde cuándo rige. Cambiarlo no altera cotizaciones ya enviadas.
+  precio        Decimal?               @db.Decimal(10, 2)
+  fechaPrecio   DateTime?              @map("fecha_precio") @db.Date
+  // Lo que hay en el estante. Solo lo cambian los movimientos (movimiento_inventario guarda el saldo de cada uno).
+  stockFisico   Decimal                @default(0) @map("stock_fisico") @db.Decimal(10, 2)
+  stockMinimo   Decimal                @default(0) @map("stock_minimo") @db.Decimal(10, 2)
+  ubicacion     String?                @db.VarChar(30) // Estante o gaveta
+  // Telas: si el cliente la ve en "Telas en línea" (W2). Descontinuar = activo en false (nunca se borra).
+  enWeb         Boolean                @default(true) @map("en_web")
+  activo        Boolean                @default(true)
+  fechaCreacion DateTime               @default(now()) @map("fecha_creacion") @db.Timestamptz
+  proveedor     Proveedor?             @relation(fields: [proveedorId], references: [id])
   telas         SolicitudTela[]
+  reservas      ReservaMaterial[]
+  encargos      EncargoTela[]
+  lineasCompra  CompraLinea[]
+  movimientos   MovimientoInventario[]
+  lineasConteo  ConteoLinea[]
 
   @@index([categoria, activo])
   @@map("material")
+}
+
+// A8p Proveedores: a quién se le compra, cómo se le pide y cuánto tarda (sirve para saber si llega a tiempo).
+model Proveedor {
+  id            Int        @id @default(autoincrement())
+  nombre        String     @unique @db.VarChar(80)
+  canal         String     @db.VarChar(12) // telefono | whatsapp
+  contacto      String     @db.VarChar(40)
+  diasMin       Int        @map("dias_min")
+  diasMax       Int        @map("dias_max")
+  tipo          String     @db.VarChar(10) // stock | telas (bajo pedido)
+  activo        Boolean    @default(true)
+  fechaCreacion DateTime   @default(now()) @map("fecha_creacion") @db.Timestamptz
+  materiales    Material[]
+  compras       Compra[]
+
+  @@map("proveedor")
+}
+
+// CU-C14: el pedido nace (con su propio código PED-0000) cuando se acepta la cotización y se paga el adelanto.
+// Es distinto de la solicitud (SOL-0000): una solicitud puede no llegar nunca a pedido. Por ahora se enlaza con su
+// solicitud de origen; la cotización congelada se agrega con el backend de Cotizaciones.
+model Pedido {
+  id              Int                    @id @default(autoincrement())
+  codigo          String                 @unique @db.VarChar(12)
+  solicitudId     Int                    @map("solicitud_id")
+  clienteId       Int                    @map("cliente_id")
+  // Generado | Esperando mueble | Esperando material | Listo para producir | En producción | En pausa | Terminado |
+  // En reparto | Listo para retiro | Entregado | Cerrado | Cancelado (un solo ciclo, RG-09).
+  estado          String                 @db.VarChar(30)
+  descripcion     String                 @db.VarChar(120) // "Sofá de 3 cuerpos", "12 sillas"…
+  fechaCompromiso DateTime?              @map("fecha_compromiso") @db.Date
+  fechaCreacion   DateTime               @default(now()) @map("fecha_creacion") @db.Timestamptz
+  solicitud       Solicitud              @relation(fields: [solicitudId], references: [id])
+  cliente         Cliente                @relation(fields: [clienteId], references: [id])
+  reservas        ReservaMaterial[]
+  encargos        EncargoTela[]
+  movimientos     MovimientoInventario[]
+
+  @@index([estado])
+  @@map("pedido")
+}
+
+// CU-A02: al nacer el pedido se reservan sus materiales de stock. Reservado = cantidad − retirado (mientras esté activa).
+model ReservaMaterial {
+  id         Int      @id @default(autoincrement())
+  pedidoId   Int      @map("pedido_id")
+  materialId Int      @map("material_id")
+  cantidad   Decimal  @db.Decimal(10, 2)
+  retirado   Decimal  @default(0) @db.Decimal(10, 2)
+  activa     Boolean  @default(true)
+  fecha      DateTime @default(now()) @db.Timestamptz
+  pedido     Pedido   @relation(fields: [pedidoId], references: [id])
+  material   Material @relation(fields: [materialId], references: [id])
+
+  @@unique([pedidoId, materialId])
+  @@index([materialId, activa])
+  @@map("reserva_material")
+}
+
+// Tela bajo pedido (A8 · Telas para encargar): aparece cuando se paga el adelanto; al llegar queda en su pedido,
+// no entra al stock. por_encargar → encargada → llego.
+model EncargoTela {
+  id             Int           @id @default(autoincrement())
+  pedidoId       Int           @map("pedido_id")
+  materialId     Int           @map("material_id")
+  cantidad       Decimal       @db.Decimal(10, 2) // yardas
+  precio         Decimal       @db.Decimal(10, 2) // por yarda, el cotizado
+  estado         String        @db.VarChar(15)
+  fechaNecesaria DateTime?     @map("fecha_necesaria") @db.Date
+  fecha          DateTime      @default(now()) @db.Timestamptz
+  pedido         Pedido        @relation(fields: [pedidoId], references: [id])
+  material       Material      @relation(fields: [materialId], references: [id])
+  lineas         CompraLinea[]
+
+  @@index([estado])
+  @@map("encargo_tela")
+}
+
+// CU-A03 / A04: compra al proveedor. Se pide por teléfono o WhatsApp como siempre; GARWEB solo anota
+// "Marcar como pedido" (por_llegar) y "Llegó" (llego), que suma al stock.
+model Compra {
+  id            Int                    @id @default(autoincrement())
+  codigo        String                 @unique @db.VarChar(12) // OC-0001
+  proveedorId   Int                    @map("proveedor_id")
+  estado        String                 @db.VarChar(12) // por_llegar | llego
+  fechaPedido   DateTime               @default(now()) @map("fecha_pedido") @db.Timestamptz
+  fechaEstimada DateTime?              @map("fecha_estimada") @db.Date
+  fechaLlegada  DateTime?              @map("fecha_llegada") @db.Timestamptz
+  registradoPor Int                    @map("registrado_por")
+  recibidoPor   Int?                   @map("recibido_por")
+  proveedor     Proveedor              @relation(fields: [proveedorId], references: [id])
+  registrador   Usuario                @relation("CompraRegistradaPor", fields: [registradoPor], references: [id])
+  receptor      Usuario?               @relation("CompraRecibidaPor", fields: [recibidoPor], references: [id])
+  lineas        CompraLinea[]
+  movimientos   MovimientoInventario[]
+
+  @@index([estado])
+  @@map("compra")
+}
+
+model CompraLinea {
+  id         Int          @id @default(autoincrement())
+  compraId   Int          @map("compra_id")
+  materialId Int          @map("material_id")
+  cantidad   Decimal      @db.Decimal(10, 2)
+  precio     Decimal      @db.Decimal(10, 2)
+  // Solo telas: el encargo que cubre (la tela llega asignada a su pedido).
+  encargoId  Int?         @map("encargo_id")
+  compra     Compra       @relation(fields: [compraId], references: [id])
+  material   Material     @relation(fields: [materialId], references: [id])
+  encargo    EncargoTela? @relation(fields: [encargoId], references: [id])
+
+  @@index([materialId])
+  @@map("compra_linea")
+}
+
+// A8c Movimientos (kardex): toda entrada, salida, ajuste o conteo, con su saldo, quién y cuándo (RG-02, RG-06).
+model MovimientoInventario {
+  id         Int      @id @default(autoincrement())
+  materialId Int      @map("material_id")
+  tipo       String   @db.VarChar(10) // entrada | salida | ajuste | conteo
+  motivo     String   @db.VarChar(60)
+  detalle    String?  @db.VarChar(200)
+  cantidad   Decimal  @db.Decimal(10, 2) // con signo: + entra, − sale, 0 = conteo que coincide
+  saldo      Decimal  @db.Decimal(10, 2) // en el estante después del movimiento
+  pedidoId   Int?     @map("pedido_id")
+  compraId   Int?     @map("compra_id")
+  conteoId   Int?     @map("conteo_id")
+  usuarioId  Int      @map("usuario_id")
+  fecha      DateTime @default(now()) @db.Timestamptz
+  material   Material @relation(fields: [materialId], references: [id])
+  pedido     Pedido?  @relation(fields: [pedidoId], references: [id])
+  compra     Compra?  @relation(fields: [compraId], references: [id])
+  conteo     Conteo?  @relation(fields: [conteoId], references: [id])
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@index([materialId, fecha])
+  @@index([fecha])
+  @@map("movimiento_inventario")
+}
+
+// CU-A10 A9: conteo a ciegas. Guarda lo que decía el sistema y lo contado; cada diferencia se ajusta con motivo.
+model Conteo {
+  id          Int                    @id @default(autoincrement())
+  fecha       DateTime               @default(now()) @db.Timestamptz
+  usuarioId   Int                    @map("usuario_id")
+  usuario     Usuario                @relation(fields: [usuarioId], references: [id])
+  lineas      ConteoLinea[]
+  movimientos MovimientoInventario[]
+
+  @@map("conteo")
+}
+
+model ConteoLinea {
+  id         Int      @id @default(autoincrement())
+  conteoId   Int      @map("conteo_id")
+  materialId Int      @map("material_id")
+  sistema    Decimal  @db.Decimal(10, 2)
+  contado    Decimal  @db.Decimal(10, 2)
+  motivo     String?  @db.VarChar(60)
+  conteo     Conteo   @relation(fields: [conteoId], references: [id])
+  material   Material @relation(fields: [materialId], references: [id])
+
+  @@unique([conteoId, materialId])
+  @@map("conteo_linea")
 }
 
 model Direccion {
@@ -269,6 +463,8 @@ model Solicitud {
   direccionId     Int?              @map("direccion_id")
   fechaPrefRecojo DateTime?         @map("fecha_pref_recojo") @db.Date
   franjaRecojo    String?           @map("franja_recojo") @db.VarChar(10) // manana | tarde
+  // Hora preferida de recojo (W2): bloque de `recojo.duracion_min` que reserva la agenda hasta que se acepte o cierre.
+  horaPrefRecojo  String?           @map("hora_pref_recojo") @db.VarChar(5)
   estado          String            @db.VarChar(30)
   fechaSolicitud  DateTime          @default(now()) @map("fecha_solicitud") @db.Timestamptz
   registradoPor   Int               @map("registrado_por")
@@ -285,6 +481,7 @@ model Solicitud {
   muebles         SolicitudMueble[]
   citas           Cita[]
   notificaciones  Notificacion[]
+  pedidos         Pedido[]
 
   @@index([clienteId, fechaSolicitud])
   @@index([estado])
@@ -384,13 +581,17 @@ model Cita {
 
 // Días u horas en que el taller no atiende citas (feriados, cierres). Los administra la Agenda (A2).
 model AgendaBloqueo {
-  id            Int      @id @default(autoincrement())
-  fecha         DateTime @db.Date
-  horaInicio    String?  @map("hora_inicio") @db.VarChar(5) // vacío = todo el día
-  horaFin       String?  @map("hora_fin") @db.VarChar(5)
-  motivo        String   @db.VarChar(120)
-  creadoPor     Int?     @map("creado_por")
-  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.Timestamptz
+  id            Int       @id @default(autoincrement())
+  fecha         DateTime  @db.Date
+  horaInicio    String?   @map("hora_inicio") @db.VarChar(5) // vacío = todo el día
+  horaFin       String?   @map("hora_fin") @db.VarChar(5)
+  motivo        String    @db.VarChar(120)
+  creadoPor     Int?      @map("creado_por")
+  fechaCreacion DateTime  @default(now()) @map("fecha_creacion") @db.Timestamptz
+  // Quitar un bloqueo no lo borra: queda anulado, con quién y cuándo (A2 · Configurar agenda).
+  activo        Boolean   @default(true)
+  quitadoPor    Int?      @map("quitado_por")
+  fechaQuitado  DateTime? @map("fecha_quitado") @db.Timestamptz
 
   @@index([fecha])
   @@map("agenda_bloqueo")

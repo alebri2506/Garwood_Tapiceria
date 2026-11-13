@@ -79,6 +79,7 @@ corrida. Cree `.env.test` copiando `.env`, agregue `NODE_ENV=test` y apunte `DAT
 | GET | `/api/solicitudes/direcciones` | C01 | Cliente | direcciones guardadas en su perfil |
 | GET | `/api/solicitudes` | C01 | Cliente | sus solicitudes (solo las suyas) |
 | POST | `/api/solicitudes` | C01 | Cliente · `multipart/form-data`: campo `datos` (JSON) y las fotos de cada mueble en `mueble_0`, `mueble_1`… | 201 `{ codigo, estado, siguiente, cita }` (`siguiente`: cita, visita o cotizacion). Con cita en el local o visita, `datos.cita` (`fecha`, `hora` o `franja`, y `direccion` en la visita) es obligatorio desde la web: la solicitud y el turno se guardan juntos |
+| GET | `/api/solicitudes/recojo/disponibilidad` | C01 | Cliente / Admin | W2: semanas de lunes a sábado con las horas de recojo (1 hora) y si están libres; «ocupada» si chocan con la agenda o un bloqueo |
 | GET | `/api/solicitudes/:codigo` | C01 | Cliente | su solicitud con muebles, telas, fotos (enlaces firmados) y cita |
 | POST | `/api/solicitudes/:codigo/fotos` | C01 | Cliente · multipart, `mueble_0`… | sube las fotos que el taller pidió por enlace |
 | GET | `/api/citas/disponibilidad` | C03, C04 | `?tipo=local\|domicilio&desde=AAAA-MM-DD&dias=N` | turnos (local) o franjas (visita) libres por día |
@@ -87,8 +88,9 @@ corrida. Cree `.env.test` copiando `.env`, agregue `NODE_ENV=test` y apunte `DAT
 | POST | `/api/citas/:id/resultado` | C05 | Admin · `{ resultado: atendida \| no_asistio }` | `{ cita, inasistencias, puedeReprogramar }` |
 | GET | `/api/admin/agenda?desde=AAAA-MM-DD` | C03, C04 | Admin | A2: la semana (lunes a sábado; el domingo, la siguiente) con citas, visitas, bloqueos y horario |
 | POST | `/api/admin/agenda/bloqueos` | C03 | Admin · `{ bloques: [{ fecha, hora }], motivo? }` | 201; solo turnos libres y futuros |
+| POST | `/api/admin/agenda/bloqueos/:id/quitar` | C03 | Admin | 204; el bloqueo queda anulado (no se borra) y el turno vuelve a estar libre |
 | POST | `/api/admin/solicitudes/:codigo/vencer` | C04 | Admin | tras la 2.ª inasistencia, la da por vencida y avisa al cliente |
-| GET | `/api/admin/solicitudes` | C02 | Admin | bandeja con conteo por estado, atrasadas y motivos de descarte |
+| GET | `/api/admin/solicitudes?q=&desde=&hasta=` | C02 | Admin | A3 Solicitudes y cotizaciones: cada fila con su `etapa` (Cita / visita · Por cotizar · Esperando al cliente · Cerradas), `estadoVisible`, hora de envío, cita y atraso; `desde`/`hasta` filtran por día de solicitud (Nueva York) |
 | GET | `/api/admin/solicitudes/:codigo` | C02 | Admin | ficha completa con historial |
 | POST | `/api/admin/solicitudes/:codigo/descartar` | C02 | Admin · `{ motivo }` | Descartada con motivo; cancela la cita y avisa |
 | GET | `/api/admin/clientes?q=` | H01 | Admin | busca clientes por nombre, correo o teléfono |
@@ -96,6 +98,15 @@ corrida. Cree `.env.test` copiando `.env`, agregue `NODE_ENV=test` y apunte `DAT
 | GET | `/api/notificaciones` | RG-05 | cualquier rol | `{ sinLeer, notificaciones }` |
 | POST | `/api/notificaciones/:id/leida` · `/leer-todas` | RG-05 | cualquier rol | 204 |
 | GET | `/api/archivos/*` | — | enlace firmado (`vence`, `firma`) | el archivo, solo mientras el enlace no vence |
+| GET | `/api/admin/inventario/stock` | A01, A02, A09 | Admin | A15: cada material con en el estante, reservado, disponible, mínimo, consumo, «alcanza para» y estado |
+| GET · POST · PUT | `/api/admin/inventario/materiales[/:id]` | A01 | Admin | ficha con últimos movimientos; nuevo material (entra con 0); editar (la unidad no cambia si ya tiene movimientos) |
+| GET · POST · PUT | `/api/admin/inventario/telas[/:id]` · `PUT /telas/:id/oferta` | A01 | Admin | A15b muestrario sin cantidades; descontinuar / volver a ofrecer |
+| GET · POST · PUT | `/api/admin/inventario/proveedores[/:id]` | A03 | Admin | A8p |
+| GET | `/api/admin/inventario/reponer` | A02, A03 | Admin | telas para encargar, materiales por proveedor con cantidad sugerida y compras por llegar |
+| POST | `/api/admin/inventario/compras` · `/encargos` · `/compras/:id/llegada` | A03, A04 | Admin | «Marcar como pedido», «Marcar como encargada» y «Llegó» |
+| GET · POST | `/api/admin/inventario/movimientos` | A09 | Admin | kardex (`materialId`, `tipo`, `desde`, `hasta`) y «Corregir stock» |
+| GET | `/api/admin/inventario/pedidos-en-proceso?q=` | A09 | Admin | pedidos a los que se les puede retirar o devolver material |
+| GET · POST | `/api/admin/inventario/conteo` · `/conteo/comparar` | A10 | Admin | lista a ciegas, comparar y guardar con el motivo de cada diferencia |
 
 Errores: `{ "mensaje": "..." }` en español, listo para mostrar. Los 400 de validación traen además `errores` por campo.
 
@@ -115,7 +126,9 @@ Errores: `{ "mensaje": "..." }` en español, listo para mostrar. Los 400 de vali
   partes, una tela para cada parte. «¿Qué tela busca?» es obligatoria solo con visita a domicilio (en el local es
   opcional). Con cita en el local o visita a domicilio queda «En espera de cita», se guarda junto con el turno elegido
   (si el turno se ocupó, no se guarda nada) y el traslado se define en la cita; si no, queda «Nueva» y pide traslado; con delivery, dirección y
-  (si algo se recoge) fecha de lunes a sábado sin feriados dentro de `recojo.dias_anticipacion_max` días y franja.
+  (si algo se recoge) día de lunes a sábado sin feriados dentro de `recojo.dias_anticipacion_max` días y **hora** de recojo
+  (bloques de `recojo.duracion_min` en las franjas del taller): la hora no debe chocar con citas, visitas, otros recojos ni
+  bloqueos, y queda reservada en la agenda mientras la solicitud está Nueva, Atendida o Cotizada (índice único).
   Las direcciones guardadas deben ser del cliente. Todo en una transacción; si falla, se borran los archivos.
   Las fotos se guardan con `STORAGE=disco` en `UPLOADS_DIR` (volumen `garweb-uploads` en Docker) o con
   `STORAGE=supabase` en un bucket privado de Supabase Storage (`SUPABASE_URL`, `SUPABASE_SECRET_KEY`,
@@ -127,6 +140,10 @@ Errores: `{ "mensaje": "..." }` en español, listo para mostrar. Los 400 de vali
   franja de la visita; el Administrador puede fijarle hora (A2e) y entonces ocupa los turnos seguidos de
   `visita.duracion_min`. El cliente reprograma una vez tras una inasistencia (`cita.reprogramaciones_inasistencia`);
   si vuelve a faltar, el Administrador decide: darla por vencida u ofrecerle un último turno. Hora del negocio: New York.
+- **Inventario (A15, A15b, A8, A8c, A8p, A9 · decisiones H)**: disponible = en el estante − reservado; reservado y consumo se
+  calculan de `reserva_material` y `movimiento_inventario`; la cantidad sugerida usa `inventario.semanas_compra`; el estante
+  nunca queda en negativo (también lo impide un CHECK); la tela bajo pedido (`encargo_tela`) no entra al stock; el conteo es a
+  ciegas y cada diferencia exige motivo. Todo queda en `bitacora` (módulo `almacen`).
 - **RG-05**: cada aviso al cliente o al taller se guarda en `notificacion` y se envía por correo después de confirmar
   la transacción.
 - **RG-07**: el cliente solo ve y cambia sus solicitudes, citas y avisos.
@@ -150,5 +167,10 @@ Errores: `{ "mensaje": "..." }` en español, listo para mostrar. Los 400 de vali
   administrador, fotos pendientes por enlace).
 - `cita` agrega `tipo` (local / domicilio), `franja` y `direccion_id` para la visita a domicilio.
 - `cliente.email` es opcional: el administrador registra clientes que llaman por teléfono sin correo.
+- Inventario (migraciones `inventario` e `inventario_reglas`): `material` agrega proveedor, precio con su fecha, en el estante,
+  mínimo, ubicación, `en_web`, libro y color para buscar; tablas nuevas `proveedor`, `pedido` (código `PED-0000` propio, enlazado
+  a su solicitud), `reserva_material`, `encargo_tela`, `compra` / `compra_linea`, `movimiento_inventario` (kardex con saldo) y
+  `conteo` / `conteo_linea`. `parametro.opciones` para el tipo «opción» (unidades de A14). **Los pedidos, proveedores y
+  materiales del seed son datos de prueba** (`seed-inventario.ts`).
 - Diseño v4: se quitó la muestra de tela a domicilio (migración `sin_muestra_tela`): la tela se elige en el catálogo,
   en el local o en la visita.

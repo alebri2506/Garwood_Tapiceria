@@ -10,6 +10,7 @@ import { codigoSolicitud, estadoInicial, hayRecojo, necesitaCita, siguientePaso 
 import type { SolicitudEntrada } from '../http/solicitud.schemas.js';
 import { citaDto, revisarTurno, tipoCitaDe, turnoOcupado } from './citas.js';
 import { idDireccion, revisarDireccion } from './direcciones.js';
+import { revisarHoraRecojo } from './recojo.js';
 
 const error = (mensaje: string) => new ReglaNegocioError(mensaje, 400);
 const CAMPO_ARCHIVO = /^mueble_(\d+)$/;
@@ -41,14 +42,14 @@ export async function archivosPorMueble(archivos: ArchivoSubido[], nMuebles: num
 }
 
 /** Revisa los muebles y sus telas contra el catálogo: tipos activos, partes del mueble y solo telas activas. */
-async function revisarCatalogo(e: SolicitudEntrada) {
+async function revisarCatalogo(e: SolicitudEntrada, soloWeb: boolean) {
   const ids = [...new Set(e.muebles.map((m) => m.tipoMuebleId))];
   const tipos = await prisma.tipoMueble.findMany({ where: { id: { in: ids }, activo: true }, include: { partes: true } });
   if (tipos.length !== ids.length) throw error('Uno de los tipos de mueble ya no está disponible. Elija otro.');
 
   if (e.tela !== 'catalogo') return;
   const materiales = [...new Set(e.muebles.flatMap((m) => m.telas.map((t) => t.materialId)))];
-  const activas = await prisma.material.count({ where: { id: { in: materiales }, categoria: 'tela', activo: true } });
+  const activas = await prisma.material.count({ where: { id: { in: materiales }, categoria: 'tela', activo: true, ...(soloWeb ? { enWeb: true } : {}) } });
   if (activas !== materiales.length) throw error('Una de las telas elegidas ya no está disponible. Elija otra.');
 
   e.muebles.forEach((m, i) => {
@@ -97,7 +98,8 @@ export async function registrarSolicitud(e: SolicitudEntrada, archivos: ArchivoS
   const esperaFotos = Boolean(quien.esperaFotos) && quien.canal !== 'local' && quien.canal !== 'web';
 
   const grupos = await archivosPorMueble(archivos, e.muebles.length, maxArchivos, !esperaFotos);
-  await revisarCatalogo(e);
+  // El cliente desde la web solo puede elegir las telas que se le muestran en línea (A15b).
+  await revisarCatalogo(e, quien.canal === 'web');
   await revisarDireccion(delivery ? e.direccion : undefined, clienteId);
   // W3 / W3b: desde la web la solicitud con cita se envía junto con el turno elegido (último paso del asistente).
   if (cita && quien.canal === 'web' && !e.cita) throw error(e.tela === 'domicilio' ? 'Elija el día de la visita.' : 'Elija el día y la hora de su cita.');
@@ -108,6 +110,7 @@ export async function registrarSolicitud(e: SolicitudEntrada, archivos: ArchivoS
   if (conRecojo) {
     const motivo = motivoSinRecojo(e.fechaPrefRecojo!, diasRecojo);
     if (motivo) throw error(motivo);
+    await revisarHoraRecojo(e.fechaPrefRecojo!, e.horaPrefRecojo!);
   }
 
   // Los archivos pasan a su lugar definitivo antes de la transacción; si algo falla, se borran.
@@ -129,7 +132,8 @@ export async function registrarSolicitud(e: SolicitudEntrada, archivos: ArchivoS
           traslado: cita ? null : e.traslado!,
           direccionId,
           fechaPrefRecojo: conRecojo ? new Date(`${e.fechaPrefRecojo}T00:00:00Z`) : null,
-          franjaRecojo: conRecojo ? e.franjaRecojo! : null,
+          franjaRecojo: conRecojo ? (e.horaPrefRecojo! < '12:00' ? 'manana' : 'tarde') : null,
+          horaPrefRecojo: conRecojo ? e.horaPrefRecojo! : null,
           estado: estadoInicial(e.tela),
           esperaFotos,
           registradoPor: quien.usuarioId,
@@ -202,7 +206,8 @@ export async function registrarSolicitud(e: SolicitudEntrada, archivos: ArchivoS
     return { codigo: solicitud.codigo, estado: solicitud.estado, siguiente: solicitud.siguiente, esperaFotos, cita: solicitud.cita ? citaDto(solicitud.cita) : null };
   } catch (err) {
     await Promise.all(guardados.map((r) => deps.almacen.eliminar(r)));
-    if (turnoOcupado(err)) throw new ReglaNegocioError(tipoCita === 'local' ? 'Ese turno se acaba de ocupar. Elija otro.' : 'Esa franja se acaba de ocupar. Elija otra.', 409);
+    // Índice único: dos solicitudes enviadas a la vez con el mismo turno, franja u hora de recojo.
+    if (turnoOcupado(err)) throw new ReglaNegocioError(conRecojo ? 'Esa hora de recojo se acaba de ocupar. Elija otra.' : tipoCita === 'local' ? 'Ese turno se acaba de ocupar. Elija otro.' : 'Esa franja se acaba de ocupar. Elija otra.', 409);
     throw err;
   }
 }

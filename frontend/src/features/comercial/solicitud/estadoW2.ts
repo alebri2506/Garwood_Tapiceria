@@ -1,5 +1,5 @@
 // Estado del asistente W2 (CU-C01) y lo que se envía a la API. Las reglas de validación están en validacion.ts.
-import { fechaCorta, primerDiaDisponible } from '../fechas';
+import { DIAS, MESES } from '../fechas';
 import type { Catalogo, CodigoAcabado, CodigoServicio, DireccionEnvio, SolicitudEnvio, TelaApi, TipoMuebleApi } from './solicitudApi';
 
 export type OpcionTelaW2 = SolicitudEnvio['tela'];
@@ -41,8 +41,8 @@ export interface EstadoW2 {
   telaConocida: string;
   traslado: 'delivery' | 'propio';
   dir: DireccionW2;
-  fechaRecojo: Date;
-  franja: 'manana' | 'tarde';
+  /** W2 · recojo preferido: día y hora elegidos en la cuadrícula (null hasta que elija). */
+  recojo: { fecha: string; hora: string; hasta: string } | null;
 }
 
 let uid = 1;
@@ -67,7 +67,7 @@ export function estadoInicial(c: Catalogo, primeraGuardada: number | null): Esta
   return {
     paso: 0, muebles: [nuevoMueble(c)], activo: 0, mismaTela: true, tela: 'local', familia: 'Todas',
     telaTraida: '', telaBusca: '', telaConocida: '',
-    traslado: 'delivery', dir: direccionVacia(primeraGuardada), fechaRecojo: primerDiaDisponible(), franja: 'manana',
+    traslado: 'delivery', dir: direccionVacia(primeraGuardada), recojo: null,
   };
 }
 
@@ -118,10 +118,13 @@ export function textoTraslado(e: EstadoW2) {
   return e.traslado === 'delivery' ? 'Delivery (recojo y entrega)' : 'Lo llevo y lo recojo yo';
 }
 
-export const textoRecojo = (c: Catalogo, e: EstadoW2) =>
-  `${fechaCorta(e.fechaRecojo)} · ${(c.franjas.find((f) => f.codigo === e.franja)?.nombre ?? '').split(' ')[0]!.toLowerCase()}`;
-
-const fechaIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+/** "mar 10 nov · 10:00–11:00" */
+export const textoRecojo = (_c: Catalogo, e: EstadoW2) => {
+  if (!e.recojo) return 'Elija el día y la hora';
+  const [y, m, d] = e.recojo.fecha.split('-').map(Number);
+  const f = new Date(y!, m! - 1, d!);
+  return `${DIAS[f.getDay()]!.slice(0, 3)} ${d} ${MESES[m! - 1]!.slice(0, 3)} · ${e.recojo.hora}–${e.recojo.hasta}`;
+};
 
 export function direccionEnvio(d: DireccionW2): DireccionEnvio {
   if (d.guardadaId != null) return { tipo: 'guardada', id: d.guardadaId };
@@ -166,8 +169,8 @@ export function construirEnvio(c: Catalogo, e: EstadoW2, cita?: SolicitudEnvio['
     if (e.traslado === 'delivery') {
       datos.direccion = direccionEnvio(e.dir);
       if (hayRecojo(e)) {
-        datos.fechaPrefRecojo = fechaIso(e.fechaRecojo);
-        datos.franjaRecojo = e.franja;
+        datos.fechaPrefRecojo = e.recojo?.fecha;
+        datos.horaPrefRecojo = e.recojo?.hora;
       }
     }
   }

@@ -5,6 +5,16 @@ export interface ReglaParametro {
   unidad: string | null;
   minimo: number | null;
   maximo: number | null;
+  /** Solo tipo "opcion": "valor=Etiqueta|valor=Etiqueta". */
+  opciones?: string | null;
+}
+
+/** "yd=Yarda|m=Metro" → [{ valor: 'yd', etiqueta: 'Yarda' }, …]. */
+export function leerOpciones(texto: string | null | undefined) {
+  return (texto ?? '').split('|').filter(Boolean).map((o) => {
+    const [valor = '', etiqueta = valor] = o.split('=');
+    return { valor: valor.trim(), etiqueta: etiqueta.trim() };
+  });
 }
 
 const dosDigitos = (n: number) => String(n).padStart(2, '0');
@@ -33,6 +43,10 @@ export function validarValor(p: ReglaParametro, entrada: string): { valor: strin
     if (!h) return { error: 'Escriba el horario así: 09:00-12:00.' };
     if (h.desde >= h.hasta) return { error: 'La hora de inicio debe ser antes que la hora de fin.' };
     return { valor: h.valor };
+  }
+  if (p.tipo === 'opcion') {
+    const opciones = leerOpciones(p.opciones);
+    return opciones.some((o) => o.valor === texto) ? { valor: texto } : { error: `Elija una de las opciones: ${opciones.map((o) => o.etiqueta).join(', ')}.` };
   }
   if (p.tipo === 'texto') return texto.length > 200 ? { error: 'Es muy largo: máximo 200 caracteres.' } : { valor: texto };
 

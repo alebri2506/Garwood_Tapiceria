@@ -20,8 +20,7 @@ const MENU: Seccion[] = [
   {
     modulo: 'com', titulo: 'Comercial', opciones: [
       { a: '/admin/agenda', texto: 'Agenda de citas', icono: 'calendar' },
-      { a: '/admin/solicitudes', texto: 'Solicitudes', icono: 'inbox' },
-      { a: '/admin/cotizaciones', texto: 'Cotizaciones', icono: 'quote' },
+      { a: '/admin/solicitudes', texto: 'Solicitudes y cotizaciones', icono: 'inbox' },
       { a: '/admin/pagos', texto: 'Pagos', icono: 'payment' },
       { a: '/admin/pedidos', texto: 'Pedidos', icono: 'kanban' },
       { a: '/admin/plantillas', texto: 'Plantillas', icono: 'clipboard' },
@@ -30,7 +29,6 @@ const MENU: Seccion[] = [
   {
     modulo: 'alm', titulo: 'Almacén e Inventario', opciones: [
       { a: '/admin/inventario', texto: 'Inventario', icono: 'package' },
-      { a: '/admin/catalogo', texto: 'Catálogo de materiales', icono: 'scissors' },
     ],
   },
   {

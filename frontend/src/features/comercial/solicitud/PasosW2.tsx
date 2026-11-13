@@ -6,7 +6,7 @@ import { DireccionAutocompletar } from '../../../shared/maps/DireccionAutocomple
 import { MapaUbicacion } from '../../../shared/maps/MapaUbicacion';
 import { mapsHabilitado } from '../../../shared/maps/config';
 import { MESES, fechaLarga } from '../fechas';
-import { CalendarioRecojo } from './CalendarioRecojo';
+import { RecojoPorHora } from './RecojoPorHora';
 import { Contador } from './Contador';
 import { DibujoMueble } from './DibujoMueble';
 import { fondoDe } from './datos';
@@ -29,6 +29,8 @@ export interface PropsPaso {
   fotosPorEnlace?: { activo: boolean; posible: boolean; cambiar(v: boolean): void };
   /** A3: el cliente está en el local, así que la tela se elige con él y no se pregunta qué busca. */
   buscaOpcionalEnLocal?: boolean;
+  /** W2: índices de los muebles a los que aún les falta un dato obligatorio (se marcan en la barra). */
+  pendientes?: number[];
 }
 
 const ErrorCampo = ({ texto }: { texto?: string }) => (texto ? <p className="gw-field-error w2-error" role="alert"><Icon name="alert" size={14} />{texto}</p> : null);
@@ -50,7 +52,10 @@ function BarraMuebles({ p, editable }: { p: PropsPaso; editable: boolean }) {
       <span className="gw-field-label">{n > 1 ? 'Sus muebles:' : 'Mueble:'}</span>
       {e.muebles.map((m, i) => (
         <span key={m.uid} className={i === e.activo ? 'w2-itc on' : 'w2-itc'}>
-          <button type="button" className="w2-itc-b" aria-pressed={i === e.activo} onClick={() => set({ activo: i })}><b>{i + 1} · </b>{etiquetaMueble(c, m)}</button>
+          <button type="button" className="w2-itc-b" aria-pressed={i === e.activo} onClick={() => set({ activo: i })}>
+            <b>{i + 1} · </b>{etiquetaMueble(c, m)}
+            {n > 1 && p.pendientes?.includes(i) && <span className="w2-itc-falta">Falta</span>}
+          </button>
           {editable && n > 1 && <button type="button" className="w2-itc-x" aria-label={`Quitar el mueble ${i + 1}`} onClick={() => quitar(i)}>×</button>}
         </span>
       ))}
@@ -392,7 +397,7 @@ export function CampoDireccion({ valor, onChange, guardadas, etiqueta, error, te
 
 /** Paso 3 · Traslado (solo cuando no hace falta cita ni visita). */
 export function PasoTrasladoW2(p: PropsPaso) {
-  const { c, e, set, errores, guardadas } = p;
+  const { e, set, errores, guardadas } = p;
   const nuevo = todoFabricacion(e);
   const opciones = nuevo
     ? [['delivery', 'Entrega a domicilio', 'Solo entrega: es un mueble nuevo · según distancia y tamaño', 'truck'], ['propio', 'Lo recojo en el taller', 'Sin costo de traslado', 'map-pin']] as const
@@ -401,7 +406,7 @@ export function PasoTrasladoW2(p: PropsPaso) {
   const mapa = guardada
     ? { ubicacion: guardada.latitud != null && guardada.longitud != null ? { lat: guardada.latitud, lng: guardada.longitud } : null, etiqueta: `${guardada.etiqueta ?? 'Dirección'} · ${guardada.ciudad ?? ''}` }
     : { ubicacion: e.dir.ubicacion, etiqueta: e.dir.ubicacion ? e.dir.texto : undefined };
-  const f = e.fechaRecojo;
+  const f = e.recojo ? (() => { const [y, m, d] = e.recojo.fecha.split('-').map(Number); return new Date(y!, m! - 1, d!); })() : null;
 
   return (
     <section className="card stack" aria-labelledby="w2-tras">
@@ -430,25 +435,23 @@ export function PasoTrasladoW2(p: PropsPaso) {
           {hayRecojo(e) ? (
             <div className="stack" style={{ gap: 8, marginTop: 8 }}>
               <span className="gw-field-label">¿Cuándo prefiere que pasemos a recogerlo?</span>
-              <div className="pick2">
-                <CalendarioRecojo value={f} diasMax={c.limites.diasRecojo} onChange={(fechaRecojo) => set({ fechaRecojo })} />
+              <div className="pick2 ag2">
+                <RecojoPorHora valor={e.recojo} onChange={(recojo) => set({ recojo })} />
                 <div className="selday">
-                  <div className="big">
-                    <span><small>{MESES[f.getMonth()]!.slice(0, 3)}</small>{f.getDate()}</span>
-                    <div><b>{fechaLarga(f)}</b><em>Fecha preferida de recojo</em></div>
-                  </div>
-                  <span className="gw-field-label" id="w2-franja">Franja horaria</span>
-                  <div className="row" style={{ flexWrap: 'wrap', gap: 8 }} role="radiogroup" aria-labelledby="w2-franja">
-                    {c.franjas.map((x) => (
-                      <button key={x.codigo} type="button" role="radio" aria-checked={e.franja === x.codigo} className={e.franja === x.codigo ? 'pslot on' : 'pslot'} onClick={() => set({ franja: x.codigo })}>{x.nombre}</button>
-                    ))}
-                  </div>
+                  {f ? (
+                    <div className="big">
+                      <span><small>{MESES[f.getMonth()]!.slice(0, 3)}</small>{f.getDate()}</span>
+                      <div><b>{fechaLarga(f)}</b><em>Recojo preferido · {e.recojo!.hora} a {e.recojo!.hasta}</em></div>
+                    </div>
+                  ) : (
+                    <div className="big"><span><small>—</small>?</span><div><b>Elija un día y una hora</b><em>Recojo preferido</em></div></div>
+                  )}
                   <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.45 }}>
-                    Horario del taller: {c.franjas.map((x) => x.nombre.split('· ')[1]).join(' y ')} (cierra al mediodía). Es una preferencia: el recojo se hace después de que acepte la cotización; el taller le confirma el día y la hora al planificar la salida y le avisa por correo y aquí.
+                    {p.admin ? 'Elija con el cliente la hora en que prefiere que pasemos.' : 'Elija la hora en que prefiere que pasemos.'} Es una preferencia: el recojo se hace después de que {p.admin ? 'el cliente acepte' : 'acepte'} la cotización; el taller la confirma al planificar la salida y {p.admin ? 'le avisa al cliente' : 'le avisa'} por correo y aquí.
                   </span>
                 </div>
               </div>
-              <ErrorCampo texto={errores.fechaPrefRecojo} />
+              <ErrorCampo texto={errores.horaPrefRecojo ?? errores.fechaPrefRecojo} />
             </div>
           ) : (
             <p className="muted" style={{ fontSize: 13 }}>Como es un mueble nuevo, no hay nada que recoger. Cuando esté terminado le avisamos y coordinamos el día de la entrega.</p>

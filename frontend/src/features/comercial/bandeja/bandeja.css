@@ -66,3 +66,23 @@
 .sl-hist ol { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .sl-hist li { display: flex; flex-direction: column; font-size: 13px; }
 .sl-hist li small { color: var(--ink-muted); font-size: 12px; }
+
+/* A3 Solicitudes y cotizaciones (diseño unificado): indicadores, filtro de fecha y etapa */
+.sl-kp { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 720px) { .sl-kp { grid-template-columns: 1fr; } }
+.sl-k { display: flex; flex-direction: column; gap: 5px; padding: 14px 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-sm); text-align: left; cursor: pointer; font-family: var(--font-sans); color: var(--ink); }
+.sl-k b { font: 800 26px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.sl-k small { font-size: 12.5px; color: var(--ink-muted); }
+.sl-k.sl-warn { border-color: color-mix(in srgb, var(--warning-500) 50%, var(--line)); background: color-mix(in srgb, var(--warning-500) 6%, var(--surface)); }
+.sl-k.sl-ok b { color: var(--success-ink); }
+.sl-k:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (hover: hover) { .sl-k:hover { border-color: var(--primary); } }
+.sl-dfr { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.sl-dfi { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink-muted); }
+.sl-dfi input { height: 34px; border-radius: 9px; border: 1px solid var(--line-strong); padding: 0 8px; font: 500 13.5px/1 var(--font-sans); color: var(--ink); background: var(--surface); }
+.sl-dfinfo { font-size: 12.5px; margin-left: auto; }
+.sl-hint { font-size: 13px; margin: -6px 0 0; }
+.sl-etapa { display: block; margin-bottom: 3px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-muted); }
+.sl-fchip { min-height: 34px; padding: 0 12px; border-radius: 9999px; border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--ink-muted); font: 600 12.5px/1 var(--font-sans); cursor: pointer; }
+.sl-fchip[aria-pressed="true"] { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.sl-fchip:focus-visible { outline: none; box-shadow: var(--focus-ring); }

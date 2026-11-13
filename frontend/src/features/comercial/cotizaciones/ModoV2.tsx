@@ -93,7 +93,7 @@ export function ModoV2({ onEstado }: { onEstado(estado: string): void }) {
       {publicada && (
         <>
           <Toast title="Recotización publicada">Robert King recibió correo y notificación. Si la acepta se genera la orden OS-0077-2; si no, se cobra la revisión y se devuelve el sillón.</Toast>
-          <Link className="gw-btn gw-btn-secondary" style={{ alignSelf: 'flex-start' }} to="/admin/cotizaciones">Volver a Cotizaciones</Link>
+          <Link className="gw-btn gw-btn-secondary" style={{ alignSelf: 'flex-start' }} to="/admin/solicitudes">Volver a Solicitudes y cotizaciones</Link>
         </>
       )}
     </>

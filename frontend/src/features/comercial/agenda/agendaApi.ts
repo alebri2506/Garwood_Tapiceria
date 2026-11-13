@@ -11,6 +11,8 @@ export interface CitaAgenda extends CitaDto {
     tela: string; telaDescripcion: string | null; fotos: number; inasistencias: number; tieneProgramada: boolean;
   };
 }
+/** W2 · hora de recojo preferida de una solicitud que espera: reserva la agenda. */
+export interface RecojoAgenda { solicitud: string; estado: string; cliente: string; telefono: string; fecha: string; hora: string; hasta: string; mueble: string; direccion: string | null }
 export interface BloqueoAgenda { id: number; fecha: string; horaInicio: string | null; horaFin: string | null; motivo: string }
 export interface Semana {
   desde: string; hasta: string; hoy: string; ahora: string;
@@ -20,18 +22,22 @@ export interface Semana {
   bloqueos: (BloqueoAgenda & { horaInicio: string; horaFin: string })[];
   proximosBloqueos: BloqueoAgenda[];
   citas: CitaAgenda[];
+  recojos: RecojoAgenda[];
 }
 
 interface AgendaApi {
   semana(desde?: string): Promise<Semana>;
   bloquear(bloques: { fecha: string; hora: string }[], motivo?: string): Promise<{ bloqueados: number }>;
   vencer(codigo: string): Promise<void>;
+  /** Queda anulado (no se borra) y el turno vuelve a estar libre. */
+  quitarBloqueo(id: number): Promise<void>;
 }
 
 const http: AgendaApi = {
   semana: (desde) => apiFetch(`/admin/agenda${desde ? `?desde=${desde}` : ''}`),
   bloquear: (bloques, motivo) => apiFetch('/admin/agenda/bloqueos', { method: 'POST', body: JSON.stringify({ bloques, motivo }) }),
   vencer: async (codigo) => { await apiFetch(`/admin/solicitudes/${encodeURIComponent(codigo)}/vencer`, { method: 'POST' }); },
+  quitarBloqueo: async (id) => { await apiFetch(`/admin/agenda/bloqueos/${id}/quitar`, { method: 'POST' }); },
 };
 
 // ---------------------------------------------------------------- API simulada (sin VITE_API_URL): una semana de ejemplo.
@@ -60,6 +66,7 @@ const simulada: AgendaApi = {
       dias: dias.map((fecha) => ({ fecha, cerrado: null })),
       bloqueos: bloqueados.filter((b) => dias.includes(b.fecha)) as Semana['bloqueos'],
       proximosBloqueos: bloqueados,
+      recojos: [{ solicitud: 'SOL-0084', estado: 'Nueva', cliente: 'Rosa Díaz', telefono: '+19085550133', fecha: dias[4]!, hora: '10:00', hasta: '11:00', mueble: 'Sillón', direccion: '31 Elm St, Westfield, NJ' }],
       citas: [
         ejemplo(1, dias[0]!, '09:30', 'Mark Ellison', 'Sillón', 'Atendida'),
         ejemplo(2, dias[1]!, '10:00', 'Laura Méndez', 'Sofá de 3 cuerpos', 'Programada'),
@@ -73,6 +80,7 @@ const simulada: AgendaApi = {
     return { bloqueados: bloques.length };
   },
   vencer: async () => undefined,
+  quitarBloqueo: async (id) => { const i = bloqueados.findIndex((b) => b.id === id); if (i >= 0) bloqueados.splice(i, 1); },
 };
 
 export const agendaApi: AgendaApi = API_URL ? http : simulada;

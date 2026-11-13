@@ -5,15 +5,15 @@ import { registrarBitacora } from '../../../shared/infrastructure/bitacora.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { hoyNegocio } from '../../comercial/domain/calendario.js';
 import { enNY, instanteNY } from '../../comercial/domain/agenda.js';
-import { HORARIOS_AGENDA, fueraDeRangos, revisarCoherencia, validarValor, type ReglaParametro } from '../domain/parametros.js';
+import { HORARIOS_AGENDA, fueraDeRangos, leerOpciones, revisarCoherencia, validarValor, type ReglaParametro } from '../domain/parametros.js';
 
 const PROVISIONAL = 'Provisional: por confirmar con el dueño';
 const decimal = (d: Parametro['minimo']) => (d == null ? null : Number(d));
-const regla = (p: Parametro): ReglaParametro => ({ tipo: p.tipo, unidad: p.unidad, minimo: decimal(p.minimo), maximo: decimal(p.maximo) });
+const regla = (p: Parametro): ReglaParametro => ({ tipo: p.tipo, unidad: p.unidad, minimo: decimal(p.minimo), maximo: decimal(p.maximo), opciones: p.opciones });
 
 const parametroDto = (p: Parametro) => ({
   clave: p.clave, etiqueta: p.etiqueta ?? p.clave, valor: p.valor, unidad: p.unidad, tipo: p.tipo,
-  minimo: decimal(p.minimo), maximo: decimal(p.maximo), ayuda: p.ayuda,
+  minimo: decimal(p.minimo), maximo: decimal(p.maximo), ayuda: p.ayuda, opciones: leerOpciones(p.opciones),
   provisional: Boolean(p.ayuda?.includes(PROVISIONAL)),
 });
 

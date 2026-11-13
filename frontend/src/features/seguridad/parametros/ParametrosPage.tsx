@@ -19,8 +19,14 @@ function adornos(p: Pick<Parametro, 'unidad'>) {
   return { prefix: undefined, suffix: p.unidad ?? undefined };
 }
 
-/** Un valor como se lee en el historial: "$1.60", "40 %", "30 min", "9:00–12:00". */
+/** Unidades de A14 (tipo «opción»): cómo se lee cada una y su equivalencia. Solo cambia cómo se muestra. */
+const UNIDADES: Record<string, [string, string]> = {
+  yd: ['yarda', '1 yd = 0.914 m'], m: ['metro', '1 m = 1.094 yd'], in: ['pulgada', '1 in = 2.54 cm'], cm: ['centímetro', '1 cm = 0.394 in'],
+};
+
+/** Un valor como se lee en el historial: "$1.60", "40 %", "30 min", "9:00–12:00", "yarda". */
 function legible(valor: string, unidad: string | null) {
+  if (UNIDADES[valor] && !unidad) return UNIDADES[valor]![0];
   if (unidad?.startsWith('USD')) return `$${valor}`;
   if (/^\d{2}:\d{2}-\d{2}:\d{2}$/.test(valor)) return valor.replace('-', '–');
   return unidad ? `${valor} ${unidad}` : valor;
@@ -161,7 +167,36 @@ export function ParametrosPage() {
       {grupos && (
         <div className="split">
           <div className="wide">
-            {grupos.map((g) => (
+            {grupos.map((g) => g.parametros.every((p) => p.tipo === 'opcion') ? (
+              // «Unidades de la solicitud y la cotización»: una tabla, como en el diseño.
+              <section key={g.nombre} className="card stack" aria-labelledby={`grp-${g.nombre}`}>
+                <div className="between"><h2 id={`grp-${g.nombre}`} style={{ fontSize: 18 }}>{g.nombre}</h2><span className="pill">Telas y medidas del mueble</span></div>
+                <p className="muted pr-nota">Cómo se miden las telas que se cotizan y las medidas que el cliente escribe de su mueble. Lo guardado no cambia: solo cómo se muestra. La unidad de cada material del almacén se elige al registrarlo en <Link to="/admin/inventario">Inventario › Stock</Link>.</p>
+                <div className="tbl-box pr-tabla">
+                  <table className="t">
+                    <thead><tr><th>Qué se mide</th><th>Unidad</th><th>Abreviatura</th><th>Equivalencia</th></tr></thead>
+                    <tbody>
+                      {g.parametros.map((p) => {
+                        const valor = borrador[p.clave] ?? p.valor;
+                        return (
+                          <tr key={p.clave}>
+                            <td><b>{p.etiqueta}</b></td>
+                            <td>
+                              <select id={idCampo(p.clave)} className={`gw-input${editado(p) ? ' pr-sel-editado' : ''}`} aria-label={`Unidad de ${p.etiqueta.toLowerCase()}`} value={valor} onChange={(e) => escribir(p.clave, e.target.value)}>
+                                {p.opciones?.map((o) => <option key={o.valor} value={o.valor}>{o.etiqueta}</option>)}
+                              </select>
+                              {errores[p.clave] && <p className="gw-field-error">{errores[p.clave]}</p>}
+                            </td>
+                            <td className="num">{valor}</td>
+                            <td className="muted">{UNIDADES[valor]?.[1] ?? '—'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            ) : (
               <section key={g.nombre} className="card stack" aria-labelledby={`grp-${g.nombre}`}>
                 <h2 id={`grp-${g.nombre}`} style={{ fontSize: 18 }}>{g.nombre}</h2>
                 <div className="grid2 pr-grid">

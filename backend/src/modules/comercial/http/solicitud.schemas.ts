@@ -51,6 +51,7 @@ export const solicitudSchema = z
     direccion: direccionSchema.optional(),
     fechaPrefRecojo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha de recojo no es válida').optional(),
     franjaRecojo: z.enum(FRANJAS).optional(),
+    horaPrefRecojo: z.string().regex(/^\d{2}:\d{2}$/, 'La hora de recojo no es válida').optional(),
     cita: citaSolicitudSchema.optional(),
   })
   .superRefine((d, ctx) => {
@@ -92,7 +93,7 @@ export const solicitudSchema = z
     if (!d.direccion) falta(['direccion'], 'Indique la dirección de recojo y entrega');
     if (hayRecojo(d.muebles.map((m) => m.servicio))) {
       if (!d.fechaPrefRecojo) falta(['fechaPrefRecojo'], 'Elija el día que prefiere para el recojo');
-      if (!d.franjaRecojo) falta(['franjaRecojo'], 'Elija la franja horaria del recojo');
+      if (!d.horaPrefRecojo) falta(['horaPrefRecojo'], 'Elija la hora que prefiere para el recojo');
     }
   });
 

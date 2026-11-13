@@ -4,8 +4,10 @@ import { API_URL, ApiError, apiFetch } from '../../../shared/api/http';
 
 export interface Parametro {
   clave: string; etiqueta: string; valor: string; unidad: string | null;
-  tipo: 'entero' | 'decimal' | 'porcentaje' | 'monto' | 'horario' | 'texto';
+  tipo: 'entero' | 'decimal' | 'porcentaje' | 'monto' | 'horario' | 'texto' | 'opcion';
   minimo: number | null; maximo: number | null; ayuda: string | null; provisional: boolean;
+  /** Solo tipo "opcion" (unidades de telas y medidas): los valores que se pueden elegir. */
+  opciones?: { valor: string; etiqueta: string }[];
 }
 export interface GrupoParametros { nombre: string; parametros: Parametro[] }
 export interface CambioHistorial {
@@ -42,6 +44,10 @@ const ejemplo: GrupoParametros[] = [
     p('pago.adelanto_sin_historial_pct', 'Adelanto sugerido · sin pedidos cerrados o con saldo vencido', '40', 'porcentaje', '%', 0, 50, PROV),
     p('cotizacion.margen_pct', 'Margen sobre costo', '75', 'porcentaje', '%', 0, 200, PROV),
   ] },
+  { nombre: 'Unidades de la solicitud y la cotización', parametros: [
+    { ...p('unidad.telas', 'Telas', 'yd', 'opcion', null, null, null), opciones: [{ valor: 'yd', etiqueta: 'Yarda' }, { valor: 'm', etiqueta: 'Metro' }] },
+    { ...p('unidad.medidas', 'Medidas del mueble', 'in', 'opcion', null, null, null), opciones: [{ valor: 'in', etiqueta: 'Pulgada' }, { valor: 'cm', etiqueta: 'Centímetro' }] },
+  ] },
   { nombre: 'Tarifas', parametros: [
     p('tarifa.hora_persona', 'Hora persona', '15.00', 'monto', 'USD/h', 0, null, PROV),
     p('transporte.por_milla', 'Transporte · por milla', '1.60', 'monto', 'USD/milla', 0, null, PROV),
@@ -66,7 +72,7 @@ const simulada: ParametrosApi = {
       const x = todos.find((t) => t.clave === c.clave);
       const n = Number(c.valor);
       if (!x) errores[c.clave] = 'Este parámetro no existe o no se puede cambiar desde aquí.';
-      else if (x.tipo !== 'horario' && (Number.isNaN(n) || (x.minimo != null && n < x.minimo) || (x.maximo != null && n > x.maximo))) {
+      else if (x.tipo !== 'horario' && x.tipo !== 'opcion' && (Number.isNaN(n) || (x.minimo != null && n < x.minimo) || (x.maximo != null && n > x.maximo))) {
         errores[c.clave] = x.maximo != null ? `Debe estar entre ${x.minimo} y ${x.maximo} ${x.unidad ?? ''}.`.replace(' .', '.') : `No puede ser menor que ${x.minimo ?? 0}.`;
       }
     }

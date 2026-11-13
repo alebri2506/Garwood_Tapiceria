@@ -122,7 +122,12 @@ function Asistente({ c, guardadas }: { c: Catalogo; guardadas: DireccionGuardada
     }
   };
 
-  const props: PropsPaso = { c, e, set, errores, guardadas };
+  // Lo que falta en el paso actual, calculado en vivo: mientras haya algo, «Continuar» queda deshabilitado.
+  const faltan = validarPaso(c, e, e.paso);
+  const pendientes = [...new Set(Object.keys(faltan).map((k) => /^muebles\.(\d+)\./.exec(k)?.[1]).filter((x) => x != null).map(Number))];
+  const bloqueado = Object.keys(faltan).length > 0;
+
+  const props: PropsPaso = { c, e, set, errores, guardadas, pendientes };
   const totalArchivos = e.muebles.reduce((t, m) => t + m.archivos.length, 0);
   const fabricacion = e.muebles.length === 1 && e.muebles[0]!.servicio === 'fabricacion';
 
@@ -165,7 +170,9 @@ function Asistente({ c, guardadas }: { c: Catalogo; guardadas: DireccionGuardada
               {e.paso > 0
                 ? <button type="button" className="gw-btn gw-btn-ghost" disabled={enviando} onClick={() => set({ paso: e.paso - 1 })}>Atrás</button>
                 : <Link className="gw-btn gw-btn-ghost" to="/cliente/pedidos/solicitudes">Atrás</Link>}
-              {e.paso < ultimo && <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" onClick={continuar}>Continuar</button>}
+              {e.paso < ultimo && (
+                <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={bloqueado} onClick={continuar}>Continuar</button>
+              )}
               {e.paso === ultimo && (
                 <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={enviando} onClick={cita ? irACita : enviar}>
                   {enviando ? 'Enviando…' : e.tela === 'local' ? 'Elegir día y hora de la cita' : e.tela === 'domicilio' ? 'Elegir día de la visita' : 'Enviar solicitud'}

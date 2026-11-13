@@ -137,6 +137,7 @@ export function describir(e: EntradaBitacora, r: Referencias): EntradaLegible {
     case 'cita_inasistencia': return l('No asistió', deCita,
       `Solicitud: ${texto(antes.solicitud)} → ${texto(despues.solicitud)} · ${plural(despues.inasistencias, 'inasistencia', 'inasistencias')}`);
     case 'agenda_bloqueo': return l('Turno bloqueado', 'Agenda', `${cuandoCita(despues)} · ${texto(despues.motivo)}`);
+    case 'agenda_desbloqueo': return l('Bloqueo quitado', 'Agenda', `${cuandoCita(antes)} · ${texto(antes.motivo)}`);
 
     case 'usuario_creado': {
       const partes = [texto(despues.nombre), etiquetaRol(texto(despues.rol)), texto(despues.dispositivo)].filter(Boolean);

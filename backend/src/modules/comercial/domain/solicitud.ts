@@ -35,6 +35,27 @@ export const necesitaCita = (tela: OpcionTela) => tela === 'local' || tela === '
 export const sinTelaPermitido = (servicio: Servicio) => !SERVICIOS.find((s) => s.codigo === servicio)!.requiereTela;
 
 /** Con cita (en el local o en su casa) espera el turno; si no, el taller la cotiza con las fotos. */
+/**
+ * A3 Solicitudes y cotizaciones: cada solicitud avanza por 4 etapas (una pestaña cada una).
+ * «Cotizada» queda «Esperando al cliente» hasta que existan los estados de la cotización (A4).
+ * Si ya generó su pedido (CU-C14, código PED-0000 propio), queda en «Cerradas · Aceptada → pedido».
+ */
+export const ETAPAS = ['Cita / visita', 'Por cotizar', 'Esperando al cliente', 'Cerradas'] as const;
+export type Etapa = (typeof ETAPAS)[number];
+export function etapaDe(estado: string, pedido?: string | null): Etapa {
+  if (pedido) return 'Cerradas';
+  if (estado === 'En espera de cita') return 'Cita / visita';
+  if (estado === 'Nueva' || estado === 'Atendida') return 'Por cotizar';
+  if (estado === 'Cotizada') return 'Esperando al cliente';
+  return 'Cerradas';
+}
+/** Cómo se muestra el estado: la visita a domicilio espera «visita», no «cita». */
+export const estadoVisible = (estado: string, telaOpcion: string, pedido?: string | null) =>
+  pedido ? `Aceptada → pedido ${pedido}` : estado === 'En espera de cita' && telaOpcion === 'domicilio' ? 'En espera de visita' : estado === 'Cotizada' ? 'Esperando respuesta' : estado;
+
+/** Estados en que la hora de recojo preferida sigue reservada en la agenda (hasta que se acepte o se cierre). */
+export const RESERVAN_RECOJO = ['Nueva', 'Atendida', 'Cotizada'];
+
 export const estadoInicial = (tela: OpcionTela): EstadoSolicitud => (necesitaCita(tela) ? 'En espera de cita' : 'Nueva');
 
 /** Qué sigue para el cliente después de enviarla. */

@@ -10,6 +10,9 @@ import type { AlmacenArchivos } from '../../../shared/infrastructure/archivos.js
 import type { Correo } from '../../../shared/infrastructure/correo.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { hoyNegocio, leerFecha } from '../domain/calendario.js';
+import { enNY, instanteNY, sumarDias } from '../domain/agenda.js';
+import { estadoVisible, etapaDe } from '../domain/solicitud.js';
+import { citaDto } from './citas.js';
 import { incluirSolicitud, solicitudDto } from './seguimientoSolicitud.js';
 
 const error = (m: string, status = 400) => new ReglaNegocioError(m, status);
@@ -27,11 +30,17 @@ const diasDesde = (fecha: Date) => {
   return Math.max(0, Math.round((hoy - d) / 86_400_000));
 };
 
-/** A3 · bandeja: todas las solicitudes con filtro por estado y búsqueda por cliente o código. */
-export async function bandeja(filtro: { estado?: string; q?: string }) {
+/**
+ * A3 Solicitudes y cotizaciones · bandeja: todas las solicitudes con su etapa, búsqueda por cliente, código o mueble
+ * y filtro por fecha de solicitud (`desde`/`hasta` en días de Nueva York, ambos incluidos).
+ */
+export async function bandeja(filtro: { estado?: string; q?: string; desde?: string; hasta?: string }) {
   const q = filtro.q?.trim();
+  const desde = filtro.desde && leerFecha(filtro.desde) ? filtro.desde : undefined;
+  const hasta = filtro.hasta && leerFecha(filtro.hasta) ? filtro.hasta : undefined;
   const where: Prisma.SolicitudWhereInput = {
     ...(filtro.estado ? { estado: filtro.estado } : {}),
+    ...(desde || hasta ? { fechaSolicitud: { ...(desde ? { gte: instanteNY(desde) } : {}), ...(hasta ? { lt: instanteNY(sumarDias(hasta, 1)) } : {}) } } : {}),
     ...(q ? {
       OR: [
         { codigo: { contains: q, mode: 'insensitive' } },
@@ -39,13 +48,14 @@ export async function bandeja(filtro: { estado?: string; q?: string }) {
         { cliente: { apellidos: { contains: q, mode: 'insensitive' } } },
         { cliente: { razonSocial: { contains: q, mode: 'insensitive' } } },
         { cliente: { email: { contains: q, mode: 'insensitive' } } },
+        { muebles: { some: { tipoMueble: { nombre: { contains: q, mode: 'insensitive' } } } } },
       ],
     } : {}),
   };
   const [lista, porEstado, diasAtraso] = await Promise.all([
     prisma.solicitud.findMany({
       where, orderBy: { fechaSolicitud: 'desc' }, take: 300,
-      include: { cliente: true, direccion: true, muebles: { orderBy: { orden: 'asc' }, include: { tipoMueble: true, _count: { select: { adjuntos: true } } } }, citas: { where: { estado: 'Programada' } } },
+      include: { cliente: true, direccion: true, muebles: { orderBy: { orden: 'asc' }, include: { tipoMueble: true, _count: { select: { adjuntos: true } } } }, citas: { where: { estado: 'Programada' } }, pedidos: { select: { codigo: true }, take: 1 } },
     }),
     prisma.solicitud.groupBy({ by: ['estado'], _count: { _all: true } }),
     parametroNumero(prisma, 'solicitud.dias_atraso'),
@@ -55,8 +65,11 @@ export async function bandeja(filtro: { estado?: string; q?: string }) {
     conteo: Object.fromEntries(porEstado.map((g) => [g.estado, g._count._all])),
     solicitudes: lista.map((s) => {
       const dias = diasDesde(s.fechaSolicitud);
+      const cita = s.citas[0] ? citaDto(s.citas[0]) : null;
       return {
-        codigo: s.codigo!, estado: s.estado, canal: s.canal, fecha: s.fechaSolicitud, dias,
+        codigo: s.codigo!, estado: s.estado, estadoVisible: estadoVisible(s.estado, s.telaOpcion, s.pedidos[0]?.codigo), etapa: etapaDe(s.estado, s.pedidos[0]?.codigo),
+        canal: s.canal, fecha: s.fechaSolicitud, hora: enNY(s.fechaSolicitud).hora, dias,
+        cita: cita ? { id: cita.id, fecha: cita.fecha, hora: cita.hora, franja: cita.franja, tipo: cita.tipo } : null,
         atrasada: s.estado === 'Nueva' && dias >= diasAtraso,
         cliente: nombreCliente(s.cliente),
         ciudad: s.direccion?.ciudad ?? null,
@@ -71,7 +84,7 @@ export async function bandeja(filtro: { estado?: string; q?: string }) {
 
 /** A3 · ficha completa, con el contacto del cliente y los enlaces a sus fotos y videos. */
 export async function fichaAdmin(codigo: string, almacen: AlmacenArchivos) {
-  const s = await prisma.solicitud.findUnique({ where: { codigo }, include: { ...incluirSolicitud, registrador: { include: { rol: true } } } });
+  const s = await prisma.solicitud.findUnique({ where: { codigo }, include: { ...incluirSolicitud, registrador: { include: { rol: true } }, pedidos: { select: { codigo: true }, take: 1 } } });
   if (!s) throw error('No encontramos esa solicitud.', 404);
   const historial = await prisma.bitacora.findMany({
     where: { OR: [{ entidad: 'solicitud', entidadId: s.id }, { entidad: 'cita', entidadId: { in: s.citas.map((c) => c.id) } }] },
@@ -79,6 +92,8 @@ export async function fichaAdmin(codigo: string, almacen: AlmacenArchivos) {
   });
   return {
     ...(await solicitudDto(s, almacen)),
+    estadoVisible: estadoVisible(s.estado, s.telaOpcion, s.pedidos[0]?.codigo), etapa: etapaDe(s.estado, s.pedidos[0]?.codigo),
+    pedido: s.pedidos[0]?.codigo ?? null,
     cliente: {
       id: s.cliente.id, nombre: nombreCliente(s.cliente), tipoPersona: s.cliente.tipoPersona,
       email: s.cliente.email, telefono: s.cliente.telefono, tieneCuenta: Boolean(await prisma.usuario.count({ where: { clienteId: s.cliente.id } })),

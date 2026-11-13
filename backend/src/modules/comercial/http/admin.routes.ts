@@ -6,7 +6,7 @@ import type { Correo } from '../../../shared/infrastructure/correo.js';
 import { prisma } from '../../../shared/infrastructure/prisma.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { registrarSolicitud } from '../application/registrarSolicitud.js';
-import { agendaSemana, bloquearTurnos } from '../application/agendaAdmin.js';
+import { agendaSemana, bloquearTurnos, quitarBloqueo } from '../application/agendaAdmin.js';
 import { vencerSolicitud, type Quien } from '../application/citas.js';
 import {
   MOTIVOS_DESCARTE, bandeja, buscarClientes, correoInvitacion, descartarSolicitud, esDuplicado, fichaAdmin, registrarClienteNuevo,
@@ -24,7 +24,7 @@ export function adminComercialRoutes(deps: Deps) {
   r.use(autenticar, exigirRol('Administrador'));
 
   r.get('/solicitudes', async (req, res) => {
-    res.json({ ...(await bandeja({ estado: req.query.estado ? String(req.query.estado) : undefined, q: req.query.q ? String(req.query.q) : undefined })), motivosDescarte: MOTIVOS_DESCARTE });
+    res.json({ ...(await bandeja({ estado: req.query.estado ? String(req.query.estado) : undefined, q: req.query.q ? String(req.query.q) : undefined, desde: req.query.desde ? String(req.query.desde) : undefined, hasta: req.query.hasta ? String(req.query.hasta) : undefined })), motivosDescarte: MOTIVOS_DESCARTE });
   });
 
   r.get('/solicitudes/:codigo', async (req, res) => {
@@ -44,6 +44,12 @@ export function adminComercialRoutes(deps: Deps) {
   // CU-C03: bloquear turnos libres (uno o varios).
   r.post('/agenda/bloqueos', validar(bloqueosSchema), async (req, res) => {
     res.status(201).json(await bloquearTurnos(quien(req), req.body.bloques, req.body.motivo));
+  });
+
+  // A2: quitar un bloqueo (queda anulado, no se borra).
+  r.post('/agenda/bloqueos/:id/quitar', async (req, res) => {
+    await quitarBloqueo(quien(req), Number(req.params.id));
+    res.status(204).end();
   });
 
   // A2f: tras la segunda inasistencia, el Administrador la da por vencida.

@@ -9,7 +9,6 @@ import { EstadisticasPage } from '../features/panel/EstadisticasPage';
 import { AgendaPage } from '../features/comercial/agenda/AgendaPage';
 import { AtenderCitaPage } from '../features/comercial/atender/AtenderCitaPage';
 import { SolicitudesAdminPage } from '../features/comercial/bandeja/SolicitudesAdminPage';
-import { CotizacionesPage } from '../features/comercial/cotizaciones/CotizacionesPage';
 import { CotizarPage } from '../features/comercial/cotizaciones/CotizarPage';
 import { SolicitudPage } from '../features/comercial/solicitud/SolicitudPage';
 import { CitaPage } from '../features/comercial/cita/CitaPage';
@@ -18,6 +17,15 @@ import { EnCursoPage } from '../features/comercial/pedidos/EnCursoPage';
 import { SolicitudesPage } from '../features/comercial/pedidos/SolicitudesPage';
 import { AnterioresPage } from '../features/comercial/pedidos/AnterioresPage';
 import { PendientePage } from './PendientePage';
+import { PedidosPage } from '../features/comercial/pedidosAdmin/PedidosPage';
+import { FichaPedidoPage } from '../features/comercial/pedidosAdmin/FichaPedidoPage';
+import { PlantillasPage } from '../features/comercial/plantillas/PlantillasPage';
+import { StockPage } from '../features/almacen/inventario/StockPage';
+import { TelasPage } from '../features/almacen/inventario/TelasPage';
+import { ReponerPage } from '../features/almacen/inventario/ReponerPage';
+import { MovimientosPage } from '../features/almacen/inventario/MovimientosPage';
+import { ProveedoresPage } from '../features/almacen/inventario/ProveedoresPage';
+import { ConteoPage } from '../features/almacen/inventario/ConteoPage';
 import { NotificacionesPage } from '../features/notificaciones/NotificacionesPage';
 import { ParametrosPage } from '../features/seguridad/parametros/ParametrosPage';
 import { UsuariosPage } from '../features/seguridad/usuarios/UsuariosPage';
@@ -26,7 +34,6 @@ import { PerfilPage } from '../features/historial/perfil/PerfilPage';
 // Pantallas A del diseño que aún no se implementan (ruta del menú lateral → pantalla).
 const PANTALLAS_ADMIN: [string, string][] = [
   ['pagos', 'A5 Pagos'],
-  ['pedidos', 'A6 Pedidos'], ['plantillas', 'A16 Plantillas'], ['inventario', 'A8 Inventario'], ['catalogo', 'A15 Catálogo de materiales y telas'],
   ['historial', 'A12 Historial'], ['clientes', 'A17 Clientes y expediente'], ['salidas', 'A13 Planificar salidas'],
   ['taller', 'A18 Taller: recepciones y retiros'], ['reclamos', 'A19 Reclamos e incidencias'],
 
@@ -93,8 +100,20 @@ export const router = createBrowserRouter([
         { path: 'agenda', element: <AgendaPage /> },
         { path: 'agenda/atender', element: <AtenderCitaPage /> },
         { path: 'solicitudes', element: <SolicitudesAdminPage /> },
-        { path: 'cotizaciones', element: <CotizacionesPage /> },
+        { path: 'cotizaciones', element: <Navigate to="/admin/solicitudes?etapa=por-cotizar" replace /> },
         { path: 'cotizaciones/cotizar', element: <CotizarPage /> },
+        { path: 'pedidos', element: <PedidosPage /> },
+        { path: 'pedidos/:codigo', element: <FichaPedidoPage /> },
+        { path: 'plantillas', element: <PlantillasPage /> },
+        // Almacén e Inventario (diseño del 12/11): cinco pestañas y el conteo.
+        { path: 'inventario', element: <StockPage /> },
+        { path: 'inventario/telas', element: <TelasPage /> },
+        { path: 'inventario/reponer', element: <ReponerPage /> },
+        { path: 'inventario/movimientos', element: <MovimientosPage /> },
+        { path: 'inventario/proveedores', element: <ProveedoresPage /> },
+        { path: 'inventario/conteo', element: <ConteoPage /> },
+        // El antiguo «Catálogo de materiales» (A15) ahora es la pestaña Stock / Telas de Inventario.
+        { path: 'catalogo', element: <Navigate to="/admin/inventario" replace /> },
         { path: 'parametros', element: <ParametrosPage /> },
         { path: 'usuarios', element: <UsuariosPage /> },
         ...PANTALLAS_ADMIN.map(([path, titulo]) => ({ path, element: <PendientePage titulo={titulo} /> })),

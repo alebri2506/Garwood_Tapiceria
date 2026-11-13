@@ -32,7 +32,8 @@ export interface SolicitudEnvio {
   traslado?: 'delivery' | 'propio';
   direccion?: DireccionEnvio;
   fechaPrefRecojo?: string;
-  franjaRecojo?: 'manana' | 'tarde';
+  /** W2: hora de recojo preferida (bloque de 1 hora); la franja la deduce la API. */
+  horaPrefRecojo?: string;
   /** W3 / W3b: con cita en el local o visita, la solicitud se envía junto con el turno elegido. */
   cita?: { fecha: string; hora?: string; franja?: 'manana' | 'tarde'; direccion?: DireccionEnvio };
 }
@@ -65,6 +66,7 @@ export interface SolicitudCliente {
   direccion: string | null;
   fechaPrefRecojo: string | null;
   franjaRecojo: 'manana' | 'tarde' | null;
+  horaPrefRecojo: string | null;
   motivoDescarte: string | null;
   cita: CitaDto | null;
   inasistencias: number;
@@ -76,6 +78,9 @@ export interface SolicitudCliente {
   }[];
 }
 
+export interface HoraRecojo { hora: string; hasta: string; libre: boolean; motivo: string | null }
+export interface DisponibilidadRecojo { duracionMin: number; horas: string[]; semanas: number; dias: { fecha: string; cerrado: string | null; horas: HoraRecojo[] }[] }
+
 export interface SolicitudApi {
   catalogo(): Promise<Catalogo>;
   direcciones(): Promise<DireccionGuardada[]>;
@@ -83,6 +88,8 @@ export interface SolicitudApi {
   enviar(datos: SolicitudEnvio, fotos: File[][]): Promise<SolicitudCreada>;
   mias(): Promise<SolicitudCliente[]>;
   detalle(codigo: string): Promise<SolicitudCliente>;
+  /** W2 · semanas con las horas de recojo y si están libres (cruzadas con la agenda del taller). */
+  recojoDisponibilidad(): Promise<DisponibilidadRecojo>;
   subirFotos(codigo: string, fotos: File[][]): Promise<SolicitudCliente>;
 }
 
@@ -99,6 +106,7 @@ const httpSolicitudApi: SolicitudApi = {
   enviar: (datos, fotos) => apiFetch<SolicitudCreada>('/solicitudes', { method: 'POST', body: formulario(fotos, datos) }),
   mias: () => apiFetch<SolicitudCliente[]>('/solicitudes'),
   detalle: (codigo) => apiFetch<SolicitudCliente>(`/solicitudes/${encodeURIComponent(codigo)}`),
+  recojoDisponibilidad: () => apiFetch<DisponibilidadRecojo>('/solicitudes/recojo/disponibilidad'),
   subirFotos: (codigo, fotos) => apiFetch<SolicitudCliente>(`/solicitudes/${encodeURIComponent(codigo)}/fotos`, { method: 'POST', body: formulario(fotos) }),
 };
 
@@ -153,7 +161,7 @@ let siguienteCodigo = 88;
 export const SOLICITUDES_SIMULADAS: SolicitudCliente[] = [];
 const base = (codigo: string, cambio: Partial<SolicitudCliente>): SolicitudCliente => ({
   codigo, estado: 'Nueva', fecha: new Date().toISOString(), canal: 'web', tela: 'catalogo', telaDescripcion: null, telaConocida: null,
-  esperaFotos: false, traslado: 'propio', direccion: null, fechaPrefRecojo: null, franjaRecojo: null, motivoDescarte: null,
+  esperaFotos: false, traslado: 'propio', direccion: null, fechaPrefRecojo: null, franjaRecojo: null, horaPrefRecojo: null, motivoDescarte: null,
   cita: null, inasistencias: 0,
   muebles: [{ orden: 1, tipo: 'Silla de comedor', tipoCodigo: 'ch', servicio: 'retapizado', servicioNombre: 'Retapizado completo', acabado: null, cantidad: 1, medidas: null, modoTela: 'una', telas: [], archivos: [] }],
   ...cambio,
@@ -173,6 +181,22 @@ const buscar = (codigo: string) => {
 const mockSolicitudApi: SolicitudApi = {
   mias: async () => [...SOLICITUDES_SIMULADAS],
   detalle: async (codigo) => buscar(codigo),
+  recojoDisponibilidad: async () => {
+    // 4 semanas desde el lunes de esta semana, con algunas horas ocupadas de ejemplo.
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const lunes = new Date(hoy); lunes.setDate(hoy.getDate() + (hoy.getDay() === 0 ? 1 : 1 - hoy.getDay()));
+    const horas = ['09:00', '10:00', '11:00', '15:00', '16:00'];
+    const dias = Array.from({ length: 24 }, (_, i) => {
+      const d = new Date(lunes); d.setDate(lunes.getDate() + Math.floor(i / 6) * 7 + (i % 6));
+      const fecha = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const cerrado = d < hoy ? 'Fecha pasada' : null;
+      return { fecha, cerrado, horas: horas.map((hora, k) => {
+        const ocupada = !cerrado && (d.getDate() * 3 + k * 5) % 7 === 0;
+        return { hora, hasta: `${String(+hora.slice(0, 2) + 1).padStart(2, '0')}:00`, libre: !cerrado && !ocupada, motivo: ocupada ? 'Hora ocupada' : null };
+      }) };
+    });
+    return { duracionMin: 60, horas, semanas: 4, dias };
+  },
   subirFotos: async (codigo, fotos) => {
     const s = buscar(codigo);
     s.esperaFotos = false;

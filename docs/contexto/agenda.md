@@ -24,7 +24,8 @@ Casos de uso: **C03** Configurar disponibilidad · **C04** Programar, reprograma
   | Libre | Vacío |
 
 - **Filtros:** Todas · Visitas al local · Retiros.
-- **No muestra** recojos ni entregas a domicilio: los hace el conductor y están en **Salidas (A13)**.
+- **Recojos preferidos (11/11):** la hora de recojo que eligió el cliente en W2 aparece como un bloque de 1 hora en ámbar («Recojo preferido») y ocupa esos turnos mientras la solicitud espera. Al tocarlo se ven el cliente, la solicitud y la dirección.
+- **No muestra** las entregas ni los recojos ya planificados: los hace el conductor y están en **Salidas (A13)**.
 - **Panel derecho:** el detalle de lo que se toque.
 
 ## 3. Modos

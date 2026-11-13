@@ -6,7 +6,8 @@ import { avisoAlCliente, avisosAlTaller, enviarCorreos, guardarAvisos, type Avis
 import type { Correo } from '../../../shared/infrastructure/correo.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { hoyNegocio, leerFecha } from '../domain/calendario.js';
-import { diaCerrado, enNY, franjaBloqueada, instanteNY, sumarDias, sumarMinutos, turnoBloqueado, turnosDe, type Bloqueo } from '../domain/agenda.js';
+import { diaCerrado, enNY, franjaBloqueada, instanteNY, minutosDe, sumarDias, sumarMinutos, turnoBloqueado, turnosDe, type Bloqueo } from '../domain/agenda.js';
+import { RESERVAN_RECOJO } from '../domain/solicitud.js';
 import type { NombreRol } from '../../seguridad/application/tokens.js';
 import type { DireccionEntrada } from '../http/solicitud.schemas.js';
 import { idDireccion, revisarDireccion } from './direcciones.js';
@@ -47,7 +48,7 @@ export async function reglasAgenda(db: Db = prisma) {
 const textoFranja = (rango: string) => rango.replace('-', '–');
 
 export async function bloqueosEntre(desde: string, hasta: string): Promise<(Bloqueo & { id: number; motivo: string; creadoPor: number | null })[]> {
-  const filas = await prisma.agendaBloqueo.findMany({ where: { fecha: { gte: leerFecha(desde)!, lte: leerFecha(hasta)! } }, orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }] });
+  const filas = await prisma.agendaBloqueo.findMany({ where: { activo: true, fecha: { gte: leerFecha(desde)!, lte: leerFecha(hasta)! } }, orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }] });
   return filas.map((b) => ({ id: b.id, fecha: b.fecha.toISOString().slice(0, 10), horaInicio: b.horaInicio, horaFin: b.horaFin, motivo: b.motivo, creadoPor: b.creadoPor }));
 }
 
@@ -57,25 +58,49 @@ const horaDe = (c: { tipo: string; fechaHora: Date }) => {
   return c.tipo === 'local' || hora !== '00:00' ? hora : null;
 };
 
+/** Un tramo ocupado del día, en minutos desde las 00:00. */
+export interface Tramo { desde: number; hasta: number }
+
 /**
- * Turnos del local ocupados por día ("AAAA-MM-DD" → horas): las citas en el local y las visitas con hora,
- * que ocupan los turnos seguidos que dura la visita.
+ * Lo que ocupa la agenda cada día ("AAAA-MM-DD" → tramos): citas en el local, visitas con hora (los turnos seguidos
+ * que dura) y horas de recojo preferidas de solicitudes que aún esperan (`recojo.duracion_min`, W2).
  */
-export async function turnosOcupados(desde: string, hasta: string, duracionTurno: number, ignorarCitaId?: number) {
-  const citas = await prisma.cita.findMany({
-    where: { estado: 'Programada', fechaHora: { gte: instanteNY(desde), lt: instanteNY(sumarDias(hasta, 1)) }, NOT: ignorarCitaId ? { id: ignorarCitaId } : undefined },
-    select: { tipo: true, fechaHora: true, duracionMin: true },
-  });
-  const porDia = new Map<string, Set<string>>();
+export async function ocupacion(desde: string, hasta: string, ignorar: { citaId?: number; solicitudId?: number } = {}) {
+  const [citas, recojos, duracionRecojo] = await Promise.all([
+    prisma.cita.findMany({
+      where: { estado: 'Programada', fechaHora: { gte: instanteNY(desde), lt: instanteNY(sumarDias(hasta, 1)) }, NOT: ignorar.citaId ? { id: ignorar.citaId } : undefined },
+      select: { tipo: true, fechaHora: true, duracionMin: true },
+    }),
+    prisma.solicitud.findMany({
+      where: { horaPrefRecojo: { not: null }, estado: { in: RESERVAN_RECOJO }, fechaPrefRecojo: { gte: leerFecha(desde)!, lte: leerFecha(hasta)! }, NOT: ignorar.solicitudId ? { id: ignorar.solicitudId } : undefined },
+      select: { fechaPrefRecojo: true, horaPrefRecojo: true },
+    }),
+    parametroNumero(prisma, 'recojo.duracion_min'),
+  ]);
+  const porDia = new Map<string, Tramo[]>();
+  const poner = (fecha: string, hora: string, minutos: number) => {
+    const desdeMin = minutosDe(hora);
+    porDia.set(fecha, [...(porDia.get(fecha) ?? []), { desde: desdeMin, hasta: desdeMin + minutos }]);
+  };
   for (const c of citas) {
     const hora = horaDe(c);
-    if (!hora) continue;
-    const { fecha } = enNY(c.fechaHora);
-    const set = porDia.get(fecha) ?? new Set<string>();
-    for (let m = 0; m < (c.tipo === 'local' ? duracionTurno : c.duracionMin); m += duracionTurno) set.add(sumarMinutos(hora, m));
-    porDia.set(fecha, set);
+    if (hora) poner(enNY(c.fechaHora).fecha, hora, c.duracionMin);
   }
+  for (const s of recojos) poner(s.fechaPrefRecojo!.toISOString().slice(0, 10), s.horaPrefRecojo!, duracionRecojo);
   return porDia;
+}
+
+/** El tramo [desde, hasta) choca con alguno de la lista. */
+export const choca = (tramos: Tramo[] | undefined, desde: number, hasta: number) => Boolean(tramos?.some((x) => x.desde < hasta && x.hasta > desde));
+
+/** Turnos del local ocupados por día ("AAAA-MM-DD" → horas): los que chocan con cualquier tramo ocupado. */
+export async function turnosOcupados(desde: string, hasta: string, r: { turnos: string[]; duracion: number }, ignorarCitaId?: number) {
+  const porDia = await ocupacion(desde, hasta, { citaId: ignorarCitaId });
+  const turnos = new Map<string, Set<string>>();
+  for (const [fecha, tramos] of porDia) {
+    turnos.set(fecha, new Set(r.turnos.filter((h) => choca(tramos, minutosDe(h), minutosDe(h) + r.duracion))));
+  }
+  return turnos;
 }
 
 /** Ya hay una visita programada en esa franja de ese día (con o sin hora). */
@@ -101,7 +126,7 @@ export async function disponibilidad(tipo: TipoCita, desdePedido: string, diasPe
       where: { tipo: 'domicilio', estado: 'Programada', fechaHora: { gte: instanteNY(desde), lt: instanteNY(sumarDias(hasta, 1)) } },
       select: { fechaHora: true, franja: true },
     }),
-    turnosOcupados(desde, hasta, r.duracion),
+    turnosOcupados(desde, hasta, r),
   ]);
   const ocupados = new Set(visitas.map((c) => `${enNY(c.fechaHora).fecha}|${c.franja}`));
   const ahora = enNY(new Date());
@@ -157,7 +182,7 @@ export async function revisarTurno(tipo: TipoCita, t: TurnoEntrada, ignorarCitaI
     if (horas.some((h) => turnoBloqueado(t.fecha, h, bloqueos))) throw error('Ese turno no está disponible. Elija otro.');
     const ahora = enNY(new Date());
     if (t.fecha === ahora.fecha && t.hora <= ahora.hora) throw error('Ese turno ya pasó. Elija otro.');
-    const ocupadas = (await turnosOcupados(t.fecha, t.fecha, r.duracion, ignorarCitaId)).get(t.fecha);
+    const ocupadas = (await turnosOcupados(t.fecha, t.fecha, r, ignorarCitaId)).get(t.fecha);
     if (horas.some((h) => ocupadas?.has(h))) throw error('Ese turno se acaba de ocupar. Elija otro.', 409);
     const fechaHora = instanteNY(t.fecha, t.hora);
     if (tipo === 'local') return { fechaHora, franja: null, duracion: r.duracion, texto: `${fechaLarga(t.fecha)}, ${t.hora}` };

@@ -50,6 +50,7 @@ export async function solicitudDto(s: SolicitudCompleta, almacen: AlmacenArchivo
     direccion: s.direccion?.direccion ?? null,
     fechaPrefRecojo: s.fechaPrefRecojo?.toISOString().slice(0, 10) ?? null,
     franjaRecojo: s.franjaRecojo,
+    horaPrefRecojo: s.horaPrefRecojo,
     motivoDescarte: s.motivoDescarte,
     fechaDescarte: s.fechaDescarte,
     cita: citaActual ? { ...citaDto(citaActual), direccion: citaActual.direccion?.direccion ?? null } : null,

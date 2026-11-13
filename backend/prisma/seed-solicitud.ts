@@ -29,7 +29,7 @@ export const TELAS_PRUEBA = [
   { codigo: 'TP-318-2', nombre: 'Pana Gris 318', familia: 'Pana', pattern: '318', numeroColor: '2', colorHex: '#6B7280', descripcion: 'Pana de algodón · gris' },
   { codigo: 'TP-52-7', nombre: 'Chenille Verde 52', familia: 'Chenille', pattern: '52', numeroColor: '7', colorHex: '#3F6B4E', descripcion: 'Chenille · verde bosque' },
   { codigo: 'TP-12-1', nombre: 'Chenille Marfil 12', familia: 'Chenille', pattern: '12', numeroColor: '1', colorHex: '#E7DFCF', descripcion: 'Chenille · marfil' },
-  { codigo: 'TP-640-5', nombre: 'Cuero sint. Café', familia: 'Cuero sint.', pattern: '640', numeroColor: '5', colorHex: '#6B4226', descripcion: 'Fácil de limpiar · café' },
+  { codigo: 'TP-640-5', nombre: 'Cuero sint. Café', familia: 'Cuero sintético', pattern: '640', numeroColor: '5', colorHex: '#6B4226', descripcion: 'Fácil de limpiar · café' },
   { codigo: 'TP-220-9', nombre: 'Terciopelo Vino', familia: 'Terciopelo', pattern: '220', numeroColor: '9', colorHex: '#6D1F3A', descripcion: 'Terciopelo · vino' },
   { codigo: 'TP-224-3', nombre: 'Terciopelo Mostaza', familia: 'Terciopelo', pattern: '224', numeroColor: '3', colorHex: '#B8860B', descripcion: 'Terciopelo · mostaza' },
   { codigo: 'TP-760-2', nombre: 'Estampado Floral', familia: 'Estampado', pattern: '760', numeroColor: '2', colorHex: '#9C6B5B', descripcion: 'Estampado · floral' },

@@ -62,17 +62,22 @@ export const FichaSolicitud = forwardRef<HTMLElement, Props>(function FichaSolic
   if (!f) return <section ref={ref} className="sl-det" aria-busy="true"><p className="muted" role="status">Cargando la solicitud…</p></section>;
 
   const cita = f.cita;
-  // A2c / A2e: sin turno, se agenda desde aquí; con turno, se abre la Agenda en esa cita.
+  const casa = f.tela === 'domicilio';
+  const hoy = new Date();
+  const esHoy = cita?.fecha === `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  // Un solo botón con lo que toca hacer según el estado (diseño A3a–A3m).
   const accion = f.estado === 'En espera de cita'
     ? cita?.estado === 'Programada'
-      ? { texto: 'Ver en la agenda', a: `/admin/agenda?cita=${cita.id}&fecha=${cita.fecha}` }
-      : { texto: f.tela === 'domicilio' ? 'Agendar visita' : 'Agendar cita', a: `/admin/agenda?agendar=${f.codigo}` }
-    : ['Nueva', 'Atendida'].includes(f.estado) && !f.esperaFotos ?{ texto: 'Armar cotización', a: '/admin/cotizaciones/cotizar' }
-      : f.estado === 'Cotizada' ? { texto: 'Ver cotización', a: '/admin/cotizaciones' } : null;
+      ? esHoy
+        ? { texto: casa ? 'Ir a la visita' : 'Ir a la cita', a: `/admin/agenda/atender?solicitud=${f.codigo}${casa ? '&lugar=domicilio' : ''}` }
+        : { texto: casa ? 'Ver visita' : 'Ver cita', a: `/admin/agenda?cita=${cita.id}&fecha=${cita.fecha}` }
+      : { texto: casa ? 'Agendar visita' : 'Agendar cita', a: `/admin/agenda?agendar=${f.codigo}` }
+    : ['Nueva', 'Atendida'].includes(f.estado) && !f.esperaFotos ? { texto: 'Armar cotización', a: `/admin/cotizaciones/cotizar?solicitud=${f.codigo}` }
+      : f.estado === 'Cotizada' ? { texto: 'Ver cotización', a: `/admin/cotizaciones/cotizar?solicitud=${f.codigo}` } : null;
 
   return (
     <section ref={ref} className="sl-det" aria-label={`Solicitud ${f.codigo}`}>
-      <div className="between"><span className="ov">{f.codigo} · {CANAL[f.canal] ?? f.canal}</span><StatusChip status={f.estado} /></div>
+      <div className="between"><span className="ov">{f.codigo} · {CANAL[f.canal] ?? f.canal}</span><StatusChip status={f.estadoVisible} /></div>
       <div className="sl-who">
         <span className="sl-av" aria-hidden="true">{iniciales(f.cliente.nombre)}</span>
         <div>
@@ -116,7 +121,7 @@ export const FichaSolicitud = forwardRef<HTMLElement, Props>(function FichaSolic
       <div className="sl-blk">
         <span className="ov">Traslado</span>
         <b>{f.traslado === 'delivery' ? `Delivery · ${f.direccion ?? ''}` : f.traslado === 'propio' ? 'Lo lleva y lo recoge el cliente' : 'Se define en la cita'}</b>
-        {f.fechaPrefRecojo && <small>Recojo preferido: {fechaCorta(f.fechaPrefRecojo)} · {f.franjaRecojo === 'manana' ? 'mañana' : 'tarde'}</small>}
+        {f.fechaPrefRecojo && <small>Recojo preferido: {fechaCorta(f.fechaPrefRecojo)} · {f.horaPrefRecojo ?? (f.franjaRecojo === 'manana' ? 'mañana' : 'tarde')}{f.horaPrefRecojo && ['Nueva', 'Atendida', 'Cotizada'].includes(f.estado) ? ' · reservado en la agenda' : ''}</small>}
       </div>
 
       {cita && (

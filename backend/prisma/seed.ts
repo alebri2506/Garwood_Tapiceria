@@ -1,11 +1,12 @@
 // Datos iniciales: roles, parámetros, usuarios de prueba (caso PED-0076) y el catálogo de la solicitud
-// (tipos de mueble y telas de prueba, ver seed-solicitud.ts).
+// (tipos de mueble y telas de prueba, ver seed-solicitud.ts) y el inventario con pedidos de ejemplo (seed-inventario.ts).
 // Es idempotente: se puede ejecutar varias veces sin duplicar datos.
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import { sembrarCatalogoSolicitud } from './seed-solicitud.js';
 import { sembrarParametros } from './seed-parametros.js';
+import { sembrarInventario } from './seed-inventario.js';
 
 const prisma = new PrismaClient();
 
@@ -50,7 +51,8 @@ async function main() {
     });
   }
   await sembrarCatalogoSolicitud(prisma);
-  console.log('Seed completo: roles, parámetros, usuarios de prueba, tipos de mueble y telas de prueba.');
+  await sembrarInventario(prisma);
+  console.log('Seed completo: roles, parámetros, usuarios de prueba, tipos de mueble, telas e inventario de prueba.');
 }
 
 main()

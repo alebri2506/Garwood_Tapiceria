@@ -4,7 +4,8 @@ import { registrarBitacora } from '../../../shared/infrastructure/bitacora.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { hoyNegocio, leerFecha } from '../domain/calendario.js';
 import { enNY, motivoCierre, sumarDias, sumarMinutos, turnoBloqueado } from '../domain/agenda.js';
-import { SERVICIOS } from '../domain/solicitud.js';
+import { RESERVAN_RECOJO, SERVICIOS } from '../domain/solicitud.js';
+import { parametroNumero } from '../../../shared/infrastructure/parametros.js';
 import { bloqueosEntre, citaDto, fechaLarga, reglasAgenda, turnosOcupados, type Quien } from './citas.js';
 
 const error = (m: string, status = 400) => new ReglaNegocioError(m, status);
@@ -26,7 +27,7 @@ export async function agendaSemana(desdePedido?: string) {
   const hoy = hoyNegocio();
   const desde = lunesDe(desdePedido && leerFecha(desdePedido) ? desdePedido : hoy);
   const hasta = sumarDias(desde, 5);
-  const [bloqueos, citas, futuros] = await Promise.all([
+  const [bloqueos, citas, futuros, recojos, duracionRecojo] = await Promise.all([
     bloqueosEntre(desde, hasta),
     prisma.cita.findMany({
       where: { estado: { in: ['Programada', 'Atendida', 'No asistió'] }, fechaHora: { gte: new Date(`${desde}T00:00:00Z`), lt: new Date(`${sumarDias(hasta, 2)}T00:00:00Z`) } },
@@ -43,6 +44,12 @@ export async function agendaSemana(desdePedido?: string) {
       },
     }),
     bloqueosEntre(hoy, sumarDias(hoy, r.dias)),
+    // W2: horas de recojo preferidas de solicitudes que esperan; ocupan la agenda.
+    prisma.solicitud.findMany({
+      where: { horaPrefRecojo: { not: null }, estado: { in: RESERVAN_RECOJO }, fechaPrefRecojo: { gte: leerFecha(desde)!, lte: leerFecha(hasta)! } },
+      include: { cliente: true, direccion: true, muebles: { orderBy: { orden: 'asc' }, include: { tipoMueble: true } } },
+    }),
+    parametroNumero(prisma, 'recojo.duracion_min'),
   ]);
   const ahora = enNY(new Date());
 
@@ -55,6 +62,11 @@ export async function agendaSemana(desdePedido?: string) {
       return { fecha, cerrado: motivoCierre(fecha, bloqueos) };
     }),
     bloqueos: bloqueos.filter((b) => b.horaInicio).map((b) => ({ id: b.id, fecha: b.fecha, horaInicio: b.horaInicio!, horaFin: b.horaFin!, motivo: b.motivo })),
+    recojos: recojos.map((s) => ({
+      solicitud: s.codigo!, estado: s.estado, cliente: nombreCliente(s.cliente), telefono: s.cliente.telefono,
+      fecha: s.fechaPrefRecojo!.toISOString().slice(0, 10), hora: s.horaPrefRecojo!, hasta: sumarMinutos(s.horaPrefRecojo!, duracionRecojo),
+      mueble: s.muebles.map((x) => `${x.cantidad > 1 ? `${x.cantidad} × ` : ''}${x.tipoMueble.nombre}`).join(', '), direccion: s.direccion?.direccion ?? null,
+    })),
     proximosBloqueos: futuros.map((b) => ({ id: b.id, fecha: b.fecha, horaInicio: b.horaInicio, horaFin: b.horaFin, motivo: b.motivo })),
     citas: citas
       .map((c) => ({ c, dto: citaDto(c) }))
@@ -85,7 +97,7 @@ export async function bloquearTurnos(quien: Quien, bloques: { fecha: string; hor
   const ahora = enNY(new Date());
   const unicos = [...new Map(bloques.map((b) => [`${b.fecha}|${b.hora}`, b])).values()].sort((a, b) => `${a.fecha}${a.hora}`.localeCompare(`${b.fecha}${b.hora}`));
   const desde = unicos[0]!.fecha, hasta = unicos[unicos.length - 1]!.fecha;
-  const [existentes, ocupados] = await Promise.all([bloqueosEntre(desde, hasta), turnosOcupados(desde, hasta, r.duracion)]);
+  const [existentes, ocupados] = await Promise.all([bloqueosEntre(desde, hasta), turnosOcupados(desde, hasta, r)]);
 
   for (const b of unicos) {
     const que = `${fechaLarga(b.fecha)} a las ${b.hora}`;
@@ -103,4 +115,22 @@ export async function bloquearTurnos(quien: Quien, bloques: { fecha: string; hor
     }
   });
   return { bloqueados: unicos.length };
+}
+
+/**
+ * A2 · quitar un bloqueo: no se borra (RG-03), queda anulado con quién y cuándo, y el turno vuelve a estar libre
+ * para los clientes. Los bloqueos de días pasados no se tocan: son historia.
+ */
+export async function quitarBloqueo(quien: Quien, id: number) {
+  const b = await prisma.agendaBloqueo.findUnique({ where: { id } });
+  if (!b || !b.activo) throw error('Ese bloqueo ya no existe.', 404);
+  const fecha = b.fecha.toISOString().slice(0, 10);
+  if (fecha < hoyNegocio()) throw error('Ese bloqueo ya pasó: queda en el historial.');
+  await prisma.$transaction(async (tx) => {
+    await tx.agendaBloqueo.update({ where: { id }, data: { activo: false, quitadoPor: quien.usuarioId, fechaQuitado: new Date() } });
+    await registrarBitacora(tx, {
+      usuarioId: quien.usuarioId, modulo: 'comercial', accion: 'agenda_desbloqueo', entidad: 'agenda_bloqueo', entidadId: id,
+      valorAnterior: { fecha, hora: b.horaInicio, motivo: b.motivo }, valorNuevo: { activo: false }, ip: quien.ip,
+    });
+  });
 }

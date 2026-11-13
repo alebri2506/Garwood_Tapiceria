@@ -74,7 +74,7 @@ describe('CU-S05 API de parámetros (A14)', () => {
   it('lista los parámetros agrupados, en el orden de la pantalla y sin valores técnicos', async () => {
     const r = await request(app).get('/api/admin/parametros').set(auth(admin));
     expect(r.status).toBe(200);
-    expect(r.body.grupos.map((g: { nombre: string }) => g.nombre)).toEqual(['Cotización y pagos', 'Tarifas', 'Agenda y despacho', 'Solicitudes', 'Seguridad']);
+    expect(r.body.grupos.map((g: { nombre: string }) => g.nombre)).toEqual(['Cotización y pagos', 'Unidades de la solicitud y la cotización', 'Tarifas', 'Agenda y despacho', 'Solicitudes', 'Seguridad']);
     const vigencia = r.body.grupos[0].parametros[0];
     expect(vigencia).toMatchObject({ clave: 'cotizacion.vigencia_dias', etiqueta: 'Vigencia de la cotización', tipo: 'entero', minimo: 1, maximo: 90, provisional: true });
     const claves = r.body.grupos.flatMap((g: { parametros: { clave: string }[] }) => g.parametros.map((p) => p.clave));

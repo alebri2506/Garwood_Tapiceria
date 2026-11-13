@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { crearApp } from '../src/app.js';
 import { prisma } from '../src/shared/infrastructure/prisma.js';
 import { hoyNegocio, leerFecha, motivoSinRecojo } from '../src/modules/comercial/domain/calendario.js';
-import { estadoInicial, siguientePaso } from '../src/modules/comercial/domain/solicitud.js';
+import { estadoInicial, estadoVisible, etapaDe, siguientePaso } from '../src/modules/comercial/domain/solicitud.js';
 import type { AlmacenArchivos } from '../src/shared/infrastructure/archivos.js';
 import { unlink } from 'node:fs/promises';
 
@@ -38,27 +38,27 @@ let catalogo: {
 };
 const tipo = (codigo: string) => catalogo.tiposMueble.find((t) => t.codigo === codigo)!;
 
-/** Próximo día con recojo (lunes a sábado, sin feriados). */
-function diaConRecojo(desde = 1) {
-  const d = leerFecha(hoyNegocio())!;
-  d.setUTCDate(d.getUTCDate() + desde);
-  while (motivoSinRecojo(d.toISOString().slice(0, 10), 60)) d.setUTCDate(d.getUTCDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
+/** Horas de recojo libres según la API: cada solicitud de prueba toma una distinta (una hora = un recojo). */
+let libres: { fecha: string; hora: string }[] = [];
+const horaLibre = (hora?: string) => {
+  const i = hora ? libres.findIndex((x) => x.hora === hora) : 0;
+  if (i < 0) throw new Error('sin horas de recojo libres');
+  return libres.splice(i, 1)[0]!;
+};
 function domingo() {
   const d = leerFecha(hoyNegocio())!;
   do d.setUTCDate(d.getUTCDate() + 1); while (d.getUTCDay() !== 0);
   return d.toISOString().slice(0, 10);
 }
 
-const base = () => ({
+const base = (recojo = horaLibre()) => ({
   muebles: [{ tipoMuebleId: tipo('s3').id, servicio: 'retapizado', cantidad: 1, modoTela: 'una', telas: [{ materialId: catalogo.telas[0]!.id }] }],
   tela: 'catalogo',
   mismaTela: true,
   traslado: 'delivery',
   direccion: { tipo: 'nueva', texto: '48 Park St, Montclair, NJ 07042', guardar: true },
-  fechaPrefRecojo: diaConRecojo(),
-  franjaRecojo: 'manana',
+  fechaPrefRecojo: recojo.fecha,
+  horaPrefRecojo: recojo.hora,
 });
 
 function enviar(datos: unknown, archivos: { campo: string; nombre: string; tipo: string; contenido: Buffer }[] = [{ campo: 'mueble_0', nombre: 'frente.jpg', tipo: 'image/jpeg', contenido: JPG }], t = token) {
@@ -71,6 +71,8 @@ beforeAll(async () => {
   const login = await request(app).post('/api/auth/login').send({ identificador: 'laura.mendez@correo.com', contrasena: process.env.SEED_CONTRASENA, recordarme: false });
   token = login.body.token;
   catalogo = (await request(app).get('/api/solicitudes/catalogo').set('Authorization', `Bearer ${token}`)).body;
+  const dispo = (await request(app).get('/api/solicitudes/recojo/disponibilidad').set('Authorization', `Bearer ${token}`)).body;
+  libres = dispo.dias.flatMap((d: { fecha: string; horas: { hora: string; libre: boolean }[] }) => d.horas.filter((h) => h.libre).map((h) => ({ fecha: d.fecha, hora: h.hora })));
 });
 afterAll(() => prisma.$disconnect());
 
@@ -84,6 +86,16 @@ describe('CU-C01 reglas de la solicitud', () => {
     expect(siguientePaso('domicilio')).toBe('visita');
   });
 
+  it('A3: cada estado cae en una de las 4 etapas, y la visita espera «visita»', () => {
+    expect(etapaDe('En espera de cita')).toBe('Cita / visita');
+    expect(etapaDe('Nueva')).toBe('Por cotizar');
+    expect(etapaDe('Atendida')).toBe('Por cotizar');
+    expect(etapaDe('Cotizada')).toBe('Esperando al cliente');
+    for (const e of ['Vencida', 'Descartada']) expect(etapaDe(e)).toBe('Cerradas');
+    expect(estadoVisible('En espera de cita', 'domicilio')).toBe('En espera de visita');
+    expect(estadoVisible('En espera de cita', 'local')).toBe('En espera de cita');
+  });
+
   it('no hay recojos en domingo, feriados ni fechas pasadas', () => {
     expect(motivoSinRecojo('2026-11-08', 60, '2026-11-07')).toMatch(/domingos/);
     expect(motivoSinRecojo('2026-11-26', 60, '2026-11-07')).toMatch(/Thanksgiving/);
@@ -94,11 +106,13 @@ describe('CU-C01 reglas de la solicitud', () => {
 });
 
 describe('CU-C01 catálogo y acceso', () => {
-  it('muestra los tipos de mueble con sus partes y solo las telas activas', () => {
+  it('muestra los tipos de mueble con sus partes y solo las telas activas que se ofrecen en la web (A15b)', () => {
     expect(catalogo.tiposMueble).toHaveLength(13);
     expect(tipo('s3').partes).toHaveLength(6);
-    expect(catalogo.telas.map((t) => t.nombre)).not.toContain('Terciopelo Gris 300');
-    expect(catalogo.telas.length).toBeGreaterThanOrEqual(9);
+    const nombres = catalogo.telas.map((t) => t.nombre);
+    expect(nombres).not.toContain('Terciopelo Gris 300'); // descontinuada
+    expect(nombres).not.toContain('Estampado Floral'); // «Solo en el taller»
+    expect(catalogo.telas.length).toBeGreaterThanOrEqual(8);
   });
 
   it('pide sesión y solo deja entrar a clientes (RG-07)', async () => {
@@ -167,7 +181,7 @@ describe('CU-C01 registrar solicitud', () => {
     expect(r1.body.errores['muebles.0.medidas']).toMatch(/medidas/);
     expect(r1.body.errores['muebles.0.acabado']).toMatch(/acabado/);
 
-    const con = { ...sin, fechaPrefRecojo: undefined, franjaRecojo: undefined, muebles: [{ ...sin.muebles[0], medidas: '160 × 120 cm', acabado: 'capitoneado' }] };
+    const con = { ...sin, fechaPrefRecojo: undefined, horaPrefRecojo: undefined, muebles: [{ ...sin.muebles[0], medidas: '160 × 120 cm', acabado: 'capitoneado' }] };
     const r2 = await enviar(con);
     expect(r2.status).toBe(201);
   });
@@ -247,5 +261,62 @@ describe('CU-C01 registrar solicitud', () => {
     expect(res.status).toBe(200);
     expect(res.body.length).toBeGreaterThanOrEqual(3);
     expect(res.body[0]).toMatchObject({ codigo: expect.stringMatching(/^SOL-/), muebles: expect.any(Array) });
+  });
+});
+
+describe('W2 · recojo preferido por hora (reserva la agenda)', () => {
+  const auth = (t: string) => ({ Authorization: `Bearer ${t}` });
+  const libreEn = async (fecha: string, hora: string) => {
+    const d = (await request(app).get('/api/solicitudes/recojo/disponibilidad').set(auth(token))).body.dias.find((x: { fecha: string }) => x.fecha === fecha);
+    return d.horas.find((h: { hora: string }) => h.hora === hora) as { libre: boolean; motivo: string | null };
+  };
+
+  it('ofrece horas de 1 hora en las franjas del taller, sin domingos', async () => {
+    const r = await request(app).get('/api/solicitudes/recojo/disponibilidad').set(auth(token));
+    expect(r.status).toBe(200);
+    expect(r.body.horas).toEqual(['09:00', '10:00', '11:00', '15:00', '16:00']);
+    expect(r.body.duracionMin).toBe(60);
+    for (const d of r.body.dias) expect(new Date(`${d.fecha}T00:00:00Z`).getUTCDay()).not.toBe(0);
+  });
+
+  it('al enviar, la hora queda reservada: sale ocupada, nadie más la toma y la agenda la muestra', async () => {
+    const recojo = horaLibre('10:00');
+    const s = await enviar(base(recojo));
+    expect(s.status).toBe(201);
+    const db = await prisma.solicitud.findUniqueOrThrow({ where: { codigo: s.body.codigo } });
+    expect(db).toMatchObject({ horaPrefRecojo: '10:00', franjaRecojo: 'manana' });
+
+    expect(await libreEn(recojo.fecha, '10:00')).toMatchObject({ libre: false, motivo: 'Hora ocupada' });
+    const otra = await enviar(base(recojo));
+    expect(otra.status).toBe(409);
+    expect(otra.body.mensaje).toMatch(/ocupada/);
+
+    // Los turnos de cita que chocan con esa hora tampoco están libres.
+    const local = await request(app).get(`/api/citas/disponibilidad?tipo=local&desde=${recojo.fecha}&dias=1`).set(auth(token));
+    const turnos = local.body.dias[0].turnos as { hora: string; libre: boolean }[];
+    expect(turnos.filter((x) => x.hora === '10:00' || x.hora === '10:30').every((x) => !x.libre)).toBe(true);
+
+    const admin = (await request(app).post('/api/auth/login').send({ identificador: 'admin', contrasena: process.env.SEED_CONTRASENA })).body.token;
+    const semana = await request(app).get(`/api/admin/agenda?desde=${recojo.fecha}`).set(auth(admin));
+    expect(semana.body.recojos.find((x: { solicitud: string }) => x.solicitud === s.body.codigo)).toMatchObject({ hora: '10:00', hasta: '11:00' });
+
+    // Al descartarla, la hora se libera.
+    await request(app).post(`/api/admin/solicitudes/${s.body.codigo}/descartar`).set(auth(admin)).send({ motivo: 'Solicitud duplicada' });
+    expect((await libreEn(recojo.fecha, '10:00')).libre).toBe(true);
+  });
+
+  it('una hora que choca con un turno bloqueado sale bloqueada y no se acepta', async () => {
+    const recojo = horaLibre('15:00');
+    const admin = (await request(app).post('/api/auth/login').send({ identificador: 'admin', contrasena: process.env.SEED_CONTRASENA })).body.token;
+    expect((await request(app).post('/api/admin/agenda/bloqueos').set(auth(admin)).send({ bloques: [{ fecha: recojo.fecha, hora: '15:30' }] })).status).toBe(201);
+    expect(await libreEn(recojo.fecha, '15:00')).toMatchObject({ libre: false, motivo: 'Hora bloqueada' });
+    expect((await enviar(base(recojo))).status).toBe(409);
+  });
+
+  it('pide la hora y solo acepta las horas del calendario', async () => {
+    const sinHora = await enviar({ ...base(), horaPrefRecojo: undefined });
+    expect(sinHora.body.errores?.horaPrefRecojo).toMatch(/hora que prefiere/);
+    const rara = await enviar({ ...base(), horaPrefRecojo: '13:00' });
+    expect(rara.body.mensaje).toMatch(/horas de recojo/);
   });
 });

@@ -6,11 +6,19 @@ import { feriados, leerFecha } from './calendario.js';
 
 const ZONA = 'America/New_York';
 
+/** "09:30-12:00" (o "9:30–12:00", como lo guarda A14) → minutos de inicio y fin. */
+export function leerRango(rango: string) {
+  const m = /^(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})$/.exec(rango.trim());
+  if (!m) throw new Error(`Rango de horario inválido: ${rango}`);
+  return { desde: +m[1]! * 60 + +m[2]!, hasta: +m[3]! * 60 + +m[4]! };
+}
+
+/** "HH:MM" → minutos desde las 00:00. */
+export const minutosDe = (hora: string) => +hora.slice(0, 2) * 60 + +hora.slice(3, 5);
+
 /** "09:30-12:00" → turnos de `duracion` minutos que empiezan dentro del rango. */
 export function turnosDe(rango: string, duracion: number): string[] {
-  const m = /^(\d{2}):(\d{2})-(\d{2}):(\d{2})$/.exec(rango);
-  if (!m) throw new Error(`Rango de horario inválido: ${rango}`);
-  const desde = +m[1]! * 60 + +m[2]!, hasta = +m[3]! * 60 + +m[4]!;
+  const { desde, hasta } = leerRango(rango);
   const turnos: string[] = [];
   for (let t = desde; t + duracion <= hasta; t += duracion) turnos.push(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`);
   return turnos;

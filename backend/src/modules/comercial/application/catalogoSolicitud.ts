@@ -3,12 +3,15 @@ import { parametroNumero, parametroTexto } from '../../../shared/infrastructure/
 import { LIMITE_BYTES, MIMES_ACEPTADOS } from '../../../shared/infrastructure/archivos.js';
 import { ACABADOS, SERVICIOS } from '../domain/solicitud.js';
 
-/** Lo que el asistente W2 necesita para armar la solicitud: muebles con sus partes, servicios, telas activas y franjas. */
-export async function consultarCatalogo() {
+/**
+ * Lo que el asistente W2 necesita para armar la solicitud: muebles con sus partes, servicios, telas activas y franjas.
+ * `soloWeb` (el cliente): solo las telas marcadas «Mostrar al cliente en Telas en línea» (A15b); el Administrador ve todas.
+ */
+export async function consultarCatalogo(soloWeb = false) {
   const [tipos, telas, maxMuebles, maxArchivos, diasRecojo, manana, tarde] = await Promise.all([
     prisma.tipoMueble.findMany({ where: { activo: true }, orderBy: { orden: 'asc' }, include: { partes: { orderBy: { orden: 'asc' } } } }),
     // CU-C01: solo telas activas.
-    prisma.material.findMany({ where: { categoria: 'tela', activo: true }, orderBy: [{ familia: 'asc' }, { nombre: 'asc' }] }),
+    prisma.material.findMany({ where: { categoria: 'tela', activo: true, ...(soloWeb ? { enWeb: true } : {}) }, orderBy: [{ familia: 'asc' }, { nombre: 'asc' }] }),
     parametroNumero(prisma, 'solicitud.max_muebles'),
     parametroNumero(prisma, 'solicitud.max_archivos_mueble'),
     parametroNumero(prisma, 'recojo.dias_anticipacion_max'),

@@ -31,14 +31,13 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
 7. **Traslado (paso 3, solo si no hay cita ni visita):**
    - **Delivery** (recojo y entrega, un solo costo según distancia y tamaño) o **Lo llevo y lo recojo yo**.
    - En fabricación a medida: "¿Cómo recibe su mueble nuevo?", con entrega a domicilio o retiro en el taller, sin fecha de recojo.
-   - **Recojo preferido (solo con Delivery):** mini agenda semanal por **día + franja**, no por horas:
-     - franja **mañana 9:00–12:00** o **tarde 15:00–17:00** (parámetros `taller.franja_manana` y `taller.franja_tarde`); de 12:00 a 15:00 está cerrado;
-     - de lunes a sábado, sin domingos ni feriados;
-     - se puede elegir hasta 4 semanas adelante;
-     - cada franja tiene un **cupo** de recojos; una franja llena aparece como «Llena» y no se puede elegir (valor del cupo: ver F);
-     - es una **preferencia**: la hora exacta la fija el administrador al planificar la salida (A13), y el recojo ocurre después de aceptar la cotización;
-     - los recojos **no** van en la Agenda de citas (ver `agenda.md`).
-     - *Decidido con el asesor (clase del 04/11): el cliente indica en qué parte del día estará en casa; se descartó elegir una hora exacta.*
+   - **Recojo preferido (solo con Delivery) · cambiado el 11/11 con el diseño nuevo:** mini agenda semanal por **día + hora** (antes era por franja):
+     - horas de **1 hora** (parámetro `recojo.duracion_min` = 60) dentro de las franjas del taller: **9:00, 10:00, 11:00, 15:00 y 16:00** (`taller.franja_manana` 9:00–12:00 y `taller.franja_tarde` 15:00–17:00); de 12:00 a 15:00 está cerrado;
+     - de lunes a sábado, sin domingos ni feriados, hasta `recojo.dias_anticipacion_max` días adelante (4 semanas);
+     - **está ligada a la Agenda de citas:** una hora sale **«Ocup.»** si choca con **cualquier** turno ocupado (cita, visita con hora u otro recojo) o bloqueado; por ejemplo, 10:00–11:00 está ocupada si hay algo a las 10:00 o a las 10:30;
+     - al enviar la solicitud, la hora **queda reservada en la agenda** (1 hora) mientras la solicitud espera (Nueva, Atendida o Cotizada); se libera si se descarta, vence o se rechaza. Dos clientes no pueden tomar la misma hora (índice único en la base);
+     - sigue siendo una **preferencia**: el recojo ocurre después de aceptar la cotización y el administrador lo confirma al planificar la salida (A13).
+     - *Antes (clase del 04/11) se había descartado la hora exacta; el equipo lo cambió el 11/11 para seguir el diseño nuevo. Con esto ya no hace falta un cupo por franja: cada hora es un recojo.*
    - Con **«Lo llevo y lo recojo yo»** no se pide día ni franja.
 8. **Con "Ver en el local" o "Visita a domicilio" la solicitud tiene 3 pasos** (Mueble y fotos → Tela → Cita/Visita). No hay paso de traslado: se define en la cita.
 9. **Navegación del asistente:**
@@ -83,7 +82,13 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
    - **Estadísticas (A21)** van aparte y son mensuales: ventas, cobros y margen **comparados con el mes anterior y con el mismo mes del año anterior** (si aún no hay datos de ese año, se indica), formas de pago en porcentaje y lo que más se vende.
    - Los indicadores de la tesis (valor inicial y meta) **no** se muestran en las pantallas.
    - *Decidido con el asesor (clase del 04/11): "el dashboard operacional es para que el paciente no se muera; lo mensual es estadística".*
-8. **Mis pedidos del cliente (W6c):** cada tarjeta muestra su estado y "qué le toca" al cliente. La visita a domicilio tiene sus estados (Visita programada / No lo encontramos / Preparando cotización).
+8. **Solicitudes y cotizaciones (A3 · diseño del 11/11):** el menú tiene **una sola opción**, «Solicitudes y cotizaciones»; la lista de A4 Cotizaciones se eliminó (A4 queda solo como la pantalla de una cotización).
+   - Cada solicitud avanza por **4 etapas**, una por pestaña: **Cita / visita** (En espera de cita / de visita) → **Por cotizar** (Nueva, Atendida) → **Esperando al cliente** (Esperando respuesta, Aceptada · falta adelanto) → **Cerradas** (Aceptada → pedido, Rechazada, Vencida, Descartada).
+   - Arriba: indicadores Por cotizar, Esperando al cliente y Aceptadas; filtro por **fecha de solicitud** (Todas, Hoy, Últimos 7 días, Este mes, Rango).
+   - La ficha tiene **un solo botón** con lo que toca hacer (Ver cita, Ir a la cita, Ver visita, Armar cotización, Ver cotización…).
+   - La etapa no se guarda: se calcula del estado. Los estados de la cotización (Esperando respuesta, Aceptada, Rechazada) llegarán con el backend de A4; hasta entonces «Esperando al cliente» queda vacía.
+9. **Agenda · quitar un bloqueo (11/11):** al tocar un horario bloqueado se ve en «Configurar agenda» con el botón «Quitar». El bloqueo **no se borra**: queda anulado con quién y cuándo, y el turno vuelve a estar libre.
+10. **Mis pedidos del cliente (W6c):** cada tarjeta muestra su estado y "qué le toca" al cliente. La visita a domicilio tiene sus estados (Visita programada / No lo encontramos / Preparando cotización).
 
 ## D. Seguridad y parámetros (A20, A14 · decidido el 10/11)
 
@@ -189,17 +194,51 @@ Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más ad
 2. **Último ingreso:** solo fecha y hora ("Último ingreso: hoy 09:12"), sacado de la bitácora. Es el ingreso anterior al actual.
 3. **Desactivar la cuenta:** no está en W10; lo hará el Administrador en A17 (H02).
 
+## H. Almacén e Inventario y Parámetros (diseño del 12/11)
+
+### H.1 Solicitud y pedido son entidades distintas (CU-C14)
+1. **Solicitud** (`SOL-0000`): lo que pide el cliente; puede terminar sin pedido (descartada, vencida, rechazada).
+2. **Pedido** (`PED-0000`, código propio): nace cuando se acepta la cotización y se paga el adelanto (o el adelanto es 0 %).
+   Tabla `pedido` enlazada a su solicitud de origen; la cotización congelada se enlaza cuando exista su backend.
+3. Inventario, taller, pagos y despacho trabajan sobre el **pedido** (`pedido_id`), no sobre la solicitud.
+4. En A3, una solicitud que ya tiene pedido queda en **Cerradas · «Aceptada → pedido PED-…»** (se calcula, no se guarda).
+5. Por ahora los pedidos son **datos de prueba** (seed `seed-inventario.ts`); A6 Pedidos sigue con datos de ejemplo.
+
+### H.2 Inventario: cinco pestañas y el conteo
+1. **Stock (A15):** en el estante, reservado, **disponible = en el estante − reservado**, mínimo, «alcanza para» y estado
+   (OK · Bajo el mínimo · Falta para un pedido · Pedido). Nada de esto se guarda: se calcula de reservas, compras y movimientos.
+2. **Telas (A15b):** muestrario digital **sin cantidades**. Descontinuar = `activo` en falso (no se borra). «Mostrar al cliente en
+   Telas en línea» (`en_web`): el cliente en W2 solo ve las telas activas y en la web; el Administrador ve todas.
+3. **Reponer (A8):** telas para encargar (tras el adelanto) · materiales por proveedor con **cantidad sugerida =
+   consumo × `inventario.semanas_compra` − disponible − lo que ya viene, nunca menos de lo que falta para el mínimo** · por llegar.
+   GARWEB no le escribe al proveedor: «Marcar como pedido» y «Llegó» solo lo anotan. «Llegó» suma todo lo pedido; si llegó
+   menos, se corrige en Movimientos («Llegó menos de lo pedido»). La tela llega asignada a su pedido y **no entra al stock**.
+4. **Movimientos (A8c):** kardex con saldo. «Corregir stock» exige motivo; «Retiro para un pedido» y «Sobró de un pedido»
+   exigen un pedido en proceso. Nunca sale más de lo que hay en el estante.
+5. **Proveedores (A8p):** nombre, teléfono o WhatsApp, días que tarda (desde–hasta) y si vende materiales de stock o telas.
+6. **Conteo (A9):** a ciegas (la lista no muestra lo que dice el sistema); cada diferencia se ajusta con motivo y lo que
+   coincide queda como constancia «Conteo de inventario · coincide».
+7. **Consumo promedio:** retiros − devoluciones de pedidos de las últimas `inventario.semanas_promedio` semanas (parámetro
+   interno, 4) ÷ semanas.
+8. **Unidad de cada material:** se elige al registrarlo y no se cambia una vez que tiene movimientos.
+9. **En esta entrega solo el Administrador** registra movimientos; los retiros y devoluciones del taller (T2/T3) se agregan con
+   la app del taller (la API ya descuenta la reserva al retirar para un pedido).
+
+### H.3 Parámetros (A14)
+1. **Unidades de la solicitud y la cotización:** telas (yarda/metro) y medidas del mueble (pulgada/centímetro). **Solo cambia
+   cómo se muestra**: lo guardado sigue en yardas y pulgadas (1 yd = 0.914 m · 1 in = 2.54 cm). Tipo de parámetro nuevo «opción».
+2. Se agregan «Compra sugerida · semanas de consumo» (2) y «Plazo estándar para terminar un pedido» (14 días).
+3. Salen de la pantalla (no se borran, quedan sin grupo): «Aviso de precio por revisar» y «Horas extra por tela difícil».
+
 ## F. Pendientes por confirmar con el dueño (vía Alejandro)
 - Duración real de la cita para ver telas (prototipo: 30 min).
 - Límite de distancia para la visita a domicilio gratuita.
 - Tarifas reales de transporte por tamaño de carga.
 - Qué pasa si la tela que trae el cliente no alcanza (propuesta: recotización V2).
 - Si "¿Qué tela busca?" es obligatorio u opcional (y si "¿Qué tela trae?" es opcional).
-- **Cupo de recojos por franja** (cuántos caben en la mañana y en la tarde). Mientras no se confirme, el sistema no limita el cupo.
 - Fotos y códigos reales de las telas: están en los libros del dueño; por ahora el catálogo usa datos de prueba.
 
 ## G. Por decidir en el equipo (reunión del 08/11)
 - A3: quitar «Pedírselas por enlace» y el estado «Esperando fotos».
 - A3: «¿Por dónde se comunicó?» como lista desplegable en vez de tarjetas.
-- Menú: si «Cotizaciones» se junta con «Solicitudes».
 - Supabase desde ahora o recién en Tesis 2 (hoy se trabaja en local con Docker).

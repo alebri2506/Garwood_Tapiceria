@@ -5,7 +5,7 @@
 //    prototipo A14 y la ayuda "Provisional: por confirmar con el dueño" (D.3.2).
 import { Prisma, type PrismaClient } from '@prisma/client';
 
-type Tipo = 'entero' | 'decimal' | 'porcentaje' | 'monto' | 'horario' | 'texto';
+type Tipo = 'entero' | 'decimal' | 'porcentaje' | 'monto' | 'horario' | 'texto' | 'opcion';
 
 interface DefParametro {
   clave: string;
@@ -17,6 +17,8 @@ interface DefParametro {
   minimo?: number;
   maximo?: number;
   ayuda?: string;
+  /** Solo tipo "opcion": "valor=Etiqueta|valor=Etiqueta". */
+  opciones?: string;
 }
 
 const PROVISIONAL = 'Provisional: por confirmar con el dueño.';
@@ -40,13 +42,20 @@ export const GRUPOS_PARAMETROS: { grupo: string; parametros: DefParametro[] }[] 
     ],
   },
   {
+    // Solo cambia cómo se MUESTRA: telas y medidas se guardan siempre en yardas y pulgadas (decisiones H.6).
+    grupo: 'Unidades de la solicitud y la cotización',
+    parametros: [
+      { clave: 'unidad.telas', valor: 'yd', tipo: 'opcion', opciones: 'yd=Yarda|m=Metro', etiqueta: 'Telas', descripcion: 'Unidad en que se muestran las telas que se cotizan (1 yd = 0.914 m)' },
+      { clave: 'unidad.medidas', valor: 'in', tipo: 'opcion', opciones: 'in=Pulgada|cm=Centímetro', etiqueta: 'Medidas del mueble', descripcion: 'Unidad en que se muestran las medidas que el cliente escribe de su mueble (1 in = 2.54 cm)' },
+    ],
+  },
+  {
     grupo: 'Tarifas',
     parametros: [
       { clave: 'tarifa.hora_persona', valor: '15.00', unidad: 'USD/h', tipo: 'monto', minimo: 0, etiqueta: 'Hora persona', descripcion: 'Costo de una hora de mano de obra (CU-C06)', ayuda: prov() },
       { clave: 'tarifa.costos_fijos_pedido', valor: '60.00', unidad: 'USD', tipo: 'monto', minimo: 0, etiqueta: 'Costos fijos por pedido', descripcion: 'Costos fijos que se suman a cada pedido (CU-C06)', ayuda: prov() },
       { clave: 'tarifa.tela_referencia', valor: '17.00', unidad: 'USD/yd', tipo: 'monto', minimo: 0, etiqueta: 'Tela de referencia para plantillas', descripcion: 'Precio de tela usado solo en el precio de referencia de las plantillas (A16)', ayuda: prov('La cotización usa el precio de la tela que elige el cliente.') },
-      { clave: 'catalogo.dias_revisar_precio', valor: '180', unidad: 'días', tipo: 'entero', minimo: 0, etiqueta: 'Aviso de precio por revisar', descripcion: 'Pasado este plazo, el Catálogo marca "Revisar precio" (A15)', ayuda: prov() },
-      { clave: 'tarifa.tela_dificil_pct', valor: '20', unidad: '%', tipo: 'porcentaje', minimo: 0, maximo: 100, etiqueta: 'Horas extra por tela difícil', descripcion: 'Se suma a coser y tapizar cuando la tela es difícil (seda, terciopelo, cuero)', ayuda: prov() },
+      { clave: 'inventario.semanas_compra', valor: '2', unidad: 'semanas', tipo: 'entero', minimo: 1, maximo: 12, etiqueta: 'Compra sugerida · semanas de consumo', descripcion: 'Semanas de consumo que cubre la compra sugerida en Reponer (CU-A03)', ayuda: 'Reponer sugiere: consumo de estas semanas − disponible − lo que ya viene (nunca menos de lo que falta para el mínimo).' },
       { clave: 'transporte.carga_chica', valor: '15.00', unidad: 'USD', tipo: 'monto', minimo: 0, etiqueta: 'Transporte · carga chica (silla, cojín, otomán)', descripcion: 'Parte fija del transporte según el tamaño de la carga (C.4)', ayuda: prov() },
       { clave: 'transporte.carga_mediana', valor: '30.00', unidad: 'USD', tipo: 'monto', minimo: 0, etiqueta: 'Transporte · carga mediana (sillón, cabecera, banco)', descripcion: 'Parte fija del transporte según el tamaño de la carga (C.4)', ayuda: prov() },
       { clave: 'transporte.carga_grande', valor: '45.00', unidad: 'USD', tipo: 'monto', minimo: 0, etiqueta: 'Transporte · carga grande (sofá, cama, seccional)', descripcion: 'Parte fija del transporte según el tamaño de la carga (C.4)', ayuda: prov() },
@@ -66,7 +75,9 @@ export const GRUPOS_PARAMETROS: { grupo: string; parametros: DefParametro[] }[] 
       { clave: 'visita.franja_tarde', valor: '15:00-17:00', tipo: 'horario', etiqueta: 'Franja de visitas · tarde', descripcion: 'Franja de la tarde de las visitas a domicilio; una visita por franja (CU-C04)' },
       { clave: 'taller.franja_manana', valor: '9:00–12:00', tipo: 'horario', etiqueta: 'Franja de recojos y entregas · mañana', descripcion: 'Franja de la mañana para recojos y entregas' },
       { clave: 'taller.franja_tarde', valor: '15:00–17:00', tipo: 'horario', etiqueta: 'Franja de recojos y entregas · tarde', descripcion: 'Franja de la tarde para recojos y entregas (el taller cierra al mediodía)' },
+      { clave: 'recojo.duracion_min', valor: '60', unidad: 'min', tipo: 'entero', minimo: 15, etiqueta: 'Duración del recojo', descripcion: 'Tiempo que se reserva en la agenda por cada recojo preferido; el cliente elige la hora en W2 (CU-C01)' },
       { clave: 'recojo.dias_anticipacion_max', valor: '28', unidad: 'días', tipo: 'entero', minimo: 1, etiqueta: 'El cliente puede pedir el recojo hasta', descripcion: 'Hasta cuántos días adelante se puede pedir el recojo (CU-C01)' },
+      { clave: 'pedido.plazo_dias', valor: '14', unidad: 'días', tipo: 'entero', minimo: 1, maximo: 90, etiqueta: 'Plazo estándar para terminar un pedido', descripcion: 'Fecha para terminar = día en que nace el pedido + este plazo (CU-A05)', ayuda: prov('El dueño indicó 1 a 2 semanas.') },
       { clave: 'despacho.dias_aviso_terminado', valor: '7', unidad: 'días', tipo: 'entero', minimo: 0, etiqueta: 'Aviso de pedido terminado sin salida', descripcion: 'Días que un pedido terminado puede esperar sin salida antes de avisar', ayuda: prov() },
       { clave: 'entrega.horas_confirmar', valor: '24', unidad: 'h antes', tipo: 'entero', minimo: 0, etiqueta: 'Confirmar o reprogramar entrega hasta', descripcion: 'Horas antes de la entrega en que el cliente aún puede confirmarla o reprogramarla', ayuda: prov() },
       { clave: 'reclamo.plazo_dias', valor: '7', unidad: 'días', tipo: 'entero', minimo: 0, etiqueta: 'Plazo para reclamos', descripcion: 'Días tras la entrega en que el cliente puede reclamar (CU-D07)', ayuda: prov() },
@@ -92,16 +103,27 @@ export const GRUPOS_PARAMETROS: { grupo: string; parametros: DefParametro[] }[] 
   },
 ];
 
+/**
+ * Parámetros que usa el sistema pero no se muestran en A14 (grupo vacío). Incluye los que el diseño quitó de la
+ * pantalla: no se borran (RG-03), solo dejan de mostrarse.
+ */
+export const PARAMETROS_INTERNOS: DefParametro[] = [
+  { clave: 'inventario.semanas_promedio', valor: '4', unidad: 'semanas', tipo: 'entero', minimo: 1, etiqueta: 'Consumo promedio · semanas que se miran', descripcion: 'Semanas de salidas que se promedian para el consumo semanal de cada material (A15, A8)' },
+  { clave: 'catalogo.dias_revisar_precio', valor: '180', unidad: 'días', tipo: 'entero', minimo: 0, etiqueta: 'Aviso de precio por revisar', descripcion: 'Ya no se muestra en A14 (diseño del 12/11)' },
+  { clave: 'tarifa.tela_dificil_pct', valor: '20', unidad: '%', tipo: 'porcentaje', minimo: 0, maximo: 100, etiqueta: 'Horas extra por tela difícil', descripcion: 'Ya no se muestra en A14 (diseño del 12/11)' },
+];
+
 const decimal = (n?: number) => (n == null ? null : new Prisma.Decimal(n));
 
 export async function sembrarParametros(prisma: PrismaClient) {
   let orden = 0;
-  for (const { grupo, parametros } of GRUPOS_PARAMETROS) {
+  const todos = [...GRUPOS_PARAMETROS, { grupo: null, parametros: PARAMETROS_INTERNOS }];
+  for (const { grupo, parametros } of todos) {
     for (const p of parametros) {
       orden += 10;
       const datos = {
         unidad: p.unidad ?? null, descripcion: p.descripcion, etiqueta: p.etiqueta, grupo, tipo: p.tipo,
-        minimo: decimal(p.minimo), maximo: decimal(p.maximo), ayuda: p.ayuda ?? null, orden,
+        minimo: decimal(p.minimo), maximo: decimal(p.maximo), ayuda: p.ayuda ?? null, opciones: p.opciones ?? null, orden,
       };
       // El valor solo se pone al crear: si ya existe, se respeta el que dejó el Administrador.
       await prisma.parametro.upsert({ where: { clave: p.clave }, update: datos, create: { clave: p.clave, valor: p.valor, ...datos } });

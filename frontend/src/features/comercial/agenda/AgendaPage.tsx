@@ -10,7 +10,7 @@ import { Toast } from '../../../shared/ui/Toast';
 import { adminSolicitudesApi, type FichaAdmin } from '../bandeja/adminApi';
 import { citasApi } from '../cita/citasApi';
 import { DIAS, MESES } from '../fechas';
-import { agendaApi, type CitaAgenda, type Semana } from './agendaApi';
+import { agendaApi, type CitaAgenda, type RecojoAgenda, type Semana } from './agendaApi';
 import './agenda.css';
 
 // ---------------------------------------------------------------- utilidades de fecha y hora
@@ -75,7 +75,9 @@ export function AgendaPage() {
   const [cfg, setCfg] = useState(false);
   const [blk, setBlk] = useState(false);
   const [bsel, setBsel] = useState<string[]>([]);
-  const [blkOk, setBlkOk] = useState<string | null>(null);
+  const [blkOk, setBlkOk] = useState<{ titulo: string; texto: string } | null>(null);
+  const [selBloqueo, setSelBloqueo] = useState<number | null>(null);
+  const [selRecojo, setSelRecojo] = useState<string | null>(null);
   const [aviso, setAviso] = useState<{ titulo: string; texto: string } | null>(null);
   const [falla, setFalla] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -130,17 +132,22 @@ export function AgendaPage() {
       if (c.tipo === 'domicilio') for (let m = sem.duracionMin; m < c.duracionMin; m += sem.duracionMin) poner(`${c.fecha}|${sumar(c.hora, m)}`, { c, cont: true });
     }
     const sinHora = sem.citas.filter((c) => !c.hora);
-    return { porTurno, sinHora };
+    // W2: los recojos reservados ocupan cada turno que tocan (bloque de 1 hora).
+    const recojoEn = new Map<string, { r: RecojoAgenda; cont: boolean }>();
+    for (const r of sem.recojos) {
+      sem.turnos.filter((h) => h >= r.hora && h < r.hasta).forEach((h, k) => recojoEn.set(`${r.fecha}|${h}`, { r, cont: k > 0 }));
+    }
+    return { porTurno, sinHora, recojoEn };
   }, [sem]);
 
   if (error) return <Alert tone="danger" title="No pudimos cargar la agenda">{error} <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" onClick={recargar}>Reintentar</button></Alert>;
   if (!sem || !datos) return <p className="muted" role="status">Cargando la agenda…</p>;
 
-  const { porTurno, sinHora } = datos;
+  const { porTurno, sinHora, recojoEn } = datos;
   const cerradoDe = (fecha: string) => sem.dias.find((d) => d.fecha === fecha)?.cerrado ?? null;
   const bloqueo = (fecha: string, hora: string) => sem.bloqueos.find((b) => b.fecha === fecha && hora >= b.horaInicio && hora < b.horaFin);
   const pasado = (fecha: string, hora: string) => fecha < sem.hoy || (fecha === sem.hoy && hora <= sem.ahora);
-  const libre = (fecha: string, hora: string) => sem.turnos.includes(hora) && !porTurno.has(`${fecha}|${hora}`) && !bloqueo(fecha, hora) && !cerradoDe(fecha) && !pasado(fecha, hora);
+  const libre = (fecha: string, hora: string) => sem.turnos.includes(hora) && !porTurno.has(`${fecha}|${hora}`) && !recojoEn.has(`${fecha}|${hora}`) && !bloqueo(fecha, hora) && !cerradoDe(fecha) && !pasado(fecha, hora);
   const nTurnosVisita = Math.max(1, Math.ceil(sem.visitaDuracionMin / sem.duracionMin));
   const horasDe = (hora: string, casa: boolean) => Array.from({ length: casa ? nTurnosVisita : 1 }, (_, k) => sumar(hora, k * sem.duracionMin));
   const cabe = (fecha: string, hora: string, casa: boolean) => horasDe(hora, casa).every((h) => libre(fecha, h));
@@ -153,8 +160,9 @@ export function AgendaPage() {
   const hoyIdx = sem.dias.findIndex((d) => d.fecha === sem.hoy);
   const proxima = sem.citas.filter((c) => c.fecha === sem.hoy && c.estado === 'Programada' && c.hora && c.hora > sem.ahora).sort((a, b) => a.hora!.localeCompare(b.hora!))[0];
   const s = sem.citas.find((c) => c.id === sel) ?? null;
+  const recojoSel = selRecojo ? sem.recojos.find((r) => r.solicitud === selRecojo) ?? null : null;
 
-  const elegirCita = (c: CitaAgenda) => { setSel(c.id); setAviso(null); setFalla(null); };
+  const elegirCita = (c: CitaAgenda) => { setSel(c.id); setSelRecojo(null); setAviso(null); setFalla(null); };
   const salirDeAgendar = () => { setAg(null); setBk(null); setFalla(null); if (params.has('agendar')) setParams({}, { replace: true }); };
 
   // ---------------------------------------------------------------- acciones
@@ -203,7 +211,15 @@ export function AgendaPage() {
     setBlk(false);
     setBsel([]);
     setCfg(true);
-    setBlkOk(`${r.bloqueados} ${r.bloqueados === 1 ? 'bloque bloqueado' : 'bloques bloqueados'}. Los clientes ya no los ven.`);
+    setBlkOk({ titulo: 'Bloqueo guardado', texto: `${r.bloqueados} ${r.bloqueados === 1 ? 'bloque bloqueado' : 'bloques bloqueados'}. Los clientes ya no los ven.` });
+    recargar();
+  });
+
+  /** Quitar un bloqueo: queda anulado (no se borra) y el turno vuelve a estar libre para los clientes. */
+  const quitarBloqueo = (b: { id: number; fecha: string; horaInicio: string | null }) => hacer(async () => {
+    await agendaApi.quitarBloqueo(b.id);
+    setSelBloqueo(null);
+    setBlkOk({ titulo: 'Bloqueo quitado', texto: `${capital(largo(b.fecha))}${b.horaInicio ? ` · ${b.horaInicio}` : ''} vuelve a estar libre para los clientes.` });
     recargar();
   });
 
@@ -226,10 +242,31 @@ export function AgendaPage() {
         </button>
       );
     }
+    const rec = recojoEn.get(k);
+    if (rec) {
+      return (
+        <button type="button" className={`ag-ap ag-rec${selRecojo === rec.r.solicitud ? ' ag-sel' : ''}${filtro === 1 ? ' ag-dim' : ''}`}
+          aria-pressed={selRecojo === rec.r.solicitud} aria-label={`Recojo preferido de ${rec.r.cliente}, ${largo(fecha)} de ${rec.r.hora} a ${rec.r.hasta}`}
+          onClick={() => { setSelRecojo(rec.r.solicitud); setSel(null); setAviso(null); }}>
+          {enDia
+            ? <><div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}><b>{rec.r.cliente}</b><span>Recojo preferido · {rec.r.mueble}{rec.cont ? ' · continúa (1 hora)' : ''}</span></div><StatusChip status="Recojo" tone="warning" /></>
+            : <><span className="ag-ty"><Icon name="truck" size={14} /></span><b>{rec.r.cliente}</b><span>{rec.cont ? 'continúa' : 'Recojo preferido'}</span></>}
+        </button>
+      );
+    }
     const cierre = cerradoDe(fecha);
     if (cierre) return <div className="ag-off"><Icon name="lock" size={14} />{enDia ? `Cerrado · ${cierre}` : cierre}</div>;
     const b = bloqueo(fecha, hora);
-    if (b) return <div className="ag-off"><Icon name="lock" size={14} /><span>{enDia ? `Bloqueado · ${b.motivo}` : b.motivo}</span></div>;
+    // Tocar un horario bloqueado lo muestra en «Configurar agenda», donde se puede quitar.
+    if (b) {
+      return (
+        <button type="button" className={selBloqueo === b.id ? 'ag-off ag-off-btn ag-on' : 'ag-off ag-off-btn'} title="Ver o quitar el bloqueo"
+          aria-label={`Bloqueado ${largo(fecha)} a las ${hora}: ${b.motivo}. Ver o quitar el bloqueo`} disabled={Boolean(ag) || blk}
+          onClick={() => { setSelBloqueo(b.id); setCfg(true); setBlkOk(null); setFalla(null); }}>
+          <Icon name="lock" size={14} /><span>{enDia ? `Bloqueado · ${b.motivo}` : b.motivo}</span>
+        </button>
+      );
+    }
     if (pasado(fecha, hora)) return <div className="ag-past" title="Turno pasado" />;
     const { w, n } = corto(fecha);
     if (blk) {
@@ -378,7 +415,7 @@ export function AgendaPage() {
               <span><i style={{ background: 'var(--success-500)' }} />Atendida</span>
               <span><i style={{ background: 'var(--error-500)' }} />No asistió</span>
               <span><i style={{ background: '#7C3AED' }} />Visita a domicilio</span>
-              <span><i style={{ background: 'var(--warning-500)' }} />Retiro en taller</span>
+              <span><i style={{ background: 'var(--warning-500)' }} />Recojo preferido / retiro</span>
               <span><i style={{ background: 'repeating-linear-gradient(135deg,var(--line-strong) 0 2px,transparent 2px 4px)' }} />Bloqueado</span>
               <span>Las citas se agendan desde la solicitud (Solicitudes › Agendar cita); aquí se elige el turno</span>
             </div>
@@ -402,11 +439,14 @@ export function AgendaPage() {
               <p className="audit">Turnos de {sem.duracionMin} min (parámetro, en <Link to="/admin/parametros">Parámetros</Link>). Un turno = un cliente. El cliente solo ve los turnos libres.</p>
               <hr className="stitch" />
               <div className="between"><b style={{ fontSize: 15 }}>Bloqueos</b><button type="button" className="gw-btn gw-btn-sm gw-btn-secondary" onClick={() => { setBlk(true); setBsel([]); setCfg(false); setBlkOk(null); salirDeAgendar(); }}>+ Bloquear horario</button></div>
-              {blkOk && <Alert tone="success" title="Bloqueo guardado" compact>{blkOk}</Alert>}
-              {sem.proximosBloqueos.length === 0 && <p className="muted" style={{ fontSize: 13 }}>No hay bloqueos próximos.</p>}
-              {sem.proximosBloqueos.slice(0, 12).map((b) => (
-                <div key={b.id} className="ag-blk"><Icon name="lock" size={16} />
-                  <div><b>{corto(b.fecha).w} {corto(b.fecha).n} {MESES[fechaDe(b.fecha).getMonth()]!.slice(0, 3)} · {b.horaInicio ? `${b.horaInicio}–${b.horaFin}` : 'todo el día'}</b><small>{b.motivo}</small></div>
+              {blkOk && <Alert tone="success" title={blkOk.titulo} compact>{blkOk.texto}</Alert>}
+              {falla && <Alert tone="danger" title="No se pudo" compact>{falla}</Alert>}
+              {sem.proximosBloqueos.length === 0 && <p className="muted" style={{ fontSize: 13, margin: 0 }}>No hay horarios bloqueados.</p>}
+              {sem.proximosBloqueos.slice(0, 20).map((b) => (
+                <div key={b.id} className={selBloqueo === b.id ? 'ag-blk ag-blk-on' : 'ag-blk'}><Icon name="lock" size={16} />
+                  <div style={{ flex: 1 }}><b>{corto(b.fecha).w} {corto(b.fecha).n} {MESES[fechaDe(b.fecha).getMonth()]!.slice(0, 3)} · {b.horaInicio ? `${b.horaInicio}–${b.horaFin}` : 'todo el día'}</b><small>{b.motivo}</small></div>
+                  {/* Los días cerrados completos (feriados cargados como bloqueo) no se quitan desde aquí. */}
+                  {b.horaInicio && <button type="button" className="gw-btn gw-btn-sm gw-btn-ghost" disabled={ocupado} onClick={() => quitarBloqueo(b)}>Quitar</button>}
                 </div>
               ))}
             </section>
@@ -466,7 +506,26 @@ export function AgendaPage() {
 
           {!ag && !blk && !cfg && falla && <Alert tone="danger" title="No se pudo" compact>{falla}</Alert>}
 
-          {!ag && !blk && (s ? (
+          {!ag && !blk && recojoSel && (
+            <section className="ag-det" aria-labelledby="ag-rec-nombre">
+              <div className="between"><span className="ov">Recojo preferido</span><StatusChip status={recojoSel.estado} /></div>
+              <div className="ag-who">
+                <span className="ag-av" aria-hidden="true">{iniciales(recojoSel.cliente)}</span>
+                <div><h2 id="ag-rec-nombre">{recojoSel.cliente}</h2><small>{capital(largo(recojoSel.fecha))} · {recojoSel.hora}–{recojoSel.hasta}</small></div>
+              </div>
+              <dl className="ag-facts">
+                <div><span className="ag-ic"><Icon name="truck" size={16} /></span><dt>Tipo</dt><dd>Recojo a domicilio</dd></div>
+                <div><span className="ag-ic"><Icon name="inbox" size={16} /></span><dt>Solicitud</dt><dd>{recojoSel.solicitud}</dd></div>
+                <div><span className="ag-ic"><Icon name="sofa" size={16} /></span><dt>Mueble</dt><dd>{recojoSel.mueble}</dd></div>
+                <div><span className="ag-ic"><Icon name="user" size={16} /></span><dt>Teléfono</dt><dd><a href={`tel:${recojoSel.telefono}`}>{telefono(recojoSel.telefono)}</a></dd></div>
+                {recojoSel.direccion && <div><span className="ag-ic"><Icon name="map-pin" size={16} /></span><dt>Dirección</dt><dd>{recojoSel.direccion}</dd></div>}
+              </dl>
+              <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/admin/solicitudes?ver=${recojoSel.solicitud}`}>Ver la solicitud</Link>
+              <p className="audit" style={{ margin: 0 }}>Es la hora que el cliente prefiere para que pasemos. Queda reservada en la agenda mientras la solicitud espera; el recojo se confirma al planificar la salida, después de que acepte la cotización.</p>
+            </section>
+          )}
+
+          {!ag && !blk && !recojoSel && (s ? (
             <section className="ag-det" aria-labelledby="ag-sel-nombre">
               {aviso && <Toast title={aviso.titulo} onClose={() => setAviso(null)}>{aviso.texto}</Toast>}
               <div className="between"><span className="ov">Cita seleccionada</span><StatusChip status={s.solicitud.estado === 'Vencida' ? 'Vencida' : s.estado} /></div>
@@ -510,8 +569,8 @@ export function AgendaPage() {
               )}
               {s.estado === 'Atendida' && (
                 <>
-                  <Link className="gw-btn gw-btn-primary gw-btn-block" to="/admin/cotizaciones">Ver su cotización</Link>
-                  <p className="audit">Cita atendida. La cotización se arma desde esta visita y el cliente la recibe en su cuenta (W4).</p>
+                  <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/admin/solicitudes?ver=${s.solicitud.codigo}`}>Ver la solicitud</Link>
+                  <p className="audit">Cita atendida: la solicitud queda en Solicitudes y cotizaciones › Por cotizar. El cliente recibe la cotización en su cuenta (W4).</p>
                 </>
               )}
               {s.estado === 'No asistió' && (s.solicitud.estado === 'Vencida' ? (

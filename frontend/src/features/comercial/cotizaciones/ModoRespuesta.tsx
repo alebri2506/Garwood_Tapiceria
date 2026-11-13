@@ -58,7 +58,7 @@ export function ModoRespuesta({ cotizacion, onEstado }: { cotizacion: Cotizacion
           {guardada ? (
             <>
               <Toast title="Respuesta registrada">{detalle}</Toast>
-              <Link className="gw-btn gw-btn-secondary" style={{ alignSelf: 'flex-start' }} to={rechazada ? '/admin/cotizaciones' : '/admin/pagos'}>{rechazada ? 'Volver a Cotizaciones' : 'Ver el adelanto en Pagos'}</Link>
+              <Link className="gw-btn gw-btn-secondary" style={{ alignSelf: 'flex-start' }} to={rechazada ? '/admin/solicitudes?etapa=cerradas' : '/admin/pagos'}>{rechazada ? 'Volver a Cotizaciones' : 'Ver el adelanto en Pagos'}</Link>
             </>
           ) : (
             <button type="button" className="gw-btn gw-btn-primary" style={{ alignSelf: 'flex-start' }} disabled={incompleta}

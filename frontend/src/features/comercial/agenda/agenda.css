@@ -147,3 +147,12 @@
 .ag-vsh span { color: var(--ink-muted); }
 .ag-vsh.ag-sel { box-shadow: 0 0 0 2px var(--primary); }
 .ag-free.ag-hl:focus-visible, .ag-free.ag-bhl:focus-visible, .ag-vsh:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* Quitar bloqueos (diseño v6): el horario bloqueado se toca para verlo y quitarlo */
+.ag-off-btn { border: 0; font: inherit; text-align: left; cursor: pointer; }
+.ag-off-btn:disabled { cursor: default; }
+.ag-off-btn.ag-on { outline: 2px solid #334155; outline-offset: -2px; }
+.ag-off-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (hover: hover) { .ag-off-btn:not(:disabled):hover { outline: 1.5px solid #94A3B8; outline-offset: -2px; } }
+.ag-blk.ag-blk-on { outline: 2px solid #334155; outline-offset: -2px; }
+/* W2 · recojo preferido reservado (1 hora) */
+.ag-ap.ag-rec { --c: var(--warning-500); background: color-mix(in srgb, var(--warning-500) 10%, var(--surface)); padding-right: 28px; }

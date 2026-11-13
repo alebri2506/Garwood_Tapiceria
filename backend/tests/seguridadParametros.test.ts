@@ -56,6 +56,10 @@ describe('D.3 Parámetros: datos para A14, límites e historial', () => {
       expect(p.grupo, p.clave).toBeTruthy();
       expect(p.etiqueta, p.clave).toBeTruthy();
       if (p.tipo === 'horario' || p.tipo === 'texto') continue;
+      if (p.tipo === 'opcion') {
+        expect(p.opciones?.split('|').map((o) => o.split('=')[0]), p.clave).toContain(p.valor);
+        continue;
+      }
       const v = Number(p.valor);
       expect(Number.isNaN(v), p.clave).toBe(false);
       if (p.minimo != null) expect(v, p.clave).toBeGreaterThanOrEqual(Number(p.minimo));
@@ -75,7 +79,7 @@ describe('D.3 Parámetros: datos para A14, límites e historial', () => {
     // Porcentajes ≤ 100 (salvo el margen) y nada negativo.
     for (const p of todos) {
       if (p.tipo === 'porcentaje' && p.clave !== 'cotizacion.margen_pct') expect(p.maximo, p.clave).toBeLessThanOrEqual(100);
-      if (p.tipo !== 'horario' && p.tipo !== 'texto') expect(p.minimo, p.clave).toBeGreaterThanOrEqual(0);
+      if (p.tipo !== 'horario' && p.tipo !== 'texto' && p.tipo !== 'opcion') expect(p.minimo, p.clave).toBeGreaterThanOrEqual(0);
     }
   });
 

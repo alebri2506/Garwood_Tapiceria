@@ -26,7 +26,7 @@ const corto = (iso: string) => { const d = fechaDe(iso); return `${DIAS[d.getDay
 function solicitudDeBorrador({ e, c }: BorradorW2): SolicitudCliente {
   return {
     codigo: '', estado: 'En espera de cita', fecha: new Date().toISOString(), canal: 'web', tela: e.tela, telaDescripcion: e.telaBusca.trim() || null, telaConocida: null,
-    esperaFotos: false, traslado: null, direccion: null, fechaPrefRecojo: null, franjaRecojo: null, motivoDescarte: null, cita: null, inasistencias: 0,
+    esperaFotos: false, traslado: null, direccion: null, fechaPrefRecojo: null, franjaRecojo: null, horaPrefRecojo: null, motivoDescarte: null, cita: null, inasistencias: 0,
     muebles: e.muebles.map((m, i) => ({
       orden: i + 1, tipo: tipoDe(c, m).nombre, tipoCodigo: tipoDe(c, m).codigo, servicio: m.servicio, servicioNombre: nombreServicio(c, m), acabado: null,
       cantidad: m.cantidad, medidas: null, modoTela: null, telas: [],
