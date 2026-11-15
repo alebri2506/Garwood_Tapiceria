@@ -3,7 +3,7 @@
 // y el adelanto cobrado en la visita) y el recojo. Toda escritura queda en la bitácora (RG-02); nada se borra (RG-03).
 import { Prisma } from '@prisma/client';
 import { prisma, type Db } from '../../../shared/infrastructure/prisma.js';
-import { parametroNumero, parametroTexto } from '../../../shared/infrastructure/parametros.js';
+import { parametroNumero } from '../../../shared/infrastructure/parametros.js';
 import { registrarBitacora } from '../../../shared/infrastructure/bitacora.js';
 import { avisoAlCliente, enviarCorreos, guardarAvisos, type Aviso } from '../../../shared/infrastructure/avisos.js';
 import type { Correo } from '../../../shared/infrastructure/correo.js';
@@ -11,11 +11,11 @@ import type { AlmacenArchivos } from '../../../shared/infrastructure/archivos.js
 import type { Rutas } from '../../../shared/infrastructure/rutas.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { hoyNegocio, leerFecha } from '../domain/calendario.js';
-import { diaCerrado, enNY, sumarDias, turnoBloqueado, turnosDe, type Bloqueo } from '../domain/agenda.js';
+import { diaCerrado, enNY, leerRango, minutosDe, sumarDias, turnoBloqueado, turnosDe, type Bloqueo } from '../domain/agenda.js';
 import { dinero } from '../domain/cotizacion.js';
 import { SERVICIOS } from '../domain/solicitud.js';
 import type { DireccionEntrada } from '../http/solicitud.schemas.js';
-import { bloqueosEntre } from './citas.js';
+import { bloqueosEntre, choca, ocupacion, reglasAgenda } from './citas.js';
 import { idDireccion, revisarDireccion } from './direcciones.js';
 import { calcular, cargarSolicitud, prepararEscritura, publicarEn, type CotizacionEntrada } from './cotizaciones.js';
 
@@ -33,7 +33,29 @@ const codigoPedido = (n: number) => `PED-${String(n).padStart(4, '0')}`;
 
 /** La cita que se está atendiendo: la programada (o la recién atendida) más reciente de la solicitud. */
 async function citaDe(solicitudId: number) {
-  return prisma.cita.findFirst({ where: { solicitudId, estado: { in: ['Programada', 'Atendida'] } }, orderBy: { fechaHora: 'desc' }, include: { direccion: true } });
+  return prisma.cita.findFirst({ where: { solicitudId, estado: { in: ['Programada', 'En atención', 'Atendida'] } }, orderBy: { fechaHora: 'desc' }, include: { direccion: true } });
+}
+
+/**
+ * «Empezar» (CU-C05 · decisiones L.2.10): la cita o la visita queda «En atención» y su solicitud también, para poder
+ * armar la cotización. No pasa a «Atendida» hasta registrar la respuesta del cliente (al publicar). Si ya estaba en
+ * curso, no cambia nada (se retoma).
+ */
+export async function empezarAtencion(codigo: string, q: Quien) {
+  const s = await cargarSolicitud(codigo);
+  const cita = await citaDe(s.id);
+  if (!cita) throw error('Esta solicitud no tiene una cita ni una visita para atender.', 409);
+  if (cita.estado === 'En atención' || (cita.estado === 'Atendida' && s.estado !== 'En espera de cita')) return { cita: cita.estado, solicitud: s.estado };
+  if (cita.estado !== 'Programada') throw error('Esta cita ya tiene un resultado.', 409);
+  await prisma.$transaction(async (tx) => {
+    await tx.cita.update({ where: { id: cita.id }, data: { estado: 'En atención' } });
+    if (s.estado === 'En espera de cita') await tx.solicitud.update({ where: { id: s.id }, data: { estado: 'En atención' } });
+    await registrarBitacora(tx, {
+      usuarioId: q.usuarioId, modulo: 'comercial', accion: 'cita_en_atencion', entidad: 'cita', entidadId: cita.id,
+      valorAnterior: { cita: 'Programada', solicitud: s.estado }, valorNuevo: { cita: 'En atención', solicitud: s.estado === 'En espera de cita' ? 'En atención' : s.estado }, ip: q.ip,
+    });
+  });
+  return { cita: 'En atención', solicitud: s.estado === 'En espera de cita' ? 'En atención' : s.estado };
 }
 
 // ---------------------------------------------------------------- Datos de la atención
@@ -61,7 +83,8 @@ export async function datosAtencion(codigo: string, almacen?: AlmacenArchivos) {
       servicio: SERVICIOS.find((x) => x.codigo === m.servicio)?.nombre.replace(' (desde una foto)', '') ?? m.servicio, medidas: m.medidas,
       medios: almacen ? await Promise.all(m.adjuntos.map(async (x) => ({ nombre: x.nombreOriginal, tipo: x.tipo, url: await almacen.urlTemporal(x.ruta, 3600).catch(() => null) }))) : [],
     }))),
-    direcciones: direcciones.map((d) => ({ id: d.id, etiqueta: d.etiqueta, texto: d.direccion, ciudad: d.ciudad, principal: d.esPrincipal })),
+    // Con su ubicación, para el mapa del paso Traslado (el mismo de W2).
+    direcciones: direcciones.map((d) => ({ id: d.id, etiqueta: d.etiqueta, texto: d.direccion, referencia: d.referencia, ciudad: d.ciudad, principal: d.esPrincipal, latitud: d.latitud == null ? null : Number(d.latitud), longitud: d.longitud == null ? null : Number(d.longitud) })),
     cotizacion: cot ? { codigo: cot.codigo, estado: cot.estado, total: num(cot.total), adelanto: num(cot.adelanto) } : null,
     pedido: pedido ? {
       codigo: pedido.codigo, estado: pedido.estado,
@@ -76,7 +99,7 @@ export async function definirTraslado(codigo: string, traslado: 'delivery' | 'pr
   const s = await cargarSolicitud(codigo);
   const cot = await prisma.cotizacion.findFirst({ where: { solicitudId: s.id }, orderBy: { version: 'desc' } });
   if (cot && cot.estado !== 'Borrador') throw error(`La cotización ${cot.codigo} ya se publicó: el traslado no se puede cambiar.`, 409);
-  if (!['Nueva', 'En espera de cita', 'Atendida'].includes(s.estado)) throw error(`La solicitud está «${s.estado}»: el traslado ya no se cambia.`, 409);
+  if (!['Nueva', 'En espera de cita', 'En atención', 'Atendida'].includes(s.estado)) throw error(`La solicitud está «${s.estado}»: el traslado ya no se cambia.`, 409);
   if (traslado === 'delivery' && !direccion) throw error('Indique la dirección de recojo y entrega.', 400, { direccion: 'Indique la dirección de recojo y entrega.' });
   await revisarDireccion(direccion, s.clienteId);
   await prisma.$transaction(async (tx) => {
@@ -100,7 +123,7 @@ export interface RespuestaEntrada {
 }
 
 /** El siguiente PED-0000 (los pedidos de ejemplo tienen códigos propios: se sigue desde el mayor). */
-async function siguienteCodigoPedido(tx: Db) {
+export async function siguienteCodigoPedido(tx: Db) {
   const [r] = await tx.$queryRaw<{ n: number | null }[]>`SELECT MAX(CAST(SUBSTRING(codigo FROM 5) AS INTEGER)) AS n FROM pedido WHERE codigo ~ '^PED-[0-9]+$'`;
   return codigoPedido(Number(r?.n ?? 0) + 1);
 }
@@ -200,28 +223,32 @@ const enHora = (h: string, min: number) => {
   return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
 };
 
+/**
+ * Horas de inicio del recojo: las mismas de la Agenda (turnos de `cita.duracion_min`, 30 min, en `agenda.turnos_*`),
+ * porque es una sola agenda (decisiones L.2.9). El recojo dura `recojo.duracion_min` (1 h): solo se ofrecen los
+ * inicios donde esa hora entera cabe antes del almuerzo o del cierre (9:30, 10:00, 10:30, 11:00 · 15:00, 15:30, 16:00).
+ */
 async function reglasRecojo() {
-  const [duracion, diasMax, manana, tarde] = await Promise.all([
-    parametroNumero(prisma, 'recojo.duracion_min'), parametroNumero(prisma, 'recojo.dias_anticipacion_max'),
-    parametroTexto(prisma, 'taller.franja_manana'), parametroTexto(prisma, 'taller.franja_tarde'),
+  const [duracion, diasMax, agenda] = await Promise.all([
+    parametroNumero(prisma, 'recojo.duracion_min'), parametroNumero(prisma, 'recojo.dias_anticipacion_max'), reglasAgenda(),
   ]);
-  return { duracion, diasMax, turnos: [...turnosDe(manana, duracion), ...turnosDe(tarde, duracion)] };
+  const inicios = (rango: string) => turnosDe(rango, agenda.duracion).filter((h) => minutosDe(h) + duracion <= leerRango(rango).hasta);
+  return { duracion, diasMax, turnos: [...inicios(agenda.rangoManana), ...inicios(agenda.rangoTarde)] };
 }
 
 /**
- * Horas para el recojo: lunes a sábado en las franjas del taller (`taller.franja_*`), de `recojo.duracion_min`, hasta
- * `recojo.dias_anticipacion_max` días. Sin domingos, feriados ni bloqueos de la agenda; una sola por hora (un camión).
+ * Horas para el recojo: lunes a sábado, cada 30 min como la Agenda, de `recojo.duracion_min`, hasta
+ * `recojo.dias_anticipacion_max` días. Sin domingos, feriados ni bloqueos; sin cruzarse con citas, visitas ni otro
+ * recojo (una sola agenda · un camión).
  */
 export async function disponibilidadRecojo() {
   const { duracion, diasMax, turnos } = await reglasRecojo();
   const hoy = hoyNegocio();
   const hasta = sumarDias(hoy, diasMax);
   const ahora = enNY(new Date());
-  const [bloqueos, ocupados] = await Promise.all([
-    bloqueosEntre(hoy, hasta),
-    prisma.recojo.findMany({ where: { tipo: 'agendado', estado: 'Programado', fecha: { gte: leerFecha(hoy)!, lte: leerFecha(hasta)! } }, select: { fecha: true, hora: true } }),
-  ]);
-  const ocupado = new Set(ocupados.map((o) => `${o.fecha!.toISOString().slice(0, 10)}|${o.hora}`));
+  // Una sola agenda sin cruces: otros recojos, citas en el local y visitas (con hora o por franja) ocupan la hora.
+  const { franjas } = await reglasAgenda();
+  const [bloqueos, ocupada] = await Promise.all([bloqueosEntre(hoy, hasta), ocupacion(hoy, hasta, {}, franjas)]);
   const dias = [];
   for (let f = hoy; f <= hasta; f = sumarDias(f, 1)) {
     if (leerFecha(f)!.getUTCDay() === 0) continue; // domingo
@@ -231,8 +258,8 @@ export async function disponibilidadRecojo() {
       horas: turnos.map((h) => {
         const fin = enHora(h, duracion);
         const estado = (f === hoy && h <= ahora.hora) ? 'pasada'
-          : cerrado || turnoBloqueado(f, h, bloqueos as Bloqueo[]) ? 'cerrada'
-            : ocupado.has(`${f}|${h}`) ? 'ocupada' : 'libre';
+          : cerrado || turnoBloqueado(f, h, bloqueos as Bloqueo[], duracion) ? 'cerrada'
+            : choca(ocupada.get(f), minutosDe(h), minutosDe(h) + duracion) ? 'ocupada' : 'libre';
         return { inicio: h, fin, estado };
       }),
     });

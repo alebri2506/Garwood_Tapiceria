@@ -29,7 +29,8 @@ const Play = () => (
 );
 
 /** Fotos y videos del mueble, todos juntos (sin filtros), con visor a pantalla completa. */
-export function FotosMueble({ medios, titulo = 'Fotos y videos del mueble' }: { medios: Medio[]; titulo?: string }) {
+/** `compacto`: dentro de otra tarjeta (A2b), sin su propia tarjeta, con altura fija y la foto entera (sin recortar). */
+export function FotosMueble({ medios, titulo = 'Fotos y videos del mueble', compacto = false }: { medios: Medio[]; titulo?: string; compacto?: boolean }) {
   const [elegido, setElegido] = useState(medios[0]?.nombre ?? '');
   const [abierto, setAbierto] = useState(false);
   const grande = useRef<HTMLButtonElement>(null);
@@ -41,9 +42,9 @@ export function FotosMueble({ medios, titulo = 'Fotos y videos del mueble' }: { 
   const cerrar = () => { setAbierto(false); grande.current?.focus(); };
 
   return (
-    <section className="card stack" style={{ padding: 20 }} aria-labelledby="co-fotos">
+    <section className={compacto ? 'stack co-compacto' : 'card stack'} style={compacto ? { gap: 8 } : { padding: 20 }} aria-labelledby="co-fotos">
       <div>
-        <h2 id="co-fotos" style={{ fontSize: 20 }}>{titulo}</h2>
+        <h2 id="co-fotos" style={{ fontSize: compacto ? 15 : 20 }}>{titulo}</h2>
         <p className="muted" style={{ fontSize: 13 }}>Haga clic para verlo en grande.</p>
       </div>
       {!actual ? <p className="muted" style={{ margin: 0, fontSize: 14 }}>No hay fotos ni videos de este mueble.</p> : (

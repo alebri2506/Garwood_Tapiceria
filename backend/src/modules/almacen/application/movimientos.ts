@@ -28,7 +28,8 @@ export async function listarMovimientos(f: FiltroMovimientos) {
     ...(f.tipo === 'ajuste' ? { tipo: f.materialId ? { in: ['ajuste', 'conteo'] } : 'ajuste' } : f.tipo ? { tipo: f.tipo } : {}),
     ...(f.desde || f.hasta ? { fecha: { ...(f.desde ? { gte: instanteNY(f.desde) } : {}), ...(f.hasta ? { lte: new Date(instanteNY(f.hasta).getTime() + 86_399_999) } : {}) } } : {}),
   };
-  const limite = f.materialId ? 200 : Math.min(f.limite ?? 30, 100);
+  // La pantalla pagina la lista (10, 25, 50 o 100 por página): se traen hasta 500 movimientos (con un material, hasta 1000).
+  const limite = f.materialId ? 1000 : Math.min(f.limite ?? 500, 500);
   const [total, filas] = await Promise.all([
     prisma.movimientoInventario.count({ where }),
     prisma.movimientoInventario.findMany({

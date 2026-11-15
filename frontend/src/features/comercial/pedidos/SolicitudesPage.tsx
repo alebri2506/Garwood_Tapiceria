@@ -99,6 +99,7 @@ function Tarjeta({ s, t, actualizar, avisar }: { s: SolicitudCliente; t: ReturnT
         {t.extra === 'fotos' && <SubirFotos s={s} actualizar={actualizar} avisar={avisar} />}
       </div>
       <div className="oside">
+        {t.monto && <div className="amt"><b>{t.monto.valor}</b><small>{t.monto.nota}</small></div>}
         {t.accion && <Link className={`gw-btn gw-btn-${t.accion.tipo} gw-btn-block`} to={t.accion.a}>{t.accion.texto}</Link>}
         <button type="button" className="gw-btn gw-btn-ghost gw-btn-block" onClick={() => setDetalle(true)}>Ver solicitud</button>
       </div>

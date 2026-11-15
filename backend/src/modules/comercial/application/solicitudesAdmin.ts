@@ -19,7 +19,7 @@ const error = (m: string, status = 400) => new ReglaNegocioError(m, status);
 
 export const MOTIVOS_DESCARTE = ['El cliente no respondió', 'Trabajo que no hacemos', 'Solicitud duplicada', 'El cliente desistió', 'Otro motivo'] as const;
 /** CU-C02: solo estas se descartan; las demás ya terminaron o tienen cotización. */
-const DESCARTABLES = ['Nueva', 'En espera de cita', 'Atendida'];
+const DESCARTABLES = ['Nueva', 'En espera de cita', 'En atención', 'Atendida'];
 
 const nombreCliente = (c: { tipoPersona: string; razonSocial: string | null; nombres: string; apellidos: string }) =>
   c.tipoPersona === 'empresa' && c.razonSocial ? c.razonSocial : `${c.nombres} ${c.apellidos}`.trim();
@@ -126,7 +126,8 @@ export async function descartarSolicitud(usuarioId: number, codigo: string, moti
   let avisos: Aviso[] = [];
   await prisma.$transaction(async (tx) => {
     await tx.solicitud.update({ where: { id: s.id }, data: { estado: 'Descartada', motivoDescarte: motivo, descartadaPor: usuarioId, fechaDescarte: new Date() } });
-    await tx.cita.updateMany({ where: { solicitudId: s.id, estado: 'Programada' }, data: { estado: 'Cancelada' } });
+    // La cita programada o la que quedó «En atención» a medias se cancela (no se borra · RG-03).
+    await tx.cita.updateMany({ where: { solicitudId: s.id, estado: { in: ['Programada', 'En atención'] } }, data: { estado: 'Cancelada' } });
     await registrarBitacora(tx, { usuarioId, modulo: 'comercial', accion: 'solicitud_descartada', entidad: 'solicitud', entidadId: s.id, valorAnterior: { estado: s.estado }, valorNuevo: { estado: 'Descartada', motivo }, ip });
     avisos = await avisoAlCliente(tx, s.clienteId,
       { solicitudId: s.id, tipo: 'solicitud_descartada', titulo: `Cerramos su solicitud ${codigo}`, mensaje: `Motivo: ${motivo.toLowerCase()}. Si quiere retomarla, envíe una nueva o llámenos.`, enlace: '/cliente/pedidos/solicitudes' },

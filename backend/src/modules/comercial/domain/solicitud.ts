@@ -28,7 +28,8 @@ export const TRASLADOS = ['delivery', 'propio'] as const;
 export const FRANJAS = ['manana', 'tarde'] as const;
 export type Franja = (typeof FRANJAS)[number];
 
-export const ESTADOS_SOLICITUD = ['Nueva', 'En espera de cita', 'Atendida', 'Cotizada', 'Rechazada', 'Vencida', 'Descartada'] as const;
+// «En atención»: la cita o la visita empezó y todavía no se registró la respuesta del cliente (decisiones L.2.10).
+export const ESTADOS_SOLICITUD = ['Nueva', 'En espera de cita', 'En atención', 'Atendida', 'Cotizada', 'Rechazada', 'Vencida', 'Descartada'] as const;
 export type EstadoSolicitud = (typeof ESTADOS_SOLICITUD)[number];
 
 export const necesitaCita = (tela: OpcionTela) => tela === 'local' || tela === 'domicilio';
@@ -44,7 +45,7 @@ export const ETAPAS = ['Cita / visita', 'Por cotizar', 'Esperando al cliente', '
 export type Etapa = (typeof ETAPAS)[number];
 export function etapaDe(estado: string, pedido?: string | null): Etapa {
   if (pedido) return 'Cerradas';
-  if (estado === 'En espera de cita') return 'Cita / visita';
+  if (estado === 'En espera de cita' || estado === 'En atención') return 'Cita / visita';
   if (estado === 'Nueva' || estado === 'Atendida') return 'Por cotizar';
   if (estado === 'Cotizada') return 'Esperando al cliente';
   return 'Cerradas';

@@ -248,11 +248,14 @@ describe('Decisiones A.7 · el recojo no se elige al pedir la cotización (13/11
     expect(s.direccion?.direccion).toBe('48 Park St, Montclair, NJ 07042');
   });
 
-  it('no ocupa la agenda: ya no hay recojos en la agenda ni horas de recojo que elegir', async () => {
+  it('al pedir la cotización no se elige recojo: la agenda solo muestra recojos de pedidos ya agendados (decisiones L.2.9)', async () => {
     const admin = (await request(app).post('/api/auth/login').send({ identificador: 'admin', contrasena: process.env.SEED_CONTRASENA })).body.token;
     const semana = await request(app).get('/api/admin/agenda').set(auth(admin));
     expect(semana.status).toBe(200);
-    expect(semana.body.recojos).toBeUndefined();
+    // Los recojos de la agenda son de la tabla `recojo` (cada uno de un pedido), nunca de una solicitud por cotizar.
+    const pedidos = new Set((await prisma.recojo.findMany({ select: { pedido: { select: { codigo: true } } } })).map((x) => x.pedido.codigo));
+    expect((semana.body.recojos as { pedido: string }[]).every((x) => pedidos.has(x.pedido))).toBe(true);
+    // La vieja ruta para elegir el recojo al pedir la cotización ya no existe.
     expect((await request(app).get('/api/solicitudes/recojo/disponibilidad').set(auth(token))).status).toBe(404);
   });
 });

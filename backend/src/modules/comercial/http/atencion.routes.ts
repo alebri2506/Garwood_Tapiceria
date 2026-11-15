@@ -2,7 +2,7 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { autenticar, exigirRol, validar } from '../../../shared/http/middlewares.js';
 import type { Dependencias } from '../../../app.js';
-import { METODOS_PAGO, MOTIVOS_RECHAZO, datosAtencion, definirRecojo, definirTraslado, disponibilidadRecojo, responderEnAtencion } from '../application/atencion.js';
+import { METODOS_PAGO, MOTIVOS_RECHAZO, datosAtencion, definirRecojo, definirTraslado, disponibilidadRecojo, empezarAtencion, responderEnAtencion } from '../application/atencion.js';
 import { cotizacionSchema } from './cotizaciones.routes.js';
 import { direccionSchema } from './solicitud.schemas.js';
 
@@ -39,6 +39,11 @@ export function atencionRoutes(deps: Dependencias) {
     await definirTraslado(String(req.params.solicitud), req.body.traslado, req.body.direccion, quien(req));
     res.json(await datosAtencion(String(req.params.solicitud), deps.almacen));
   });
+  // «Empezar»: la cita o la visita queda «En atención» hasta registrar la respuesta del cliente.
+  r.post('/:solicitud/empezar', async (req, res) => {
+    res.json(await empezarAtencion(String(req.params.solicitud), quien(req)));
+  });
+
   r.post('/:solicitud/respuesta', validar(respuestaSchema), async (req, res) => {
     res.json(await responderEnAtencion(String(req.params.solicitud), req.body, quien(req), deps.rutas, deps.correo));
   });

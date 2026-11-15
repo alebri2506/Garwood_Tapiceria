@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiError } from '../../../shared/api/http';
 import { Alert } from '../../../shared/ui/Alert';
+import { Paginacion, usePaginacion } from '../../../shared/ui/Paginacion';
 import { Icon } from '../../../shared/ui/Icon';
 import { normalizar } from '../../../shared/texto';
 import { Aviso, CabeceraInventario, ESTADO, Lateral, diaCorto, dinero } from './comunes';
@@ -30,6 +31,7 @@ export function ProveedoresPage() {
     const texto = normalizar(q.trim());
     return (lista ?? []).filter((p) => (!tipo || p.tipo === tipo) && (!texto || normalizar(p.nombre).includes(texto)));
   }, [lista, q, tipo]);
+  const pagina = usePaginacion(visibles, [q, tipo]);
   const cerrar = useCallback(() => { setSel(null); setForm(null); }, []);
 
   return (
@@ -54,7 +56,7 @@ export function ProveedoresPage() {
           <table className="pt">
             <thead><tr><th>Proveedor</th><th>Cómo se le pide</th><th>Tarda en llegar</th><th>Pendiente</th></tr></thead>
             <tbody>
-              {visibles.map((p) => (
+              {pagina.visibles.map((p) => (
                 <tr key={p.id} tabIndex={0} onClick={() => { setSel(p); setForm(null); }} onKeyDown={(e) => { if (e.key === 'Enter') { setSel(p); setForm(null); } }} aria-label={`Abrir ${p.nombre}`}>
                   <td><b>{p.nombre}</b><small>{p.tipo === 'telas' ? 'Telas bajo pedido' : 'Materiales de stock'}</small></td>
                   <td>{CANAL[p.canal]}<small>{p.contacto}</small></td>
@@ -67,6 +69,7 @@ export function ProveedoresPage() {
           </table>
         </div>
       )}
+      {lista && visibles.length > 0 && <Paginacion {...pagina.props} />}
 
       {sel && !form && (
         <Lateral etiqueta="Proveedor" titulo={sel.nombre} sub={`${CANAL[sel.canal]} · ${sel.contacto} · tarda ${sel.tarda}`} onClose={cerrar}

@@ -50,6 +50,17 @@ export interface CitaDto {
 }
 
 /** Lo que el cliente ve de su solicitud (W6c, W3): sin costos ni datos internos (RG-08). */
+export interface CotizacionCliente {
+  codigo: string;
+  /** Pendiente de respuesta · Aceptada: pendiente de adelanto · Aceptada · Rechazada · Vencida */
+  estado: string;
+  total: number;
+  adelanto: number;
+  conTraslado: boolean;
+  vigenciaHasta: string | null;
+  pedido: string | null;
+}
+
 export interface SolicitudCliente {
   codigo: string;
   estado: string;
@@ -68,6 +79,8 @@ export interface SolicitudCliente {
   motivoDescarte: string | null;
   cita: CitaDto | null;
   inasistencias: number;
+  /** Su última cotización publicada (sin el borrador del taller ni el desglose de costos). */
+  cotizacion?: CotizacionCliente | null;
   muebles: {
     orden: number; tipo: string; tipoCodigo: string; servicio: CodigoServicio; servicioNombre: string; acabado: CodigoAcabado | null;
     cantidad: number; medidas: string | null; modoTela: 'una' | 'partes' | null;

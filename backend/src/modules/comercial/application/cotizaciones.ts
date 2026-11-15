@@ -24,7 +24,8 @@ const num = (d: { toString(): string } | null | undefined) => (d == null ? 0 : N
 const D = (n: number) => new Prisma.Decimal(Math.round(n * 100) / 100);
 const SEGUNDOS_ENLACE = 3600;
 /** Solo se arma una cotización de una solicitud que está por cotizar (CU-C02, A3 «Por cotizar»). */
-const COTIZABLES = ['Nueva', 'Atendida'];
+// «En atención»: la cita o la visita está en curso y la cotización se arma ahí (decisiones L.2.10).
+const COTIZABLES = ['Nueva', 'En atención', 'Atendida'];
 
 const nombreCliente = (c: { tipoPersona: string; razonSocial: string | null; nombres: string; apellidos: string }) =>
   c.tipoPersona === 'empresa' && c.razonSocial ? c.razonSocial : `${c.nombres} ${c.apellidos}`.trim();
@@ -33,7 +34,11 @@ const requiereTela = (codigo: string) => SERVICIOS.find((s) => s.codigo === codi
 
 // ---------------------------------------------------------------- Entrada (lo que guarda la pantalla)
 export interface ActividadEntrada { nombre: string; horasPersona: number; maquinaId: number | null; horasMaquina: number; materiales: { materialId: number; cantidad: number }[] }
-export interface MuebleEntrada { solicitudMuebleId: number; actividades: ActividadEntrada[]; telas: { materialId: number; yardas: number }[]; propuesto: number; motivo?: string; revisado: boolean }
+export interface MuebleEntrada {
+  solicitudMuebleId: number; actividades: ActividadEntrada[]; telas: { materialId: number; yardas: number }[]; propuesto: number; motivo?: string; revisado: boolean;
+  /** Cita o visita con «distintas telas por partes» (como en W2): la tela de cada parte. Las yardas van por tela en `telas`. */
+  partes?: { parteId: number; materialId: number }[];
+}
 export interface CotizacionEntrada {
   muebles: MuebleEntrada[];
   transporte: { manual: boolean; monto?: number; motivo?: string };
@@ -243,6 +248,7 @@ export async function armarCotizacion(codigoSolicitud: string, almacen: AlmacenA
 
   const borrador = editable && cot?.borrador ? (cot.borrador as unknown as CotizacionEntrada) : null;
   const busqueda = borrador ? await buscarParaBorrador(borrador) : null;
+  const partesTipo = await prisma.tipoMuebleParte.findMany({ where: { tipoMuebleId: { in: s.muebles.map((m) => m.tipoMuebleId) } }, orderBy: { orden: 'asc' } });
   const muebles = await Promise.all(s.muebles.map(async (m, i) => {
     const publicado = !editable ? cot?.muebles.find((x) => x.solicitudMuebleId === m.id) : undefined;
     const enBorrador = borrador?.muebles.find((x) => x.solicitudMuebleId === m.id);
@@ -256,6 +262,10 @@ export async function armarCotizacion(codigoSolicitud: string, almacen: AlmacenA
       servicio: m.servicio, servicioNombre: nombreServicio(m.servicio), cantidad: m.cantidad, medidas: m.medidas, acabado: m.acabado,
       tamanoCarga: m.tipoMueble.tamanoCarga,
       tela: { tipo: tela.tipo, nota: tela.nota, eligeAqui: tela.eligeAqui, telas: datos.telas },
+      // Para «una tela para todo / distintas telas por partes» en la cita o la visita (el mismo dibujo que W2).
+      tipoCodigo: m.tipoMueble.codigo,
+      partesMueble: partesTipo.filter((x) => x.tipoMuebleId === m.tipoMuebleId).map((x) => ({ id: x.id, nombre: x.nombre })),
+      partes: enBorrador?.partes ?? m.telas.filter((t) => t.parteId != null).map((t) => ({ parteId: t.parteId!, materialId: t.materialId })),
       medios: await Promise.all(m.adjuntos.map(async (a) => ({ nombre: a.nombreOriginal, tipo: a.tipo, url: await almacen.urlTemporal(a.ruta, SEGUNDOS_ENLACE).catch(() => null) }))),
       ...datos,
     };
@@ -311,10 +321,11 @@ export async function calcular(s: SolicitudCompleta, e: CotizacionEntrada, p: Pa
   const idsMaq = [...new Set(e.muebles.flatMap((m) => m.actividades.map((a) => a.maquinaId)).filter((x): x is number => x != null))];
   const idsMat = [...new Set(e.muebles.flatMap((m) => m.actividades.flatMap((a) => a.materiales.map((x) => x.materialId))))];
   const idsTela = [...new Set(e.muebles.flatMap((m) => m.telas.map((t) => t.materialId)))];
-  const [maquinas, materiales, telas] = await Promise.all([
+  const [maquinas, materiales, telas, partesTipo] = await Promise.all([
     prisma.maquina.findMany({ where: { id: { in: idsMaq }, activo: true } }),
     prisma.material.findMany({ where: { id: { in: idsMat }, activo: true, categoria: { not: 'tela' } } }),
     prisma.material.findMany({ where: { id: { in: idsTela }, categoria: 'tela' } }),
+    prisma.tipoMuebleParte.findMany({ where: { tipoMuebleId: { in: s.muebles.map((m) => m.tipoMuebleId) } } }),
   ]);
 
   const muebles = await Promise.all(s.muebles.map(async (m, i) => {
@@ -322,6 +333,13 @@ export async function calcular(s: SolicitudCompleta, e: CotizacionEntrada, p: Pa
     const k = `muebles.${i}`;
     const tela = telaDe(s, m);
     const permitidas = tela.eligeAqui && tela.tipo !== 'no' ? entrada.telas.map((t) => t.materialId) : tela.telas.map((t) => t.materialId);
+    if (entrada.partes?.length) {
+      const delMueble = partesTipo.filter((x) => x.tipoMuebleId === m.tipoMuebleId);
+      if (!tela.eligeAqui) errores[`${k}.tela`] = 'Las telas por partes se eligen en la cita o la visita.';
+      else if (entrada.partes.some((x) => !delMueble.some((y) => y.id === x.parteId))) errores[`${k}.tela`] = 'Alguna parte no es de este mueble. Recargue la página.';
+      else if (entrada.partes.some((x) => !permitidas.includes(x.materialId))) errores[`${k}.tela`] = 'Falta la tela de alguna parte en la lista de yardas.';
+      else if (publicar && delMueble.some((y) => !entrada.partes!.some((x) => x.parteId === y.id))) errores[`${k}.tela`] = 'Elija una tela para cada parte.';
+    }
     const actividades = entrada.actividades.map((a, j) => {
       const maq = a.maquinaId != null ? maquinas.find((x) => x.id === a.maquinaId) : null;
       if (a.maquinaId != null && !maq) errores[`${k}.actividades.${j}.maquinaId`] = 'Esa máquina ya no está disponible.';
@@ -351,7 +369,7 @@ export async function calcular(s: SolicitudCompleta, e: CotizacionEntrada, p: Pa
     }
     const costeo = costearMueble(
       actividades.map((a) => ({ horasPersona: a.horasPersona, horasMaquina: a.maquinaId ? a.horasMaquina : 0, tarifaMaquina: a.tarifaMaquina, materiales: a.materialesConPrecio })),
-      telasCalc, p.costos, i === 0,
+      telasCalc, p.costos, i === 0, m.cantidad,
     );
     const plantilla = await prisma.plantilla.findFirst({ where: { tipoMuebleId: m.tipoMuebleId, servicio: m.servicio, activa: true }, select: { id: true } });
     return { entrada, plantillaId: plantilla?.id ?? null, actividades, telas: telasCalc, costeo };
@@ -409,6 +427,22 @@ export async function escribir(tx: Db, s: SolicitudCompleta, c: Calculo, e: Coti
     cot = await tx.cotizacion.update({ where: { id: creada.id }, data: { codigo: codigoCotizacion(creada.id) }, select: { id: true, codigo: true } });
   }
   if (!publicar) return cot;
+  if (eligeEnCita(s.telaOpcion)) {
+    for (const m of c.muebles) {
+      const sm = s.muebles.find((x) => x.id === m.entrada.solicitudMuebleId)!;
+      if (sm.telas.length || !m.telas.length) continue; // ya tenía su tela, o el trabajo no lleva tela
+      const partes = m.entrada.partes ?? [];
+      await tx.solicitudMueble.update({
+        where: { id: sm.id },
+        data: {
+          modoTela: partes.length ? 'partes' : 'una',
+          telas: { create: partes.length
+            ? partes.map((x, k) => ({ materialId: x.materialId, parteId: x.parteId, orden: k + 1 }))
+            : m.telas.map((t, k) => ({ materialId: t.materialId, parteId: null, orden: k + 1 })) },
+        },
+      });
+    }
+  }
   for (const m of c.muebles) {
     await tx.cotizacionMueble.create({
       data: {
@@ -479,6 +513,15 @@ export async function publicarEn(tx: Db, s: SolicitudCompleta, c: Calculo, e: Co
     usuarioId: q.usuarioId, modulo: 'comercial', accion: 'solicitud_cotizada', entidad: 'solicitud', entidadId: s.id,
     valorAnterior: { estado: s.estado }, valorNuevo: { estado: 'Cotizada', cotizacion: cot.codigo }, ip: q.ip,
   });
+  // La cita o la visita «En atención» termina aquí: con la cotización publicada pasa a «Atendida».
+  const enCurso = await tx.cita.findMany({ where: { solicitudId: s.id, estado: 'En atención' }, select: { id: true } });
+  for (const c of enCurso) {
+    await tx.cita.update({ where: { id: c.id }, data: { estado: 'Atendida' } });
+    await registrarBitacora(tx, {
+      usuarioId: q.usuarioId, modulo: 'comercial', accion: 'cita_atendida', entidad: 'cita', entidadId: c.id,
+      valorAnterior: { cita: 'En atención' }, valorNuevo: { cita: 'Atendida', cotizacion: cot.codigo }, ip: q.ip,
+    });
+  }
   return cot;
 }
 

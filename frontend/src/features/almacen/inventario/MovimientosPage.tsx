@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../../shared/api/http';
 import { Alert } from '../../../shared/ui/Alert';
+import { Paginacion, usePaginacion } from '../../../shared/ui/Paginacion';
 import { Icon } from '../../../shared/ui/Icon';
 import { Aviso, CabeceraInventario, Lateral, Pasos, cantidad, momento, num } from './comunes';
 import { inventarioApi, type FiltroMovimientos, type FilaStock, type Movimiento, type PedidoEnProceso } from './inventarioApi';
@@ -38,6 +39,7 @@ export function MovimientosPage() {
   const materialId = Number(params.get('material')) || undefined;
   const filtro: FiltroMovimientos = { materialId, tipo: (params.get('tipo') || undefined) as FiltroMovimientos['tipo'], desde: params.get('desde') || undefined, hasta: params.get('hasta') || undefined };
   const clave = params.toString();
+  const pagina = usePaginacion(lista?.movimientos ?? [], clave);
   const poner = (cambios: Record<string, string | undefined>) => {
     const p = new URLSearchParams(params);
     for (const [k, v] of Object.entries(cambios)) { if (v) p.set(k, v); else p.delete(k); }
@@ -110,7 +112,7 @@ export function MovimientosPage() {
           <table className="kd">
             <thead><tr><th>Fecha</th><th>Tipo</th><th>Material</th><th>Pedido</th><th>Detalle</th><th>Quién</th><th className="r">Entra</th><th className="r">Sale</th>{uno && <th className="r">Saldo</th>}</tr></thead>
             <tbody>
-              {lista.movimientos.map((m) => {
+              {pagina.visibles.map((m) => {
                 const t = momento(m.fecha);
                 return (
                   <tr key={m.id}>
@@ -131,6 +133,7 @@ export function MovimientosPage() {
           </table>
         </div>
       )}
+      {lista && lista.movimientos.length > 0 && <Paginacion {...pagina.props} />}
       {lista && !uno && lista.total > lista.movimientos.length && <p className="why" style={{ marginTop: -6 }}>Se muestran los {lista.movimientos.length} más recientes de {lista.total}. Elija un material para ver su historia completa.</p>}
       <p className="why">Elija un material para ver su <b>kardex</b> con el saldo después de cada movimiento. Las entradas vienen de «Llegó» (Reponer) y las salidas del taller; si algo no se registró, se corrige con «Corregir stock».</p>
 

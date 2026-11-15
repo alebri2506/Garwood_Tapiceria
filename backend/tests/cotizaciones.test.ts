@@ -99,6 +99,9 @@ describe('Reglas de la cotización (sin base de datos)', () => {
     const a = [{ horasPersona: 2, horasMaquina: 1, tarifaMaquina: 6, materiales: [{ precio: 10, cantidad: 2 }] }];
     expect(costearMueble(a, [{ yardas: 3, precio: 24 }], p, true)).toMatchObject({ materiales: 92, manoObra: 30, maquinaria: 6, fijos: 60, sugerido: 329 });
     expect(costearMueble(a, [], p, false)).toMatchObject({ fijos: 0, sugerido: Math.round((20 + 30 + 6) * 1.75) });
+    // «2 × sofá»: horas, máquina y materiales de la plantilla van por unidad; la tela (yardas de toda la línea) y los
+    // costos fijos (una vez por cotización) no se duplican.
+    expect(costearMueble(a, [{ yardas: 3, precio: 24 }], p, true, 2)).toMatchObject({ horas: 4, materiales: 40 + 72, manoObra: 60, maquinaria: 12, fijos: 60, sugerido: Math.round((112 + 60 + 12 + 60) * 1.75) });
   });
 });
 

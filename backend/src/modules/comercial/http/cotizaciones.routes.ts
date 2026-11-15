@@ -19,6 +19,8 @@ const muebleSchema = z.object({
   solicitudMuebleId: z.number().int().positive(),
   actividades: z.array(actividadSchema).max(40, 'Son demasiadas actividades.'),
   telas: z.array(z.object({ materialId: z.number().int().positive(), yardas: numero('las yardas', 999) })).max(12).default([]),
+  // Cita o visita con «distintas telas por partes»: qué tela va en cada parte (como en W2). Las yardas van por tela.
+  partes: z.array(z.object({ parteId: z.number().int().positive(), materialId: z.number().int().positive() })).max(20).optional(),
   propuesto: numero('el precio propuesto', 1_000_000),
   motivo: z.string().trim().max(160, 'El motivo es muy largo: máximo 160 caracteres.').optional(),
   revisado: z.boolean().default(false),

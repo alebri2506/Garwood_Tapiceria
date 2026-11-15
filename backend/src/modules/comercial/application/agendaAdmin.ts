@@ -29,7 +29,7 @@ export async function agendaSemana(desdePedido?: string) {
   const [bloqueos, citas, futuros] = await Promise.all([
     bloqueosEntre(desde, hasta),
     prisma.cita.findMany({
-      where: { estado: { in: ['Programada', 'Atendida', 'No asistió'] }, fechaHora: { gte: new Date(`${desde}T00:00:00Z`), lt: new Date(`${sumarDias(hasta, 2)}T00:00:00Z`) } },
+      where: { estado: { in: ['Programada', 'En atención', 'Atendida', 'No asistió'] }, fechaHora: { gte: new Date(`${desde}T00:00:00Z`), lt: new Date(`${sumarDias(hasta, 2)}T00:00:00Z`) } },
       orderBy: { fechaHora: 'asc' },
       include: {
         direccion: true,
@@ -44,6 +44,12 @@ export async function agendaSemana(desdePedido?: string) {
     }),
     bloqueosEntre(hoy, sumarDias(hoy, r.dias)),
   ]);
+  // Una sola agenda sin cruces: los recojos del delivery se ven aquí (a veces va el Administrador).
+  const recojos = await prisma.recojo.findMany({
+    where: { tipo: 'agendado', estado: 'Programado', fecha: { gte: leerFecha(desde)!, lte: leerFecha(hasta)! } },
+    orderBy: [{ fecha: 'asc' }, { hora: 'asc' }],
+    include: { direccion: true, pedido: { include: { cliente: true, solicitud: { select: { codigo: true } } } } },
+  });
   const ahora = enNY(new Date());
 
   return {
@@ -56,6 +62,11 @@ export async function agendaSemana(desdePedido?: string) {
     }),
     bloqueos: bloqueos.filter((b) => b.horaInicio).map((b) => ({ id: b.id, fecha: b.fecha, horaInicio: b.horaInicio!, horaFin: b.horaFin!, motivo: b.motivo })),
     proximosBloqueos: futuros.map((b) => ({ id: b.id, fecha: b.fecha, horaInicio: b.horaInicio, horaFin: b.horaFin, motivo: b.motivo })),
+    recojos: recojos.filter((x) => x.fecha && x.hora).map((x) => ({
+      id: x.id, fecha: x.fecha!.toISOString().slice(0, 10), hora: x.hora!, fin: sumarMinutos(x.hora!, x.duracionMin),
+      pedido: x.pedido.codigo, solicitud: x.pedido.solicitud.codigo, cliente: nombreCliente(x.pedido.cliente), descripcion: x.pedido.descripcion,
+      direccion: x.direccion?.direccion ?? null,
+    })),
     citas: citas
       .map((c) => ({ c, dto: citaDto(c) }))
       .filter(({ dto }) => dto.fecha >= desde && dto.fecha <= hasta)
@@ -93,7 +104,7 @@ export async function bloquearTurnos(quien: Quien, bloques: { fecha: string; hor
     if (b.fecha < ahora.fecha || (b.fecha === ahora.fecha && b.hora <= ahora.hora)) throw error(`El turno del ${que} ya pasó.`);
     if (motivoCierre(b.fecha, existentes)) throw error(`El ${fechaLarga(b.fecha)} el taller no atiende.`);
     if (turnoBloqueado(b.fecha, b.hora, existentes)) throw error(`El turno del ${que} ya está bloqueado.`);
-    if (ocupados.get(b.fecha)?.has(b.hora)) throw error(`El turno del ${que} tiene una cita: reprográmela antes de bloquear.`);
+    if (ocupados.get(b.fecha)?.has(b.hora)) throw error(`El turno del ${que} tiene una cita o un recojo: reprográmelo antes de bloquear.`);
   }
 
   await prisma.$transaction(async (tx) => {

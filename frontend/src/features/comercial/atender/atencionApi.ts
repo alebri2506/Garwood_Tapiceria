@@ -10,11 +10,12 @@ export interface Atencion {
   cita: { id: number; tipo: 'local' | 'domicilio'; estado: string; fecha: string; hora: string | null; franja: string | null; direccion: string | null } | null;
   /** Lo que pidió el cliente, mueble por mueble, con sus fotos y videos (paso 1). */
   muebles: { id: number; titulo: string; servicio: string; medidas: string | null; medios: { nombre: string; tipo: string; url: string | null }[] }[];
-  direcciones: { id: number; etiqueta: string | null; texto: string; ciudad: string | null; principal: boolean }[];
+  /** Con su ubicación, para el mapa del paso Traslado. */
+  direcciones: { id: number; etiqueta: string | null; texto: string; referencia: string | null; ciudad: string | null; principal: boolean; latitud: number | null; longitud: number | null }[];
   cotizacion: { codigo: string; estado: string; total: number; adelanto: number } | null;
   pedido: { codigo: string; estado: string; recojo: { tipo: 'agendado' | 'en_visita'; estado: string; fecha: string | null; hora: string | null } | null } | null;
 }
-export type DireccionTraslado = { tipo: 'guardada'; id: number } | { tipo: 'nueva'; texto: string; referencia?: string; guardar: boolean };
+export type DireccionTraslado = { tipo: 'guardada'; id: number } | { tipo: 'nueva'; texto: string; referencia?: string; latitud?: number; longitud?: number; guardar: boolean };
 export type MetodoPago = 'efectivo' | 'tarjeta' | 'zelle' | 'cheque';
 export interface Respuesta {
   cotizacion: EntradaCotizacion;
@@ -29,6 +30,8 @@ export interface Disponibilidad { duracionMin: number; dias: { fecha: string; ho
 export const atencionApi = {
   datos: (s: string): Promise<Atencion> => apiFetch(`/admin/atencion/${encodeURIComponent(s)}`),
   /** CU-C04/C05: la visita se realizó (empieza la atención) o no se encontró al cliente. */
+  /** «Empezar»: la cita o la visita queda «En atención» hasta registrar la respuesta del cliente. */
+  empezar: (s: string): Promise<{ cita: string; solicitud: string }> => apiFetch(`/admin/atencion/${encodeURIComponent(s)}/empezar`, { method: 'POST' }),
   resultado: (citaId: number, resultado: 'atendida' | 'no_asistio'): Promise<{ cita: string; puedeReprogramar: boolean }> =>
     apiFetch(`/citas/${citaId}/resultado`, { method: 'POST', body: JSON.stringify({ resultado }) }),
   traslado: (s: string, traslado: 'delivery' | 'propio', direccion?: DireccionTraslado): Promise<Atencion> =>

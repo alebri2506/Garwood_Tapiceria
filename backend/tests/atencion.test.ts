@@ -151,6 +151,63 @@ describe('A2b · Atender la visita a domicilio', () => {
     expect((await prisma.pedido.findUniqueOrThrow({ where: { codigo: p2 } })).estado).toBe('Esperando mueble');
   });
 
+  it('una sola agenda sin cruces: el recojo ocupa los turnos de citas y una cita ocupa la hora del recojo', async () => {
+    type Dia = { fecha: string; horas: { inicio: string; estado: string }[] };
+    const recojos = async () => (await api('get', '/atencion/recojos/disponibilidad')).body.dias as Dia[];
+    const turnosLocal = async (fecha: string) => (await request(app).get(`/api/citas/disponibilidad?tipo=local&desde=${fecha}&dias=1`).set('Authorization', `Bearer ${cliente}`)).body.dias[0].turnos as { hora: string; libre: boolean }[];
+
+    // Un recojo de 15:00 a 16:00 (desde mañana, para que no haya horas pasadas) deja sin ofrecer las citas de 15:00 y 15:30.
+    const dia = (await recojos()).find((d) => d.fecha > hoyNegocio() && d.horas.some((h) => h.inicio === '15:00' && h.estado === 'libre'))!;
+    // Las horas de inicio son las de la Agenda (cada 30 min) donde cabe la hora entera del recojo.
+    expect(dia.horas.map((h) => h.inicio)).toEqual(['09:30', '10:00', '10:30', '11:00', '15:00', '15:30', '16:00']);
+    expect((await turnosLocal(dia.fecha)).filter((t) => ['15:00', '15:30'].includes(t.hora)).every((t) => t.libre)).toBe(true);
+    const { s, cita, dir } = await conVisita();
+    const pedido = (await api('post', `/atencion/${s.codigo}/respuesta`).send({ cotizacion: (await armarEnVisita(s.codigo!, cita.id, dir.id)).entrada, respuesta: 'acepta', pagaAhora: true, metodo: 'efectivo' })).body.pedido;
+    expect((await api('post', `/atencion/pedidos/${pedido}/recojo`).send({ tipo: 'agendado', fecha: dia.fecha, hora: '15:00' })).status).toBe(200);
+    const local = await turnosLocal(dia.fecha);
+    expect(local.find((t) => t.hora === '15:00')!.libre).toBe(false);
+    expect(local.find((t) => t.hora === '15:30')!.libre).toBe(false);
+    expect(local.find((t) => t.hora === '16:00')!.libre).toBe(true);
+    // La Agenda de citas lo muestra.
+    const semana = (await api('get', `/agenda?desde=${dia.fecha}`)).body;
+    expect(semana.recojos).toEqual(expect.arrayContaining([expect.objectContaining({ pedido, fecha: dia.fecha, hora: '15:00', fin: '16:00' })]));
+
+    // Al revés: una cita en el local a las 10:30 ocupa la hora de recojo de 10:00 a 11:00.
+    const otro = (await recojos()).find((d) => d.fecha > hoyNegocio() && d.horas.some((h) => h.inicio === '10:00' && h.estado === 'libre'))!;
+    const conCita = await conVisita({ tipo: 'local' });
+    await prisma.cita.update({ where: { id: conCita.cita.id }, data: { fechaHora: instanteNY(otro.fecha, '10:30'), duracionMin: 30 } });
+    const hora = (await recojos()).find((d) => d.fecha === otro.fecha)!.horas.find((h) => h.inicio === '10:00')!;
+    expect(hora.estado).toBe('ocupada');
+  });
+
+  it('«Empezar» la deja «En atención» hasta registrar la respuesta: recién ahí la cita queda «Atendida»', async () => {
+    const { s, cita, dir } = await conVisita({ tipo: 'local' });
+    const r = await api('post', `/atencion/${s.codigo}/empezar`);
+    expect(r.body).toEqual({ cita: 'En atención', solicitud: 'En atención' });
+    expect((await prisma.cita.findUniqueOrThrow({ where: { id: cita.id } })).estado).toBe('En atención');
+    // Se puede volver a abrir (se retoma) sin cambiar nada; la pantalla de la atención la ve «En atención».
+    expect((await api('post', `/atencion/${s.codigo}/empezar`)).body.cita).toBe('En atención');
+    expect((await api('get', `/atencion/${s.codigo}`)).body.cita.estado).toBe('En atención');
+    // A medias: arma la cotización (traslado y tela) pero no termina → no está «Atendida».
+    expect((await api('put', `/atencion/${s.codigo}/traslado`).send({ traslado: 'delivery', direccion: { tipo: 'guardada', id: dir.id } })).status).toBe(200);
+    const a = (await api('get', `/cotizaciones/armar/${s.codigo}`)).body;
+    const entrada = {
+      muebles: a.muebles.map((m: { solicitudMuebleId: number; actividades: { nombre: string; horasPersona: number; maquinaId: number | null; horasMaquina: number; materiales: { materialId: number; cantidad: number }[] }[] }) => ({
+        solicitudMuebleId: m.solicitudMuebleId, telas: [{ materialId: navyId, yardas: 12 }], propuesto: 900, revisado: true,
+        actividades: m.actividades.map((x) => ({ nombre: x.nombre, horasPersona: x.horasPersona, maquinaId: x.maquinaId, horasMaquina: x.horasMaquina, materiales: x.materiales.map((y) => ({ materialId: y.materialId, cantidad: y.cantidad })) })),
+      })),
+      transporte: { manual: false }, adelanto: null, observaciones: '',
+    };
+    expect((await api('put', `/cotizaciones/armar/${s.codigo}`).send(entrada)).status).toBe(200);
+    expect((await prisma.solicitud.findUniqueOrThrow({ where: { id: s.id } })).estado).toBe('En atención');
+    expect((await prisma.cita.findUniqueOrThrow({ where: { id: cita.id } })).estado).toBe('En atención');
+    // Con la respuesta del cliente termina: cita «Atendida» y solicitud «Cotizada».
+    expect((await api('post', `/atencion/${s.codigo}/respuesta`).send({ cotizacion: entrada, respuesta: 'pensara' })).status).toBe(200);
+    expect((await prisma.cita.findUniqueOrThrow({ where: { id: cita.id } })).estado).toBe('Atendida');
+    expect((await prisma.solicitud.findUniqueOrThrow({ where: { id: s.id } })).estado).toBe('Cotizada');
+    expect(await prisma.bitacora.count({ where: { entidad: 'cita', entidadId: cita.id, accion: { in: ['cita_en_atencion', 'cita_atendida'] } } })).toBe(2);
+  });
+
   it('en una cita en el local no se puede «llevar el mueble ahora»', async () => {
     const { s, cita, dir } = await conVisita({ tipo: 'local' });
     const p = (await api('post', `/atencion/${s.codigo}/respuesta`).send({ cotizacion: (await armarEnVisita(s.codigo!, cita.id, dir.id)).entrada, respuesta: 'acepta', pagaAhora: true, metodo: 'tarjeta' })).body;
@@ -174,6 +231,13 @@ describe('A2b · Atender la visita a domicilio', () => {
     const e1 = (await armarEnVisita(piensa.s.codigo!, piensa.cita.id, piensa.dir.id)).entrada;
     expect((await api('post', `/atencion/${piensa.s.codigo}/respuesta`).send({ cotizacion: e1, respuesta: 'pensara' })).body.estado).toBe('Pendiente de respuesta');
     expect((await prisma.solicitud.findUniqueOrThrow({ where: { id: piensa.s.id } })).estado).toBe('Cotizada');
+    // W6c: el cliente ve el total, el adelanto y la vigencia para «Ver y responder»; nunca el sugerido ni el desglose (RG-08).
+    const mias = (await request(app).get('/api/solicitudes').set('Authorization', `Bearer ${cliente}`)).body as { codigo: string; cotizacion: Record<string, unknown> | null }[];
+    const vista = mias.find((x) => x.codigo === piensa.s.codigo)!.cotizacion!;
+    expect(vista).toMatchObject({ estado: 'Pendiente de respuesta', conTraslado: true, pedido: null });
+    expect(vista.total).toBeGreaterThan(0);
+    expect(vista.vigenciaHasta).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(Object.keys(vista).sort()).toEqual(['adelanto', 'codigo', 'conTraslado', 'estado', 'pedido', 'total', 'vigenciaHasta']);
 
     const no = await conVisita();
     const e2 = (await armarEnVisita(no.s.codigo!, no.cita.id, no.dir.id)).entrada;
@@ -182,6 +246,31 @@ describe('A2b · Atender la visita a domicilio', () => {
     expect(r.body.estado).toBe('Rechazada');
     expect(await prisma.cotizacion.findFirstOrThrow({ where: { solicitudId: no.s.id } })).toMatchObject({ estado: 'Rechazada', motivoRechazo: 'Precio' });
     expect((await api('get', `/solicitudes/${no.s.codigo}`)).body).toMatchObject({ estado: 'Rechazada', etapa: 'Cerradas' });
+  });
+
+  it('telas por partes (como W2): cada parte con su tela; al publicar queda en la solicitud y la cotización va por tela', async () => {
+    const { s, cita, dir } = await conVisita({ tipo: 'local' });
+    const { entrada } = await armarEnVisita(s.codigo!, cita.id, dir.id);
+    const partes = await prisma.tipoMuebleParte.findMany({ where: { tipoMueble: { codigo: 's3' } }, orderBy: { orden: 'asc' } });
+    const otra = await prisma.material.findFirstOrThrow({ where: { categoria: 'tela', activo: true, precio: { not: null }, id: { not: navyId } } });
+    const asiento = partes[1]!.id;
+    const porPartes = partes.map((p) => ({ parteId: p.id, materialId: p.id === asiento ? otra.id : navyId }));
+    const mueble = { ...entrada.muebles[0], telas: [{ materialId: navyId, yardas: 14 }, { materialId: otra.id, yardas: 5 }] };
+
+    // Falta la tela de una parte: no se publica.
+    const incompleta = await api('post', `/atencion/${s.codigo}/respuesta`).send({ cotizacion: { ...entrada, muebles: [{ ...mueble, partes: porPartes.slice(1) }] }, respuesta: 'pensara' });
+    expect(incompleta.status).toBe(400);
+    expect(JSON.stringify(incompleta.body)).toMatch(/cada parte/);
+
+    const r = await api('post', `/atencion/${s.codigo}/respuesta`).send({ cotizacion: { ...entrada, muebles: [{ ...mueble, partes: porPartes }] }, respuesta: 'pensara' });
+    expect(r.status).toBe(200);
+    const sm = await prisma.solicitudMueble.findFirstOrThrow({ where: { solicitudId: s.id }, include: { telas: true } });
+    expect(sm.modoTela).toBe('partes');
+    expect(sm.telas).toHaveLength(partes.length);
+    expect(sm.telas.find((t) => t.parteId === asiento)?.materialId).toBe(otra.id);
+    // La cotización: una fila por tela con sus yardas (el precio no cambia por repartirla en partes).
+    const cm = await prisma.cotizacionMueble.findFirstOrThrow({ where: { cotizacion: { solicitudId: s.id } }, include: { telas: true } });
+    expect(cm.telas.map((t) => [t.materialId, Number(t.yardas)]).sort()).toEqual([[navyId, 14], [otra.id, 5]].sort());
   });
 
   it('cliente con pedidos cerrados: adelanto 0 %, el pedido se genera sin cobrar', async () => {
@@ -194,5 +283,70 @@ describe('A2b · Atender la visita a domicilio', () => {
     const r = await api('post', `/atencion/${s.codigo}/respuesta`).send({ cotizacion: entrada, respuesta: 'acepta' });
     expect(r.body).toMatchObject({ estado: 'Aceptada', adelanto: 0, recojoPendiente: false });
     expect(await prisma.pago.count({ where: { pedido: { codigo: r.body.pedido } } })).toBe(0);
+  });
+});
+
+describe('W4 · el cliente revisa y responde su cotización', () => {
+  const cli = (metodo: 'get' | 'post', ruta: string, token = cliente) => request(app)[metodo](`/api/solicitudes${ruta}`).set('Authorization', `Bearer ${token}`);
+  /** Cotización publicada a Laura («lo pensará»), con el adelanto que se indique. */
+  async function publicada(adelanto: number | null = null) {
+    const { s, cita, dir } = await conVisita();
+    const { entrada } = await armarEnVisita(s.codigo!, cita.id, dir.id);
+    const r = await api('post', `/atencion/${s.codigo}/respuesta`).send({ cotizacion: { ...entrada, adelanto }, respuesta: 'pensara' });
+    expect(r.body.estado).toBe('Pendiente de respuesta');
+    return s;
+  }
+
+  it('ve qué se hará, la tela, el total y el adelanto; nunca los costos internos (RG-08). Solo la suya (RG-07)', async () => {
+    const s = await publicada();
+    const r = await cli('get', `/${s.codigo}/cotizacion`);
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ estado: 'Pendiente de respuesta', traslado: 'delivery', pedido: null, eligeRecojo: false });
+    expect(r.body.total).toBeGreaterThan(0);
+    expect(r.body.adelanto).toBeGreaterThan(0);
+    expect(r.body.diasRestantes).toBeGreaterThan(0);
+    expect(r.body.muebles[0].trabajos.length).toBeGreaterThan(0);
+    expect(r.body.muebles[0].telas[0].nombre).toBeTruthy();
+    expect(Object.keys(r.body.muebles[0]).sort()).toEqual(['cantidad', 'foto', 'precio', 'servicio', 'tela', 'telas', 'tipo', 'trabajos']);
+    expect(JSON.stringify(r.body)).not.toMatch(/sugerido|manoObra|maquinaria|costosFijos|horas/i);
+    // El Administrador no entra por aquí y otro cliente no la encuentra.
+    expect((await cli('get', `/${s.codigo}/cotizacion`, admin)).status).toBe(403);
+    const otro = await prisma.cliente.create({ data: { tipoPersona: 'persona', nombres: 'Ana', apellidos: 'Ajena', telefono: '+19735550888', canalRegistro: 'web' } });
+    const ajena = await conVisita({ clienteId: otro.id });
+    expect((await cli('get', `/${ajena.s.codigo}/cotizacion`)).status).toBe(404);
+  });
+
+  it('rechaza con motivo y comentario: la solicitud se cierra; no se puede responder dos veces', async () => {
+    const s = await publicada();
+    expect((await cli('post', `/${s.codigo}/cotizacion/respuesta`).send({ respuesta: 'rechaza' })).status).toBe(400);
+    const r = await cli('post', `/${s.codigo}/cotizacion/respuesta`).send({ respuesta: 'rechaza', motivo: 'Precio', comentario: 'Me pareció alto' });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ estado: 'Rechazada', pedido: null });
+    expect(await prisma.cotizacion.findFirstOrThrow({ where: { solicitudId: s.id } })).toMatchObject({ estado: 'Rechazada', motivoRechazo: 'Precio', comentarioRespuesta: 'Me pareció alto', medioRespuesta: 'Plataforma' });
+    expect((await prisma.solicitud.findUniqueOrThrow({ where: { id: s.id } })).estado).toBe('Rechazada');
+    expect(await prisma.bitacora.count({ where: { accion: 'cotizacion_rechazada', entidad: 'cotizacion' } })).toBeGreaterThan(0);
+    expect((await cli('post', `/${s.codigo}/cotizacion/respuesta`).send({ respuesta: 'rechaza', motivo: 'Precio' })).status).toBe(409);
+  });
+
+  it('con adelanto no puede aceptar todavía: el pago en línea no existe', async () => {
+    const s = await publicada();
+    const r = await cli('post', `/${s.codigo}/cotizacion/respuesta`).send({ respuesta: 'acepta' });
+    expect(r.status).toBe(409);
+    expect((await prisma.cotizacion.findFirstOrThrow({ where: { solicitudId: s.id } })).estado).toBe('Pendiente de respuesta');
+  });
+
+  it('sin adelanto acepta: se genera el pedido y elige el día del recojo en una hora libre', async () => {
+    const s = await publicada(0);
+    const r = await cli('post', `/${s.codigo}/cotizacion/respuesta`).send({ respuesta: 'acepta', comentario: 'Mejor por la tarde' });
+    expect(r.body).toMatchObject({ estado: 'Aceptada', eligeRecojo: true });
+    expect(await prisma.pedido.findUniqueOrThrow({ where: { codigo: r.body.pedido } })).toMatchObject({ estado: 'Esperando mueble', solicitudId: s.id });
+    expect((await cli('get', `/${s.codigo}/cotizacion`)).body).toMatchObject({ estado: 'Aceptada', eligeRecojo: true, pedido: { codigo: r.body.pedido, recojo: null } });
+
+    const disp = (await cli('get', '/recojos/disponibilidad')).body as { dias: { fecha: string; horas: { inicio: string; estado: string }[] }[] };
+    const dia = disp.dias.find((d) => d.horas.some((h) => h.estado === 'libre'))!;
+    const hora = dia.horas.find((h) => h.estado === 'libre')!.inicio;
+    expect((await cli('post', `/${s.codigo}/recojo`).send({ fecha: dia.fecha, hora })).status).toBe(200);
+    expect((await cli('get', `/${s.codigo}/cotizacion`)).body.pedido.recojo).toMatchObject({ tipo: 'agendado', fecha: dia.fecha, hora });
+    expect((await cli('post', `/${s.codigo}/recojo`).send({ fecha: dia.fecha, hora })).status).toBe(409);
   });
 });

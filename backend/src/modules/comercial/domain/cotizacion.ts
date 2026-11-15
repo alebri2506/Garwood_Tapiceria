@@ -41,14 +41,18 @@ export interface CostosCotizacion { tarifaHora: number; costosFijos: number; mar
 /**
  * CU-C08 Precio sugerido de un mueble = materiales + tela + mano de obra + maquinaria + costos fijos + margen (sin transporte).
  * Los costos fijos son POR PEDIDO: se cargan una sola vez, al primer mueble de la cotización (`conFijos`).
+ * Las actividades (horas, máquina y materiales) son POR UNIDAD, como en la plantilla: se multiplican por `cantidad`
+ * (p. ej. «2 × sofá de 3 cuerpos»). Las yardas de tela las mide el taller para toda la línea: no se multiplican.
  */
-export function costearMueble(actividades: ActividadACotizar[], telas: { yardas: number; precio: number }[], p: CostosCotizacion, conFijos: boolean) {
+export function costearMueble(actividades: ActividadACotizar[], telas: { yardas: number; precio: number }[], p: CostosCotizacion, conFijos: boolean, cantidad = 1) {
   let horas = 0, materiales = 0, maquinaria = 0;
   for (const a of actividades) {
     horas += a.horasPersona;
     maquinaria += a.horasMaquina * a.tarifaMaquina;
     for (const m of a.materiales) materiales += m.cantidad * m.precio;
   }
+  const n = Math.max(1, cantidad);
+  horas *= n; maquinaria *= n; materiales *= n;
   for (const t of telas) materiales += t.yardas * t.precio;
   const manoObra = horas * p.tarifaHora;
   const fijos = conFijos ? p.costosFijos : 0;

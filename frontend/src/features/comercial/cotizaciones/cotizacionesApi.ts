@@ -16,6 +16,11 @@ export interface MuebleArmado {
   medios: { nombre: string; tipo: string; url: string | null }[];
   actividades: ActividadArmada[];
   propuesto: number; motivo: string; revisado: boolean;
+  /** Para elegir la tela en la cita o la visita con el mismo dibujo que W2. */
+  tipoCodigo?: string;
+  partesMueble?: { id: number; nombre: string }[];
+  /** «Distintas telas por partes»: la tela de cada parte (vacío = una tela para todo). */
+  partes?: { parteId: number; materialId: number }[];
 }
 export interface Armado {
   solicitud: { codigo: string; estado: string; fecha: string; esperaFotos: boolean };
@@ -34,7 +39,7 @@ export interface Armado {
   muestrario?: { id: number; nombre: string; familia: string | null; colorHex: string | null; libro: string | null; precio: number | null }[];
 }
 export interface EntradaCotizacion {
-  muebles: { solicitudMuebleId: number; actividades: { nombre: string; horasPersona: number; maquinaId: number | null; horasMaquina: number; materiales: { materialId: number; cantidad: number }[] }[]; telas: { materialId: number; yardas: number }[]; propuesto: number; motivo: string; revisado: boolean }[];
+  muebles: { solicitudMuebleId: number; actividades: { nombre: string; horasPersona: number; maquinaId: number | null; horasMaquina: number; materiales: { materialId: number; cantidad: number }[] }[]; telas: { materialId: number; yardas: number }[]; partes?: { parteId: number; materialId: number }[]; propuesto: number; motivo: string; revisado: boolean }[];
   transporte: { manual: boolean; monto?: number; motivo?: string };
   adelanto: number | null;
   observaciones: string;

@@ -310,6 +310,11 @@ Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más ad
     generales («la tela se pide al pagar el adelanto…», «si encontramos algo distinto, recotización…») las ve siempre el
     cliente como texto fijo de la cotización.
 11. **Costos fijos por pedido:** se cargan una sola vez, al precio sugerido del primer mueble.
+11b. **Cantidad del mueble (15/11):** las actividades de la plantilla son **por unidad**; con «2 × sofá» las horas, la
+    maquinaria y los materiales se multiplican por 2. Las yardas de tela las escribe el taller para toda la línea (no se
+    multiplican) y los costos fijos siguen una sola vez. El **precio propuesto empieza igual al sugerido** (RG-01) y lo
+    sigue mientras el Administrador no escriba otro; «Volver al sugerido» lo devuelve. Con varios muebles el panel
+    muestra «Precio de este mueble» y el total de la cotización con el transporte (una sola vez).
 12. **Guardar y publicar:** «Guardar borrador» guarda lo armado (COT-0000) sin crear filas que luego haya que borrar
     (RG-03). «Publicar y avisar al cliente» revisa todo, congela los precios de ese momento, fija la vigencia
     (`cotizacion.vigencia_dias`), pasa la solicitud a «Cotizada» y avisa al cliente por notificación y correo. Ya
@@ -341,8 +346,12 @@ Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más ad
 1. **Empezar** registra la visita como atendida (endpoint de resultado que ya existía); **«No lo encontramos»** registra la
    inasistencia con su regla de reprogramaciones y aviso al cliente, y vuelve a la Agenda.
 2. **Tela en la cita o la visita:** se elige del muestrario (A15b) y viaja en el borrador de la cotización de A4, con las
-   yardas que mide el taller (no se escriben filas en la solicitud). Sin tela no se puede cerrar la respuesta.
-   «Por partes» no se guarda por parte: la cotización guarda cada tela con el total de yardas.
+   yardas que mide el taller. Sin tela no se puede cerrar la respuesta.
+   **Igual que W2 (15/11):** «Una tela para todo» o «Distintas telas por partes», con el mismo dibujo del mueble y la
+   lista de partes; con partes, **cada parte necesita su tela**. Las yardas van **por tela** (las mide el taller). Mientras
+   se arma viaja en el borrador; **al publicar** queda en la solicitud como la del catálogo en línea (`modo_tela` y
+   `solicitud_tela` con su parte), y la cotización guarda una fila por tela con sus yardas.
+   El paso Traslado usa el mismo campo de dirección y **mapa** de W2 (autocompletado de Google si hay clave).
 3. **Traslado:** se guarda en la solicitud (delivery con dirección guardada o nueva, o lo lleva el cliente); el transporte
    lo calcula A4 automáticamente.
 4. **La cotización se arma con A4** (mismas reglas). La respuesta la publica y, según lo que decide el cliente:
@@ -356,8 +365,52 @@ Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más ad
    hasta `recojo.dias_anticipacion_max` días, sin domingos, feriados ni bloqueos de la agenda; **un recojo por hora**,
    un camión) con aviso obligatorio `recojo_programado`; o «en la visita» (solo a domicilio, queda Realizado). El pedido
    sigue «Esperando mueble» hasta la recepción en el taller (A18).
-7. Pendiente para Pagos y Despacho: pantallas A5/W5 sobre la tabla `pago`; reservar materiales al nacer el pedido; salidas
+7. **Atención a medias (15/11):** si se sale antes de publicar, la cita queda «Atendida» y la solicitud «Atendida». En la
+   Agenda y en A3 el botón es **«Continuar la atención»** (no «Armar cotización», porque la tela y el traslado se definen
+   en la atención) y se retoma en el primer paso que falta: telas → traslado → cotización. La pantalla sigue el diseño
+   A2b: pasos a la izquierda y el resumen «Se guarda mientras avanza / Lo que se lleva el cliente» a la derecha; fotos
+   en un visor compacto (la foto entera, sin recortar).
+8. **La agenda del cliente (W3/W3b) es la misma del Administrador (A2):** ocupan turno las citas Programadas **y las
+   Atendidas** (una empezada antes de su hora sigue en A2), las visitas con hora (su duración) y las visitas antiguas
+   solo con franja (toda la franja). Un bloqueo por horas tapa el turno si toca **cualquier parte** de él.
+9. **Una sola agenda sin cruces (15/11 · decisión de Alejandro):** a veces el Administrador va con el chico del delivery a
+   recoger, así que **recojos, citas en el local, visitas y bloqueos comparten una sola agenda** y nunca se cruzan. Esto
+   reemplaza «el recojo no ocupa la agenda del Administrador» (A.7 y L.6). Un recojo agendado ocupa su bloque de
+   `recojo.duracion_min` (1 h: tapa dos turnos de cita de 30 min); una cita o visita tapa las horas de recojo que toca.
+   Sigue **un recojo a la vez** (un camión). **Las horas de inicio del recojo van cada 30 min, las mismas de la Agenda**
+   (`agenda.turnos_*`, 9:30, 10:00, 10:30, 11:00 · 15:00, 15:30, 16:00): así se aprovecha un hueco como 9:30–10:30. El
+   recojo sigue durando `recojo.duracion_min` (1 h) y solo se ofrece si la hora entera cabe antes del almuerzo o del cierre. **Lo mismo
+   para la visita a domicilio (W3b):** empieza cada 30 min en las horas de la Agenda y dura `visita.duracion_min` (1 h). Los recojos se ven en la Agenda de citas como bloques naranjas («Recojo ·
+   cliente», con el pedido y la dirección) y no se pueden elegir ni bloquear. Costo aceptado: las horas de recojo se
+   restan de las de citas aunque el chico vaya solo; si más adelante molesta, se agrega «Va el Administrador» por recojo.
+10. **Estado «En atención» (15/11 · decisión de Alejandro):** «Empezar» deja la cita o la visita **y su solicitud** «En
+    atención» (no «Atendida»). Así una atención a medias no se ve terminada. Se puede cotizar, cambiar el traslado y
+    descartar (la cita en curso se cancela); sigue ocupando la agenda y no admite «No asistió». **Al registrar la
+    respuesta del cliente** (se publica la cotización) la cita pasa a «Atendida» y la solicitud a «Cotizada». En la
+    Agenda se ve en otro color con «Continuar la atención»; en A3 está en la etapa «Cita / visita»; el cliente (W6c) ve
+    «Cita en curso». Migración `en_atencion` (CHECK de cita y solicitud). Las atenciones a medias de antes de este
+    cambio quedaron «Atendida» y se siguen retomando igual.
+11. Pendiente para Pagos y Despacho: pantallas A5/W5 sobre la tabla `pago`; reservar materiales al nacer el pedido; salidas
    que usen la tabla `recojo`.
+
+## M. El cliente revisa y responde su cotización (W4 · 15/11 · decisiones de Alejandro)
+1. **W6c** muestra en la tarjeta de cada solicitud su última cotización publicada: total («incluye traslado ida y vuelta»
+   si hay transporte), días para responder, adelanto y el botón **«Ver y responder»** (lleva a W4). Aceptada sin
+   adelanto, con pedido, rechazada o vencida cambian la tarjeta (las tres últimas pasan a Cerradas).
+2. **W4** muestra lo que hará el taller con cada mueble (los nombres de las actividades, sin horas, máquinas ni costos:
+   RG-08), la tela, el traslado, las observaciones del taller (una por línea), el total con el transporte, el adelanto y el
+   saldo. El precio por mueble solo se lista con varios muebles.
+3. **Rechazar** funciona: motivo obligatorio (Precio · Plazo de entrega · Elegí otro taller · Otro motivo) y comentario
+   opcional (`cotizacion.comentario_respuesta`). Medio de respuesta «Plataforma». La solicitud queda **Rechazada**.
+4. **«Aceptar y pagar el adelanto» todavía no hace nada:** no hay pasarela de pago. El botón se ve deshabilitado con la
+   nota «El pago en línea estará disponible pronto…» y el backend responde 409 si se intenta por la API.
+5. **Adelanto 0 %** (cliente con pedidos cerrados): «Aceptar y generar el pedido» sí funciona (no pasa por la pasarela):
+   pedido en «Esperando mueble» con su constancia, y si es con delivery el cliente **elige el día del recojo** en la misma
+   agenda del camión que usa A2b (mismas reglas: una hora libre, un recojo por hora).
+6. **Vencida:** se trata como vencida si pasó su vigencia aunque el estado diga «Pendiente de respuesta» (no hay todavía
+   tarea que la venza sola). Como la renovación (C10) no existe, en vez de «Pedir que la renueven» se indica llamar.
+7. No se muestran todavía: la tarjeta de muestra de tela (ese flujo no existe), «Tiempo estimado» (no hay parámetro) y
+   la orden de servicio en PDF.
 
 ## F. Pendientes por confirmar con el dueño (vía Alejandro)
 - Duración real de la cita para ver telas (prototipo: 30 min).

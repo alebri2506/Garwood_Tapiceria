@@ -6,13 +6,13 @@ import { Icon } from '../../../shared/ui/Icon';
 import { StatusChip } from '../../../shared/ui/StatusChip';
 import { DIAS, MESES } from '../fechas';
 import { fondoDe } from '../solicitud/datos';
-import { adminSolicitudesApi, type FichaAdmin } from './adminApi';
+import { adminSolicitudesApi, type FichaAdmin, tonoEstadoVisible } from './adminApi';
 
 const CANAL: Record<string, string> = { web: 'Web', telefono: 'Teléfono', local: 'En persona', correo: 'Correo', mensaje: 'Mensaje de texto' };
 const TELA: Record<string, string> = { trae: 'La trae el cliente', catalogo: 'Telas en línea', local: 'Ver en el local', domicilio: 'Visita a domicilio', sin: 'No lleva tela' };
 const ACCION: Record<string, string> = {
   solicitud_registrada: 'Solicitud registrada', cita_programada: 'Cita programada', cita_reprogramada: 'Cita reprogramada', cita_cancelada: 'Cita cancelada',
-  cita_atendida: 'Cita atendida', cita_inasistencia: 'No asistió', solicitud_descartada: 'Descartada', fotos_recibidas: 'Llegaron las fotos',
+  cita_en_atencion: 'Atención empezada', cita_atendida: 'Cita atendida', cita_inasistencia: 'No asistió', solicitud_descartada: 'Descartada', fotos_recibidas: 'Llegaron las fotos',
   solicitud_vencida: 'Vencida', traslado_definido: 'Traslado definido', solicitud_cotizada: 'Solicitud cotizada',
   cotizacion_aceptada: 'Cotización aceptada', cotizacion_rechazada: 'Cotización rechazada', pedido_generado: 'Pedido generado',
   cotizacion_creada: 'Cotización empezada', cotizacion_guardada: 'Cotización guardada', cotizacion_publicada: 'Cotización publicada', pago_registrado: 'Adelanto cobrado', recojo_agendado: 'Recojo agendado', recojo_en_visita: 'Mueble recogido en la visita',
@@ -77,12 +77,14 @@ export const FichaSolicitud = forwardRef<HTMLElement, Props>(function FichaSolic
         ? { texto: casa ? 'Ir a la visita' : 'Ir a la cita', a: `/admin/agenda/atender?solicitud=${f.codigo}${casa ? '&lugar=domicilio' : ''}` }
         : { texto: casa ? 'Ver visita' : 'Ver cita', a: `/admin/agenda?cita=${cita.id}&fecha=${cita.fecha}` }
       : { texto: casa ? 'Agendar visita' : 'Agendar cita', a: `/admin/agenda?agendar=${f.codigo}` }
+    // Cita o visita ya empezada: la tela se elige y el traslado se define en la atención, así que se sigue ahí (no en A4).
+    : (f.estado === 'En atención' || f.estado === 'Atendida') && (casa || f.tela === 'local') ? { texto: casa ? 'Continuar la atención de la visita' : 'Continuar la atención de la cita', a: `/admin/agenda/atender?solicitud=${f.codigo}${casa ? '&lugar=domicilio' : ''}` }
     : ['Nueva', 'Atendida'].includes(f.estado) && !f.esperaFotos ? { texto: 'Armar cotización', a: `/admin/cotizaciones/cotizar?solicitud=${f.codigo}` }
       : f.estado === 'Cotizada' ? { texto: 'Ver cotización', a: `/admin/cotizaciones/cotizar?solicitud=${f.codigo}` } : null;
 
   return (
     <section ref={ref} className="sl-det" aria-label={`Solicitud ${f.codigo}`}>
-      <div className="between"><span className="ov">{f.codigo} · {CANAL[f.canal] ?? f.canal}</span><StatusChip status={f.estadoVisible} /></div>
+      <div className="between"><span className="ov">{f.codigo} · {CANAL[f.canal] ?? f.canal}</span><StatusChip status={f.estadoVisible} tone={tonoEstadoVisible(f.estadoVisible)} /></div>
       <div className="sl-who">
         <span className="sl-av" aria-hidden="true">{iniciales(f.cliente.nombre)}</span>
         <div>

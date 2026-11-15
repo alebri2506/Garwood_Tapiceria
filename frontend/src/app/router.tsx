@@ -31,6 +31,7 @@ import { ParametrosPage } from '../features/seguridad/parametros/ParametrosPage'
 import { UsuariosPage } from '../features/seguridad/usuarios/UsuariosPage';
 import { PerfilPage } from '../features/historial/perfil/PerfilPage';
 import { PagosAdminPage } from '../features/comercial/pagos/PagosAdminPage';
+import { MiCotizacionPage } from '../features/comercial/micotizacion/MiCotizacionPage';
 import { PagosClientePage } from '../features/comercial/pagos/PagosClientePage';
 
 // Pantallas A del diseño que aún no se implementan (ruta del menú lateral → pantalla).
@@ -81,7 +82,7 @@ export const router = createBrowserRouter([
         { path: 'solicitud', element: <SolicitudPage /> },
         { path: 'cita', element: <CitaPage tipo="local" /> },
         { path: 'visita', element: <CitaPage tipo="domicilio" /> },
-        { path: 'cotizacion', element: <PendientePage titulo="W4 Mi cotización" /> },
+        { path: 'cotizacion', element: <MiCotizacionPage /> },
         { path: 'pagos', element: <PagosClientePage /> },
         { path: 'entrega', element: <PendientePage titulo="W7 Aviso de entrega" /> },
         { path: 'reclamos', element: <PendientePage titulo="W9 Reclamos" /> },

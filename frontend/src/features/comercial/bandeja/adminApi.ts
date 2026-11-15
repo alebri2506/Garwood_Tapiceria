@@ -10,6 +10,21 @@ export const ETAPAS = ['Cita / visita', 'Por cotizar', 'Esperando al cliente', '
 export type Etapa = (typeof ETAPAS)[number];
 export const etapaDe = (estado: string): Etapa =>
   estado === 'En espera de cita' ? 'Cita / visita' : estado === 'Nueva' || estado === 'Atendida' ? 'Por cotizar' : estado === 'Cotizada' ? 'Esperando al cliente' : 'Cerradas';
+/**
+ * Color del estado que se ve en A3 (lista y ficha). «Aceptada → pedido …» en verde (ya es pedido); «Aceptada · falta
+ * adelanto» en ámbar (todavía falta el pago), como la cotización «Aceptada: pendiente de adelanto».
+ */
+export function tonoEstadoVisible(v: string): 'info' | 'success' | 'progress' | 'warning' | 'danger' | 'neutral' {
+  if (v.startsWith('Aceptada → pedido')) return 'success';
+  if (v.startsWith('Aceptada · falta')) return 'warning';
+  const t: Record<string, 'info' | 'success' | 'progress' | 'danger' | 'neutral'> = {
+    'Nueva': 'info', 'En espera de cita': 'info', 'En espera de visita': 'info', 'En atención': 'progress', 'Atendida': 'success',
+    'Esperando respuesta': 'progress', 'Aceptada': 'success', 'Rechazada': 'danger', 'Vencida': 'neutral', 'Descartada': 'danger',
+  };
+  return t[v] ?? 'neutral';
+}
+export const esAceptada = (v: string) => v.startsWith('Aceptada');
+
 export const estadoVisibleDe = (estado: string, tela: string) =>
   estado === 'En espera de cita' && tela === 'domicilio' ? 'En espera de visita' : estado === 'Cotizada' ? 'Esperando respuesta' : estado;
 
@@ -81,7 +96,7 @@ const CLIENTES: ClienteBuscado[] = [
 ];
 const fichaDe = (s: SolicitudCliente): FichaAdmin => ({
   ...s, estadoVisible: estadoVisibleDe(s.estado, s.tela), etapa: etapaDe(s.estado), cliente: { id: 1, nombre: 'Laura Méndez', tipoPersona: 'persona', email: 'laura.mendez@correo.com', telefono: '+19735550142', tieneCuenta: true },
-  registradaPor: s.canal === 'web' ? 'el cliente' : 'admin', puedeDescartarse: ['Nueva', 'En espera de cita', 'Atendida'].includes(s.estado),
+  registradaPor: s.canal === 'web' ? 'el cliente' : 'admin', puedeDescartarse: ['Nueva', 'En espera de cita', 'En atención', 'Atendida'].includes(s.estado),
   historial: [{ accion: 'solicitud_registrada', fecha: s.fecha, quien: s.canal === 'web' ? 'Cliente' : 'admin' }],
 });
 const buscar = (codigo: string) => {

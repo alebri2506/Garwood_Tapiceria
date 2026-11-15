@@ -27,6 +27,12 @@
 .ag-ap.ag-appt{--c:var(--primary);background:color-mix(in srgb,var(--primary) 7%,var(--surface))}
 .ag-ap.ag-miss{--c:var(--error-500);background:color-mix(in srgb,var(--error-500) 7%,var(--surface))}
 .ag-ap.ag-miss b{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--error-500) 60%,transparent)}
+/* Recojo del delivery: ocupa la agenda (una sola agenda sin cruces), no se elige como cita. */
+.ag-ap.ag-cruce{box-shadow:inset 0 0 0 2px #D97706}
+.ag-ap.ag-cruce span{color:#B45309;font-weight:600}
+/* En atención: empezó y todavía no se registró la respuesta del cliente. */
+.ag-ap.ag-curso{--c:#0891B2;background:color-mix(in srgb,#0891B2 8%,var(--surface))}
+.ag-ap.ag-rec{--c:#D97706;background:color-mix(in srgb,#D97706 8%,var(--surface));cursor:default}
 .ag-ap.ag-pick{--c:var(--warning-500);background:color-mix(in srgb,var(--warning-500) 10%,var(--surface))}
 .ag-ap.ag-sel{box-shadow:0 0 0 2px var(--primary),var(--shadow-md)}
 .ag-free{width:100%;height:100%;border:0;border-radius:10px;background:transparent;color:transparent;font:600 12.5px/1 var(--font-sans);cursor:pointer;transition:background 160ms var(--ease-out,ease),color 160ms var(--ease-out,ease)}
@@ -63,7 +69,8 @@
 .ag-who h2{font-size:20px;line-height:1.2}
 .ag-who small{font-size:13px;color:var(--ink-muted)}
 .ag-facts{display:flex;flex-direction:column;gap:2px;padding:6px 0}
-.ag-facts div{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+/* El nombre del dato ocupa su ancho (no se aplasta); el valor usa el resto y baja de línea si es largo. */
+.ag-facts div{display:grid;grid-template-columns:22px auto minmax(0,1fr);align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
 .ag-facts div:last-child{border-bottom:0}
 .ag-facts div > span{color:var(--ink-muted)}
 .ag-facts b{font-variant-numeric:tabular-nums;text-align:right}
@@ -93,8 +100,8 @@
 
 /* Ajustes de la implementación */
 .ag-facts { margin: 0; }
-.ag-facts dt { color: var(--ink-muted); }
-.ag-facts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.ag-facts dt { color: var(--ink-muted); white-space: nowrap; }
+.ag-facts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; min-width: 0; overflow-wrap: anywhere; }
 .ag-wk button:disabled { opacity: .45; cursor: not-allowed; }
 .ag-seg button:focus-visible, .ag-wk button:focus-visible, .ag-fchip:focus-visible, .ag-mchip:focus-visible, .ag-h:focus-visible, .ag-ap:focus-visible, .ag-free:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .ag-free:focus-visible { background: var(--primary-soft); color: var(--primary); }

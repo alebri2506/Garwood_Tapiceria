@@ -1,25 +1,32 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TopAdmin } from '../../../app/layout/AdminLayout';
 import { ApiError } from '../../../shared/api/http';
 import { Alert } from '../../../shared/ui/Alert';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { Icon } from '../../../shared/ui/Icon';
-import { TextField } from '../../../shared/ui/TextField';
 import { Contador } from '../solicitud/Contador';
-import { DIAS, MESES, fechaLarga } from '../fechas';
+import { MESES, fechaLarga } from '../fechas';
 import { Armar, type ArmadoEnVisita } from '../cotizaciones/ModoArmar';
 import { FotosMueble } from '../cotizaciones/VisorMedios';
-import { cotizacionesApi, type Armado, type EntradaCotizacion } from '../cotizaciones/cotizacionesApi';
+import { cotizacionesApi, type Armado, type EntradaCotizacion, type MuebleArmado } from '../cotizaciones/cotizacionesApi';
+import { DibujoMueble } from '../solicitud/DibujoMueble';
+import { CampoDireccion } from '../solicitud/PasosW2';
+import type { DireccionW2 } from '../solicitud/estadoW2';
+import type { DireccionGuardada } from '../solicitud/solicitudApi';
+import { MapaUbicacion } from '../../../shared/maps/MapaUbicacion';
+import { MapsProvider } from '../../../shared/maps/MapsProvider';
+import { fondoDe } from '../solicitud/datos';
+import '../solicitud/solicitud.css';
 import type { Medio } from '../cotizaciones/datos';
 import { PASOS, SIGUIENTE, TEXTOS } from './datos';
+import { GrillaRecojo, deIso, type HoraElegida } from './GrillaRecojo';
 import { atencionApi, type Atencion, type Disponibilidad, type MetodoPago, type ResultadoRespuesta } from './atencionApi';
 import '../cotizaciones/cotizaciones.css';
 
 // A2b Atender la cita o la visita a domicilio conectada a la API (decisiones L). La cotización se arma con A4.
 
 const dolares = (v: number) => `$${Math.round(v).toLocaleString('en-US')}`;
-const deIso = (s: string) => { const [y, m, d] = s.split('-').map(Number) as [number, number, number]; return new Date(y, m - 1, d); };
 const minuscula = (s: string) => `${s[0]!.toLowerCase()}${s.slice(1)}`;
 const mensaje = (e: unknown, def: string) => (e instanceof ApiError ? e.message : def);
 const METODOS: { id: MetodoPago; l: string; frase: string }[] = [
@@ -29,14 +36,34 @@ const METODOS: { id: MetodoPago; l: string; frase: string }[] = [
 const MOTIVOS = ['Precio', 'Plazo de entrega', 'Elegirá otro taller', 'Otro motivo'];
 
 /** La cotización con las telas elegidas en la visita, a partir de lo que trae «armar» (para guardar el borrador). */
-function entradaDesde(a: Armado, telas: Record<number, { materialId: number; yardas: number }[]>): EntradaCotizacion {
+/** La tela de un mueble en la cita o la visita, como en W2: una para todo, o una por cada parte. Las yardas van por tela. */
+interface TelaDelMueble { modo: 'una' | 'partes'; una: number | null; porParte: Record<number, number>; activa: number; yardas: Record<number, number> }
+
+const telaInicial = (m: MuebleArmado): TelaDelMueble => ({
+  modo: m.partes?.length ? 'partes' : 'una',
+  una: m.partes?.length ? null : m.tela.telas[0]?.materialId ?? null,
+  porParte: Object.fromEntries((m.partes ?? []).map((x) => [x.parteId, x.materialId])),
+  activa: 0,
+  yardas: Object.fromEntries(m.tela.telas.map((t) => [t.materialId, t.yardas || 1])),
+});
+/** Las telas que usa el mueble (sin repetir), con sus yardas. */
+const telasUsadas = (t: TelaDelMueble) => {
+  const ids = t.modo === 'una' ? (t.una != null ? [t.una] : []) : [...new Set(Object.values(t.porParte))];
+  return ids.map((id) => ({ materialId: id, yardas: t.yardas[id] ?? 1 }));
+};
+
+function entradaDesde(a: Armado, telas: Record<number, TelaDelMueble>): EntradaCotizacion {
   return {
-    muebles: a.muebles.map((m) => ({
-      solicitudMuebleId: m.solicitudMuebleId,
-      actividades: m.actividades.map((x) => ({ nombre: x.nombre, horasPersona: x.horasPersona, maquinaId: x.maquinaId, horasMaquina: x.horasMaquina, materiales: x.materiales.map((y) => ({ materialId: y.materialId, cantidad: y.cantidad })) })),
-      telas: m.tela.eligeAqui ? (telas[m.solicitudMuebleId] ?? []) : m.tela.telas.map((t) => ({ materialId: t.materialId, yardas: t.yardas })),
-      propuesto: m.propuesto, motivo: m.motivo, revisado: m.revisado,
-    })),
+    muebles: a.muebles.map((m) => {
+      const t = telas[m.solicitudMuebleId];
+      return {
+        solicitudMuebleId: m.solicitudMuebleId,
+        actividades: m.actividades.map((x) => ({ nombre: x.nombre, horasPersona: x.horasPersona, maquinaId: x.maquinaId, horasMaquina: x.horasMaquina, materiales: x.materiales.map((y) => ({ materialId: y.materialId, cantidad: y.cantidad })) })),
+        telas: m.tela.eligeAqui ? (t ? telasUsadas(t) : []) : m.tela.telas.map((x) => ({ materialId: x.materialId, yardas: x.yardas })),
+        ...(m.tela.eligeAqui && t?.modo === 'partes' ? { partes: Object.entries(t.porParte).map(([parteId, materialId]) => ({ parteId: Number(parteId), materialId })) } : {}),
+        propuesto: m.propuesto, motivo: m.motivo, revisado: m.revisado,
+      };
+    }),
     transporte: a.transporte.manual ? { manual: true, monto: a.transporte.monto, motivo: a.transporte.motivo } : { manual: false },
     adelanto: a.condiciones.adelanto,
     observaciones: a.observaciones,
@@ -49,12 +76,15 @@ export function AtencionConectada({ codigo }: { codigo: string }) {
   const [armado, setArmado] = useState<Armado | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [paso, setPaso] = useState(0);
+  // Lo que se elige en el paso Telas antes de guardar: el resumen lateral lo muestra en vivo (solo en ese paso).
+  const [telasEnCurso, setTelasEnCurso] = useState<Record<number, TelaDelMueble> | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
 
+  const retomada = useRef(false);
   const cargarArmado = useCallback(async () => {
-    try { setArmado(await cotizacionesApi.armar(codigo)); } catch (e) { setAviso(mensaje(e, 'No pudimos cargar la cotización.')); }
+    try { const a = await cotizacionesApi.armar(codigo); setArmado(a); return a; } catch (e) { setAviso(mensaje(e, 'No pudimos cargar la cotización.')); return null; }
   }, [codigo]);
   const cargar = useCallback(async () => {
     setError(null);
@@ -62,8 +92,14 @@ export function AtencionConectada({ codigo }: { codigo: string }) {
       const d = await atencionApi.datos(codigo);
       setAt(d);
       // La cotización se arma cuando la visita ya se está atendiendo (la solicitud dejó de esperar su cita).
-      if (d.solicitud.estado !== 'En espera de cita') await cargarArmado();
+      const a = d.solicitud.estado !== 'En espera de cita' ? await cargarArmado() : null;
       if (d.cotizacion && d.cotizacion.estado !== 'Borrador') setPaso(4);
+      else if (!retomada.current && (d.cita?.estado === 'En atención' || d.cita?.estado === 'Atendida') && a) {
+        // Se volvió a abrir una atención ya empezada: sigue en el primer paso que falta (telas → traslado → cotización).
+        const faltaTela = a.muebles.some((m) => m.tela.eligeAqui && m.tela.tipo !== 'no' && m.tela.telas.length === 0);
+        setPaso(faltaTela ? 1 : d.solicitud.traslado == null ? 2 : 3);
+      }
+      retomada.current = true;
     } catch (e) { setError(mensaje(e, 'No pudimos abrir la atención.')); }
   }, [codigo, cargarArmado]);
   useEffect(() => { void cargar(); }, [cargar]);
@@ -76,12 +112,14 @@ export function AtencionConectada({ codigo }: { codigo: string }) {
   const cuando = at.cita ? `${minuscula(fechaLarga(deIso(at.cita.fecha)))}${at.cita.hora ? `, ${at.cita.hora}` : at.cita.franja ? `, por la ${at.cita.franja === 'manana' ? 'mañana' : 'tarde'}` : ''}` : '';
   const ir = (n: number) => { setPaso(n); window.scrollTo({ top: 0 }); titulo.current?.focus(); };
   const publicada = Boolean(at.cotizacion && at.cotizacion.estado !== 'Borrador');
+  const resumen = <ResumenAtencion at={at} armado={armado} paso={paso} enCurso={paso === 1 ? telasEnCurso : null} />;
 
   /** «Empezar»: la visita se está realizando (CU-C05) y la solicitud queda lista para cotizar. */
   const empezar = async () => {
     setOcupado(true);
     try {
-      if (at.cita?.estado === 'Programada') await atencionApi.resultado(at.cita.id, 'atendida');
+      // La cita queda «En atención»: pasa a «Atendida» recién al registrar la respuesta del cliente.
+      if (at.cita?.estado === 'Programada') await atencionApi.empezar(codigo);
       await cargar();
       ir(1);
     } catch (e) { setAviso(mensaje(e, 'No pudimos empezar la atención.')); } finally { setOcupado(false); }
@@ -106,23 +144,67 @@ export function AtencionConectada({ codigo }: { codigo: string }) {
         })}
       </nav>
 
-      {paso === 0 && <PasoRevisar at={at} lugar={lugar} onEmpezar={empezar} ocupado={ocupado} onNoEstaba={async () => {
+      {paso === 0 && <PasoRevisar aside={resumen} at={at} lugar={lugar} onEmpezar={empezar} ocupado={ocupado} onNoEstaba={async () => {
         if (!at.cita) return;
         try { await atencionApi.resultado(at.cita.id, 'no_asistio'); navigate('/admin/agenda'); } catch (e) { setAviso(mensaje(e, 'No pudimos registrar la inasistencia.')); }
       }} />}
-      {paso === 1 && armado && <PasoTelas armado={armado} codigo={codigo} onListo={async () => { await cargarArmado(); ir(2); }} onAtras={() => ir(0)} />}
-      {paso === 2 && <PasoTraslado at={at} codigo={codigo} onListo={async (d) => { setAt(d); await cargarArmado(); ir(3); }} onAtras={() => ir(1)} />}
+      {paso === 1 && armado && <PasoTelas aside={resumen} onCambio={setTelasEnCurso} armado={armado} codigo={codigo} onListo={async () => { await cargarArmado(); ir(2); }} onAtras={() => ir(0)} />}
+      {/* El mapa y el autocompletado de direcciones de Google necesitan su proveedor (igual que W2). */}
+      {paso === 2 && <MapsProvider><PasoTraslado aside={resumen} at={at} codigo={codigo} onListo={async (d) => { setAt(d); await cargarArmado(); ir(3); }} onAtras={() => ir(1)} /></MapsProvider>}
       {paso >= 3 && armado && !publicada && (
         <PasoCotizacionYRespuesta key={`${armado.cotizacion.codigo}|${armado.transporte.calculado}`} armado={armado} at={at} codigo={codigo} paso={paso} lugar={lugar}
-          onPaso={ir} onRecargar={cargarArmado} onRespondido={cargar} />
+          onPaso={ir} onRecargar={async () => { await cargarArmado(); }} onRespondido={cargar} />
       )}
       {paso === 4 && publicada && <Cierre at={at} lugar={lugar} onCambio={setAt} />}
     </>
   );
 }
 
+// ---------------------------------------------------------------- Resumen lateral (pasos 1 a 3)
+function ResumenAtencion({ at, armado, paso, enCurso }: { at: Atencion; armado: Armado | null; paso: number; enCurso: Record<number, TelaDelMueble> | null }) {
+  const fotos = at.muebles.reduce((t, m) => t + m.medios.length, 0);
+  const color = (id: number) => armado?.muestrario?.find((x) => x.id === id)?.colorHex ?? null;
+  const telas = armado?.muebles.flatMap((m) => {
+    const vivo = enCurso?.[m.solicitudMuebleId];
+    if (vivo && m.tela.eligeAqui) {
+      return telasUsadas(vivo).map((t) => ({
+        clave: `${m.solicitudMuebleId}-${t.materialId}`, nombre: armado.muestrario?.find((x) => x.id === t.materialId)?.nombre ?? 'Tela', yardas: t.yardas, color: color(t.materialId),
+        partes: vivo.modo === 'partes' ? (m.partesMueble ?? []).filter((p) => vivo.porParte[p.id] === t.materialId).map((p) => p.nombre).join(', ') : '',
+      }));
+    }
+    return m.tela.telas.map((t) => ({
+      clave: `${m.solicitudMuebleId}-${t.materialId}`, nombre: t.nombre, yardas: t.yardas, color: color(t.materialId),
+      partes: (m.partes ?? []).filter((x) => x.materialId === t.materialId).map((x) => m.partesMueble?.find((p) => p.id === x.parteId)?.nombre).filter(Boolean).join(', '),
+    }));
+  }) ?? [];
+  const telaTexto = (() => {
+    if (!armado) return 'Se eligen en el paso 2';
+    const sinTela = (m: MuebleArmado) => (enCurso?.[m.solicitudMuebleId] && m.tela.eligeAqui ? telasUsadas(enCurso[m.solicitudMuebleId]!).length === 0 : !m.tela.telas.length);
+    const notas = [...new Set(armado.muebles.filter(sinTela).map((m) => (m.tela.eligeAqui ? 'Falta elegir' : m.tela.nota)))];
+    if (!telas.length) return notas.join(' · ') || 'Falta elegir';
+    return `${telas.length} ${telas.length === 1 ? 'tela' : 'telas'}${notas.length ? ` · ${notas.join(' · ').toLowerCase()}` : ''}`;
+  })();
+  const dir = at.direcciones.find((d) => d.id === at.solicitud.direccionId);
+  const traslado = at.solicitud.traslado === 'propio' ? 'Lo lleva el cliente'
+    : at.solicitud.traslado === 'delivery' ? `Delivery${dir ? ` · ${dir.texto}` : ''}` : 'Se define en el paso 3';
+  return (
+    <section className="card at-sum" aria-label="Resumen de la atención">
+      <span className="ov">{paso === 0 ? 'Se guarda mientras avanza' : 'Lo que se lleva el cliente'}</span>
+      {at.muebles.map((m, i) => <div key={m.id} className="kv"><span>{at.muebles.length > 1 ? `Mueble ${i + 1}` : 'Mueble'}</span><b>{m.titulo}</b></div>)}
+      <div className="kv"><span>Telas</span><b>{telaTexto}</b></div>
+      {telas.map((t) => <div key={t.clave} className="at-fs"><i style={{ background: t.color ?? 'var(--primary-soft)', border: '1px solid var(--line)' }} aria-hidden="true" /><span>{t.nombre}{t.partes && <small className="at-fs-p">{t.partes}</small>}</span><b>{t.yardas ? `${t.yardas} yd` : '—'}</b></div>)}
+      <div className="kv"><span>Fotos</span><b>{fotos ? `${fotos} de la solicitud` : 'No envió'}</b></div>
+      <div className="kv"><span>Traslado</span><b>{traslado}</b></div>
+      <p className="audit" style={{ margin: 0 }}>
+        Cada paso se guarda en la solicitud {at.solicitud.codigo}. Si el cliente se va antes de terminar, se sigue después con
+        «Continuar la atención» desde la Agenda o Solicitudes.
+      </p>
+    </section>
+  );
+}
+
 // ---------------------------------------------------------------- Paso 1 · Recibir y revisar
-function PasoRevisar({ at, lugar, onEmpezar, onNoEstaba, ocupado }: { at: Atencion; lugar: 'local' | 'domicilio'; onEmpezar(): void; onNoEstaba(): void; ocupado: boolean }) {
+function PasoRevisar({ at, lugar, onEmpezar, onNoEstaba, ocupado, aside }: { aside: ReactNode; at: Atencion; lugar: 'local' | 'domicilio'; onEmpezar(): void; onNoEstaba(): void; ocupado: boolean }) {
   const [confirmar, setConfirmar] = useState(false);
   const t = TEXTOS[lugar];
   const tela = at.solicitud.telaOpcion === 'trae' ? 'La trae el cliente' : at.solicitud.telaOpcion === 'sin' ? 'No lleva tela' : at.solicitud.telaOpcion === 'catalogo' ? 'La eligió en línea' : t.tela;
@@ -142,7 +224,7 @@ function PasoRevisar({ at, lugar, onEmpezar, onNoEstaba, ocupado }: { at: Atenci
                   <div><dt>Tela</dt><dd>{tela}</dd></div>
                   <div><dt>Medidas</dt><dd>{m.medidas ?? 'No indicó'}</dd></div>
                 </dl>
-                {medios.length > 0 ? <FotosMueble medios={medios} titulo={`Fotos y videos · ${m.titulo.toLowerCase()}`} /> : <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>No envió fotos de este mueble.</p>}
+                {medios.length > 0 ? <FotosMueble compacto medios={medios} titulo={`Fotos y videos · ${m.titulo.toLowerCase()}`} /> : <p className="muted" style={{ margin: 0, fontSize: 13.5 }}>No envió fotos de este mueble.</p>}
               </div>
             );
           })}
@@ -154,32 +236,55 @@ function PasoRevisar({ at, lugar, onEmpezar, onNoEstaba, ocupado }: { at: Atenci
               <button type="button" className="gw-btn gw-btn-danger gw-btn-sm" onClick={onNoEstaba}>Sí, registrar</button>
               <button type="button" className="gw-btn gw-btn-ghost gw-btn-sm" onClick={() => setConfirmar(false)}>Cancelar</button>
             </div>
-          ) : (
-            <button type="button" className="gw-btn gw-btn-ghost" style={{ color: 'var(--danger-ink)' }} disabled={!at.cita || at.cita.estado !== 'Programada'} onClick={() => setConfirmar(true)}>{t.noAsistio}</button>
-          )}
-          <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={ocupado} onClick={onEmpezar}>{ocupado ? 'Empezando…' : SIGUIENTE[0]}</button>
+          ) : at.cita?.estado === 'Programada' ? (
+            <button type="button" className="gw-btn gw-btn-ghost" style={{ color: 'var(--danger-ink)' }} onClick={() => setConfirmar(true)}>{t.noAsistio}</button>
+          ) : <span />}
+          <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={ocupado} onClick={onEmpezar}>{ocupado ? 'Empezando…' : at.cita?.estado === 'En atención' || at.cita?.estado === 'Atendida' ? 'Seguir: elegir telas' : SIGUIENTE[0]}</button>
         </div>
       </div>
+      <aside className="aside">{aside}</aside>
     </div>
   );
 }
 
 // ---------------------------------------------------------------- Paso 2 · Telas (del muestrario, con las yardas que mide el taller)
-function PasoTelas({ armado, codigo, onListo, onAtras }: { armado: Armado; codigo: string; onListo(): Promise<void>; onAtras(): void }) {
-  const [telas, setTelas] = useState<Record<number, { materialId: number; yardas: number }[]>>(() =>
-    Object.fromEntries(armado.muebles.map((m) => [m.solicitudMuebleId, m.tela.eligeAqui ? m.tela.telas.map((t) => ({ materialId: t.materialId, yardas: t.yardas || 1 })) : []])));
+function PasoTelas({ armado, codigo, onListo, onAtras, aside, onCambio }: { aside: ReactNode; onCambio(t: Record<number, TelaDelMueble>): void; armado: Armado; codigo: string; onListo(): Promise<void>; onAtras(): void }) {
+  const [telas, setTelas] = useState<Record<number, TelaDelMueble>>(() => Object.fromEntries(armado.muebles.map((m) => [m.solicitudMuebleId, telaInicial(m)])));
+  useEffect(() => { onCambio(telas); }, [telas, onCambio]);
   const [actual, setActual] = useState(0);
+  const [familia, setFamilia] = useState('Todas');
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const muestrario = armado.muestrario ?? [];
   const m = armado.muebles[Math.min(actual, armado.muebles.length - 1)]!;
-  const sel = telas[m.solicitudMuebleId] ?? [];
-  const cambiar = (lista: { materialId: number; yardas: number }[]) => setTelas((x) => ({ ...x, [m.solicitudMuebleId]: lista }));
-  const alternar = (id: number) => cambiar(sel.some((x) => x.materialId === id) ? sel.filter((x) => x.materialId !== id) : [...sel, { materialId: id, yardas: 1 }]);
+  const t = telas[m.solicitudMuebleId] ?? telaInicial(m);
+  const partes = m.partesMueble ?? [];
+  const porPartes = t.modo === 'partes' && partes.length > 0;
+  const parte = partes[t.activa] ?? partes[0];
+  // «Sofá seccional (en L)» → «sofá seccional (en L)»: solo la primera letra en minúscula.
+  const nombreMueble = m.titulo.replace(/^\d+ × /, '').replace(/^./, (c) => c.toLowerCase());
+  const tela = (id: number | null | undefined) => muestrario.find((x) => x.id === id);
+  const familias = ['Todas', ...new Set(muestrario.map((x) => x.familia).filter((x): x is string => Boolean(x)))];
+  const visibles = muestrario.filter((x) => familia === 'Todas' || x.familia === familia);
+  const usadas = telasUsadas(t);
+  const cambiar = (c: Partial<TelaDelMueble>) => setTelas((x) => ({ ...x, [m.solicitudMuebleId]: { ...t, ...c } }));
+  const elegir = (id: number) => (porPartes && parte ? cambiar({ porParte: { ...t.porParte, [parte.id]: id } }) : cambiar({ una: id }));
+
+  /** Lo que falta para seguir (el cliente está presente: se elige ahora). */
+  const falta = armado.muebles.flatMap((x, i) => {
+    if (!x.tela.eligeAqui || x.tela.tipo === 'no') return [];
+    const y = telas[x.solicitudMuebleId]!;
+    const pre = armado.muebles.length > 1 ? `Mueble ${i + 1}: ` : '';
+    if (y.modo === 'partes' && (x.partesMueble ?? []).some((p) => y.porParte[p.id] == null)) return [`${pre}elija una tela para cada parte`];
+    if (y.modo === 'una' && y.una == null) return [`${pre}elija la tela`];
+    return [];
+  });
   const guardar = async () => {
+    if (falta.length) { setError(`Falta: ${falta.join(' · ')}.`); return; }
     setGuardando(true); setError(null);
     try { await cotizacionesApi.guardar(codigo, entradaDesde(armado, telas)); await onListo(); } catch (e) { setError(mensaje(e, 'No pudimos guardar las telas.')); } finally { setGuardando(false); }
   };
+
   return (
     <div className="split">
       <div className="wide">
@@ -189,38 +294,86 @@ function PasoTelas({ armado, codigo, onListo, onAtras }: { armado: Armado; codig
             <div className="co-mtabs" role="group" aria-label="Mueble">
               {armado.muebles.map((x, i) => (
                 <button key={x.solicitudMuebleId} type="button" className="co-mtab" aria-pressed={i === actual} onClick={() => setActual(i)}>
-                  <b>{x.clave}</b><span>{x.titulo}</span><em style={{ fontSize: 13 }}>{x.tela.eligeAqui ? `${(telas[x.solicitudMuebleId] ?? []).length} tela(s)` : x.tela.nota}</em>
+                  <b>{x.clave}</b><span>{x.titulo}</span><em style={{ fontSize: 13 }}>{x.tela.eligeAqui ? `${telasUsadas(telas[x.solicitudMuebleId]!).length} tela(s)` : x.tela.nota}</em>
                 </button>
               ))}
             </div>
           )}
-          {!m.tela.eligeAqui ? (
+          {!m.tela.eligeAqui || m.tela.tipo === 'no' ? (
             <div className="at-nota"><Icon name="info" size={18} /><span>{m.titulo}: <b>{m.tela.nota}</b>. No hay que elegir tela aquí.</span></div>
           ) : (
             <>
-              {sel.length > 0 && (
-                <div className="stack" style={{ gap: 8 }}>
-                  {sel.map((x) => {
-                    const tela = muestrario.find((y) => y.id === x.materialId);
+              <span className="gw-field-label" id="at-como">¿Cómo quiere la tela?</span>
+              <div className="use" role="radiogroup" aria-labelledby="at-como">
+                {([
+                  ['una', 'Una tela para todo', 'Una sola tela en todo el mueble', 'quote'],
+                  ['partes', 'Distintas telas por partes', partes.length ? 'Elija en el dibujo qué tela va en cada parte' : 'Este mueble no tiene partes definidas', 'sofa'],
+                ] as const).map(([id, titulo, detalle, icono]) => (
+                  <button key={id} type="button" role="radio" aria-checked={(id === 'partes') === porPartes} disabled={id === 'partes' && !partes.length}
+                    className={(id === 'partes') === porPartes ? 'opt on' : 'opt'} onClick={() => { if (id !== t.modo) cambiar({ modo: id, una: null, porParte: {}, activa: 0, yardas: {} }); }}>
+                    <span className="ic"><Icon name={icono} /></span>
+                    <span><b>{titulo}</b><small>{detalle}</small></span>
+                  </button>
+                ))}
+              </div>
+
+              {porPartes && (
+                <div className="dz">
+                  <div className="dzhd"><b>1. Toque una parte del {nombreMueble}</b><small>Puede usar una tela distinta en cada parte.</small></div>
+                  <div className="dzgrid">
+                    <DibujoMueble muebleId={m.tipoCodigo ?? ''} partes={partes.map((x) => x.nombre)} activa={t.activa}
+                      colorDe={(k) => tela(t.porParte[partes[k]?.id ?? -1])?.colorHex ?? '#CBD5E1'} onElegir={(activa) => cambiar({ activa })} />
+                    <div className="plist">
+                      {partes.map((x, k) => {
+                        const y = tela(t.porParte[x.id]);
+                        return (
+                          <div key={x.id} className={t.activa === k ? 'prow on' : 'prow'}>
+                            <button type="button" className="pbtn" aria-pressed={t.activa === k} onClick={() => cambiar({ activa: k })}>
+                              <i style={{ background: y ? fondoDe(y.familia, y.colorHex) : '#CBD5E1' }} />
+                              <span><b>{x.nombre}</b><small>{y?.nombre ?? 'Sin tela'}</small></span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="swhd">
+                <span className="gw-field-label">{porPartes && parte ? `2. Elija la tela para: ${parte.nombre}` : 'Elija la tela para todo el mueble'}</span>
+                <b>{usadas.length ? `${usadas.length} ${usadas.length === 1 ? 'tela' : 'telas'} en el mueble` : 'Ninguna elegida'}</b>
+              </div>
+              {familias.length > 2 && (
+                <div className="fchips" role="group" aria-label="Tipo de tela">
+                  {familias.map((x) => <button key={x} type="button" aria-pressed={familia === x} className={familia === x ? 'fchip on' : 'fchip'} onClick={() => setFamilia(x)}>{x}</button>)}
+                </div>
+              )}
+              {muestrario.length === 0 ? <p className="muted">No hay telas activas en el muestrario. Cárguelas en Inventario › Telas.</p> : (
+                <div className="sw at-sw">
+                  {visibles.map((x) => {
+                    const on = porPartes && parte ? t.porParte[parte.id] === x.id : t.una === x.id;
                     return (
-                      <div key={x.materialId} className="ydrow at-una">
-                        <div><b>{tela?.nombre ?? 'Tela'}</b><small>{tela?.precio != null ? `Costo $${tela.precio}/yd · solo lo ve usted` : 'Sin precio en Inventario'}</small></div>
-                        <Contador valor={x.yardas} unidad="yd" etiqueta={`yardas de ${tela?.nombre ?? 'tela'}`} onChange={(v) => cambiar(sel.map((y) => (y.materialId === x.materialId ? { ...y, yardas: v } : y)))} />
-                      </div>
+                      <button key={x.id} type="button" aria-pressed={on} className={on ? 'on' : undefined} onClick={() => elegir(x.id)}>
+                        <span className="tex" style={{ background: fondoDe(x.familia, x.colorHex) }}><span className="ck"><Icon name="check" size={13} strokeWidth={3} /></span></span>
+                        <span className="cap"><b>{x.nombre}</b><small>{x.precio != null ? `Costo $${x.precio}/yd` : 'Sin precio'}{x.libro ? ` · ${x.libro}` : ''}</small></span>
+                      </button>
                     );
                   })}
                 </div>
               )}
-              <span className="gw-field-label">{sel.length ? 'Toque otra tela para agregarla o la misma para quitarla' : `Tela para ${m.titulo.toLowerCase()} · las yardas las mide el taller`}</span>
-              {muestrario.length === 0 ? <p className="muted">No hay telas activas en el muestrario. Cárguelas en Inventario › Telas.</p> : (
-                <div className="sw at-sw">
-                  {muestrario.map((x) => {
-                    const on = sel.some((y) => y.materialId === x.id);
+
+              {usadas.length > 0 && (
+                <div className="stack" style={{ gap: 8 }}>
+                  <span className="gw-field-label">{porPartes ? '3. Yardas de cada tela (las mide el taller)' : 'Yardas (las mide el taller)'}</span>
+                  {usadas.map((x) => {
+                    const y = tela(x.materialId);
+                    const donde = porPartes ? partes.filter((p) => t.porParte[p.id] === x.materialId).map((p) => p.nombre).join(', ') : 'todo el mueble';
                     return (
-                      <button key={x.id} type="button" aria-pressed={on} className={on ? 'on' : undefined} onClick={() => alternar(x.id)}>
-                        <span className="tex" style={{ background: x.colorHex ?? '#94A3B8' }}><span className="ck"><Icon name="check" size={13} strokeWidth={3} /></span></span>
-                        <span className="cap"><b>{x.nombre}</b><small>{x.precio != null ? `Costo $${x.precio}/yd` : 'Sin precio'}{x.libro ? ` · ${x.libro}` : ''}</small></span>
-                      </button>
+                      <div key={x.materialId} className="ydrow at-una">
+                        <div><b>{y?.nombre ?? 'Tela'}</b><small>{donde} · {y?.precio != null ? `costo $${y.precio}/yd, solo lo ve usted` : 'sin precio en Inventario'}</small></div>
+                        <Contador valor={x.yardas} unidad="yd" etiqueta={`yardas de ${y?.nombre ?? 'tela'}`} onChange={(v) => cambiar({ yardas: { ...t.yardas, [x.materialId]: v } })} />
+                      </div>
                     );
                   })}
                 </div>
@@ -234,24 +387,32 @@ function PasoTelas({ armado, codigo, onListo, onAtras }: { armado: Armado; codig
           <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={guardando} onClick={guardar}>{guardando ? 'Guardando…' : SIGUIENTE[1]}</button>
         </div>
       </div>
+      <aside className="aside">{aside}</aside>
     </div>
   );
 }
 
 // ---------------------------------------------------------------- Paso 3 · Traslado
-function PasoTraslado({ at, codigo, onListo, onAtras }: { at: Atencion; codigo: string; onListo(d: Atencion): Promise<void>; onAtras(): void }) {
+function PasoTraslado({ at, codigo, onListo, onAtras, aside }: { aside: ReactNode; at: Atencion; codigo: string; onListo(d: Atencion): Promise<void>; onAtras(): void }) {
   const [traslado, setTraslado] = useState<'delivery' | 'propio'>(at.solicitud.traslado ?? 'delivery');
-  const [dirId, setDirId] = useState<number | null>(at.solicitud.direccionId ?? at.direcciones[0]?.id ?? null);
-  const [nueva, setNueva] = useState(at.direcciones.length === 0);
-  const [texto, setTexto] = useState('');
-  const [referencia, setReferencia] = useState('');
-  const [guardar, setGuardar] = useState(true);
+  // Las direcciones del cliente con el formato de W2, para usar el mismo campo de dirección y el mismo mapa.
+  const guardadas: DireccionGuardada[] = at.direcciones.map((d) => ({ id: d.id, etiqueta: d.etiqueta, direccion: d.texto, referencia: d.referencia, ciudad: d.ciudad, latitud: d.latitud, longitud: d.longitud }));
+  const inicial = at.solicitud.direccionId ?? at.direcciones.find((d) => d.principal)?.id ?? at.direcciones[0]?.id ?? null;
+  const [dir, setDir] = useState<DireccionW2>({ guardadaId: inicial, texto: '', ubicacion: null, referencia: '', guardar: true });
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const guardada = guardadas.find((d) => d.id === dir.guardadaId);
+  const mapa = guardada
+    ? { ubicacion: guardada.latitud != null && guardada.longitud != null ? { lat: guardada.latitud, lng: guardada.longitud } : null, etiqueta: `${guardada.etiqueta ?? 'Dirección'} · ${guardada.ciudad ?? guardada.direccion}` }
+    : { ubicacion: dir.ubicacion, etiqueta: dir.ubicacion ? dir.texto : undefined };
+  const lista = traslado === 'propio' || (dir.guardadaId != null ? Boolean(guardada) : dir.texto.trim().length >= 5);
+
   const seguir = async () => {
     setOcupado(true); setError(null);
     try {
-      const direccion = traslado === 'propio' ? undefined : nueva ? { tipo: 'nueva' as const, texto, referencia: referencia || undefined, guardar } : dirId ? { tipo: 'guardada' as const, id: dirId } : undefined;
+      const direccion = traslado === 'propio' ? undefined
+        : dir.guardadaId != null ? { tipo: 'guardada' as const, id: dir.guardadaId }
+          : { tipo: 'nueva' as const, texto: dir.texto.trim(), referencia: dir.referencia.trim() || undefined, guardar: dir.guardar, ...(dir.ubicacion ? { latitud: dir.ubicacion.lat, longitud: dir.ubicacion.lng } : {}) };
       await onListo(await atencionApi.traslado(codigo, traslado, direccion));
     } catch (e) { setError(mensaje(e, 'No pudimos guardar el traslado.')); } finally { setOcupado(false); }
   };
@@ -267,25 +428,17 @@ function PasoTraslado({ at, codigo, onListo, onAtras }: { at: Atencion; codigo: 
               </button>
             ))}
           </div>
+          {traslado === 'propio' && (
+            <Alert tone="info" title="El cliente lo trae y lo retira" compact>Después de aceptar la cotización se le da un turno libre para dejarlo en el taller, y otro para retirarlo cuando esté listo.</Alert>
+          )}
           {traslado === 'delivery' && (
             <>
-              {!nueva ? (
-                <label className="gw-field">
-                  <span className="gw-field-label">Dirección de recojo y entrega</span>
-                  <select className="gw-input" value={dirId ?? ''} onChange={(e) => setDirId(Number(e.target.value))}>
-                    {at.direcciones.map((d) => <option key={d.id} value={d.id}>{d.etiqueta ? `${d.etiqueta} · ` : ''}{d.texto}</option>)}
-                  </select>
-                </label>
-              ) : (
-                <>
-                  <TextField label="Dirección nueva" placeholder="Calle, número, ciudad, estado y código postal" value={texto} onChange={(e) => setTexto(e.target.value)} />
-                  <TextField label="Depto., piso o referencia" optional value={referencia} onChange={(e) => setReferencia(e.target.value)} />
-                  <label className="row" style={{ fontSize: 14, gap: 8 }}><input type="checkbox" checked={guardar} onChange={(e) => setGuardar(e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--primary)' }} />Guardarla en el perfil del cliente</label>
-                </>
-              )}
-              {at.direcciones.length > 0 && (
-                <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setNueva(!nueva)}>{nueva ? 'Usar una dirección guardada' : '+ Usar una dirección nueva'}</button>
-              )}
+              <div className="grid2" style={{ gap: 16, alignItems: 'start' }}>
+                <CampoDireccion valor={dir} onChange={setDir} guardadas={guardadas} etiqueta="Dirección de recojo y entrega" textoGuardar="Guardarla en la ficha del cliente" />
+                {/* Tocar el mapa llena la dirección (como dirección nueva), igual que en W2. */}
+                <MapaUbicacion alto={240} ubicacion={mapa.ubicacion} etiqueta={mapa.etiqueta}
+                  onElegir={(d) => setDir({ ...dir, guardadaId: null, texto: d.texto, ubicacion: d.ubicacion })} />
+              </div>
               <div className="at-nota"><Icon name="calendar" size={18} /><span><b>El día del recojo se elige después del adelanto.</b> Si el cliente acepta y paga hoy, lo eligen juntos al final. Si paga después, lo elige desde su cuenta.</span></div>
             </>
           )}
@@ -293,9 +446,10 @@ function PasoTraslado({ at, codigo, onListo, onAtras }: { at: Atencion; codigo: 
         </section>
         <div className="between at-foot">
           <button type="button" className="gw-btn gw-btn-ghost" onClick={onAtras}>Atrás</button>
-          <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={ocupado || (traslado === 'delivery' && (nueva ? texto.trim().length < 5 : !dirId))} onClick={seguir}>{ocupado ? 'Guardando…' : SIGUIENTE[2]}</button>
+          <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={ocupado || !lista} onClick={seguir}>{ocupado ? 'Guardando…' : SIGUIENTE[2]}</button>
         </div>
       </div>
+      <aside className="aside">{aside}</aside>
     </div>
   );
 }
@@ -472,24 +626,12 @@ function Cierre({ at, lugar, onCambio }: { at: Atencion; lugar: 'local' | 'domic
 function RecojoConectado({ pedido, enCasa, onListo }: { pedido: string; enCasa: boolean; onListo(a: Atencion): void }) {
   const [disp, setDisp] = useState<Disponibilidad | null>(null);
   const [opcion, setOpcion] = useState<'agendar' | 'llevar'>('agendar');
-  const [semana, setSemana] = useState(0);
-  const [elegido, setElegido] = useState<{ fecha: string; hora: string; fin: string } | null>(null);
+  const [elegido, setElegido] = useState<HoraElegida | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const cargar = useCallback(() => { atencionApi.disponibilidad().then(setDisp).catch((e) => setError(mensaje(e, 'No pudimos cargar la agenda del recojo.'))); }, []);
   useEffect(cargar, [cargar]);
 
-  // Semanas de lunes a sábado; abre en la primera que tenga horas libres.
-  const semanas: Disponibilidad['dias'][] = [];
-  for (const d of disp?.dias ?? []) {
-    const lunes = deIso(d.fecha); lunes.setDate(lunes.getDate() - ((lunes.getDay() + 6) % 7));
-    const k = lunes.toDateString();
-    const ultima = semanas[semanas.length - 1];
-    if (ultima && (() => { const l = deIso(ultima[0]!.fecha); l.setDate(l.getDate() - ((l.getDay() + 6) % 7)); return l.toDateString() === k; })()) ultima.push(d); else semanas.push([d]);
-  }
-  const primeraLibre = Math.max(0, semanas.findIndex((w) => w.some((d) => d.horas.some((h) => h.estado === 'libre'))));
-  const sem = semanas[Math.min(semana + primeraLibre, semanas.length - 1)] ?? [];
-  const horas = [...new Set(sem.flatMap((d) => d.horas.map((h) => h.inicio)))].sort();
 
   const confirmar = async (r: { tipo: 'agendado'; fecha: string; hora: string } | { tipo: 'en_visita' }) => {
     setOcupado(true); setError(null);
@@ -520,25 +662,7 @@ function RecojoConectado({ pedido, enCasa, onListo }: { pedido: string; enCasa: 
         </div>
       ) : !disp ? <p className="muted" role="status">Cargando la agenda del recojo…</p> : (
         <div className="at-rkg">
-          <div className="at-vmag">
-            <div className="at-vhd">
-              <button type="button" aria-label="Semana anterior" disabled={semana + primeraLibre <= 0} onClick={() => setSemana(semana - 1)}>‹</button>
-              <b>{sem.length ? `Semana del ${deIso(sem[0]!.fecha).getDate()} al ${deIso(sem[sem.length - 1]!.fecha).getDate()} ${MESES[deIso(sem[sem.length - 1]!.fecha).getMonth()]!.slice(0, 3)}` : 'Sin fechas'}</b>
-              <button type="button" aria-label="Semana siguiente" disabled={semana + primeraLibre >= semanas.length - 1} onClick={() => setSemana(semana + 1)}>›</button>
-            </div>
-            <div className="at-vmg" style={{ gridTemplateColumns: `44px repeat(${sem.length}, minmax(0, 1fr))` }} role="grid" aria-label="Horas libres para el recojo">
-              <span />
-              {sem.map((d) => <span key={d.fecha} className="at-vdh"><small>{DIAS[deIso(d.fecha).getDay()]!.slice(0, 3)}</small>{deIso(d.fecha).getDate()}</span>)}
-              {horas.map((h, i) => (
-                <FilaHora key={h} h={h} sem={sem} elegido={elegido} onElegir={setElegido} mediodia={i > 0 && horas[i - 1]! < '12:00' && h >= '12:00'} />
-              ))}
-            </div>
-            <div className="at-vlg">
-              <span><i style={{ background: 'var(--surface)', border: '1.5px solid #BFDBFE' }} />Libre</span>
-              <span><i style={{ background: 'var(--primary)' }} />Elegida</span>
-              <span><i style={{ background: 'var(--surface-sunken)' }} />Ocupada · «—» ya pasó o sin recojos</span>
-            </div>
-          </div>
+          <GrillaRecojo disp={disp} elegido={elegido} onElegir={setElegido} />
           <div className="stack" style={{ gap: 12 }}>
             <div className="at-vsel">
               <span><small>{elegido ? MESES[deIso(elegido.fecha).getMonth()]!.slice(0, 3) : '—'}</small>{elegido ? deIso(elegido.fecha).getDate() : '?'}</span>
@@ -550,27 +674,6 @@ function RecojoConectado({ pedido, enCasa, onListo }: { pedido: string; enCasa: 
         </div>
       )}
     </section>
-  );
-}
-
-function FilaHora({ h, sem, elegido, onElegir, mediodia }: { h: string; sem: Disponibilidad['dias']; elegido: { fecha: string; hora: string } | null; onElegir(x: { fecha: string; hora: string; fin: string }): void; mediodia: boolean }) {
-  return (
-    <>
-      {mediodia && <span className="at-vlun">Cerrado al mediodía</span>}
-      <span className="at-vhr">{h.replace(/^0/, '')}</span>
-      {sem.map((d) => {
-        const x = d.horas.find((y) => y.inicio === h);
-        const libre = x?.estado === 'libre';
-        const on = elegido?.fecha === d.fecha && elegido.hora === h;
-        return (
-          <button key={d.fecha} type="button" className={on ? 'at-vsl on' : libre ? 'at-vsl' : 'at-vsl at-busy'} disabled={!libre} aria-pressed={on}
-            aria-label={`${DIAS[deIso(d.fecha).getDay()]} ${deIso(d.fecha).getDate()} a las ${h}${libre ? '' : ` · ${x?.estado ?? 'sin recojos'}`}`}
-            onClick={() => x && onElegir({ fecha: d.fecha, hora: h, fin: x.fin })}>
-            {on ? '✓' : libre ? h.replace(/^0/, '') : x?.estado === 'ocupada' ? 'Ocup.' : '—'}
-          </button>
-        );
-      })}
-    </>
   );
 }
 

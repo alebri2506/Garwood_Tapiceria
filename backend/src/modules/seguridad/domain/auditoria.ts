@@ -133,7 +133,8 @@ export function describir(e: EntradaBitacora, r: Referencias): EntradaLegible {
     case 'cita_programada': return l(despues.tipo === 'domicilio' ? 'Visita programada' : 'Cita programada', deCita, cuandoCita(despues));
     case 'cita_reprogramada': return l('Cita reprogramada', deCita, `${cuandoCita(antes)} → ${cuandoCita(despues)}`);
     case 'cita_cancelada': return l('Cita cancelada', deCita, 'Programada → Cancelada');
-    case 'cita_atendida': return l('Cita atendida', deCita, `Solicitud: ${texto(antes.solicitud)} → ${texto(despues.solicitud)}`);
+    case 'cita_en_atencion': return l('Atención empezada', deCita, `Programada → En atención · solicitud: ${texto(antes.solicitud)} → ${texto(despues.solicitud)}`);
+    case 'cita_atendida': return l('Cita atendida', deCita, despues.cotizacion ? `En atención → Atendida · cotización ${texto(despues.cotizacion)}` : `Solicitud: ${texto(antes.solicitud)} → ${texto(despues.solicitud)}`);
     case 'cita_inasistencia': return l('No asistió', deCita,
       `Solicitud: ${texto(antes.solicitud)} → ${texto(despues.solicitud)} · ${plural(despues.inasistencias, 'inasistencia', 'inasistencias')}`);
     case 'agenda_bloqueo': return l('Turno bloqueado', 'Agenda', `${cuandoCita(despues)} · ${texto(despues.motivo)}`);

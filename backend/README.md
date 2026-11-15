@@ -77,7 +77,11 @@ corrida. Cree `.env.test` copiando `.env`, agregue `NODE_ENV=test` y apunte `DAT
 | GET | `/api/auth/me` | — | `Authorization: Bearer <token>` | `{ id, nombre, rol, email }` |
 | GET | `/api/solicitudes/catalogo` | C01 | Cliente | tipos de mueble con sus partes, servicios, acabados, telas activas, franjas y límites |
 | GET | `/api/solicitudes/direcciones` | C01 | Cliente | direcciones guardadas en su perfil |
-| GET | `/api/solicitudes` | C01 | Cliente | sus solicitudes (solo las suyas) |
+| GET | `/api/solicitudes` | C01 | Cliente | sus solicitudes (solo las suyas), con el resumen de su última cotización publicada |
+| GET | `/api/solicitudes/:codigo/cotizacion` | C09 | Cliente | W4: trabajos, telas, traslado, total, adelanto, vigencia, pedido y recojo (sin costos internos) |
+| POST | `/api/solicitudes/:codigo/cotizacion/respuesta` | C09, C14 | Cliente · `{ respuesta: 'rechaza', motivo, comentario? }` o `{ respuesta: 'acepta', comentario? }` | rechazar; aceptar solo sin adelanto (con adelanto: 409 hasta que exista la pasarela) |
+| GET | `/api/solicitudes/recojos/disponibilidad` | D | Cliente | horas del camión para el recojo de su pedido |
+| POST | `/api/solicitudes/:codigo/recojo` | D | Cliente · `{ fecha, hora }` | agenda el recojo de su pedido (un recojo por hora) |
 | POST | `/api/solicitudes` | C01 | Cliente · `multipart/form-data`: campo `datos` (JSON) y las fotos de cada mueble en `mueble_0`, `mueble_1`… | 201 `{ codigo, estado, siguiente, cita }` (`siguiente`: cita, visita o cotizacion). Con cita en el local o visita, `datos.cita` (`fecha`, `hora` o `franja`, y `direccion` en la visita) es obligatorio desde la web: la solicitud y el turno se guardan juntos |
 | GET | `/api/solicitudes/:codigo` | C01 | Cliente | su solicitud con muebles, telas, fotos (enlaces firmados) y cita |
 | POST | `/api/solicitudes/:codigo/fotos` | C01 | Cliente · multipart, `mueble_0`… | sube las fotos que el taller pidió por enlace |
@@ -192,6 +196,7 @@ Errores: `{ "mensaje": "..." }` en español, listo para mostrar. Los 400 de vali
   administrador, fotos pendientes por enlace).
 - `cita` agrega `tipo` (local / domicilio), `franja` y `direccion_id` para la visita a domicilio.
 - `cliente.email` es opcional: el administrador registra clientes que llaman por teléfono sin correo.
+- Respuesta del cliente (migración `respuesta_cliente`): `cotizacion.comentario_respuesta`.
 - Atención (migraciones `atencion_respuesta_recojo` y `solicitud_rechazada`): `pago` (registro mínimo del adelanto),
   `recojo` (índice único parcial: un recojo programado por hora), `pedido.cotizacion_id`, respuesta en `cotizacion`
   (medio, motivo, fecha) y el estado «Rechazada» en la solicitud.

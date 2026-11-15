@@ -22,17 +22,22 @@ const CONDICIONES_FIJAS = 'La tela se pide cuando paga el adelanto. Al recibir e
 type Revision = { tono: 'ok' | 'warn' | 'falta'; texto: string };
 interface ActForm extends ActividadArmada { key: number; nueva?: boolean }
 /** Lo que el Administrador arma en cada mueble. */
-interface MuebleForm { actividades: ActForm[]; yardas: Record<number, number>; propuesto: number; motivo: string; revisado: boolean }
+/** `propuesto` null = sigue al precio sugerido hasta que el Administrador escriba otro (RG-01). */
+interface MuebleForm { actividades: ActForm[]; yardas: Record<number, number>; propuesto: number | null; motivo: string; revisado: boolean }
 export interface Cabecera { crumb: string; titulo: string; estado: string }
 
 let siguienteKey = 1;
 const formDe = (m: MuebleArmado): MuebleForm => ({
   actividades: m.actividades.map((a) => ({ ...a, materiales: [...a.materiales], key: siguienteKey++ })),
   yardas: Object.fromEntries(m.tela.telas.map((t) => [t.materialId, t.yardas])),
-  propuesto: m.propuesto, motivo: m.motivo, revisado: m.revisado,
+  propuesto: m.propuesto > 0 ? m.propuesto : null, motivo: m.motivo, revisado: m.revisado,
 });
 
-/** El mismo cálculo que hace el servidor (CU-C08): tela + materiales + mano de obra + maquinaria + costos fijos + margen. */
+/**
+ * El mismo cálculo que hace el servidor (CU-C08): tela + materiales + mano de obra + maquinaria + costos fijos + margen.
+ * Las actividades son por unidad y se multiplican por la cantidad del mueble («2 × sofá»); las yardas de tela son de
+ * toda la línea y los costos fijos van una sola vez por cotización.
+ */
 function costear(f: MuebleForm, m: MuebleArmado, c: Armado['costos'], conFijos: boolean) {
   let horas = 0, horasMaquina = 0, materiales = 0, maquinaria = 0;
   for (const a of f.actividades) {
@@ -40,15 +45,22 @@ function costear(f: MuebleForm, m: MuebleArmado, c: Armado['costos'], conFijos: 
     if (a.maquinaId != null) { horasMaquina += a.horasMaquina; maquinaria += a.horasMaquina * a.tarifaMaquina; }
     for (const x of a.materiales) materiales += x.cantidad * x.precio;
   }
+  const n = Math.max(1, m.cantidad);
+  horas *= n; horasMaquina *= n; maquinaria *= n; materiales *= n;
   if (m.tela.tipo === 'taller') for (const t of m.tela.telas) materiales += (f.yardas[t.materialId] ?? 0) * (t.precio ?? 0);
   const manoObra = horas * c.tarifaHora, fijos = conFijos ? c.costosFijos : 0;
-  const margen = (materiales + manoObra + maquinaria + fijos) * (c.margenPct / 100);
+  const costo = materiales + manoObra + maquinaria + fijos;
+  const margen = costo * (c.margenPct / 100);
+  const desglose = [
+    { label: 'Margen', value: Math.round(margen) }, { label: 'Materiales', value: Math.round(materiales) }, { label: 'Mano de obra', value: Math.round(manoObra) },
+    { label: 'Maquinaria', value: Math.round(maquinaria) }, { label: 'Costos fijos', value: Math.round(fijos) },
+  ];
   return {
+    // El mismo que muestra el panel (la suma de sus partes): así el propuesto inicial marca 0 %. Puede diferir en $1 del
+    // redondeo del servidor (Math.round(costo × (1 + margen))), que es el que se guarda como sugerido.
+    sugerido: desglose.reduce((t, p) => t + p.value, 0),
     horas: Math.round(horas * 10) / 10, horasMaquina: Math.round(horasMaquina * 10) / 10,
-    desglose: [
-      { label: 'Margen', value: Math.round(margen) }, { label: 'Materiales', value: Math.round(materiales) }, { label: 'Mano de obra', value: Math.round(manoObra) },
-      { label: 'Maquinaria', value: Math.round(maquinaria) }, { label: 'Costos fijos', value: Math.round(fijos) },
-    ],
+    desglose,
   };
 }
 
@@ -119,6 +131,7 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
   const m = muebles[mt]!;
   const f = forms[mt]!;
   const { horas, horasMaquina, desglose } = costear(f, m, a.costos, mt === 0);
+  const propuestoDe = (i: number) => forms[i]!.propuesto ?? costear(forms[i]!, muebles[i]!, a.costos, i === 0).sugerido;
 
   const cambiarForm = (cambio: Partial<MuebleForm> | ((x: MuebleForm) => Partial<MuebleForm>)) =>
     setForms((xs) => xs.map((x, i) => (i === mt ? { ...x, ...(typeof cambio === 'function' ? cambio(x) : cambio) } : x)));
@@ -129,7 +142,7 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
   // ---------------------------------------------------------------- Transporte, total y adelanto
   const t = a.transporte;
   const transporte = !t.aplica ? 0 : manual ? numero(montoManual) : (t.calculado ?? 0);
-  const total = forms.reduce((s, x) => s + x.propuesto, 0) + transporte;
+  const total = forms.reduce((s, _x, i) => s + propuestoDe(i), 0) + transporte;
   const sugeridoAdelanto = Math.round((total * a.condiciones.adelantoPct) / 100);
   const maxAdelanto = Math.round((total * a.condiciones.adelantoMaxPct) / 100);
   const valorAdelanto = adelanto == null ? sugeridoAdelanto : numero(adelanto);
@@ -159,7 +172,7 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
     }
     if (!forms[i]!.actividades.some((y) => y.horasPersona > 0)) revision.push({ tono: 'falta', texto: `${pre}agregue al menos una actividad con horas` });
     if (forms[i]!.actividades.some((y) => !y.nombre.trim())) revision.push({ tono: 'falta', texto: `${pre}hay una actividad sin nombre` });
-    if (forms[i]!.propuesto <= 0) revision.push({ tono: 'falta', texto: `${pre}indique el precio propuesto` });
+    if (propuestoDe(i) <= 0) revision.push({ tono: 'falta', texto: `${pre}indique el precio propuesto` });
   });
   if (telasCompra.length) revision.push({ tono: 'warn', texto: `Telas a comprar: ${telasCompra.map(([n, yd]) => `${n} (${yd} yd)`).join(' y ')}. No bloquea: ${telasCompra.length > 1 ? 'se piden' : 'se pide'} al pagar el adelanto` });
   revision.push({ tono: 'ok', texto: `Vigencia: ${a.condiciones.vigenciaDias} días desde que se publica` });
@@ -173,7 +186,9 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
       solicitudMuebleId: x.solicitudMuebleId,
       actividades: forms[i]!.actividades.map((y) => ({ nombre: y.nombre, horasPersona: y.horasPersona, maquinaId: y.maquinaId, horasMaquina: y.maquinaId ? y.horasMaquina : 0, materiales: y.materiales.map((z) => ({ materialId: z.materialId, cantidad: z.cantidad })) })),
       telas: x.tela.tipo === 'taller' ? x.tela.telas.map((tl) => ({ materialId: tl.materialId, yardas: forms[i]!.yardas[tl.materialId] ?? 0 })) : [],
-      propuesto: forms[i]!.propuesto, motivo: forms[i]!.motivo, revisado: forms[i]!.revisado,
+      // La tela de cada parte, elegida en la cita o la visita, viaja tal cual hasta publicar.
+      ...(x.tela.eligeAqui && x.partes?.length ? { partes: x.partes } : {}),
+      propuesto: propuestoDe(i), motivo: forms[i]!.motivo, revisado: forms[i]!.revisado,
     })),
     transporte: manual ? { manual: true, monto: numero(montoManual), motivo: motivoManual } : { manual: false },
     adelanto: adelanto == null ? null : valorAdelanto,
@@ -249,7 +264,7 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
                   <button key={x.solicitudMuebleId} type="button" className="co-mtab" aria-pressed={i === mt} onClick={() => irA(i)}>
                     <b>{x.clave}</b>
                     <span>{x.titulo} · {x.servicioNombre}</span>
-                    <em>{dolares(forms[i]!.propuesto)}</em>
+                    <em>{dolares(propuestoDe(i))}</em>
                     <i className={rev ? 'co-mst co-mst-ok' : 'co-mst co-mst-pd'}>{rev ? '✓ Revisado' : 'Por revisar'}</i>
                   </button>
                 );
@@ -263,35 +278,51 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
           <legend className="co-sr">Acabado y tela</legend>
           <section className="card stack" style={{ padding: 20 }} aria-labelledby="co-tela">
             <h2 id="co-tela" style={{ fontSize: 20 }}>Acabado y tela{sufijo}</h2>
-            <div className="grid2" style={{ gap: 16, alignItems: 'start' }}>
-              <div className="stack" style={{ gap: 8 }}>
+            <div className="co-acab">
+              <span className="co-acab-ic" aria-hidden="true"><Icon name="sofa" size={18} /></span>
+              <div>
                 <span className="gw-field-label">Acabado</span>
-                {m.servicio === 'fabricacion'
-                  ? <div className="kv"><span>Fabricación a medida</span><b>{m.acabado ? m.acabado[0]!.toUpperCase() + m.acabado.slice(1) : 'Liso'}</b></div>
-                  : <div className="kv"><span>Este pedido es {m.servicioNombre.toLowerCase()}</span><b>Se respeta el del mueble</b></div>}
-                <span className="muted" style={{ fontSize: 12.5 }}>Liso, capitoneado o con canales se elige solo en fabricación a medida. El capitoneado suma aprox. 45 % y los canales 40 % a la mano de obra.</span>
-                {m.medidas && <div className="kv"><span>Medidas</span><b>{m.medidas}</b></div>}
+                <b>{m.servicio === 'fabricacion' ? `Fabricación a medida · ${m.acabado ? m.acabado[0]!.toUpperCase() + m.acabado.slice(1) : 'Liso'}` : `Se respeta el del mueble · ${m.servicioNombre.toLowerCase()}`}</b>
+                <small>Liso, capitoneado o con canales se elige solo en fabricación a medida (el capitoneado suma aprox. 45 % y los canales 40 % a la mano de obra).</small>
               </div>
+              {m.medidas && <div className="co-acab-med"><span className="gw-field-label">Medidas</span><b>{m.medidas}</b></div>}
+            </div>
+            <div>
               <div className="stack" style={{ gap: 8 }}>
                 <span className="gw-field-label">Tela</span>
-                {m.tela.tipo === 'taller' && m.tela.telas.map((tl) => {
-                  const yd = f.yardas[tl.materialId] ?? 0;
+                {m.tela.tipo === 'taller' && (() => {
+                  // Una fila por tela: en qué partes va, las yardas (las mide el taller) y su costo, todo junto.
+                  const enPartes = (id: number) => (m.partes ?? []).filter((x) => x.materialId === id).map((x) => m.partesMueble?.find((p) => p.id === x.parteId)?.nombre).filter(Boolean).join(', ');
+                  const totalYd = m.tela.telas.reduce((t, tl) => t + (f.yardas[tl.materialId] ?? 0), 0);
+                  const totalCosto = m.tela.telas.reduce((t, tl) => t + (f.yardas[tl.materialId] ?? 0) * (tl.precio ?? 0), 0);
                   return (
-                    <div key={tl.materialId} className="stack" style={{ gap: 6 }}>
-                      <div className="kv"><span>{tl.nombre} · la eligió el cliente</span><b className="num">{tl.precio == null ? 'Sin precio' : `$${tl.precio} por yarda`}</b></div>
-                      <span className="gw-field-label" id={`co-yd-${tl.materialId}`} style={{ marginTop: 2 }}>Yardas que se van a usar (las mide el taller)</span>
-                      <div className="co-ydrow" role="group" aria-labelledby={`co-yd-${tl.materialId}`}>
-                        <button type="button" className="co-ydb" aria-label="Media yarda menos" disabled={yd <= 0} onClick={() => cambiarForm((x) => ({ yardas: { ...x.yardas, [tl.materialId]: Math.max(0, yd - 0.5) } }))}>−</button>
-                        <input className="co-ydi num" type="number" min={0} step={0.5} value={yd} aria-label={`Yardas de ${tl.nombre}`} onChange={(e) => cambiarForm((x) => ({ yardas: { ...x.yardas, [tl.materialId]: numero(e.target.value) } }))} />
-                        <span className="muted">yd</span>
-                        <button type="button" className="co-ydb" aria-label="Media yarda más" onClick={() => cambiarForm((x) => ({ yardas: { ...x.yardas, [tl.materialId]: yd + 0.5 } }))}>+</button>
+                    <>
+                      <span className="muted" style={{ fontSize: 12.5 }}>{m.tela.nota.replace(/ · la pone el taller$/, '')} · {m.partes?.length ? 'distintas telas por partes' : m.tela.telas.length > 1 ? `${m.tela.telas.length} telas` : 'una tela para todo el mueble'}. Las yardas las mide el taller.</span>
+                      <div className="co-tl">
+                        {m.tela.telas.map((tl) => {
+                          const yd = f.yardas[tl.materialId] ?? 0;
+                          return (
+                            <div key={tl.materialId} className="co-tlrow">
+                              <div className="co-tlnm">
+                                <b>{tl.nombre}</b>
+                                <small>{enPartes(tl.materialId) || (m.tela.telas.length === 1 ? 'Todo el mueble' : '—')} · {tl.precio == null ? 'sin precio' : `$${tl.precio}/yd`}</small>
+                              </div>
+                              <div className="co-ydrow co-ydsm" role="group" aria-label={`Yardas de ${tl.nombre}`}>
+                                <button type="button" className="co-ydb" aria-label="Media yarda menos" disabled={yd <= 0} onClick={() => cambiarForm((x) => ({ yardas: { ...x.yardas, [tl.materialId]: Math.max(0, yd - 0.5) } }))}>−</button>
+                                <input className="co-ydi num" type="number" min={0} step={0.5} value={yd} aria-label={`Yardas de ${tl.nombre}`} onChange={(e) => cambiarForm((x) => ({ yardas: { ...x.yardas, [tl.materialId]: numero(e.target.value) } }))} />
+                                <span className="muted">yd</span>
+                                <button type="button" className="co-ydb" aria-label="Media yarda más" onClick={() => cambiarForm((x) => ({ yardas: { ...x.yardas, [tl.materialId]: yd + 0.5 } }))}>+</button>
+                              </div>
+                              <b className="num co-tlcost">{tl.precio == null ? '—' : dolares(yd * tl.precio)}</b>
+                            </div>
+                          );
+                        })}
                       </div>
-                      {tl.precio == null
-                        ? <span className="co-warn-txt">Esta tela no tiene precio: cárguelo en <Link to="/admin/inventario/telas">Inventario › Telas</Link>.</span>
-                        : <div className="kv co-ydtot"><span>Costo de la tela</span><b className="num">{yd} yd × ${tl.precio} = {dolares(yd * tl.precio)}</b></div>}
-                    </div>
+                      {m.tela.telas.some((tl) => tl.precio == null) && <span className="co-warn-txt">Alguna tela no tiene precio: cárguelo en <Link to="/admin/inventario/telas">Inventario › Telas</Link>.</span>}
+                      {m.tela.telas.length > 1 && <div className="kv co-ydtot"><span>Tela en total</span><b className="num">{totalYd} yd · {dolares(totalCosto)}</b></div>}
+                    </>
                   );
-                })}
+                })()}
                 {m.tela.tipo === 'cliente' && (
                   <>
                     <div className="kv"><span>Lo brinda el cliente</span><b className="num">$0</b></div>
@@ -454,7 +485,7 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
               return (
                 <div key={x.solicitudMuebleId} className={i === mt ? 'co-mrow co-mrow-on' : 'co-mrow'}>
                   <span>{x.clave} · {x.titulo}<em className={rev ? 'co-mst co-mst-ok' : 'co-mst co-mst-pd'}>{rev ? 'Revisado' : 'Por revisar'}</em></span>
-                  <b className="num">{dolares(forms[i]!.propuesto)}</b>
+                  <b className="num">{dolares(propuestoDe(i))}</b>
                 </div>
               );
             })}
@@ -489,12 +520,18 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
           <PricePanel
             key={m.solicitudMuebleId}
             desglose={desglose}
-            propuesto={f.propuesto}
+            propuesto={propuestoDe(mt)}
             onPropuesto={(v) => cambiarForm({ propuesto: v })}
             motivo={f.motivo}
             onMotivo={(v) => cambiarForm({ motivo: v })}
             transporte={varios ? 0 : transporte}
+            varios={varios ? { mueble: `este mueble (${m.titulo.replace(/^(\d+ × )?(\p{Lu})/u, (_x, n = '', l: string) => n + l.toLowerCase())})`, transporte, total } : undefined}
           >
+            {editable && f.propuesto != null && (
+              <button type="button" className="gw-btn gw-btn-ghost gw-btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => cambiarForm({ propuesto: null, motivo: '' })}>
+                Volver al sugerido
+              </button>
+            )}
             {a.cotizacion.editadoPor && a.cotizacion.fechaModificacion && (
               <p className="audit" style={{ margin: 0 }}>Guardada por {a.cotizacion.editadoPor} · {new Date(a.cotizacion.fechaModificacion).toLocaleString('es-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
             )}

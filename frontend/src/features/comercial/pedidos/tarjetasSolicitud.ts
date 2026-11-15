@@ -1,7 +1,7 @@
 // W6c · cómo se ve cada solicitud del cliente según su estado (diseño v3). Solo presenta lo que devuelve la API.
 import type { IconName } from '../../../shared/ui/Icon';
 import { DIAS, MESES } from '../fechas';
-import type { CitaDto, SolicitudCliente } from '../solicitud/solicitudApi';
+import type { CitaDto, CotizacionCliente, SolicitudCliente } from '../solicitud/solicitudApi';
 import type { Aviso } from './datos';
 
 type Tono = 'neutral' | 'info' | 'progress' | 'warning' | 'success' | 'danger';
@@ -19,7 +19,61 @@ export interface TarjetaSolicitud {
   actual: number;
   aviso: Aviso;
   accion?: { texto: string; a: string; tipo: 'primary' | 'secondary' };
+  /** El total de la cotización, a la derecha de la tarjeta (diseño W6c). */
+  monto?: { valor: string; nota: string };
   extra: Extra;
+}
+
+const dolares = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
+
+/** Días que le quedan para responder (0 = vence hoy). */
+const diasHasta = (iso: string) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  const hoy = new Date();
+  return Math.round((new Date(y!, m! - 1, d!).getTime() - new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).getTime()) / 86_400_000);
+};
+
+/**
+ * La solicitud ya tiene su cotización publicada: la tarjeta sigue lo que respondió el cliente (CU-C09, C11, C14).
+ * Pendiente → «Ver y responder» · aceptada sin adelanto → falta pagarlo · aceptada con pedido · rechazada · vencida.
+ */
+function tarjetaCotizacion(s: SolicitudCliente, c: CotizacionCliente, base: Pick<TarjetaSolicitud, 'titulo' | 'icono' | 'extra'>, servicio: string, conCita: boolean): TarjetaSolicitud {
+  const casa = s.tela === 'domicilio';
+  const pct = c.total > 0 ? Math.round((c.adelanto / c.total) * 100) : 0;
+  const pasos = [
+    'Solicitud', ...(conCita ? [casa ? 'Visita a domicilio' : 'Cita en el local'] : []), 'Cotización', 'Su respuesta',
+    ...(c.adelanto > 0 ? [`Adelanto ${pct} %`] : []), 'Pedido',
+  ];
+  const paso = (nombre: string) => pasos.findIndex((p) => p.startsWith(nombre));
+  const linea = `${s.codigo} · ${c.codigo} · ${servicio}`;
+  const monto = { valor: dolares(c.total), nota: c.conTraslado ? 'incluye traslado ida y vuelta' : 'total' };
+  const ver = `/cliente/cotizacion?solicitud=${s.codigo}`;
+
+  if (c.estado === 'Rechazada' || s.estado === 'Rechazada') {
+    return { ...base, grupo: 'cerradas', linea, estado: 'No aceptada', tono: 'neutral', pasos, actual: paso('Su respuesta'), monto,
+      aviso: { quien: 'us', icono: 'info', texto: 'No aceptó esta cotización. Si cambia de idea, envíe una nueva solicitud o llámenos.' } };
+  }
+  if (c.estado === 'Vencida') {
+    return { ...base, grupo: 'cerradas', linea, estado: 'Cotización vencida', tono: 'neutral', pasos, actual: paso('Su respuesta'), monto,
+      aviso: { quien: 'us', icono: 'info', texto: 'Venció sin respuesta. Si todavía quiere el trabajo, llámenos y la recalculamos con los precios de hoy.' } };
+  }
+  if (c.estado === 'Aceptada' && c.pedido) {
+    return { ...base, grupo: 'cerradas', icono: 'check', linea: `${linea} · pedido ${c.pedido}`, estado: 'Pedido generado', tono: 'success', pasos, actual: pasos.length - 1, monto,
+      accion: { texto: 'Ver mi pedido', a: `/cliente/pedidos?pedido=${c.pedido}`, tipo: 'secondary' },
+      aviso: { quien: 'us', icono: 'check', texto: `Aceptó la cotización y su pedido ${c.pedido} está en marcha. Lo sigue desde Mis pedidos › En curso.` } };
+  }
+  if (c.estado === 'Aceptada: pendiente de adelanto') {
+    return { ...base, grupo: 'accion', linea, estado: 'Falta el adelanto', tono: 'warning', pasos, actual: paso('Adelanto'), monto,
+      accion: { texto: 'Ver cotización', a: ver, tipo: 'secondary' },
+      aviso: { quien: 'you', icono: 'clock', texto: `Le toca a usted: aceptó la cotización. Pague el adelanto de ${dolares(c.adelanto)} y con eso generamos su pedido.` } };
+  }
+  // Pendiente de respuesta.
+  const dias = c.vigenciaHasta ? diasHasta(c.vigenciaHasta) : null;
+  const plazo = dias == null ? '' : dias <= 0 ? ' Vence hoy.' : ` Quedan ${dias} ${dias === 1 ? 'día' : 'días'} (vence el ${dia(c.vigenciaHasta!)}).`;
+  const adelanto = c.adelanto > 0 ? ` Si la acepta, el adelanto es ${dolares(c.adelanto)}.` : ' Si la acepta, no paga adelanto: su pedido se genera al instante.';
+  return { ...base, grupo: 'accion', linea, estado: 'Cotización lista', tono: 'success', pasos, actual: paso('Su respuesta'), monto,
+    accion: { texto: 'Ver y responder', a: ver, tipo: 'primary' },
+    aviso: { quien: 'you', icono: 'clock', texto: `Le toca a usted: revise la cotización y respóndala.${plazo}${adelanto}` } };
 }
 
 export const dia = (iso: string) => {
@@ -92,10 +146,16 @@ export function tarjetaDe(s: SolicitudCliente): TarjetaSolicitud {
       pasos: PASOS_CITA, actual: 1, accion: { texto: casa ? 'Elegir día de la visita' : 'Elegir día y hora', a: enlaceCita, tipo: 'primary' },
       aviso: { quien: 'you', icono: 'calendar', texto: casa ? 'Le toca a usted: elija el día y la hora de la visita a su casa.' : 'Le toca a usted: elija el día y la hora de su cita en el local.' } };
   }
+  if (s.estado === 'En atención') {
+    return { ...base, grupo: 'taller', linea: `${s.codigo} · ${casa ? 'visita en curso' : 'cita en curso'}`, estado: casa ? 'Visita en curso' : 'Cita en curso', tono: 'progress', pasos: PASOS_CITA, actual: 1,
+      aviso: { quien: 'us', icono: 'info', texto: 'Estamos eligiendo la tela y armando su cotización con usted. Al terminar le queda en su cuenta y por correo.' } };
+  }
   if (s.estado === 'Atendida') {
     return { ...base, grupo: 'taller', linea: `${s.codigo} · ${casa ? 'visita hecha' : 'cita atendida'}`, estado: 'Preparando cotización', tono: 'info', pasos: PASOS_CITA, actual: 2,
       aviso: { quien: 'us', icono: 'info', texto: casa ? 'Gracias por recibirnos. Con la tela que eligió y las medidas que tomamos, terminamos su cotización y le avisamos aquí y por correo.' : 'Gracias por venir. Terminamos su cotización y le avisamos aquí y por correo.' } };
   }
+  const cot = s.cotizacion ?? null;
+  if (cot && (s.estado === 'Cotizada' || s.estado === 'Rechazada')) return tarjetaCotizacion(s, cot, { ...base, icono: 'quote' }, servicio, s.cita != null);
   if (s.estado === 'Cotizada') {
     return { ...base, grupo: 'accion', icono: 'quote', linea: `${s.codigo} · ${servicio}`, estado: 'Cotización lista', tono: 'success', pasos: PASOS, actual: 2,
       aviso: { quien: 'you', icono: 'clock', texto: 'Le toca a usted: revise la cotización y respóndala.' } };

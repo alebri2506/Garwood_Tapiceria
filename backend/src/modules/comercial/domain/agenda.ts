@@ -60,9 +60,17 @@ export function diaCerrado(fecha: string, bloqueos: Bloqueo[]) {
   return bloqueos.some((b) => b.fecha === fecha && !b.horaInicio);
 }
 
-/** El turno cae dentro de un bloqueo por horas de ese día. */
-export const turnoBloqueado = (fecha: string, hora: string, bloqueos: Bloqueo[]) =>
-  bloqueos.some((b) => b.fecha === fecha && b.horaInicio && b.horaFin && hora >= b.horaInicio && hora < b.horaFin);
+/**
+ * El turno choca con un bloqueo por horas de ese día. Con `duracion` (minutos) cuenta cualquier parte del turno: un
+ * turno de 9:30 a 10:00 queda bloqueado por un bloqueo de 9:45 a 10:15. Sin duración, solo su hora de inicio.
+ */
+export const turnoBloqueado = (fecha: string, hora: string, bloqueos: Bloqueo[], duracion = 0) => {
+  const [h, m] = hora.split(':').map(Number) as [number, number];
+  const desde = h * 60 + m, hasta = desde + duracion;
+  const min = (x: string) => { const [a, b] = x.split(':').map(Number) as [number, number]; return a * 60 + b; };
+  return bloqueos.some((b) => b.fecha === fecha && b.horaInicio && b.horaFin
+    && (duracion > 0 ? desde < min(b.horaFin) && hasta > min(b.horaInicio) : hora >= b.horaInicio && hora < b.horaFin));
+};
 
 /** Una franja de visita queda bloqueada si algún bloqueo por horas la toca. */
 export const franjaBloqueada = (fecha: string, rango: string, bloqueos: Bloqueo[]) => {

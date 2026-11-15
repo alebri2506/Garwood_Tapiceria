@@ -162,15 +162,16 @@ describe('CU-C04 cita en el local', () => {
 });
 
 describe('CU-C04 visita a domicilio', () => {
-  it('ofrece horas de 1 hora dentro de las franjas de visita, desde mañana y sin domingos', async () => {
+  it('ofrece visitas de 1 hora que empiezan cada 30 min como la Agenda, desde mañana y sin domingos', async () => {
     const r = await request(app).get('/api/citas/disponibilidad?tipo=domicilio&dias=14').set(auth(cliente));
     expect(r.status).toBe(200);
-    expect(r.body.horas).toEqual(['09:00', '10:00', '11:00', '15:00', '16:00']);
+    expect(r.body.horas).toEqual(['09:30', '10:00', '10:30', '11:00', '15:00', '15:30', '16:00']);
     expect(r.body.duracionMin).toBe(60);
     expect(r.body.dias[0].fecha > hoyNegocio()).toBe(true);
+    const mas1h = (h: string) => { const t = +h.slice(0, 2) * 60 + +h.slice(3) + 60; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; };
     for (const d of r.body.dias) {
       if (new Date(`${d.fecha}T00:00:00Z`).getUTCDay() === 0) expect(d.cerrado).toBeTruthy();
-      for (const h of d.horas) expect(h.hasta).toBe(`${String(+h.hora.slice(0, 2) + 1).padStart(2, '0')}:00`);
+      for (const h of d.horas) expect(h.hasta).toBe(mas1h(h.hora));
     }
   });
 
@@ -245,6 +246,35 @@ describe('A2 · agenda del Administrador', () => {
     const t2 = await primerLibre('local');
     await request(app).post('/api/citas').set(auth(admin)).send({ solicitud: s.body.codigo, tipo: 'local', ...t2 });
     expect((await request(app).post('/api/admin/agenda/bloqueos').set(auth(admin)).send({ bloques: [t2] })).body.mensaje).toMatch(/tiene una cita/);
+  });
+
+  it('W3b: la visita empieza cada 30 min como la Agenda (dura 1 h: solo donde la hora entera cabe)', async () => {
+    const r = await request(app).get('/api/citas/disponibilidad?tipo=domicilio&dias=3').set(auth(cliente));
+    expect(r.body.horas).toEqual(['09:30', '10:00', '10:30', '11:00', '15:00', '15:30', '16:00']);
+    expect(r.body.horario).toBe('09:30–12:00 y 15:00–17:00');
+    expect(r.body.dias[0].horas.map((h: { hora: string; hasta: string }) => `${h.hora}-${h.hasta}`)).toContain('10:30-11:30');
+  });
+
+  it('W3 ve la misma agenda que A2: una cita atendida antes de su hora y un bloqueo que toca parte del turno no se ofrecen', async () => {
+    const libreEn = async (t: { fecha: string; hora: string }) => {
+      const d = await request(app).get(`/api/citas/disponibilidad?tipo=local&desde=${t.fecha}&dias=1`).set(auth(cliente));
+      return d.body.dias[0].turnos.find((x: { hora: string }) => x.hora === t.hora).libre as boolean;
+    };
+    // El Administrador empieza la cita antes de su hora: sigue en su agenda, así que el turno no vuelve a ofrecerse.
+    const s = await enEspera('local');
+    const t = await primerLibre('local');
+    const c = await request(app).post('/api/citas').set(auth(admin)).send({ solicitud: s.body.codigo, tipo: 'local', ...t });
+    expect((await request(app).post(`/api/citas/${c.body.id}/resultado`).set(auth(admin)).send({ resultado: 'atendida' })).body.cita).toBe('Atendida');
+    expect(await libreEn(t)).toBe(false);
+
+    // Un bloqueo de 15 minutos a mitad del turno lo deja sin ofrecer (antes solo contaba la hora de inicio).
+    const t2 = await primerLibre('local');
+    const [h, m] = t2.hora.split(':').map(Number) as [number, number];
+    const mitad = `${String(h).padStart(2, '0')}:${String(m + 15).padStart(2, '0')}`;
+    const fin = `${String(h + (m + 30 >= 60 ? 1 : 0)).padStart(2, '0')}:${String((m + 30) % 60).padStart(2, '0')}`;
+    const b = await prisma.agendaBloqueo.create({ data: { fecha: new Date(`${t2.fecha}T00:00:00Z`), horaInicio: mitad, horaFin: fin, motivo: 'Proveedor' } });
+    expect(await libreEn(t2)).toBe(false);
+    await prisma.agendaBloqueo.update({ where: { id: b.id }, data: { activo: false } });
   });
 
   it('quitar un bloqueo lo anula sin borrarlo y el turno vuelve a estar libre', async () => {

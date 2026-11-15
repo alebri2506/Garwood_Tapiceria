@@ -8,7 +8,7 @@ import type { PedidoEnCurso } from './datos';
 import { AvisoSiguiente } from './TarjetaPedido';
 
 const METODOS = ['Tarjeta', 'Cuenta bancaria', 'Zelle', 'Cheque', 'Efectivo'];
-const TELEFONO_TALLER = { texto: '(908) 555-0110', tel: '9085550110' };
+export const TELEFONO_TALLER = { texto: '(908) 555-0110', tel: '9085550110' };
 
 type Cancelacion = 'no' | 'abierta' | 'enviada';
 

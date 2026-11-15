@@ -25,6 +25,7 @@ Abre http://localhost:5173.
 | W6a Mis pedidos · en curso (lista y ficha) | `/cliente/pedidos`, `?pedido=PED-0076` | C16, C15 |
 | W6b Mis pedidos · anteriores | `/cliente/pedidos/anteriores` | H06, H05 |
 | W6c Mis pedidos · solicitudes y cotizaciones | `/cliente/pedidos/solicitudes` | C01, C04, C09 |
+| W4 Mi cotización · trabajos, tela, total y adelanto; rechazar con motivo; aceptar sin adelanto y elegir el recojo («Aceptar y pagar el adelanto» espera la pasarela) | `/cliente/cotizacion?solicitud=SOL-…` | C09, C14 |
 | W5 Pagos del pedido · total, pagado, saldo; pagar en línea (pasarela) o informar Zelle / cheque; recibos | `/cliente/pagos?pedido=PED-…` | C12, C13 |
 | W11 Notificaciones (y número en la campana) | `/cliente/notificaciones` | RG-05 |
 | Escritorio del administrador (menú lateral por módulos) | `/admin/*` | — |
@@ -47,9 +48,9 @@ Abre http://localhost:5173.
 | A8p Inventario › Proveedores | `/admin/inventario/proveedores` | A03 |
 | A9 Conteo de inventario · a ciegas, diferencias con motivo | `/admin/inventario/conteo` | A10 |
 
-Conectadas a la API (sin `VITE_API_URL` usan una API simulada): W2, W3, W3b, W6c, W11, A2, A3, A2b Atender cita o visita, A4 › Armar cotización, A14 (con Máquinas y Tamaño de carga), A16 e Inventario (A15, A15b, A8, A8c, A8p, A9). W5, W6a/W6b, A1, A21, A4 (V2, respuesta y renovar), A5, A6 y A6b
+Conectadas a la API (sin `VITE_API_URL` usan una API simulada): W2, W3, W3b, W4, W6c, W11, A2, A3, A2b Atender cita o visita, A4 › Armar cotización, A14 (con Máquinas y Tamaño de carga), A16 e Inventario (A15, A15b, A8, A8c, A8p, A9). W5, W6a/W6b, A1, A21, A4 (V2, respuesta y renovar), A5, A6 y A6b
 son solo diseño: usan datos de ejemplo y todavía no guardan nada. Las demás rutas (las demás del menú del
-administrador, `/taller`, `/conductor`, W4, W5, W7, W9, W10) son temporales.
+administrador, `/taller`, `/conductor`, W5, W7, W9, W10) son temporales.
 
 ## API
 

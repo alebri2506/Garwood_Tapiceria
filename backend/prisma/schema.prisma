@@ -709,6 +709,8 @@ model Cotizacion {
   // Respuesta del cliente (CU-C09): en persona (en la cita o la visita), por teléfono… Rechazo con motivo.
   medioRespuesta      String?            @map("medio_respuesta") @db.VarChar(20)
   motivoRechazo       String?            @map("motivo_rechazo") @db.VarChar(60)
+  // Lo que escribió el cliente al responder desde su cuenta (W4): una duda al aceptar o el detalle del rechazo.
+  comentarioRespuesta String?            @map("comentario_respuesta") @db.VarChar(500)
   fechaRespuesta      DateTime?          @map("fecha_respuesta") @db.Timestamptz
   total               Decimal            @default(0) @db.Decimal(10, 2)
   vigenciaHasta       DateTime?          @map("vigencia_hasta") @db.Date

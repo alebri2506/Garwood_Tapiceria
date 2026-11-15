@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError } from '../../../shared/api/http';
 import { Alert } from '../../../shared/ui/Alert';
+import { Paginacion, usePaginacion } from '../../../shared/ui/Paginacion';
 import { Icon } from '../../../shared/ui/Icon';
 import { normalizar } from '../../../shared/texto';
 import { Aviso, CabeceraInventario, ESTADO, Lateral, cantidad, diaCorto, dinero, fechaLarga, momento, num } from './comunes';
@@ -49,6 +50,7 @@ export function StockPage() {
       .filter((m) => pasa(m) && (!texto || normalizar(`${m.nombre} ${m.proveedor ?? ''}`).includes(texto)))
       .sort((a, b) => Number(b.estado !== 'ok') - Number(a.estado !== 'ok'));
   }, [stock, filtro, q]);
+  const pagina = usePaginacion(filas, [filtro, q]);
 
   const abrir = (id: number) => inventarioApi.material(id).then((f) => { setFicha(f); setForm(null); }).catch((e) => setError(e instanceof ApiError ? e.message : 'No pudimos abrir el material.'));
   const cerrar = useCallback(() => { setFicha(null); setForm(null); }, []);
@@ -82,7 +84,7 @@ export function StockPage() {
           <table className="st">
             <thead><tr><th>Material</th><th className="r">En el estante</th><th className="r">Reservado</th><th className="r">Disponible</th><th className="r">Mínimo</th><th>Alcanza para</th><th>Estado</th></tr></thead>
             <tbody>
-              {filas.map((m) => (
+              {pagina.visibles.map((m) => (
                 <tr key={m.id} onClick={() => abrir(m.id)} onKeyDown={(e) => { if (e.key === 'Enter') abrir(m.id); }} tabIndex={0} aria-label={`Abrir ${m.nombre}`}>
                   <td><b>{m.nombre}</b><small>{m.proveedor ?? 'Sin proveedor'}</small></td>
                   <td className="r">{cantidad(m.fisico, m.unidad)}</td>
@@ -102,6 +104,7 @@ export function StockPage() {
           </table>
         </div>
       )}
+      {stock && filas.length > 0 && <Paginacion {...pagina.props} />}
       <p className="why"><b>Disponible</b> = en el estante − reservado para pedidos. Las telas no tienen stock: se eligen en el <Link to="/admin/inventario/telas">muestrario</Link> y se encargan por pedido en <Link to="/admin/inventario/reponer">Reponer</Link>.</p>
 
       {ficha && !form && (

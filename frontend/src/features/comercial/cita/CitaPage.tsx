@@ -230,13 +230,14 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
             <section className="card stack" aria-labelledby="w3v-titulo">
               <h2 id="w3v-titulo" className="w3-h2">{programada ? '¿Cuándo lo visitamos?' : '¿Dónde y cuándo lo visitamos?'}</h2>
               {!programada && (
-                <div className="w3v-donde">
+                // Igual que la dirección y el mapa de los otros flujos de la solicitud (W2 · Traslado).
+                <div className="grid2" style={{ gap: 16, alignItems: 'start' }}>
                   <div className="stack" style={{ gap: 6 }}>
                     <CampoDireccion valor={dir} onChange={setDir} guardadas={guardadas} etiqueta="Dirección de la visita" />
                     <span className="muted" style={{ fontSize: 12.5 }}>Sus direcciones guardadas en <Link to="/cliente/perfil">Mi perfil</Link>.</span>
                   </div>
                   {/* Tocar el mapa llena la dirección (como dirección nueva). */}
-                  <MapaUbicacion alto={180} ubicacion={mapa.ubicacion} etiqueta={mapa.etiqueta}
+                  <MapaUbicacion alto={240} ubicacion={mapa.ubicacion} etiqueta={mapa.etiqueta}
                     onElegir={(d) => setDir({ ...dir, guardadaId: null, texto: d.texto, ubicacion: d.ubicacion })} />
                 </div>
               )}

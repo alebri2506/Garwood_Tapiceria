@@ -11,7 +11,7 @@ const TONO_POR_ESTADO: Record<string, Tono> = {
   'En producción': 'progress', 'En pausa': 'warning', 'Terminado': 'success', 'En reparto': 'progress', 'Listo para retiro': 'success',
   'Entregado': 'success', 'Cerrado': 'neutral', 'Archivado': 'neutral', 'Cancelado': 'danger',
   'Por confirmar': 'warning', 'Confirmado': 'success',
-  'Programada': 'info', 'Atendida': 'success', 'No asistió': 'danger', 'Cancelada': 'danger',
+  'Programada': 'info', 'En atención': 'progress', 'Atendida': 'success', 'No asistió': 'danger', 'Cancelada': 'danger',
 };
 const ICONO: Record<Tono, IconName> = { neutral: 'info', info: 'clock', progress: 'loader', warning: 'alert', success: 'check', danger: 'x' };
 

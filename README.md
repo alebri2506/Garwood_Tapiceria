@@ -173,6 +173,11 @@ docker compose logs -f api
 - **La web abre pero no deja iniciar sesión**: falta el seed (paso 4) o los secretos JWT en `backend/.env`.
 - **`npm run db:seed` falla con `Can't reach database server`**: la base no está arriba; corra
   `docker compose up -d db`.
+- **Quiero empezar de cero las pruebas de agenda y solicitudes** (solo la base local): en `backend/`,
+  `npm run db:limpiar` muestra qué se borraría (no borra nada); `npm run db:limpiar -- --si` borra la agenda, las
+  solicitudes, las cotizaciones y lo que nace de ellas (pedidos, adelantos, recojos y avisos). Agregue `--inventario`
+  para limpiar también el stock. Nunca toca usuarios, clientes, parámetros, plantillas, telas ni la bitácora, y se
+  niega a correr contra Supabase.
 
 ## Base de datos en Supabase
 
