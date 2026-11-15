@@ -11,8 +11,6 @@ export interface CitaAgenda extends CitaDto {
     tela: string; telaDescripcion: string | null; fotos: number; inasistencias: number; tieneProgramada: boolean;
   };
 }
-/** W2 · hora de recojo preferida de una solicitud que espera: reserva la agenda. */
-export interface RecojoAgenda { solicitud: string; estado: string; cliente: string; telefono: string; fecha: string; hora: string; hasta: string; mueble: string; direccion: string | null }
 export interface BloqueoAgenda { id: number; fecha: string; horaInicio: string | null; horaFin: string | null; motivo: string }
 export interface Semana {
   desde: string; hasta: string; hoy: string; ahora: string;
@@ -22,7 +20,6 @@ export interface Semana {
   bloqueos: (BloqueoAgenda & { horaInicio: string; horaFin: string })[];
   proximosBloqueos: BloqueoAgenda[];
   citas: CitaAgenda[];
-  recojos: RecojoAgenda[];
 }
 
 interface AgendaApi {
@@ -66,7 +63,6 @@ const simulada: AgendaApi = {
       dias: dias.map((fecha) => ({ fecha, cerrado: null })),
       bloqueos: bloqueados.filter((b) => dias.includes(b.fecha)) as Semana['bloqueos'],
       proximosBloqueos: bloqueados,
-      recojos: [{ solicitud: 'SOL-0084', estado: 'Nueva', cliente: 'Rosa Díaz', telefono: '+19085550133', fecha: dias[4]!, hora: '10:00', hasta: '11:00', mueble: 'Sillón', direccion: '31 Elm St, Westfield, NJ' }],
       citas: [
         ejemplo(1, dias[0]!, '09:30', 'Mark Ellison', 'Sillón', 'Atendida'),
         ejemplo(2, dias[1]!, '10:00', 'Laura Méndez', 'Sofá de 3 cuerpos', 'Programada'),

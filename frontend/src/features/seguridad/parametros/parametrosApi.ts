@@ -11,8 +11,16 @@ export interface Parametro {
 }
 export interface GrupoParametros { nombre: string; parametros: Parametro[] }
 export interface CambioHistorial {
-  id: number; clave: string; etiqueta: string; unidad: string | null; valorAnterior: string; valorNuevo: string; usuario: string; fecha: string;
+  /** Parámetros y máquinas comparten el historial: el id lleva un prefijo (p…, m…). */
+  id: string; clave: string; etiqueta: string; unidad: string | null; valorAnterior: string; valorNuevo: string; usuario: string; fecha: string;
+  /** Altas y cambios de estado de una máquina: la línea ya escrita. */
+  texto?: string;
 }
+/** A14 › Máquinas: la tarifa por hora que usa el precio sugerido de las plantillas. */
+/** A14 › Tamaño de carga de cada tipo de mueble: cuánto suma al transporte (chica, mediana o grande). */
+export type TamanoCarga = 'chica' | 'mediana' | 'grande';
+export interface CargaMueble { id: number; nombre: string; tamanoCarga: TamanoCarga; sinCambios?: boolean }
+export interface Maquina { id: number; nombre: string; tarifaHora: number; activo: boolean; usos: number; sinCambios?: boolean }
 export interface CitaFueraDeHorario {
   citaId: number; solicitud: string | null; cliente: string; tipo: 'local' | 'domicilio'; fecha: string; hora: string; franja: string | null;
 }
@@ -26,12 +34,24 @@ interface ParametrosApi {
   listar(): Promise<{ grupos: GrupoParametros[] }>;
   historial(): Promise<CambioHistorial[]>;
   guardar(cambios: { clave: string; valor: string }[]): Promise<Guardado>;
+  maquinas(): Promise<Maquina[]>;
+  crearMaquina(datos: { nombre: string; tarifaHora: string }): Promise<Maquina>;
+  editarMaquina(id: number, datos: { nombre: string; tarifaHora: string }): Promise<Maquina>;
+  estadoMaquina(id: number, activo: boolean): Promise<Maquina>;
+  cargas(): Promise<CargaMueble[]>;
+  cambiarCarga(id: number, tamanoCarga: TamanoCarga): Promise<CargaMueble>;
 }
 
 const http: ParametrosApi = {
   listar: () => apiFetch('/admin/parametros'),
   historial: () => apiFetch('/admin/parametros/historial?limite=20'),
   guardar: (cambios) => apiFetch('/admin/parametros', { method: 'PUT', body: JSON.stringify({ cambios }) }),
+  maquinas: () => apiFetch('/admin/parametros/maquinas'),
+  crearMaquina: (datos) => apiFetch('/admin/parametros/maquinas', { method: 'POST', body: JSON.stringify(datos) }),
+  editarMaquina: (id, datos) => apiFetch(`/admin/parametros/maquinas/${id}`, { method: 'PUT', body: JSON.stringify(datos) }),
+  estadoMaquina: (id, activo) => apiFetch(`/admin/parametros/maquinas/${id}/estado`, { method: 'PUT', body: JSON.stringify({ activo }) }),
+  cargas: () => apiFetch('/admin/parametros/cargas'),
+  cambiarCarga: (id, tamanoCarga) => apiFetch(`/admin/parametros/cargas/${id}`, { method: 'PUT', body: JSON.stringify({ tamanoCarga }) }),
 };
 
 // ---------------------------------------------------------------- Sin API: algunos parámetros de ejemplo por grupo.
@@ -62,6 +82,29 @@ const ejemplo: GrupoParametros[] = [
   ] },
 ];
 const historialEjemplo: CambioHistorial[] = [];
+const cargasEjemplo: CargaMueble[] = ([
+  ['Sofá de 2 cuerpos', 'grande'], ['Sofá de 3 cuerpos', 'grande'], ['Sofá seccional (en L)', 'grande'], ['Sofá cama', 'grande'], ['Sillón', 'mediana'],
+  ['Silla de comedor', 'chica'], ['Cabecera de cama', 'mediana'], ['Cama tapizada', 'grande'], ['Otomán o puf', 'chica'], ['Banco (bench)', 'mediana'],
+  ['Banqueta de restaurante', 'mediana'], ['Cojín de ventana o asiento empotrado', 'chica'],
+] as [string, TamanoCarga][]).map(([nombre, tamanoCarga], i) => ({ id: i + 1, nombre, tamanoCarga }));
+const maquinasEjemplo: Maquina[] = [
+  { id: 1, nombre: 'Cortadora de espuma', tarifaHora: 8, activo: true, usos: 3 },
+  { id: 2, nombre: 'Engrapadora neumática', tarifaHora: 5, activo: true, usos: 6 },
+  { id: 3, nombre: 'Mesa de corte', tarifaHora: 4, activo: true, usos: 6 },
+  { id: 4, nombre: 'Máquina de coser industrial', tarifaHora: 6, activo: true, usos: 4 },
+];
+/** Las mismas reglas que el backend: nombre único y tarifa entre 0 y 1000. */
+function revisarMaquina(d: { nombre: string; tarifaHora: string }, excepto?: number) {
+  const errores: Record<string, string> = {};
+  const nombre = d.nombre.trim(), tarifa = Number(d.tarifaHora);
+  if (nombre.length < 2) errores.nombre = 'Escriba el nombre de la máquina.';
+  else if (maquinasEjemplo.some((m) => m.id !== excepto && m.nombre.toLowerCase() === nombre.toLowerCase())) errores.nombre = 'Ya existe una máquina con ese nombre.';
+  if (d.tarifaHora.trim() === '' || Number.isNaN(tarifa)) errores.tarifaHora = 'Escriba la tarifa con números.';
+  else if (tarifa < 0) errores.tarifaHora = 'La tarifa no puede ser negativa.';
+  else if (tarifa > 1000) errores.tarifaHora = 'La tarifa no puede pasar de $1,000 por hora.';
+  if (Object.keys(errores).length) throw new ApiError(Object.values(errores)[0]!, 400, errores);
+  return { nombre, tarifaHora: Math.round(tarifa * 100) / 100 };
+}
 const simulada: ParametrosApi = {
   listar: async () => ({ grupos: structuredClone(ejemplo) }),
   historial: async () => structuredClone(historialEjemplo),
@@ -81,11 +124,37 @@ const simulada: ParametrosApi = {
     for (const c of cambios) {
       const x = todos.find((t) => t.clave === c.clave)!;
       if (x.valor === c.valor) continue;
-      historialEjemplo.unshift({ id: historialEjemplo.length + 1, clave: x.clave, etiqueta: x.etiqueta, unidad: x.unidad, valorAnterior: x.valor, valorNuevo: c.valor, usuario: 'Administrador', fecha: new Date().toISOString() });
+      historialEjemplo.unshift({ id: 'p' + (historialEjemplo.length + 1), clave: x.clave, etiqueta: x.etiqueta, unidad: x.unidad, valorAnterior: x.valor, valorNuevo: c.valor, usuario: 'Administrador', fecha: new Date().toISOString() });
       x.valor = c.valor;
       cambiados.push(c.clave);
     }
     return { cambiados, grupos: structuredClone(ejemplo), avisos: { citasFueraDeHorario: [] } };
+  },
+  maquinas: async () => structuredClone(maquinasEjemplo),
+  crearMaquina: async (datos) => {
+    const d = revisarMaquina(datos);
+    const m: Maquina = { id: Math.max(0, ...maquinasEjemplo.map((x) => x.id)) + 1, ...d, activo: true, usos: 0 };
+    maquinasEjemplo.push(m);
+    return structuredClone(m);
+  },
+  editarMaquina: async (id, datos) => {
+    const m = maquinasEjemplo.find((x) => x.id === id)!;
+    const d = revisarMaquina(datos, id);
+    const sinCambios = d.nombre === m.nombre && d.tarifaHora === m.tarifaHora;
+    Object.assign(m, d);
+    return { ...structuredClone(m), sinCambios };
+  },
+  cargas: async () => structuredClone(cargasEjemplo),
+  cambiarCarga: async (id, tamanoCarga) => {
+    const c = cargasEjemplo.find((x) => x.id === id)!;
+    const sinCambios = c.tamanoCarga === tamanoCarga;
+    c.tamanoCarga = tamanoCarga;
+    return { ...structuredClone(c), sinCambios };
+  },
+  estadoMaquina: async (id, activo) => {
+    const m = maquinasEjemplo.find((x) => x.id === id)!;
+    m.activo = activo;
+    return structuredClone(m);
   },
 };
 

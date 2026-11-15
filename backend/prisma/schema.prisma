@@ -23,43 +23,48 @@ model Rol {
 }
 
 model Usuario {
-  id                    Int                    @id @default(autoincrement())
-  clienteId             Int?                   @unique @map("cliente_id")
-  rolId                 Int                    @map("rol_id")
+  id                     Int                    @id @default(autoincrement())
+  clienteId              Int?                   @unique @map("cliente_id")
+  rolId                  Int                    @map("rol_id")
   // No se puede cambiar: identifica a la persona en la bitácora (decisiones D.1.4).
-  nombreUsuario         String                 @unique @map("nombre_usuario") @db.VarChar(120)
+  nombreUsuario          String                 @unique @map("nombre_usuario") @db.VarChar(120)
   // Nombre visible del personal (A20). Los clientes usan el nombre de su ficha de cliente.
-  nombre                String?                @db.VarChar(80)
+  nombre                 String?                @db.VarChar(80)
   // Para recuperar la contraseña (CU-S02). Obligatorio para Administrador y Cliente; opcional para
   // Producción y Conductor (decisiones D.1.2): esa regla se valida en el backend.
-  email                 String?                @unique @db.VarChar(160)
-  contrasenaHash        String                 @map("contrasena_hash")
+  email                  String?                @unique @db.VarChar(160)
+  contrasenaHash         String                 @map("contrasena_hash")
   // Computadora | Celular | Tablet (solo informativo, decisiones D.1.7).
-  dispositivo           String?                @db.VarChar(20)
-  activo                Boolean                @default(true)
+  dispositivo            String?                @db.VarChar(20)
+  activo                 Boolean                @default(true)
   // Bloqueo por intentos fallidos (CU-S01).
-  intentosFallidos      Int                    @default(0) @map("intentos_fallidos")
-  bloqueadoHasta        DateTime?              @map("bloqueado_hasta") @db.Timestamptz
+  intentosFallidos       Int                    @default(0) @map("intentos_fallidos")
+  bloqueadoHasta         DateTime?              @map("bloqueado_hasta") @db.Timestamptz
   // Contraseña temporal dada por el Administrador: se cambia en el primer ingreso (D.1.3).
-  debeCambiarContrasena Boolean                @default(false) @map("debe_cambiar_contrasena")
+  debeCambiarContrasena  Boolean                @default(false) @map("debe_cambiar_contrasena")
   // Sube al desactivar, cambiar el rol o la contraseña; una sesión con un número viejo ya no se renueva (D.1.6).
-  versionSesion         Int                    @default(0) @map("version_sesion")
-  fechaCreacion         DateTime               @default(now()) @map("fecha_creacion") @db.Timestamptz
-  rol                   Rol                    @relation(fields: [rolId], references: [id])
-  cliente               Cliente?               @relation(fields: [clienteId], references: [id])
-  tokens                TokenRecuperacion[]
-  cambiosCorreo         CambioCorreo[]
-  bitacora              Bitacora[]
-  solicitudes           Solicitud[]
-  descartadas           Solicitud[]            @relation("SolicitudDescartadaPor")
-  notificaciones        Notificacion[]
-  citas                 Cita[]
-  parametrosModificados Parametro[]            @relation("ParametroModificadoPor")
-  cambiosParametro      ParametroHistorial[]
-  movimientos           MovimientoInventario[]
-  compras               Compra[]               @relation("CompraRegistradaPor")
-  comprasRecibidas      Compra[]               @relation("CompraRecibidaPor")
-  conteos               Conteo[]
+  versionSesion          Int                    @default(0) @map("version_sesion")
+  fechaCreacion          DateTime               @default(now()) @map("fecha_creacion") @db.Timestamptz
+  rol                    Rol                    @relation(fields: [rolId], references: [id])
+  cliente                Cliente?               @relation(fields: [clienteId], references: [id])
+  tokens                 TokenRecuperacion[]
+  cambiosCorreo          CambioCorreo[]
+  bitacora               Bitacora[]
+  solicitudes            Solicitud[]
+  descartadas            Solicitud[]            @relation("SolicitudDescartadaPor")
+  notificaciones         Notificacion[]
+  citas                  Cita[]
+  parametrosModificados  Parametro[]            @relation("ParametroModificadoPor")
+  cambiosParametro       ParametroHistorial[]
+  movimientos            MovimientoInventario[]
+  compras                Compra[]               @relation("CompraRegistradaPor")
+  comprasRecibidas       Compra[]               @relation("CompraRecibidaPor")
+  conteos                Conteo[]
+  plantillas             Plantilla[]
+  cotizaciones           Cotizacion[]           @relation("CotizacionCreadaPor")
+  cotizacionesPublicadas Cotizacion[]           @relation("CotizacionPublicadaPor")
+  pagosRegistrados       Pago[]                 @relation("PagoRegistradoPor")
+  recojosRegistrados     Recojo[]
 
   @@map("usuario")
 }
@@ -190,14 +195,17 @@ model ParametroHistorial {
 // Una solicitud puede traer varios muebles (diseño W2): cada uno con su servicio, fotos y telas.
 
 model TipoMueble {
-  id      Int               @id @default(autoincrement())
+  id          Int               @id @default(autoincrement())
   // Código del dibujo por partes en la web (s3 = sofá de 3 cuerpos, ar = sillón…).
-  codigo  String            @unique @db.VarChar(20)
-  nombre  String            @unique @db.VarChar(80)
-  orden   Int               @default(0)
-  activo  Boolean           @default(true)
-  partes  TipoMuebleParte[]
-  muebles SolicitudMueble[]
+  codigo      String            @unique @db.VarChar(20)
+  nombre      String            @unique @db.VarChar(80)
+  orden       Int               @default(0)
+  // Tamaño para el transporte (A4 · CU-C07): chica | mediana | grande. Cada tamaño tiene su tarifa en Parámetros.
+  tamanoCarga String            @default("mediana") @map("tamano_carga") @db.VarChar(10)
+  activo      Boolean           @default(true)
+  partes      TipoMuebleParte[]
+  muebles     SolicitudMueble[]
+  plantillas  Plantilla[]
 
   @@map("tipo_mueble")
 }
@@ -218,39 +226,42 @@ model TipoMuebleParte {
 //  - Materiales de stock (espuma, relleno, insumo, pegamento): se cuentan, se reservan y se reponen.
 //  - Telas: NO tienen stock; son la copia digital del libro de muestras y se encargan por pedido (encargo_tela).
 model Material {
-  id            Int                    @id @default(autoincrement())
-  codigo        String                 @unique @db.VarChar(30)
-  nombre        String                 @db.VarChar(80)
-  categoria     String                 @db.VarChar(30) // tela | espuma | relleno | insumo | pegamento
-  familia       String?                @db.VarChar(30) // Tipo de tela: Terciopelo, Lino, Pana, Chenille…
+  id             Int                    @id @default(autoincrement())
+  codigo         String                 @unique @db.VarChar(30)
+  nombre         String                 @db.VarChar(80)
+  categoria      String                 @db.VarChar(30) // tela | espuma | relleno | insumo | pegamento
+  familia        String?                @db.VarChar(30) // Tipo de tela: Terciopelo, Lino, Pana, Chenille…
   // Color para buscar en el muestrario (Azul, Gris, Beige…).
-  colorFamilia  String?                @map("color_familia") @db.VarChar(20)
-  libro         String?                @db.VarChar(60) // Libro de muestras donde está la tela
+  colorFamilia   String?                @map("color_familia") @db.VarChar(20)
+  libro          String?                @db.VarChar(60) // Libro de muestras donde está la tela
   // Cada tela se identifica por su modelo (pattern) y su número de color.
-  pattern       String?                @db.VarChar(20)
-  numeroColor   String?                @map("numero_color") @db.VarChar(10)
-  colorHex      String?                @map("color_hex") @db.Char(7)
-  descripcion   String?                @db.VarChar(160)
-  unidadMedida  String                 @map("unidad_medida") @db.VarChar(10)
-  proveedorId   Int?                   @map("proveedor_id")
+  pattern        String?                @db.VarChar(20)
+  numeroColor    String?                @map("numero_color") @db.VarChar(10)
+  colorHex       String?                @map("color_hex") @db.Char(7)
+  descripcion    String?                @db.VarChar(160)
+  unidadMedida   String                 @map("unidad_medida") @db.VarChar(10)
+  proveedorId    Int?                   @map("proveedor_id")
   // Precio por unidad (las telas: por yarda) y desde cuándo rige. Cambiarlo no altera cotizaciones ya enviadas.
-  precio        Decimal?               @db.Decimal(10, 2)
-  fechaPrecio   DateTime?              @map("fecha_precio") @db.Date
+  precio         Decimal?               @db.Decimal(10, 2)
+  fechaPrecio    DateTime?              @map("fecha_precio") @db.Date
   // Lo que hay en el estante. Solo lo cambian los movimientos (movimiento_inventario guarda el saldo de cada uno).
-  stockFisico   Decimal                @default(0) @map("stock_fisico") @db.Decimal(10, 2)
-  stockMinimo   Decimal                @default(0) @map("stock_minimo") @db.Decimal(10, 2)
-  ubicacion     String?                @db.VarChar(30) // Estante o gaveta
+  stockFisico    Decimal                @default(0) @map("stock_fisico") @db.Decimal(10, 2)
+  stockMinimo    Decimal                @default(0) @map("stock_minimo") @db.Decimal(10, 2)
+  ubicacion      String?                @db.VarChar(30) // Estante o gaveta
   // Telas: si el cliente la ve en "Telas en línea" (W2). Descontinuar = activo en false (nunca se borra).
-  enWeb         Boolean                @default(true) @map("en_web")
-  activo        Boolean                @default(true)
-  fechaCreacion DateTime               @default(now()) @map("fecha_creacion") @db.Timestamptz
-  proveedor     Proveedor?             @relation(fields: [proveedorId], references: [id])
-  telas         SolicitudTela[]
-  reservas      ReservaMaterial[]
-  encargos      EncargoTela[]
-  lineasCompra  CompraLinea[]
-  movimientos   MovimientoInventario[]
-  lineasConteo  ConteoLinea[]
+  enWeb          Boolean                @default(true) @map("en_web")
+  activo         Boolean                @default(true)
+  fechaCreacion  DateTime               @default(now()) @map("fecha_creacion") @db.Timestamptz
+  proveedor      Proveedor?             @relation(fields: [proveedorId], references: [id])
+  telas          SolicitudTela[]
+  reservas       ReservaMaterial[]
+  encargos       EncargoTela[]
+  lineasCompra   CompraLinea[]
+  movimientos    MovimientoInventario[]
+  lineasConteo   ConteoLinea[]
+  enPlantillas   PlantillaMaterial[]
+  enCotizaciones CotizacionMaterial[]
+  telasCotizadas CotizacionTela[]
 
   @@index([categoria, activo])
   @@map("material")
@@ -287,6 +298,11 @@ model Pedido {
   descripcion     String                 @db.VarChar(120) // "Sofá de 3 cuerpos", "12 sillas"…
   fechaCompromiso DateTime?              @map("fecha_compromiso") @db.Date
   fechaCreacion   DateTime               @default(now()) @map("fecha_creacion") @db.Timestamptz
+  // La cotización aceptada que lo generó (CU-C14). Una cotización genera a lo más un pedido.
+  cotizacionId    Int?                   @unique @map("cotizacion_id")
+  cotizacion      Cotizacion?            @relation(fields: [cotizacionId], references: [id])
+  pagos           Pago[]
+  recojo          Recojo?
   solicitud       Solicitud              @relation(fields: [solicitudId], references: [id])
   cliente         Cliente                @relation(fields: [clienteId], references: [id])
   reservas        ReservaMaterial[]
@@ -440,6 +456,7 @@ model Direccion {
   fechaCreacion DateTime    @default(now()) @map("fecha_creacion") @db.Timestamptz
   cliente       Cliente     @relation(fields: [clienteId], references: [id])
   recojos       Solicitud[] @relation("SolicitudDireccion")
+  recojosPedido Recojo[]
   citas         Cita[]
 
   @@index([clienteId])
@@ -461,9 +478,10 @@ model Solicitud {
   // delivery | propio; vacío cuando se define en la cita o la visita.
   traslado        String?           @db.VarChar(12)
   direccionId     Int?              @map("direccion_id")
+  // Ya no se llenan (decisiones A.7, 13/11): el recojo no se elige al pedir la cotización, sino cuando se confirma el pago
+  // (el cliente lo elige en la grilla ligada a la agenda). Se conservan las de solicitudes anteriores.
   fechaPrefRecojo DateTime?         @map("fecha_pref_recojo") @db.Date
   franjaRecojo    String?           @map("franja_recojo") @db.VarChar(10) // manana | tarde
-  // Hora preferida de recojo (W2): bloque de `recojo.duracion_min` que reserva la agenda hasta que se acepte o cierre.
   horaPrefRecojo  String?           @map("hora_pref_recojo") @db.VarChar(5)
   estado          String            @db.VarChar(30)
   fechaSolicitud  DateTime          @default(now()) @map("fecha_solicitud") @db.Timestamptz
@@ -482,6 +500,7 @@ model Solicitud {
   citas           Cita[]
   notificaciones  Notificacion[]
   pedidos         Pedido[]
+  cotizaciones    Cotizacion[]
 
   @@index([clienteId, fechaSolicitud])
   @@index([estado])
@@ -503,6 +522,7 @@ model SolicitudMueble {
   tipoMueble   TipoMueble         @relation(fields: [tipoMuebleId], references: [id])
   telas        SolicitudTela[]
   adjuntos     SolicitudAdjunto[]
+  cotizados    CotizacionMueble[]
 
   @@unique([solicitudId, orden])
   @@map("solicitud_mueble")
@@ -595,4 +615,232 @@ model AgendaBloqueo {
 
   @@index([fecha])
   @@map("agenda_bloqueo")
+}
+
+// ---------------------------------------------------------------- Comercial · CU-C06 A16 Plantillas de cotización
+
+// Máquinas del taller con su tarifa por hora (RG-04: la tarifa de cada máquina vive aquí, no en el código).
+model Maquina {
+  id            Int                   @id @default(autoincrement())
+  nombre        String                @unique @db.VarChar(60)
+  tarifaHora    Decimal               @map("tarifa_hora") @db.Decimal(10, 2)
+  activo        Boolean               @default(true)
+  fechaCreacion DateTime              @default(now()) @map("fecha_creacion") @db.Timestamptz
+  actividades   PlantillaActividad[]
+  cotizadas     CotizacionActividad[]
+
+  @@map("maquina")
+}
+
+// Una plantilla por tipo de mueble + servicio. Versionada: guardar cambios crea una versión nueva y la anterior queda
+// inactiva (nunca se borra), así una cotización ya armada conserva la versión con que se hizo (RG-03).
+model Plantilla {
+  id            Int                  @id @default(autoincrement())
+  tipoMuebleId  Int                  @map("tipo_mueble_id")
+  servicio      String               @db.VarChar(20) // retapizado | retapizado_espuma | espuma | estructura | fabricacion
+  version       Int
+  activa        Boolean              @default(true)
+  creadoPor     Int                  @map("creado_por")
+  fechaCreacion DateTime             @default(now()) @map("fecha_creacion") @db.Timestamptz
+  tipoMueble    TipoMueble           @relation(fields: [tipoMuebleId], references: [id])
+  creador       Usuario              @relation(fields: [creadoPor], references: [id])
+  actividades   PlantillaActividad[]
+  cotizados     CotizacionMueble[]
+
+  @@unique([tipoMuebleId, servicio, version])
+  @@index([activa])
+  @@map("plantilla")
+}
+
+// Una actividad de la plantilla: horas persona, máquina (opcional) y horas máquina.
+model PlantillaActividad {
+  id           Int                 @id @default(autoincrement())
+  plantillaId  Int                 @map("plantilla_id")
+  orden        Int
+  nombre       String              @db.VarChar(80)
+  horasPersona Decimal             @map("horas_persona") @db.Decimal(6, 2)
+  maquinaId    Int?                @map("maquina_id")
+  horasMaquina Decimal             @default(0) @map("horas_maquina") @db.Decimal(6, 2)
+  plantilla    Plantilla           @relation(fields: [plantillaId], references: [id])
+  maquina      Maquina?            @relation(fields: [maquinaId], references: [id])
+  materiales   PlantillaMaterial[]
+
+  @@unique([plantillaId, orden])
+  @@map("plantilla_actividad")
+}
+
+// Materiales de STOCK del Inventario que usa la actividad. La tela no va aquí: la elige el cliente y se agrega en la cotización.
+model PlantillaMaterial {
+  id          Int                @id @default(autoincrement())
+  actividadId Int                @map("actividad_id")
+  materialId  Int                @map("material_id")
+  cantidad    Decimal            @db.Decimal(10, 2)
+  actividad   PlantillaActividad @relation(fields: [actividadId], references: [id])
+  material    Material           @relation(fields: [materialId], references: [id])
+
+  @@index([actividadId])
+  @@map("plantilla_material")
+}
+
+// ---------------------------------------------------------------- Comercial · A4 Armar cotización (CU-C07, C08, C11)
+// Una cotización por solicitud (V1; la V2 por daño oculto y la renovación se agregan después). Junta todos los muebles:
+// cada uno con sus actividades, sus telas y su precio; el transporte y el adelanto son de toda la cotización.
+// Al publicarla se congelan los precios de ese momento (cambiar el Inventario o las tarifas ya no la altera).
+model Cotizacion {
+  id                  Int                @id @default(autoincrement())
+  codigo              String             @unique @db.VarChar(12) // COT-0001
+  solicitudId         Int                @map("solicitud_id")
+  version             Int                @default(1)
+  // Borrador | Pendiente de respuesta (luego: Aceptada: pendiente de adelanto, Aceptada, Rechazada, Vencida, Reemplazada).
+  estado              String             @db.VarChar(40)
+  // Transporte ida y vuelta, un solo cobro (0 si el cliente lo lleva). Manual: cuando no se pudo calcular (con motivo).
+  millas              Decimal?           @db.Decimal(8, 2)
+  transporte          Decimal            @default(0) @db.Decimal(10, 2)
+  transporteManual    Boolean            @default(false) @map("transporte_manual")
+  motivoTransporte    String?            @map("motivo_transporte") @db.VarChar(160)
+  // Adelanto (CU-C11): el sugerido sale de Parámetros según el historial; el Administrador puede cambiarlo solo aquí.
+  adelantoPctSugerido Decimal            @map("adelanto_pct_sugerido") @db.Decimal(5, 2)
+  adelanto            Decimal            @default(0) @db.Decimal(10, 2)
+  adelantoModificado  Boolean            @default(false) @map("adelanto_modificado")
+  observaciones       String?            @db.VarChar(1000)
+  // Mientras es Borrador, lo armado se guarda aquí (se reescribe en cada guardado, sin borrar filas). Al publicar se
+  // crean los muebles, actividades y telas con los precios congelados, y este campo queda vacío.
+  borrador            Json?
+  // Respuesta del cliente (CU-C09): en persona (en la cita o la visita), por teléfono… Rechazo con motivo.
+  medioRespuesta      String?            @map("medio_respuesta") @db.VarChar(20)
+  motivoRechazo       String?            @map("motivo_rechazo") @db.VarChar(60)
+  fechaRespuesta      DateTime?          @map("fecha_respuesta") @db.Timestamptz
+  total               Decimal            @default(0) @db.Decimal(10, 2)
+  vigenciaHasta       DateTime?          @map("vigencia_hasta") @db.Date
+  creadoPor           Int                @map("creado_por")
+  fechaCreacion       DateTime           @default(now()) @map("fecha_creacion") @db.Timestamptz
+  fechaModificacion   DateTime           @default(now()) @map("fecha_modificacion") @db.Timestamptz
+  publicadoPor        Int?               @map("publicado_por")
+  fechaPublicacion    DateTime?          @map("fecha_publicacion") @db.Timestamptz
+  solicitud           Solicitud          @relation(fields: [solicitudId], references: [id])
+  creador             Usuario            @relation("CotizacionCreadaPor", fields: [creadoPor], references: [id])
+  publicador          Usuario?           @relation("CotizacionPublicadaPor", fields: [publicadoPor], references: [id])
+  pedido              Pedido?
+  pagos               Pago[]
+  muebles             CotizacionMueble[]
+
+  @@unique([solicitudId, version])
+  @@index([estado])
+  @@map("cotizacion")
+}
+
+// Un mueble de la solicitud dentro de la cotización: su precio sugerido (calculado) y el propuesto (lo decide el
+// Administrador, con motivo opcional). Se guardan ambos (CU-C08). El cliente nunca ve el sugerido ni el desglose (RG-08).
+model CotizacionMueble {
+  id                Int                   @id @default(autoincrement())
+  cotizacionId      Int                   @map("cotizacion_id")
+  solicitudMuebleId Int                   @map("solicitud_mueble_id")
+  plantillaId       Int?                  @map("plantilla_id")
+  materiales        Decimal               @default(0) @db.Decimal(10, 2)
+  manoObra          Decimal               @default(0) @map("mano_obra") @db.Decimal(10, 2)
+  maquinaria        Decimal               @default(0) @db.Decimal(10, 2)
+  costosFijos       Decimal               @default(0) @map("costos_fijos") @db.Decimal(10, 2)
+  precioSugerido    Decimal               @default(0) @map("precio_sugerido") @db.Decimal(10, 2)
+  precioPropuesto   Decimal               @default(0) @map("precio_propuesto") @db.Decimal(10, 2)
+  motivoPrecio      String?               @map("motivo_precio") @db.VarChar(160)
+  // Con varios muebles hay que revisar el precio de cada uno antes de publicar.
+  revisado          Boolean               @default(false)
+  cotizacion        Cotizacion            @relation(fields: [cotizacionId], references: [id])
+  mueble            SolicitudMueble       @relation(fields: [solicitudMuebleId], references: [id])
+  plantilla         Plantilla?            @relation(fields: [plantillaId], references: [id])
+  actividades       CotizacionActividad[]
+  telas             CotizacionTela[]
+
+  @@unique([cotizacionId, solicitudMuebleId])
+  @@map("cotizacion_mueble")
+}
+
+// Actividad del trabajo (se carga de la plantilla y se puede editar). La máquina se guarda con su tarifa del momento.
+model CotizacionActividad {
+  id            Int                  @id @default(autoincrement())
+  muebleId      Int                  @map("mueble_id")
+  orden         Int
+  nombre        String               @db.VarChar(80)
+  horasPersona  Decimal              @map("horas_persona") @db.Decimal(6, 2)
+  maquinaId     Int?                 @map("maquina_id")
+  maquina       String?              @db.VarChar(60)
+  tarifaMaquina Decimal              @default(0) @map("tarifa_maquina") @db.Decimal(10, 2)
+  horasMaquina  Decimal              @default(0) @map("horas_maquina") @db.Decimal(6, 2)
+  mueble        CotizacionMueble     @relation(fields: [muebleId], references: [id])
+  maquinaRef    Maquina?             @relation(fields: [maquinaId], references: [id])
+  materiales    CotizacionMaterial[]
+
+  @@unique([muebleId, orden])
+  @@map("cotizacion_actividad")
+}
+
+// Material de stock que usa la actividad, con el precio del momento.
+model CotizacionMaterial {
+  id          Int                 @id @default(autoincrement())
+  actividadId Int                 @map("actividad_id")
+  materialId  Int                 @map("material_id")
+  cantidad    Decimal             @db.Decimal(10, 2)
+  precio      Decimal             @db.Decimal(10, 2)
+  actividad   CotizacionActividad @relation(fields: [actividadId], references: [id])
+  material    Material            @relation(fields: [materialId], references: [id])
+
+  @@map("cotizacion_material")
+}
+
+// Tela del mueble que pone el taller (la que eligió el cliente): yardas que midió el taller × precio por yarda del momento.
+model CotizacionTela {
+  id         Int              @id @default(autoincrement())
+  muebleId   Int              @map("mueble_id")
+  materialId Int              @map("material_id")
+  yardas     Decimal          @db.Decimal(8, 2)
+  precio     Decimal          @db.Decimal(10, 2)
+  mueble     CotizacionMueble @relation(fields: [muebleId], references: [id])
+  material   Material         @relation(fields: [materialId], references: [id])
+
+  @@unique([muebleId, materialId])
+  @@map("cotizacion_tela")
+}
+
+// ---------------------------------------------------------------- Pagos · registro mínimo (CU-C11, C12)
+// Por ahora solo el adelanto cobrado en la cita o en la visita (decisión de Alejandro, 14/11): el Administrador lo cobra
+// y queda confirmado al registrarlo. El módulo de Pagos (A5/W5) usará esta misma tabla. Nada se borra: se anula (RG-03).
+model Pago {
+  id            Int        @id @default(autoincrement())
+  cotizacionId  Int        @map("cotizacion_id")
+  pedidoId      Int?       @map("pedido_id")
+  concepto      String     @db.VarChar(20) // adelanto | saldo
+  monto         Decimal    @db.Decimal(10, 2)
+  metodo        String     @db.VarChar(15) // efectivo | tarjeta | zelle | cheque | transferencia
+  origen        String     @db.VarChar(15) // visita | local
+  estado        String     @default("Confirmado") @db.VarChar(15) // Por confirmar | Confirmado | Rechazado | Anulado
+  registradoPor Int        @map("registrado_por")
+  fecha         DateTime   @default(now()) @db.Timestamptz
+  cotizacion    Cotizacion @relation(fields: [cotizacionId], references: [id])
+  pedido        Pedido?    @relation(fields: [pedidoId], references: [id])
+  registrador   Usuario    @relation("PagoRegistradoPor", fields: [registradoPor], references: [id])
+
+  @@index([pedidoId])
+  @@map("pago")
+}
+
+// ---------------------------------------------------------------- Recojo del mueble (decisiones A.7 y L)
+// Se define cuando nace el pedido con delivery: agendado en la agenda del camión (un recojo por hora) o hecho en la
+// misma visita («me lo llevo ahora»). Despacho lo usará para armar las salidas.
+model Recojo {
+  id            Int        @id @default(autoincrement())
+  pedidoId      Int        @unique @map("pedido_id")
+  tipo          String     @db.VarChar(12) // agendado | en_visita
+  fecha         DateTime?  @db.Date
+  hora          String?    @db.VarChar(5) // inicio (09:00)
+  duracionMin   Int        @map("duracion_min")
+  direccionId   Int?       @map("direccion_id")
+  estado        String     @db.VarChar(15) // Programado | Realizado | Cancelado
+  registradoPor Int        @map("registrado_por")
+  fechaRegistro DateTime   @default(now()) @map("fecha_registro") @db.Timestamptz
+  pedido        Pedido     @relation(fields: [pedidoId], references: [id])
+  direccion     Direccion? @relation(fields: [direccionId], references: [id])
+  registrador   Usuario    @relation(fields: [registradoPor], references: [id])
+
+  @@index([fecha, estado])
+  @@map("recojo")
 }

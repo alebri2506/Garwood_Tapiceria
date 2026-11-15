@@ -5,12 +5,10 @@ import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { LIMITE_BYTES, firmaValida, formatoDe, type AlmacenArchivos, type ArchivoSubido } from '../../../shared/infrastructure/archivos.js';
 import { avisoAlCliente, avisosAlTaller, enviarCorreos, guardarAvisos, type Aviso } from '../../../shared/infrastructure/avisos.js';
 import type { Correo } from '../../../shared/infrastructure/correo.js';
-import { motivoSinRecojo } from '../domain/calendario.js';
-import { codigoSolicitud, estadoInicial, hayRecojo, necesitaCita, siguientePaso } from '../domain/solicitud.js';
+import { codigoSolicitud, estadoInicial, necesitaCita, siguientePaso } from '../domain/solicitud.js';
 import type { SolicitudEntrada } from '../http/solicitud.schemas.js';
 import { citaDto, revisarTurno, tipoCitaDe, turnoOcupado } from './citas.js';
 import { idDireccion, revisarDireccion } from './direcciones.js';
-import { revisarHoraRecojo } from './recojo.js';
 
 const error = (mensaje: string) => new ReglaNegocioError(mensaje, 400);
 const CAMPO_ARCHIVO = /^mueble_(\d+)$/;
@@ -83,17 +81,15 @@ export interface Solicitante {
 /** CU-C01 Registrar solicitud de cotización. */
 export async function registrarSolicitud(e: SolicitudEntrada, archivos: ArchivoSubido[], quien: Solicitante, deps: { almacen: AlmacenArchivos; correo: Correo }, ip?: string) {
   const { clienteId } = quien;
-  const [maxMuebles, maxArchivos, diasRecojo] = await Promise.all([
+  const [maxMuebles, maxArchivos] = await Promise.all([
     parametroNumero(prisma, 'solicitud.max_muebles'),
     parametroNumero(prisma, 'solicitud.max_archivos_mueble'),
-    parametroNumero(prisma, 'recojo.dias_anticipacion_max'),
   ]);
   if (e.muebles.length > maxMuebles) throw error(`Puede pedir hasta ${maxMuebles} muebles por solicitud.`);
 
-  // Lo que no aplica a la opción elegida no se guarda (p. ej. la fecha de recojo cuando hay cita).
+  // Lo que no aplica a la opción elegida no se guarda (p. ej. la dirección cuando hay cita).
   const cita = necesitaCita(e.tela);
   const delivery = !cita && e.traslado === 'delivery';
-  const conRecojo = delivery && hayRecojo(e.muebles.map((m) => m.servicio));
   // En persona no hay enlace que pedir: las fotos se toman ahí mismo.
   const esperaFotos = Boolean(quien.esperaFotos) && quien.canal !== 'local' && quien.canal !== 'web';
 
@@ -104,14 +100,9 @@ export async function registrarSolicitud(e: SolicitudEntrada, archivos: ArchivoS
   // W3 / W3b: desde la web la solicitud con cita se envía junto con el turno elegido (último paso del asistente).
   if (cita && quien.canal === 'web' && !e.cita) throw error(e.tela === 'domicilio' ? 'Elija el día de la visita.' : 'Elija el día y la hora de su cita.');
   const tipoCita = tipoCitaDe(e.tela);
-  // Desde la web el cliente elige la franja de la visita; la hora la fija solo el taller.
-  const turno = cita && e.cita ? await revisarTurno(tipoCita, tipoCita === 'domicilio' && quien.canal === 'web' ? { fecha: e.cita.fecha, franja: e.cita.franja } : e.cita) : null;
+  // Diseño W3b del 13/11: el cliente elige el día y la hora de la visita (ocupa la agenda del administrador).
+  const turno = cita && e.cita ? await revisarTurno(tipoCita, e.cita) : null;
   if (turno && tipoCita === 'domicilio') await revisarDireccion(e.cita!.direccion, clienteId);
-  if (conRecojo) {
-    const motivo = motivoSinRecojo(e.fechaPrefRecojo!, diasRecojo);
-    if (motivo) throw error(motivo);
-    await revisarHoraRecojo(e.fechaPrefRecojo!, e.horaPrefRecojo!);
-  }
 
   // Los archivos pasan a su lugar definitivo antes de la transacción; si algo falla, se borran.
   const guardados: string[] = [];
@@ -131,9 +122,7 @@ export async function registrarSolicitud(e: SolicitudEntrada, archivos: ArchivoS
           telaConocida: e.tela === 'catalogo' ? e.telaConocida ?? null : null,
           traslado: cita ? null : e.traslado!,
           direccionId,
-          fechaPrefRecojo: conRecojo ? new Date(`${e.fechaPrefRecojo}T00:00:00Z`) : null,
-          franjaRecojo: conRecojo ? (e.horaPrefRecojo! < '12:00' ? 'manana' : 'tarde') : null,
-          horaPrefRecojo: conRecojo ? e.horaPrefRecojo! : null,
+          // Decisiones A.7: con delivery solo la dirección; el cliente elige el recojo cuando se confirma su pago.
           estado: estadoInicial(e.tela),
           esperaFotos,
           registradoPor: quien.usuarioId,
@@ -207,7 +196,7 @@ export async function registrarSolicitud(e: SolicitudEntrada, archivos: ArchivoS
   } catch (err) {
     await Promise.all(guardados.map((r) => deps.almacen.eliminar(r)));
     // Índice único: dos solicitudes enviadas a la vez con el mismo turno, franja u hora de recojo.
-    if (turnoOcupado(err)) throw new ReglaNegocioError(conRecojo ? 'Esa hora de recojo se acaba de ocupar. Elija otra.' : tipoCita === 'local' ? 'Ese turno se acaba de ocupar. Elija otro.' : 'Esa franja se acaba de ocupar. Elija otra.', 409);
+    if (turnoOcupado(err)) throw new ReglaNegocioError(tipoCita === 'local' ? 'Ese turno se acaba de ocupar. Elija otro.' : 'Esa franja se acaba de ocupar. Elija otra.', 409);
     throw err;
   }
 }

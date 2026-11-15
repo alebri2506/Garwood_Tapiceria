@@ -4,20 +4,20 @@
 //    cuando exista, se reemplazan por las reales y este bloque se quita.
 import type { PrismaClient } from '@prisma/client';
 
-export const TIPOS_MUEBLE: { codigo: string; nombre: string; partes: string[] }[] = [
-  { codigo: 's2', nombre: 'Sofá de 2 cuerpos', partes: ['Respaldo', 'Asiento (cojines)', 'Brazo izquierdo', 'Brazo derecho', 'Base y faldón', 'Parte trasera'] },
-  { codigo: 's3', nombre: 'Sofá de 3 cuerpos', partes: ['Respaldo', 'Asiento (cojines)', 'Brazo izquierdo', 'Brazo derecho', 'Base y faldón', 'Parte trasera'] },
-  { codigo: 'sL', nombre: 'Sofá seccional (en L)', partes: ['Respaldo', 'Asiento (cojines)', 'Chaise (extensión)', 'Brazo izquierdo', 'Brazo derecho', 'Base y faldón'] },
-  { codigo: 'sc', nombre: 'Sofá cama', partes: ['Respaldo', 'Asiento (cojines)', 'Brazo izquierdo', 'Brazo derecho', 'Base y faldón', 'Parte trasera'] },
+// tamano: tamaño de carga para el transporte (A4), según los ejemplos de las tarifas en Parámetros. Editable en A14.
+export const TIPOS_MUEBLE: { codigo: string; nombre: string; partes: string[]; tamano?: 'chica' | 'grande' }[] = [
+  { codigo: 's2', tamano: 'grande', nombre: 'Sofá de 2 cuerpos', partes: ['Respaldo', 'Asiento (cojines)', 'Brazo izquierdo', 'Brazo derecho', 'Base y faldón', 'Parte trasera'] },
+  { codigo: 's3', tamano: 'grande', nombre: 'Sofá de 3 cuerpos', partes: ['Respaldo', 'Asiento (cojines)', 'Brazo izquierdo', 'Brazo derecho', 'Base y faldón', 'Parte trasera'] },
+  { codigo: 'sL', tamano: 'grande', nombre: 'Sofá seccional (en L)', partes: ['Respaldo', 'Asiento (cojines)', 'Chaise (extensión)', 'Brazo izquierdo', 'Brazo derecho', 'Base y faldón'] },
+  { codigo: 'sc', tamano: 'grande', nombre: 'Sofá cama', partes: ['Respaldo', 'Asiento (cojines)', 'Brazo izquierdo', 'Brazo derecho', 'Base y faldón', 'Parte trasera'] },
   { codigo: 'ar', nombre: 'Sillón', partes: ['Respaldo', 'Asiento', 'Brazo izquierdo', 'Brazo derecho', 'Base y faldón'] },
-  { codigo: 'ch', nombre: 'Silla de comedor', partes: ['Respaldo', 'Asiento'] },
+  { codigo: 'ch', tamano: 'chica', nombre: 'Silla de comedor', partes: ['Respaldo', 'Asiento'] },
   { codigo: 'hb', nombre: 'Cabecera de cama', partes: ['Frente', 'Bordes y ribete'] },
-  { codigo: 'bed', nombre: 'Cama tapizada', partes: ['Cabecera', 'Laterales y piecera', 'Faldón'] },
-  { codigo: 'ot', nombre: 'Otomán o puf', partes: ['Tapa (arriba)', 'Lados'] },
+  { codigo: 'bed', tamano: 'grande', nombre: 'Cama tapizada', partes: ['Cabecera', 'Laterales y piecera', 'Faldón'] },
+  { codigo: 'ot', tamano: 'chica', nombre: 'Otomán o puf', partes: ['Tapa (arriba)', 'Lados'] },
   { codigo: 'bn', nombre: 'Banco (bench)', partes: ['Asiento', 'Lados'] },
   { codigo: 'bq', nombre: 'Banqueta de restaurante', partes: ['Respaldo', 'Asiento', 'Base (frente)'] },
-  { codigo: 'wn', nombre: 'Cojín de ventana o asiento empotrado', partes: ['Cojín del asiento', 'Frente del cojín', 'Cojines del respaldo'] },
-  { codigo: 'gen', nombre: 'Otro mueble de interior', partes: ['Parte principal', 'Otra parte'] },
+  { codigo: 'wn', tamano: 'chica', nombre: 'Cojín de ventana o asiento empotrado', partes: ['Cojín del asiento', 'Frente del cojín', 'Cojines del respaldo'] },
 ];
 
 // Los parámetros de la solicitud (muebles por solicitud, franjas, agenda…) están en seed-parametros.ts.
@@ -42,7 +42,7 @@ export async function sembrarCatalogoSolicitud(prisma: PrismaClient) {
     const tipo = await prisma.tipoMueble.upsert({
       where: { codigo: t.codigo },
       update: { nombre: t.nombre, orden },
-      create: { codigo: t.codigo, nombre: t.nombre, orden },
+      create: { codigo: t.codigo, nombre: t.nombre, orden, tamanoCarga: t.tamano ?? 'mediana' },
     });
     for (const [i, nombre] of t.partes.entries()) {
       await prisma.tipoMuebleParte.upsert({

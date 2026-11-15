@@ -24,3 +24,16 @@
 .pr-tabla { box-shadow: none; overflow-x: auto; }
 .pr-tabla select { min-height: 38px; min-width: 150px; }
 .pr-sel-editado { border-color: var(--mod, var(--primary)); box-shadow: 0 0 0 1px var(--mod, var(--primary)); }
+
+/* A14 › Máquinas: tarifa por hora, se guarda fila por fila. */
+.pr-maq td { vertical-align: middle; }
+.pr-maq .num { white-space: nowrap; }
+.pr-maq-acc { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.pr-maq-edit td { vertical-align: top; }
+.pr-maq-edit .gw-input { min-height: 38px; min-width: 150px; }
+.pr-maq-tarifa { max-width: 160px; }
+.pr-maq-tarifa .gw-input { padding-left: 1.8em; padding-right: 2.6em; min-width: 0; }
+.pr-maq-inactiva td { color: var(--ink-muted); }
+.pr-maq-pill { margin-left: 8px; font-size: 12px; }
+.pr-maq-conf { max-width: 340px; margin-left: auto; }
+.pr-maq-conf p { margin: 0 0 6px; font-size: 13px; line-height: 1.4; }

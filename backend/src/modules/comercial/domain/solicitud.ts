@@ -28,7 +28,7 @@ export const TRASLADOS = ['delivery', 'propio'] as const;
 export const FRANJAS = ['manana', 'tarde'] as const;
 export type Franja = (typeof FRANJAS)[number];
 
-export const ESTADOS_SOLICITUD = ['Nueva', 'En espera de cita', 'Atendida', 'Cotizada', 'Vencida', 'Descartada'] as const;
+export const ESTADOS_SOLICITUD = ['Nueva', 'En espera de cita', 'Atendida', 'Cotizada', 'Rechazada', 'Vencida', 'Descartada'] as const;
 export type EstadoSolicitud = (typeof ESTADOS_SOLICITUD)[number];
 
 export const necesitaCita = (tela: OpcionTela) => tela === 'local' || tela === 'domicilio';
@@ -50,11 +50,12 @@ export function etapaDe(estado: string, pedido?: string | null): Etapa {
   return 'Cerradas';
 }
 /** Cómo se muestra el estado: la visita a domicilio espera «visita», no «cita». */
-export const estadoVisible = (estado: string, telaOpcion: string, pedido?: string | null) =>
-  pedido ? `Aceptada → pedido ${pedido}` : estado === 'En espera de cita' && telaOpcion === 'domicilio' ? 'En espera de visita' : estado === 'Cotizada' ? 'Esperando respuesta' : estado;
-
-/** Estados en que la hora de recojo preferida sigue reservada en la agenda (hasta que se acepte o se cierre). */
-export const RESERVAN_RECOJO = ['Nueva', 'Atendida', 'Cotizada'];
+/** `cotizacion`: estado de su última cotización (aceptada pero sin adelanto → «Aceptada · falta adelanto»). */
+export const estadoVisible = (estado: string, telaOpcion: string, pedido?: string | null, cotizacion?: string | null) =>
+  pedido ? `Aceptada → pedido ${pedido}`
+    : estado === 'En espera de cita' && telaOpcion === 'domicilio' ? 'En espera de visita'
+      : estado === 'Cotizada' ? (cotizacion === 'Aceptada: pendiente de adelanto' ? 'Aceptada · falta adelanto' : 'Esperando respuesta')
+        : estado;
 
 export const estadoInicial = (tela: OpcionTela): EstadoSolicitud => (necesitaCita(tela) ? 'En espera de cita' : 'Nueva');
 
@@ -65,7 +66,7 @@ export function siguientePaso(tela: OpcionTela): 'cita' | 'visita' | 'cotizacion
   return 'cotizacion';
 }
 
-/** Un mueble nuevo no se recoge: solo hay fecha de recojo si al menos un mueble se retapiza o repara. */
+/** Un mueble nuevo no se recoge: con delivery solo hay recojo si al menos un mueble se retapiza o repara. */
 export const hayRecojo = (servicios: Servicio[]) => servicios.some((s) => s !== 'fabricacion');
 
 export const codigoSolicitud = (id: number) => `SOL-${String(id).padStart(4, '0')}`;

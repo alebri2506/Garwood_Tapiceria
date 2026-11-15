@@ -31,13 +31,17 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
 7. **Traslado (paso 3, solo si no hay cita ni visita):**
    - **Delivery** (recojo y entrega, un solo costo según distancia y tamaño) o **Lo llevo y lo recojo yo**.
    - En fabricación a medida: "¿Cómo recibe su mueble nuevo?", con entrega a domicilio o retiro en el taller, sin fecha de recojo.
-   - **Recojo preferido (solo con Delivery) · cambiado el 11/11 con el diseño nuevo:** mini agenda semanal por **día + hora** (antes era por franja):
-     - horas de **1 hora** (parámetro `recojo.duracion_min` = 60) dentro de las franjas del taller: **9:00, 10:00, 11:00, 15:00 y 16:00** (`taller.franja_manana` 9:00–12:00 y `taller.franja_tarde` 15:00–17:00); de 12:00 a 15:00 está cerrado;
-     - de lunes a sábado, sin domingos ni feriados, hasta `recojo.dias_anticipacion_max` días adelante (4 semanas);
-     - **está ligada a la Agenda de citas:** una hora sale **«Ocup.»** si choca con **cualquier** turno ocupado (cita, visita con hora u otro recojo) o bloqueado; por ejemplo, 10:00–11:00 está ocupada si hay algo a las 10:00 o a las 10:30;
-     - al enviar la solicitud, la hora **queda reservada en la agenda** (1 hora) mientras la solicitud espera (Nueva, Atendida o Cotizada); se libera si se descarta, vence o se rechaza. Dos clientes no pueden tomar la misma hora (índice único en la base);
-     - sigue siendo una **preferencia**: el recojo ocurre después de aceptar la cotización y el administrador lo confirma al planificar la salida (A13).
-     - *Antes (clase del 04/11) se había descartado la hora exacta; el equipo lo cambió el 11/11 para seguir el diseño nuevo. Con esto ya no hace falta un cupo por franja: cada hora es un recojo.*
+   - **Recojo con Delivery · cambiado el 13/11 (reemplaza el recojo por hora del 11/11):**
+     - **Al pedir la cotización (W2)** el cliente **no elige** día ni hora: solo deja la **dirección de recojo y entrega**.
+     - **Lo elige el propio cliente cuando se confirma su pago** (cotización aceptada y adelanto confirmado, o adelanto 0 %:
+       nace el pedido, CU-C14). Le llega el aviso y elige el día y la hora con la **misma grilla de antes, ligada a la agenda**
+       (horas de 1 hora en las franjas del taller, «Ocup.» si chocan con algo o están bloqueadas). Recién ahí **ocupa la agenda**.
+     - **Por qué:** el recojo solo puede hacerse cuando hay compromiso. Elegirlo al pedir la cotización permitía pedir imposibles
+       (p. ej. a las 8 p. m. para mañana temprano, sin que el taller haya revisado nada) y **bloqueaba la agenda** por semanas
+       aunque la cotización nunca se aceptara.
+     - En W2 se quitaron la reserva, el índice único y la cuadrícula de horas; la grilla vuelve en el paso posterior al pago, que
+       se construye con los backends de Cotizaciones y Pagos. Las solicitudes anteriores conservan su fecha preferida solo para mostrarla.
+     - Los parámetros `recojo.duracion_min` y `recojo.dias_anticipacion_max` quedan internos (salen de A14) hasta que vuelva la grilla.
    - Con **«Lo llevo y lo recojo yo»** no se pide día ni franja.
 8. **Con "Ver en el local" o "Visita a domicilio" la solicitud tiene 3 pasos** (Mueble y fotos → Tela → Cita/Visita). No hay paso de traslado: se define en la cita.
 9. **Navegación del asistente:**
@@ -48,7 +52,15 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
 ## B. Cita en el local (W3) y visita a domicilio (W3b) del cliente
 
 1. **Cita:** turnos de 30 min.
-2. **Visita:** franja **mañana 9:00–12:00** o **tarde 15:00–17:00**, más la dirección (guardada u otra).
+2. **Visita · cambiado el 13/11 con el diseño W3b:** el cliente elige el **día y la hora** (ya no solo la franja).
+   - Horas de **1 hora** (`visita.duracion_min` = 60) dentro de las franjas de visita: **9:00, 10:00, 11:00, 15:00 y 16:00**
+     (`visita.franja_manana` 9:00–12:00 y `visita.franja_tarde` 15:00–17:00); de lunes a sábado, sin domingos ni feriados, desde mañana.
+   - **Ligada a la agenda del administrador (A2):** la hora sale **«Ocup.»** si choca con una cita en el local, otra visita o un
+     bloqueo; al confirmar, **ocupa esa hora** en la agenda. Ya no rige «una visita por franja»: puede haber varias en la mañana si
+     no se cruzan.
+   - En la misma pantalla, arriba de la grilla: **la dirección de la visita** (guardada u otra nueva, con mapa).
+   - El administrador llega **a la hora elegida** (± 15 min por el tráfico). La visita dura aprox. 1 hora y no tiene costo.
+   - Las visitas anteriores que solo guardaron la franja se siguen mostrando así y ocupan toda su franja.
 3. **Pantalla de confirmación:** fecha, hora o franja, dirección, etiquetas ("Sin costo", duración) y "Cómo será su visita/cita". Son 3 pasos **informativos, sin estados**.
    - Lista "Tenga listo".
    - Reprogramar / Cancelar en un bloque aparte.
@@ -229,6 +241,123 @@ Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más ad
    cómo se muestra**: lo guardado sigue en yardas y pulgadas (1 yd = 0.914 m · 1 in = 2.54 cm). Tipo de parámetro nuevo «opción».
 2. Se agregan «Compra sugerida · semanas de consumo» (2) y «Plazo estándar para terminar un pedido» (14 días).
 3. Salen de la pantalla (no se borran, quedan sin grupo): «Aviso de precio por revisar» y «Horas extra por tela difícil».
+
+## I. Plantillas de cotización (A16 · CU-C06 · 14/11)
+1. **Una plantilla por tipo de mueble + servicio** (matriz de 12 × 5). Cada una tiene **actividades** (horas persona, máquina
+   opcional y horas de máquina) y cada actividad sus **materiales** con cantidad.
+2. **Versionadas:** «Guardar cambios» crea una **versión nueva** y la anterior queda inactiva (no se borra). Las cotizaciones
+   nuevas usan la vigente; las ya armadas conservan la suya. Si no cambió nada, no se crea versión. Solo puede haber una versión
+   activa por combinación; si otra persona guardó antes, se avisa y se recarga.
+3. **Precio sugerido = (materiales + mano de obra + maquinaria + costos fijos) × (1 + margen)**, redondeado al dólar, sin transporte:
+   - mano de obra = horas persona × `tarifa.hora_persona`;
+   - maquinaria = horas de máquina × la **tarifa por hora de cada máquina** (tabla `maquina`, RG-04);
+   - materiales = cantidad × **precio de hoy** del material en el Inventario;
+   - la **tela no va en la plantilla** (decisión del 14/11): los materiales son solo los de stock del Inventario. La tela la
+     elige el cliente y se agrega en la cotización con su precio real (o 0 si la trae). Por eso el precio sugerido de la
+     plantilla es **sin tela**. El parámetro `tarifa.tela_referencia` dejó de usarse y quedó oculto en Parámetros;
+   - costos fijos = `tarifa.costos_fijos_pedido` (una vez, si tiene actividades); margen = `cotizacion.margen_pct`.
+4. **Validaciones:** al menos una actividad con horas; sin máquina no lleva horas de máquina; las máquinas y los materiales deben
+   estar activos (los materiales son los de stock del Inventario; las telas del muestrario no van en plantillas); sin materiales
+   repetidos en una actividad.
+5. **Máquinas:** se cargan con el seed (Mesa de corte $4/h, Máquina de coser industrial $6/h, Cortadora de espuma $8/h,
+   Engrapadora neumática $5/h · provisionales, por confirmar con el dueño). **Se administran en Parámetros › Máquinas**
+   (agregado propio del 14/11, el diseño no lo traía; por revisar con Jesús): agregar, cambiar nombre o tarifa, desactivar y
+   reactivar. No se borran (RG-03). Cada cambio va a la bitácora y aparece en el «Historial de cambios» de A14 (RG-02). Se guardan
+   fila por fila, no con «Guardar cambios». Cambiar una tarifa actualiza al instante el precio sugerido de las plantillas que la
+   usan. Una máquina desactivada ya no se ofrece al armar plantillas; las que ya la tienen la muestran «(desactivada)» con su
+   tarifa, y al guardarlas otra vez hay que elegir otra máquina.
+6. **«Usada en N cotizaciones»** muestra 0 hasta que exista el backend de Cotizaciones (A4).
+
+## J. Pagos (A5 y W5 · diseño del 14/11 · solo frontend por ahora)
+1. **Pago en línea con pasarela** (cambia CU-C12, que decía «sin pasarela en línea»): el cliente puede pagar con **tarjeta**
+   (se confirma al instante) o **cuenta bancaria ACH** (queda «En proceso» 2 a 3 días hábiles y se confirma sola). GARWEB nunca
+   ve ni guarda datos de tarjetas ni cuentas: los maneja la pasarela. La pasarela (proveedor, comisiones) está **por definir**.
+2. **Otras formas:** Zelle (sube la captura; obligatoria), cheque (foto opcional) y efectivo (solo en persona). Zelle y cheque
+   quedan «Por confirmar» hasta que el taller los revise.
+3. **A5 Pagos** tiene 3 pestañas: **Por confirmar** (cobros que el conductor registró en la entrega; el Administrador confirma
+   cuando recibe el dinero, o rechaza con motivo), **Confirmados** (pasarela y manuales, con filtro; los manuales se anulan con
+   motivo, los de pasarela no) y **Saldos pendientes** (saldo = total − pagos confirmados; un pedido con un cobro por confirmar no
+   se repite aquí).
+4. **Registrar pago manual** (efectivo, cheque, Zelle, transferencia, tarjeta con el terminal): queda confirmado al guardar y
+   emite el recibo. El monto no puede pasar de lo que debe el pedido.
+5. **Por aclarar con Jesús / el dueño:** en el diseño de A5, «Por confirmar» solo muestra los cobros del conductor; los pagos por
+   Zelle o cheque que el cliente informa en W5 no aparecen en ninguna pestaña de A5. Se implementó tal cual el diseño.
+
+## K. Armar cotización con uno o varios muebles (A4 · diseño del 14/11 · backend del 14/11)
+1. Una cotización reúne **todos los muebles de la solicitud**. Cada mueble tiene su plantilla, su tela y yardas, sus fotos,
+   sus actividades y su **precio propuesto**; el total se suma solo.
+2. El **transporte se cobra una sola vez**: distancia + tamaño de la carga de todos los muebles juntos (se recogen y
+   entregan en el mismo viaje).
+3. Las telas a comprar se juntan por tela (p. ej. sofá y otomán con la misma tela suman sus yardas).
+4. Para publicar, el Administrador tiene que **revisar el precio de cada mueble** («Revisado» / «Por revisar»).
+5. El adelanto sugerido (40 %) se calcula sobre el total con transporte y se puede cambiar solo para ese pedido.
+6. **Transporte automático, como una app de taxi** (confirmado con Alejandro): millas **por calle** desde el taller
+   (parámetro `taller.direccion`: 469 South Avenue E B, Westfield, NJ 07090) hasta la dirección del cliente × 2 viajes ×
+   `transporte.por_milla` + la carga. Las direcciones se ubican con OpenStreetMap (Nominatim) y la ruta con OSRM; para
+   ubicarlas se quita el local, la suite o el departamento («E B», «Apt 4B»). Si no se puede calcular, se ingresa a mano
+   con motivo (queda registrado). Sin delivery, el transporte es $0.
+7. **Carga:** cada tipo de mueble tiene su tamaño (chica, mediana o grande) en **Parámetros › Tamaño de carga por tipo de
+   mueble**; la tarifa de cada tamaño está en «Tarifas». Con varios muebles **se suman** (cada uno ocupa su lugar en el
+   camión). La cantidad de un mueble («2 × sofá») no multiplica la carga (por confirmar con el dueño).
+8. **Tela de cada mueble** (confirmado con Alejandro): la trae el cliente → «Lo brinda el cliente» ($0); la eligió en línea →
+   esa tela (con «misma tela para todos», la del primer mueble); el taller **solo escribe las yardas**, porque mide. Si es de
+   cita o visita, la tela todavía no existe y no se puede publicar (hasta que la atención de la cita tenga backend).
+   Servicios sin tela (espuma, estructura) no llevan tela. Una tela sin precio en Inventario no deja publicar.
+9. **Adelanto** (CU-C11): una sola línea «Adelanto: $X · N % del total» con «Cambiar»; al cambiarlo se ve el porcentaje que
+   resulta, el máximo (`pago.adelanto_sin_historial_pct` → máximo 50 %) y «Volver al sugerido». Sugerido: 40 % sin pedidos
+   cerrados, 0 % con al menos uno. Se quitó «Tela bajo pedido» de Condiciones (repetía la revisión).
+10. **Observaciones para el cliente:** opcionales y vacías por defecto, solo para lo particular del trabajo. Las reglas
+    generales («la tela se pide al pagar el adelanto…», «si encontramos algo distinto, recotización…») las ve siempre el
+    cliente como texto fijo de la cotización.
+11. **Costos fijos por pedido:** se cargan una sola vez, al precio sugerido del primer mueble.
+12. **Guardar y publicar:** «Guardar borrador» guarda lo armado (COT-0000) sin crear filas que luego haya que borrar
+    (RG-03). «Publicar y avisar al cliente» revisa todo, congela los precios de ese momento, fija la vigencia
+    (`cotizacion.vigencia_dias`), pasa la solicitud a «Cotizada» y avisa al cliente por notificación y correo. Ya
+    publicada no se edita. Falta: la vista del cliente (W4), registrar su respuesta, la V2 y renovar (siguen de ejemplo).
+
+## L. Atender la visita a domicilio: el recojo al final (A2b · diseño del 14/11, ajustado el 14/11 · con backend desde el 15/11)
+1. En «Traslado» ya no se pide fecha de recojo (como A.7): solo delivery o lo lleva el cliente, y la dirección.
+2. Si el cliente acepta y el **pedido se genera en la visita** (pagó el adelanto, o su adelanto es 0 % porque tiene pedidos
+   cerrados) y eligió delivery, el último paso es **«¿Cuándo recogemos el sofá?»**
+   (antes repetía «¿Cómo llega el sofá al taller?», la pregunta del paso Traslado):
+   - **Agendar el recojo:** eligen juntos día y hora en la grilla de la agenda del camión (lun–sáb, franjas del taller).
+     El recojo ocupa `recojo.duracion_min` (1 h), no «20 minutos» como decía el diseño.
+   - **Me lo llevo ahora** (solo en la visita a domicilio; en una cita en el local el mueble no está): un solo botón,
+     «Registrar recojo y llevármelo». **Sin piezas, fotos ni firma** (decisión de Alejandro, 14/11: agiliza la visita y no
+     agrega funciones): las fotos ya se tomaron en el paso 1 y las piezas y fotos de llegada las registra la recepción del
+     taller (A18). Es la opción que prefiere el dueño cuando todo sale bien: cerrar todo en la visita.
+   - No hay opción «Que lo elija ella» (decisión de Alejandro, 14/11): con el cliente presente, el recojo se agenda ahí o se
+     lleva en la visita. En una cita en el local solo queda «Agendar el recojo» (sin selector de opciones).
+3. Llevárselo en la visita **no crea un estado nuevo**: el pedido sigue «Esperando mueble» hasta que el taller lo recibe
+   (A18 · RG-09). El diseño decía «Recogido · en camino al taller», que no existe en el ciclo del pedido.
+4. Si el cliente lleva el mueble él mismo, el mensaje final ya no habla de recojo.
+5. **Transporte cuando se lo lleva en la visita** (decisión de Alejandro, 14/11): se cobra igual el transporte ida y vuelta
+   cotizado. El viaje de la visita hace de recojo y la entrega se hace igual; el total que aceptó el cliente no cambia.
+   Cuidado: si algún día la visita a domicilio se cobra aparte (pendiente F), no cobrar dos veces el mismo viaje.
+6. Sin pedido no hay recojo: si el cliente acepta pero paga el adelanto después, no se lleva el mueble (el pedido nace con
+   el adelanto); elige el día del recojo desde su cuenta cuando pague.
+
+### L.2 Backend de la atención (15/11 · decisiones de Alejandro)
+1. **Empezar** registra la visita como atendida (endpoint de resultado que ya existía); **«No lo encontramos»** registra la
+   inasistencia con su regla de reprogramaciones y aviso al cliente, y vuelve a la Agenda.
+2. **Tela en la cita o la visita:** se elige del muestrario (A15b) y viaja en el borrador de la cotización de A4, con las
+   yardas que mide el taller (no se escriben filas en la solicitud). Sin tela no se puede cerrar la respuesta.
+   «Por partes» no se guarda por parte: la cotización guarda cada tela con el total de yardas.
+3. **Traslado:** se guarda en la solicitud (delivery con dirección guardada o nueva, o lo lleva el cliente); el transporte
+   lo calcula A4 automáticamente.
+4. **La cotización se arma con A4** (mismas reglas). La respuesta la publica y, según lo que decide el cliente:
+   «Lo pensará» → Pendiente de respuesta · «No acepta» → Rechazada con motivo y la **solicitud queda Rechazada** ·
+   «Acepta, paga después» → **Aceptada: pendiente de adelanto** (A3 la muestra «Aceptada · falta adelanto») ·
+   «Acepta, paga ahora» o adelanto 0 % → **Aceptada**, se genera el **pedido PED-0000** en «Esperando mueble» y, si hay
+   adelanto, un **pago mínimo** (tabla `pago`: monto, medio, origen visita/local, Confirmado). Medio de respuesta: «En persona».
+5. **Constancia sin firma:** al aceptar, el cliente recibe por correo y en su cuenta lo que aceptó (avisos obligatorios
+   `cotizacion_aceptada` / `pedido_generado`).
+6. **Recojo** (tabla `recojo`): agendado en la agenda del camión (lunes a sábado, franjas del taller, `recojo.duracion_min`,
+   hasta `recojo.dias_anticipacion_max` días, sin domingos, feriados ni bloqueos de la agenda; **un recojo por hora**,
+   un camión) con aviso obligatorio `recojo_programado`; o «en la visita» (solo a domicilio, queda Realizado). El pedido
+   sigue «Esperando mueble» hasta la recepción en el taller (A18).
+7. Pendiente para Pagos y Despacho: pantallas A5/W5 sobre la tabla `pago`; reservar materiales al nacer el pedido; salidas
+   que usen la tabla `recojo`.
 
 ## F. Pendientes por confirmar con el dueño (vía Alejandro)
 - Duración real de la cita para ver telas (prototipo: 30 min).

@@ -6,6 +6,7 @@ import { normalizar } from '../../../shared/texto';
 import { Alert } from '../../../shared/ui/Alert';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { Icon } from '../../../shared/ui/Icon';
+import { Paginacion, usePaginacion } from '../../../shared/ui/Paginacion';
 import { StatusChip } from '../../../shared/ui/StatusChip';
 import { Tabs } from '../../../shared/ui/Tabs';
 import { Toast } from '../../../shared/ui/Toast';
@@ -97,6 +98,8 @@ export function SolicitudesAdminPage() {
   const filas = todas.filter((s) => !etapa || s.etapa === etapa);
   const cuenta = (e: Etapa) => todas.filter((s) => s.etapa === e).length;
   const atrasadas = todas.filter((s) => s.atrasada).length;
+  // Vuelve a la página 1 al cambiar de pestaña, de búsqueda o de fechas.
+  const pagina = usePaginacion(filas, [pestana, texto, fechas, d1, d2]);
 
   const elegir = (codigo: string) => {
     setSel(codigo);
@@ -176,11 +179,12 @@ export function SolicitudesAdminPage() {
           <div className="split sl-split">
             <div className="wide">
               {filas.length > 0 ? (
+                <div className="gw-con-pg">
                 <div className="tbl-box">
                   <table className="t sl-t">
                     <thead><tr><th>Código</th><th>Cliente</th><th>Mueble y tela</th><th>Etapa y estado</th><th>Fecha de solicitud</th></tr></thead>
                     <tbody>
-                      {filas.map((s) => (
+                      {pagina.visibles.map((s) => (
                         <tr key={s.codigo} className={sel === s.codigo ? 'sel' : undefined} style={{ cursor: 'pointer' }} onClick={() => elegir(s.codigo)}>
                           <td className="sl-nw"><button type="button" className="sl-cod" aria-pressed={sel === s.codigo}>{s.codigo}</button></td>
                           <td><b className="sl-nw">{s.cliente}</b><div className="muted sl-s">{s.ciudad ?? '—'}</div></td>
@@ -199,6 +203,8 @@ export function SolicitudesAdminPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+                <Paginacion {...pagina.props} />
                 </div>
               ) : texto ? (
                 <EmptyState icon="search" title="Sin resultados">No hay solicitudes con «{busca.trim()}» en esta etapa.</EmptyState>

@@ -10,7 +10,7 @@ import { Toast } from '../../../shared/ui/Toast';
 import { adminSolicitudesApi, type FichaAdmin } from '../bandeja/adminApi';
 import { citasApi } from '../cita/citasApi';
 import { DIAS, MESES } from '../fechas';
-import { agendaApi, type CitaAgenda, type RecojoAgenda, type Semana } from './agendaApi';
+import { agendaApi, type CitaAgenda, type Semana } from './agendaApi';
 import './agenda.css';
 
 // ---------------------------------------------------------------- utilidades de fecha y hora
@@ -77,7 +77,6 @@ export function AgendaPage() {
   const [bsel, setBsel] = useState<string[]>([]);
   const [blkOk, setBlkOk] = useState<{ titulo: string; texto: string } | null>(null);
   const [selBloqueo, setSelBloqueo] = useState<number | null>(null);
-  const [selRecojo, setSelRecojo] = useState<string | null>(null);
   const [aviso, setAviso] = useState<{ titulo: string; texto: string } | null>(null);
   const [falla, setFalla] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -132,22 +131,17 @@ export function AgendaPage() {
       if (c.tipo === 'domicilio') for (let m = sem.duracionMin; m < c.duracionMin; m += sem.duracionMin) poner(`${c.fecha}|${sumar(c.hora, m)}`, { c, cont: true });
     }
     const sinHora = sem.citas.filter((c) => !c.hora);
-    // W2: los recojos reservados ocupan cada turno que tocan (bloque de 1 hora).
-    const recojoEn = new Map<string, { r: RecojoAgenda; cont: boolean }>();
-    for (const r of sem.recojos) {
-      sem.turnos.filter((h) => h >= r.hora && h < r.hasta).forEach((h, k) => recojoEn.set(`${r.fecha}|${h}`, { r, cont: k > 0 }));
-    }
-    return { porTurno, sinHora, recojoEn };
+    return { porTurno, sinHora };
   }, [sem]);
 
   if (error) return <Alert tone="danger" title="No pudimos cargar la agenda">{error} <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" onClick={recargar}>Reintentar</button></Alert>;
   if (!sem || !datos) return <p className="muted" role="status">Cargando la agenda…</p>;
 
-  const { porTurno, sinHora, recojoEn } = datos;
+  const { porTurno, sinHora } = datos;
   const cerradoDe = (fecha: string) => sem.dias.find((d) => d.fecha === fecha)?.cerrado ?? null;
   const bloqueo = (fecha: string, hora: string) => sem.bloqueos.find((b) => b.fecha === fecha && hora >= b.horaInicio && hora < b.horaFin);
   const pasado = (fecha: string, hora: string) => fecha < sem.hoy || (fecha === sem.hoy && hora <= sem.ahora);
-  const libre = (fecha: string, hora: string) => sem.turnos.includes(hora) && !porTurno.has(`${fecha}|${hora}`) && !recojoEn.has(`${fecha}|${hora}`) && !bloqueo(fecha, hora) && !cerradoDe(fecha) && !pasado(fecha, hora);
+  const libre = (fecha: string, hora: string) => sem.turnos.includes(hora) && !porTurno.has(`${fecha}|${hora}`) && !bloqueo(fecha, hora) && !cerradoDe(fecha) && !pasado(fecha, hora);
   const nTurnosVisita = Math.max(1, Math.ceil(sem.visitaDuracionMin / sem.duracionMin));
   const horasDe = (hora: string, casa: boolean) => Array.from({ length: casa ? nTurnosVisita : 1 }, (_, k) => sumar(hora, k * sem.duracionMin));
   const cabe = (fecha: string, hora: string, casa: boolean) => horasDe(hora, casa).every((h) => libre(fecha, h));
@@ -160,9 +154,8 @@ export function AgendaPage() {
   const hoyIdx = sem.dias.findIndex((d) => d.fecha === sem.hoy);
   const proxima = sem.citas.filter((c) => c.fecha === sem.hoy && c.estado === 'Programada' && c.hora && c.hora > sem.ahora).sort((a, b) => a.hora!.localeCompare(b.hora!))[0];
   const s = sem.citas.find((c) => c.id === sel) ?? null;
-  const recojoSel = selRecojo ? sem.recojos.find((r) => r.solicitud === selRecojo) ?? null : null;
 
-  const elegirCita = (c: CitaAgenda) => { setSel(c.id); setSelRecojo(null); setAviso(null); setFalla(null); };
+  const elegirCita = (c: CitaAgenda) => { setSel(c.id); setAviso(null); setFalla(null); };
   const salirDeAgendar = () => { setAg(null); setBk(null); setFalla(null); if (params.has('agendar')) setParams({}, { replace: true }); };
 
   // ---------------------------------------------------------------- acciones
@@ -239,18 +232,6 @@ export function AgendaPage() {
           {enDia
             ? <><div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}><b>{c.solicitud.cliente}</b><span>{detalle}</span></div><StatusChip status={c.estado} /></>
             : <><b>{c.solicitud.cliente}</b><span>{x.cont ? 'continúa' : c.solicitud.mueble}</span></>}
-        </button>
-      );
-    }
-    const rec = recojoEn.get(k);
-    if (rec) {
-      return (
-        <button type="button" className={`ag-ap ag-rec${selRecojo === rec.r.solicitud ? ' ag-sel' : ''}${filtro === 1 ? ' ag-dim' : ''}`}
-          aria-pressed={selRecojo === rec.r.solicitud} aria-label={`Recojo preferido de ${rec.r.cliente}, ${largo(fecha)} de ${rec.r.hora} a ${rec.r.hasta}`}
-          onClick={() => { setSelRecojo(rec.r.solicitud); setSel(null); setAviso(null); }}>
-          {enDia
-            ? <><div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}><b>{rec.r.cliente}</b><span>Recojo preferido · {rec.r.mueble}{rec.cont ? ' · continúa (1 hora)' : ''}</span></div><StatusChip status="Recojo" tone="warning" /></>
-            : <><span className="ag-ty"><Icon name="truck" size={14} /></span><b>{rec.r.cliente}</b><span>{rec.cont ? 'continúa' : 'Recojo preferido'}</span></>}
         </button>
       );
     }
@@ -383,7 +364,7 @@ export function AgendaPage() {
               </div>
             </div>
             {visitasSinHora(vista === 'dia' ? diaSel.fecha : undefined).length > 0 && (
-              <div className="ag-vshs"><span className="ov">Visitas a domicilio por franja (las eligió el cliente)</span>{visitasSinHora(vista === 'dia' ? diaSel.fecha : undefined).map(chipVisita)}</div>
+              <div className="ag-vshs"><span className="ov">Visitas solo con franja (solicitudes anteriores al 13/11)</span>{visitasSinHora(vista === 'dia' ? diaSel.fecha : undefined).map(chipVisita)}</div>
             )}
             {vista === 'semana' ? (
               <div className="ag-scroll">
@@ -415,7 +396,6 @@ export function AgendaPage() {
               <span><i style={{ background: 'var(--success-500)' }} />Atendida</span>
               <span><i style={{ background: 'var(--error-500)' }} />No asistió</span>
               <span><i style={{ background: '#7C3AED' }} />Visita a domicilio</span>
-              <span><i style={{ background: 'var(--warning-500)' }} />Recojo preferido / retiro</span>
               <span><i style={{ background: 'repeating-linear-gradient(135deg,var(--line-strong) 0 2px,transparent 2px 4px)' }} />Bloqueado</span>
               <span>Las citas se agendan desde la solicitud (Solicitudes › Agendar cita); aquí se elige el turno</span>
             </div>
@@ -506,26 +486,7 @@ export function AgendaPage() {
 
           {!ag && !blk && !cfg && falla && <Alert tone="danger" title="No se pudo" compact>{falla}</Alert>}
 
-          {!ag && !blk && recojoSel && (
-            <section className="ag-det" aria-labelledby="ag-rec-nombre">
-              <div className="between"><span className="ov">Recojo preferido</span><StatusChip status={recojoSel.estado} /></div>
-              <div className="ag-who">
-                <span className="ag-av" aria-hidden="true">{iniciales(recojoSel.cliente)}</span>
-                <div><h2 id="ag-rec-nombre">{recojoSel.cliente}</h2><small>{capital(largo(recojoSel.fecha))} · {recojoSel.hora}–{recojoSel.hasta}</small></div>
-              </div>
-              <dl className="ag-facts">
-                <div><span className="ag-ic"><Icon name="truck" size={16} /></span><dt>Tipo</dt><dd>Recojo a domicilio</dd></div>
-                <div><span className="ag-ic"><Icon name="inbox" size={16} /></span><dt>Solicitud</dt><dd>{recojoSel.solicitud}</dd></div>
-                <div><span className="ag-ic"><Icon name="sofa" size={16} /></span><dt>Mueble</dt><dd>{recojoSel.mueble}</dd></div>
-                <div><span className="ag-ic"><Icon name="user" size={16} /></span><dt>Teléfono</dt><dd><a href={`tel:${recojoSel.telefono}`}>{telefono(recojoSel.telefono)}</a></dd></div>
-                {recojoSel.direccion && <div><span className="ag-ic"><Icon name="map-pin" size={16} /></span><dt>Dirección</dt><dd>{recojoSel.direccion}</dd></div>}
-              </dl>
-              <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/admin/solicitudes?ver=${recojoSel.solicitud}`}>Ver la solicitud</Link>
-              <p className="audit" style={{ margin: 0 }}>Es la hora que el cliente prefiere para que pasemos. Queda reservada en la agenda mientras la solicitud espera; el recojo se confirma al planificar la salida, después de que acepte la cotización.</p>
-            </section>
-          )}
-
-          {!ag && !blk && !recojoSel && (s ? (
+          {!ag && !blk && (s ? (
             <section className="ag-det" aria-labelledby="ag-sel-nombre">
               {aviso && <Toast title={aviso.titulo} onClose={() => setAviso(null)}>{aviso.texto}</Toast>}
               <div className="between"><span className="ov">Cita seleccionada</span><StatusChip status={s.solicitud.estado === 'Vencida' ? 'Vencida' : s.estado} /></div>

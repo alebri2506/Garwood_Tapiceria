@@ -4,8 +4,7 @@ import { registrarBitacora } from '../../../shared/infrastructure/bitacora.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { hoyNegocio, leerFecha } from '../domain/calendario.js';
 import { enNY, motivoCierre, sumarDias, sumarMinutos, turnoBloqueado } from '../domain/agenda.js';
-import { RESERVAN_RECOJO, SERVICIOS } from '../domain/solicitud.js';
-import { parametroNumero } from '../../../shared/infrastructure/parametros.js';
+import { SERVICIOS } from '../domain/solicitud.js';
 import { bloqueosEntre, citaDto, fechaLarga, reglasAgenda, turnosOcupados, type Quien } from './citas.js';
 
 const error = (m: string, status = 400) => new ReglaNegocioError(m, status);
@@ -27,7 +26,7 @@ export async function agendaSemana(desdePedido?: string) {
   const hoy = hoyNegocio();
   const desde = lunesDe(desdePedido && leerFecha(desdePedido) ? desdePedido : hoy);
   const hasta = sumarDias(desde, 5);
-  const [bloqueos, citas, futuros, recojos, duracionRecojo] = await Promise.all([
+  const [bloqueos, citas, futuros] = await Promise.all([
     bloqueosEntre(desde, hasta),
     prisma.cita.findMany({
       where: { estado: { in: ['Programada', 'Atendida', 'No asistió'] }, fechaHora: { gte: new Date(`${desde}T00:00:00Z`), lt: new Date(`${sumarDias(hasta, 2)}T00:00:00Z`) } },
@@ -44,12 +43,6 @@ export async function agendaSemana(desdePedido?: string) {
       },
     }),
     bloqueosEntre(hoy, sumarDias(hoy, r.dias)),
-    // W2: horas de recojo preferidas de solicitudes que esperan; ocupan la agenda.
-    prisma.solicitud.findMany({
-      where: { horaPrefRecojo: { not: null }, estado: { in: RESERVAN_RECOJO }, fechaPrefRecojo: { gte: leerFecha(desde)!, lte: leerFecha(hasta)! } },
-      include: { cliente: true, direccion: true, muebles: { orderBy: { orden: 'asc' }, include: { tipoMueble: true } } },
-    }),
-    parametroNumero(prisma, 'recojo.duracion_min'),
   ]);
   const ahora = enNY(new Date());
 
@@ -62,11 +55,6 @@ export async function agendaSemana(desdePedido?: string) {
       return { fecha, cerrado: motivoCierre(fecha, bloqueos) };
     }),
     bloqueos: bloqueos.filter((b) => b.horaInicio).map((b) => ({ id: b.id, fecha: b.fecha, horaInicio: b.horaInicio!, horaFin: b.horaFin!, motivo: b.motivo })),
-    recojos: recojos.map((s) => ({
-      solicitud: s.codigo!, estado: s.estado, cliente: nombreCliente(s.cliente), telefono: s.cliente.telefono,
-      fecha: s.fechaPrefRecojo!.toISOString().slice(0, 10), hora: s.horaPrefRecojo!, hasta: sumarMinutos(s.horaPrefRecojo!, duracionRecojo),
-      mueble: s.muebles.map((x) => `${x.cantidad > 1 ? `${x.cantidad} × ` : ''}${x.tipoMueble.nombre}`).join(', '), direccion: s.direccion?.direccion ?? null,
-    })),
     proximosBloqueos: futuros.map((b) => ({ id: b.id, fecha: b.fecha, horaInicio: b.horaInicio, horaFin: b.horaFin, motivo: b.motivo })),
     citas: citas
       .map((c) => ({ c, dto: citaDto(c) }))

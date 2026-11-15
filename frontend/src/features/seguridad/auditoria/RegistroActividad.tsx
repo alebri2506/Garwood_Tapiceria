@@ -4,6 +4,7 @@ import { Alert } from '../../../shared/ui/Alert';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { Icon } from '../../../shared/ui/Icon';
 import { MESES } from '../../comercial/fechas';
+import { Paginacion } from '../../../shared/ui/Paginacion';
 import { auditoriaApi, type FiltrosActividad, type PaginaActividad, type TipoActor } from './auditoriaApi';
 import './auditoria.css';
 
@@ -27,6 +28,7 @@ export function RegistroActividad() {
   const [periodo, setPeriodo] = useState<Periodo>('30');
   const [rango, setRango] = useState({ desde: haceDias(29), hasta: iso(new Date()) });
   const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(50);
 
   const [datos, setDatos] = useState<PaginaActividad | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -45,13 +47,13 @@ export function RegistroActividad() {
   const fechas: Pick<FiltrosActividad, 'desde' | 'hasta'> =
     periodo === '7' ? { desde: haceDias(6) } : periodo === 'hoy' ? { desde: iso(new Date()), hasta: iso(new Date()) } : periodo === 'rango' ? rango : {};
   const filtros: FiltrosActividad = { ...fechas, tipo: tipo || undefined, modulo: modulo || undefined, q: q || undefined };
-  const clave = JSON.stringify({ ...filtros, pagina });
+  const clave = JSON.stringify({ ...filtros, pagina, porPagina });
 
   useEffect(() => {
     const n = ++ultima.current;
     setCargando(true);
     setError(null);
-    auditoriaApi.listar({ ...filtros, pagina })
+    auditoriaApi.listar({ ...filtros, pagina, porPagina })
       .then((r) => { if (n === ultima.current) setDatos(r); })
       .catch((e) => { if (n === ultima.current) setError(e instanceof ApiError ? e.message : 'No pudimos cargar el registro de actividad.'); })
       .finally(() => { if (n === ultima.current) setCargando(false); });
@@ -74,9 +76,6 @@ export function RegistroActividad() {
   };
 
   const registros = datos?.registros ?? [];
-  const desdeFila = datos ? (datos.pagina - 1) * datos.porPagina + 1 : 0;
-  const hastaFila = datos ? desdeFila + registros.length - 1 : 0;
-  const paginas = datos ? Math.max(1, Math.ceil(datos.total / datos.porPagina)) : 1;
 
   return (
     <div className="stack au">
@@ -137,6 +136,7 @@ export function RegistroActividad() {
         <EmptyState icon="search" title="Sin actividad">No hay registros con estos filtros en el período elegido.</EmptyState>
       )}
       {registros.length > 0 && (
+        <div className="gw-con-pg">
         <div className="tbl-box">
           <table className="t au-tabla" aria-busy={cargando}>
             <thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Registro</th><th>Antes → después</th></tr></thead>
@@ -157,18 +157,11 @@ export function RegistroActividad() {
             </tbody>
           </table>
         </div>
-      )}
-
-      {datos && datos.total > datos.porPagina && (
-        <div className="between au-paginas">
-          <span className="muted">Mostrando {desdeFila}–{hastaFila} de {datos.total}</span>
-          <span className="row">
-            <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" disabled={pagina <= 1 || cargando} onClick={() => setPagina((p) => p - 1)}>Anterior</button>
-            <span className="muted">Página {datos.pagina} de {paginas}</span>
-            <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" disabled={pagina >= paginas || cargando} onClick={() => setPagina((p) => p + 1)}>Siguiente</button>
-          </span>
+        <Paginacion total={datos?.total ?? 0} pagina={pagina - 1} porPagina={porPagina} cargando={cargando}
+          onPagina={(n) => setPagina(n + 1)} onPorPagina={(n) => { setPorPagina(n); setPagina(1); }} />
         </div>
       )}
+
 
       <p className="audit">El registro no se puede editar ni borrar.</p>
     </div>

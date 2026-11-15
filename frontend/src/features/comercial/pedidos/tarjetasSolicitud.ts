@@ -22,17 +22,28 @@ export interface TarjetaSolicitud {
   extra: Extra;
 }
 
-const dia = (iso: string) => {
+export const dia = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number);
   const f = new Date(y!, m! - 1, d!);
   return `${DIAS[f.getDay()]!.slice(0, 3)} ${f.getDate()} ${MESES[f.getMonth()]!.slice(0, 3)}`;
 };
-const cuando = (c: CitaDto) => (c.hora ? `${dia(c.fecha)}, ${c.hora}` : `${dia(c.fecha)}, por la ${c.franja === 'manana' ? 'mañana (09:00–12:00)' : 'tarde (15:00–17:00)'}`);
+export const cuando = (c: CitaDto) => (c.hora ? `${dia(c.fecha)}, ${c.hora}` : `${dia(c.fecha)}, por la ${c.franja === 'manana' ? 'mañana (09:00–12:00)' : 'tarde (15:00–17:00)'}`);
+
+/** «4 sillas de comedor» / «Sillón»: cómo se nombra un mueble en la tarjeta y en el detalle (W6c). */
+export const nombreMueble = (m: SolicitudCliente['muebles'][number]) => (m.cantidad > 1 ? `${m.cantidad} ${m.tipo.toLowerCase()}` : m.tipo);
+
+/** Varios muebles: «Sofá de 3 cuerpos, otomán y 4 cojines» (diseño W6c del 13/11). */
+function tituloVarios(s: SolicitudCliente) {
+  const n = s.muebles.map((m, i) => (i === 0 ? nombreMueble(m) : nombreMueble(m).toLowerCase()));
+  return n.length > 1 ? `${n.slice(0, -1).join(', ')} y ${n[n.length - 1]}` : n[0]!;
+}
 
 export function tarjetaDe(s: SolicitudCliente): TarjetaSolicitud {
   const m = s.muebles[0]!;
-  const titulo = `${m.cantidad > 1 ? `${m.cantidad} × ` : ''}${m.tipo}${s.muebles.length > 1 ? ` y ${s.muebles.length - 1} más` : ''}`;
-  const servicio = m.servicioNombre.toLowerCase();
+  const varios = s.muebles.length > 1;
+  const titulo = varios ? tituloVarios(s) : `${m.cantidad > 1 ? `${m.cantidad} × ` : ''}${m.tipo}`;
+  // Con varios muebles cada uno tiene su servicio: la línea dice cuántos van en la solicitud.
+  const servicio = varios ? `${s.muebles.length} muebles en una sola solicitud` : m.servicioNombre.toLowerCase();
   const casa = s.tela === 'domicilio';
   const enLocal = s.tela === 'local';
   const PASOS = ['Solicitud', 'Cotización', 'Su respuesta', 'Pedido'];
@@ -79,7 +90,7 @@ export function tarjetaDe(s: SolicitudCliente): TarjetaSolicitud {
     }
     return { ...base, grupo: 'accion', linea: `${s.codigo} · ${servicio} · ${casa ? 'visita a domicilio sin costo' : 'quiere ver la tela en el local'}`, estado: 'Falta elegir el día', tono: 'warning',
       pasos: PASOS_CITA, actual: 1, accion: { texto: casa ? 'Elegir día de la visita' : 'Elegir día y hora', a: enlaceCita, tipo: 'primary' },
-      aviso: { quien: 'you', icono: 'calendar', texto: casa ? 'Le toca a usted: elija el día y la franja de la visita a su casa.' : 'Le toca a usted: elija el día y la hora de su cita en el local.' } };
+      aviso: { quien: 'you', icono: 'calendar', texto: casa ? 'Le toca a usted: elija el día y la hora de la visita a su casa.' : 'Le toca a usted: elija el día y la hora de su cita en el local.' } };
   }
   if (s.estado === 'Atendida') {
     return { ...base, grupo: 'taller', linea: `${s.codigo} · ${casa ? 'visita hecha' : 'cita atendida'}`, estado: 'Preparando cotización', tono: 'info', pasos: PASOS_CITA, actual: 2,

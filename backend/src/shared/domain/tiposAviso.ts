@@ -13,6 +13,11 @@ export const AVISOS_OBLIGATORIOS = [
   'cita_reprogramada',
   'cita_inasistencia',
   'cita_recordatorio',
+  // Respuesta dada en la cita o la visita: es la constancia de lo que aceptó (ya no se firma en la tablet · decisiones L).
+  'cotizacion_aceptada',
+  'pedido_generado',
+  // Recojo del mueble (decisiones L).
+  'recojo_programado',
   // Cierre de la solicitud.
   'solicitud_vencida',
   'solicitud_descartada',
@@ -22,7 +27,7 @@ export const AVISOS_OBLIGATORIOS = [
 ] as const;
 
 /** Informativos: llegan por correo solo si el cliente deja encendido "Avance del pedido, cotización y pagos por correo". */
-export const AVISOS_INFORMATIVOS = ['solicitud_registrada', 'fotos_recibidas'] as const;
+export const AVISOS_INFORMATIVOS = ['solicitud_registrada', 'fotos_recibidas', 'cotizacion_publicada'] as const;
 
 export type TipoAvisoCliente = (typeof AVISOS_OBLIGATORIOS)[number] | (typeof AVISOS_INFORMATIVOS)[number];
 

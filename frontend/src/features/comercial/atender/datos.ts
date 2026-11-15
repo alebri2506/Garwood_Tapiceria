@@ -80,3 +80,22 @@ export const OBSERVACIONES = 'Las telas se piden al aceptar; llegan en 1 a 2 dí
 export const METODOS_ADELANTO = ['Efectivo', 'Tarjeta', 'Zelle', 'Cheque'];
 export const MOTIVOS_RECHAZO = ['Precio', 'Plazo de entrega', 'Elegirá otro taller', 'Otro motivo'];
 export const PLAZO_ADELANTO = '7 días';
+
+// ---------------------------------------------------------------- Cita en el local o visita a domicilio (decisiones L)
+/** Los textos que cambian según dónde se atiende. */
+export const TEXTOS = {
+  local: {
+    titulo: 'Atender cita en el local', crumb: 'Atender cita · mar 6 oct · 10:00',
+    tela: 'Quiere verla en el local', telasTitulo: 'Telas que elige en el local', adelanto: 'Adelanto en el local',
+    noAsistio: 'No asistió', medidasResumen: 'Se toman al recibir',
+  },
+  domicilio: {
+    titulo: 'Atender visita a domicilio', crumb: 'Atender visita · mar 6 oct · tarde · 48 Park St, Montclair',
+    tela: 'La elige en la visita (libros de telas)', telasTitulo: 'Telas que elige en su casa', adelanto: 'Adelanto en la visita',
+    noAsistio: 'No lo encontramos', medidasResumen: 'Se toman al recibir',
+  },
+} as const;
+
+/** Agenda del camión para el recojo (ejemplo): lunes a sábado, franjas del taller, 1 hora por recojo (`recojo.duracion_min`). */
+export const HORAS_RECOJO = [['9:00', '10:00'], ['10:00', '11:00'], ['11:00', '12:00'], ['15:00', '16:00'], ['16:00', '17:00']] as const;
+export const DIRECCION_RECOJO = '48 Park St, Montclair';

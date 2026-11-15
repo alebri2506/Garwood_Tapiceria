@@ -50,12 +50,12 @@ const VISITA = { tipo: 'nueva', texto: '48 Elm St, Montclair, NJ', guardar: fals
 const enEspera = (tela: 'local' | 'domicilio') =>
   enviar({ cliente: { id: clienteId }, canal: 'telefono', esperaFotos: false, avisar: false, solicitud: conCita(tela) }, admin, true, '/api/admin/solicitudes');
 
-/** Primer turno libre (local) o franja libre (domicilio) según la API. */
+/** Primer turno libre (local) u hora de visita libre (domicilio) según la API. */
 async function primerLibre(tipo: 'local' | 'domicilio') {
   const r = await request(app).get(`/api/citas/disponibilidad?tipo=${tipo}&dias=30`).set(auth(cliente));
   for (const d of r.body.dias) {
     if (tipo === 'local') { const t = d.turnos.find((x: { libre: boolean }) => x.libre); if (t) return { fecha: d.fecha, hora: t.hora }; }
-    else { const f = d.franjas.find((x: { libre: boolean }) => x.libre); if (f) return { fecha: d.fecha, franja: f.codigo }; }
+    else { const h = d.horas.find((x: { libre: boolean }) => x.libre); if (h) return { fecha: d.fecha, hora: h.hora }; }
   }
   throw new Error('sin turnos libres');
 }
@@ -121,7 +121,7 @@ describe('CU-C04 cita en el local', () => {
     const a = await enEspera('local');
     const turno = await primerLibre('local');
     expect((await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'local', fecha: turno.fecha, hora: '13:00' })).body.mensaje).toMatch(/turnos de la agenda/);
-    expect((await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', fecha: turno.fecha, franja: 'manana' })).body.mensaje).toMatch(/ver las telas en el local/);
+    expect((await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', fecha: turno.fecha, hora: '10:00' })).body.mensaje).toMatch(/ver las telas en el local/);
 
     const otro = await request(app).post('/api/auth/registro').send({ tipoPersona: 'persona', nombres: 'Otra', apellidos: 'Clienta', email: `otra${Date.now()}@prueba.test`, telefono: '+19735550111', contrasena: 'Clave2026', avisosCorreo: true });
     const ajena = await request(app).post('/api/citas').set(auth(otro.body.token)).send({ solicitud: a.body.codigo, tipo: 'local', ...turno });
@@ -162,15 +162,38 @@ describe('CU-C04 cita en el local', () => {
 });
 
 describe('CU-C04 visita a domicilio', () => {
-  it('agenda por franja con la dirección de la visita y marca atendida', async () => {
-    const a = await enEspera('domicilio');
-    const franja = await primerLibre('domicilio');
-    const sinDir = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', ...franja });
-    expect(sinDir.body.mensaje).toMatch(/dónde lo visitamos/);
+  it('ofrece horas de 1 hora dentro de las franjas de visita, desde mañana y sin domingos', async () => {
+    const r = await request(app).get('/api/citas/disponibilidad?tipo=domicilio&dias=14').set(auth(cliente));
+    expect(r.status).toBe(200);
+    expect(r.body.horas).toEqual(['09:00', '10:00', '11:00', '15:00', '16:00']);
+    expect(r.body.duracionMin).toBe(60);
+    expect(r.body.dias[0].fecha > hoyNegocio()).toBe(true);
+    for (const d of r.body.dias) {
+      if (new Date(`${d.fecha}T00:00:00Z`).getUTCDay() === 0) expect(d.cerrado).toBeTruthy();
+      for (const h of d.horas) expect(h.hasta).toBe(`${String(+h.hora.slice(0, 2) + 1).padStart(2, '0')}:00`);
+    }
+  });
 
-    const c = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', ...franja, direccion: { tipo: 'nueva', texto: '48 Elm St, Montclair, NJ', guardar: false } });
+  it('el cliente agenda por día y hora con la dirección; la hora queda ocupada para otros y marca atendida', async () => {
+    const a = await enEspera('domicilio');
+    const hora = await primerLibre('domicilio');
+    const sinDir = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', ...hora });
+    expect(sinDir.body.mensaje).toMatch(/dónde lo visitamos/);
+    const sinHora = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', fecha: hora.fecha, franja: 'manana', direccion: VISITA });
+    expect(sinHora.body.mensaje).toMatch(/día y la hora de la visita/);
+    const fuera = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', fecha: hora.fecha, hora: '11:30', direccion: VISITA });
+    expect(fuera.body.mensaje).toMatch(/horario de visitas/);
+
+    const c = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', ...hora, direccion: { tipo: 'nueva', texto: '48 Elm St, Montclair, NJ', guardar: false } });
     expect(c.status).toBe(201);
-    expect(c.body).toMatchObject({ tipo: 'domicilio', franja: franja.franja, hora: null });
+    expect(c.body).toMatchObject({ tipo: 'domicilio', hora: hora.hora, franja: hora.hora < '12:00' ? 'manana' : 'tarde', duracionMin: 60 });
+
+    // La misma hora ya no está libre para otra visita.
+    const dispo = await request(app).get(`/api/citas/disponibilidad?tipo=domicilio&desde=${hora.fecha}&dias=1`).set(auth(cliente));
+    expect(dispo.body.dias[0].horas.find((x: { hora: string }) => x.hora === hora.hora)).toMatchObject({ libre: false, motivo: 'Hora ocupada' });
+    const b = await enEspera('domicilio');
+    const otra = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: b.body.codigo, tipo: 'domicilio', ...hora, direccion: VISITA });
+    expect(otra.status).toBe(409);
 
     const at = await request(app).post(`/api/citas/${c.body.id}/resultado`).set(auth(admin)).send({ resultado: 'atendida' });
     expect(at.body.cita).toBe('Atendida');
@@ -266,16 +289,18 @@ describe('W2 + W3/W3b · la solicitud se envía junto con la cita', () => {
     expect(await prisma.solicitud.count()).toBe(antes);
   });
 
-  it('visita a domicilio: exige qué tela busca, la franja y la dirección', async () => {
-    const franja = await primerLibre('domicilio');
-    const sinTexto = await enviar({ ...conCita('domicilio'), telaDescripcion: '', cita: { ...franja, direccion: VISITA } });
+  it('visita a domicilio: exige qué tela busca, el día y la hora, y la dirección', async () => {
+    const hora = await primerLibre('domicilio');
+    const sinTexto = await enviar({ ...conCita('domicilio'), telaDescripcion: '', cita: { ...hora, direccion: VISITA } });
     expect(sinTexto.body.errores?.telaDescripcion).toMatch(/qué tela busca/);
-    const sinDir = await enviar({ ...conCita('domicilio'), cita: franja });
+    const sinDir = await enviar({ ...conCita('domicilio'), cita: hora });
     expect(sinDir.body.errores?.['cita.direccion']).toMatch(/dónde lo visitamos/);
+    const sinHora = await enviar({ ...conCita('domicilio'), cita: { fecha: hora.fecha, franja: 'manana', direccion: VISITA } });
+    expect(sinHora.body.errores?.['cita.hora']).toMatch(/día y la hora de la visita/);
 
-    const ok = await enviar({ ...conCita('domicilio'), cita: { ...franja, direccion: VISITA } });
+    const ok = await enviar({ ...conCita('domicilio'), cita: { ...hora, direccion: VISITA } });
     expect(ok.status).toBe(201);
-    expect(ok.body.cita).toMatchObject({ tipo: 'domicilio', franja: franja.franja, hora: null });
+    expect(ok.body.cita).toMatchObject({ tipo: 'domicilio', hora: hora.hora, duracionMin: 60 });
     const d = await request(app).get(`/api/solicitudes/${ok.body.codigo}`).set(auth(cliente));
     expect(d.body).toMatchObject({ telaDescripcion: 'Azul marino, suave', cita: { direccion: '48 Elm St, Montclair, NJ' } });
   });

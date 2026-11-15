@@ -17,15 +17,21 @@ import { auditoriaRoutes } from './modules/seguridad/http/auditoria.routes.js';
 import { usuariosRoutes } from './modules/seguridad/http/usuarios.routes.js';
 import { perfilRoutes } from './modules/historial/http/perfil.routes.js';
 import { inventarioRoutes } from './modules/almacen/http/inventario.routes.js';
+import { plantillasRoutes } from './modules/comercial/http/plantillas.routes.js';
+import { cotizacionesRoutes } from './modules/comercial/http/cotizaciones.routes.js';
+import { atencionRoutes } from './modules/comercial/http/atencion.routes.js';
+import { crearRutas, type Rutas } from './shared/infrastructure/rutas.js';
 import { crearAlmacen, firmaDeArchivoValida, rutaEnDisco, type AlmacenArchivos } from './shared/infrastructure/archivos.js';
 
 export interface Dependencias {
   correo: Correo;
   almacen: AlmacenArchivos;
+  /** Distancias para el transporte (OpenStreetMap; en las pruebas, fijas). */
+  rutas: Rutas;
 }
 
-export function crearApp({ correo = crearCorreo(), almacen = crearAlmacen() }: Partial<Dependencias> = {}) {
-  const deps: Dependencias = { correo, almacen };
+export function crearApp({ correo = crearCorreo(), almacen = crearAlmacen(), rutas = crearRutas() }: Partial<Dependencias> = {}) {
+  const deps: Dependencias = { correo, almacen, rutas };
   const app = express();
   app.set('trust proxy', 1);
   app.use(helmet());
@@ -45,6 +51,9 @@ export function crearApp({ correo = crearCorreo(), almacen = crearAlmacen() }: P
   app.use('/api/admin/usuarios', usuariosRoutes());
   app.use('/api/cliente/perfil', perfilRoutes(deps));
   app.use('/api/admin/inventario', inventarioRoutes());
+  app.use('/api/admin/plantillas', plantillasRoutes());
+  app.use('/api/admin/cotizaciones', cotizacionesRoutes(deps));
+  app.use('/api/admin/atencion', atencionRoutes(deps));
   app.use('/api/admin', adminComercialRoutes(deps));
   app.use('/api/notificaciones', notificacionesRoutes());
 

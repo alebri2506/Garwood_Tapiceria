@@ -62,6 +62,10 @@ function Asistente({ c, guardadas }: { c: Catalogo; guardadas: DireccionGuardada
     setFalla(null);
   };
 
+  // El paso más lejano al que llegó el cliente: el resumen solo muestra lo que ya vio y eligió
+  // (la tela viene marcada por defecto, pero no cuenta como elegida hasta llegar a ese paso).
+  const [alcanzado, setAlcanzado] = useState(e.paso);
+  useEffect(() => { setAlcanzado((a) => Math.max(a, e.paso)); }, [e.paso]);
   const pasos = pasosDe(e);
   const cita = necesitaCita(e.tela);
   const ultimo = cita ? 1 : 3;
@@ -197,10 +201,13 @@ function Asistente({ c, guardadas }: { c: Catalogo; guardadas: DireccionGuardada
             {fabricacion && <div className="kv"><span>Acabado</span><b>{c.acabados.find((a) => a.codigo === e.muebles[0]!.acabado)?.nombre}</b></div>}
             <div className="kv"><span>Fotos</span><b>{totalArchivos === 0 ? 'Ninguna aún' : `${totalArchivos} ${totalArchivos === 1 ? 'archivo' : 'archivos'}`}</b></div>
             <hr className="stitch" />
-            <div className="kv"><span>Tela</span><b>{textoTelaW2(c, e)}</b></div>
-            <div className="kv"><span>Traslado</span><b>{textoTraslado(e)}</b></div>
-            {!cita && e.traslado === 'delivery' && hayRecojo(e) && <div className="kv"><span>Recojo preferido</span><b>{textoRecojo(c, e)}</b></div>}
-            <div className="kv"><span>Cita</span><b>{e.tela === 'domicilio' ? 'Visita a domicilio sin costo · la elige en el siguiente paso' : e.tela === 'local' ? 'En el local · la elige en el siguiente paso' : 'No necesita'}</b></div>
+            <div className="kv"><span>Tela</span>{alcanzado >= 1 ? <b>{textoTelaW2(c, e)}</b> : <b className="w2-pendiente">Por elegir</b>}</div>
+            {/* Con cita, el traslado se define en la cita (se sabe al elegir la tela); sin cita, en el paso Traslado. */}
+            <div className="kv"><span>Traslado</span>{(cita ? alcanzado >= 1 : alcanzado >= 2) ? <b>{textoTraslado(e)}</b> : <b className="w2-pendiente">Por elegir</b>}</div>
+            {!cita && alcanzado >= 2 && e.traslado === 'delivery' && hayRecojo(e) && <div className="kv"><span>Recojo</span><b>{textoRecojo(c, e)}</b></div>}
+            <div className="kv"><span>Cita</span>{alcanzado >= 1
+              ? <b>{e.tela === 'domicilio' ? 'Visita a domicilio sin costo · la elige en el siguiente paso' : e.tela === 'local' ? 'En el local · la elige en el siguiente paso' : 'No necesita'}</b>
+              : <b className="w2-pendiente">Por elegir</b>}</div>
           </div>
         </aside>
       </div>

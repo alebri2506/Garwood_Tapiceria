@@ -54,12 +54,12 @@ export const GRUPOS_PARAMETROS: { grupo: string; parametros: DefParametro[] }[] 
     parametros: [
       { clave: 'tarifa.hora_persona', valor: '15.00', unidad: 'USD/h', tipo: 'monto', minimo: 0, etiqueta: 'Hora persona', descripcion: 'Costo de una hora de mano de obra (CU-C06)', ayuda: prov() },
       { clave: 'tarifa.costos_fijos_pedido', valor: '60.00', unidad: 'USD', tipo: 'monto', minimo: 0, etiqueta: 'Costos fijos por pedido', descripcion: 'Costos fijos que se suman a cada pedido (CU-C06)', ayuda: prov() },
-      { clave: 'tarifa.tela_referencia', valor: '17.00', unidad: 'USD/yd', tipo: 'monto', minimo: 0, etiqueta: 'Tela de referencia para plantillas', descripcion: 'Precio de tela usado solo en el precio de referencia de las plantillas (A16)', ayuda: prov('La cotización usa el precio de la tela que elige el cliente.') },
       { clave: 'inventario.semanas_compra', valor: '2', unidad: 'semanas', tipo: 'entero', minimo: 1, maximo: 12, etiqueta: 'Compra sugerida · semanas de consumo', descripcion: 'Semanas de consumo que cubre la compra sugerida en Reponer (CU-A03)', ayuda: 'Reponer sugiere: consumo de estas semanas − disponible − lo que ya viene (nunca menos de lo que falta para el mínimo).' },
       { clave: 'transporte.carga_chica', valor: '15.00', unidad: 'USD', tipo: 'monto', minimo: 0, etiqueta: 'Transporte · carga chica (silla, cojín, otomán)', descripcion: 'Parte fija del transporte según el tamaño de la carga (C.4)', ayuda: prov() },
       { clave: 'transporte.carga_mediana', valor: '30.00', unidad: 'USD', tipo: 'monto', minimo: 0, etiqueta: 'Transporte · carga mediana (sillón, cabecera, banco)', descripcion: 'Parte fija del transporte según el tamaño de la carga (C.4)', ayuda: prov() },
       { clave: 'transporte.carga_grande', valor: '45.00', unidad: 'USD', tipo: 'monto', minimo: 0, etiqueta: 'Transporte · carga grande (sofá, cama, seccional)', descripcion: 'Parte fija del transporte según el tamaño de la carga (C.4)', ayuda: prov() },
       { clave: 'transporte.por_milla', valor: '1.60', unidad: 'USD/milla', tipo: 'monto', minimo: 0, etiqueta: 'Transporte · por milla', descripcion: 'Costo por milla recorrida (ida y vuelta)', ayuda: prov('Ej.: sofá a 14 mi: 14 × 2 × $1.60 + $45 (grande) ≈ $90.') },
+      { clave: 'taller.direccion', valor: '469 South Avenue E B, Westfield, NJ 07090', tipo: 'texto', etiqueta: 'Dirección del taller (origen del transporte)', descripcion: 'Desde aquí se calcula la distancia del transporte con OpenStreetMap (A4 · CU-C07)', ayuda: 'El transporte se calcula como una app de taxi: millas por calle desde el taller × 2 viajes × tarifa por milla + tamaño de la carga.' },
     ],
   },
   {
@@ -75,8 +75,6 @@ export const GRUPOS_PARAMETROS: { grupo: string; parametros: DefParametro[] }[] 
       { clave: 'visita.franja_tarde', valor: '15:00-17:00', tipo: 'horario', etiqueta: 'Franja de visitas · tarde', descripcion: 'Franja de la tarde de las visitas a domicilio; una visita por franja (CU-C04)' },
       { clave: 'taller.franja_manana', valor: '9:00–12:00', tipo: 'horario', etiqueta: 'Franja de recojos y entregas · mañana', descripcion: 'Franja de la mañana para recojos y entregas' },
       { clave: 'taller.franja_tarde', valor: '15:00–17:00', tipo: 'horario', etiqueta: 'Franja de recojos y entregas · tarde', descripcion: 'Franja de la tarde para recojos y entregas (el taller cierra al mediodía)' },
-      { clave: 'recojo.duracion_min', valor: '60', unidad: 'min', tipo: 'entero', minimo: 15, etiqueta: 'Duración del recojo', descripcion: 'Tiempo que se reserva en la agenda por cada recojo preferido; el cliente elige la hora en W2 (CU-C01)' },
-      { clave: 'recojo.dias_anticipacion_max', valor: '28', unidad: 'días', tipo: 'entero', minimo: 1, etiqueta: 'El cliente puede pedir el recojo hasta', descripcion: 'Hasta cuántos días adelante se puede pedir el recojo (CU-C01)' },
       { clave: 'pedido.plazo_dias', valor: '14', unidad: 'días', tipo: 'entero', minimo: 1, maximo: 90, etiqueta: 'Plazo estándar para terminar un pedido', descripcion: 'Fecha para terminar = día en que nace el pedido + este plazo (CU-A05)', ayuda: prov('El dueño indicó 1 a 2 semanas.') },
       { clave: 'despacho.dias_aviso_terminado', valor: '7', unidad: 'días', tipo: 'entero', minimo: 0, etiqueta: 'Aviso de pedido terminado sin salida', descripcion: 'Días que un pedido terminado puede esperar sin salida antes de avisar', ayuda: prov() },
       { clave: 'entrega.horas_confirmar', valor: '24', unidad: 'h antes', tipo: 'entero', minimo: 0, etiqueta: 'Confirmar o reprogramar entrega hasta', descripcion: 'Horas antes de la entrega en que el cliente aún puede confirmarla o reprogramarla', ayuda: prov() },
@@ -111,6 +109,8 @@ export const PARAMETROS_INTERNOS: DefParametro[] = [
   { clave: 'inventario.semanas_promedio', valor: '4', unidad: 'semanas', tipo: 'entero', minimo: 1, etiqueta: 'Consumo promedio · semanas que se miran', descripcion: 'Semanas de salidas que se promedian para el consumo semanal de cada material (A15, A8)' },
   { clave: 'catalogo.dias_revisar_precio', valor: '180', unidad: 'días', tipo: 'entero', minimo: 0, etiqueta: 'Aviso de precio por revisar', descripcion: 'Ya no se muestra en A14 (diseño del 12/11)' },
   { clave: 'tarifa.tela_dificil_pct', valor: '20', unidad: '%', tipo: 'porcentaje', minimo: 0, maximo: 100, etiqueta: 'Horas extra por tela difícil', descripcion: 'Ya no se muestra en A14 (diseño del 12/11)' },
+      { clave: 'recojo.duracion_min', valor: '60', unidad: 'min', tipo: 'entero', minimo: 15, etiqueta: 'Duración del recojo', descripcion: 'Tiempo que se reserva en la agenda por cada recojo preferido; el cliente elige la hora en W2 (CU-C01) · Ya no se usa: el cliente no elige el recojo (decisiones A.7, 13/11)' },
+      { clave: 'recojo.dias_anticipacion_max', valor: '28', unidad: 'días', tipo: 'entero', minimo: 1, etiqueta: 'El cliente puede pedir el recojo hasta', descripcion: 'Hasta cuántos días adelante se puede pedir el recojo (CU-C01) · Ya no se usa: el cliente no elige el recojo (decisiones A.7, 13/11)' },
 ];
 
 const decimal = (n?: number) => (n == null ? null : new Prisma.Decimal(n));

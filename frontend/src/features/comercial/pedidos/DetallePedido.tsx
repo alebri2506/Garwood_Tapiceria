@@ -98,7 +98,7 @@ export function DetallePedido({ pedido: p, volver }: { pedido: PedidoEnCurso; vo
             <div className="row2 saldo"><b>Saldo pendiente</b><b className="num">{p.cuenta.saldo}</b></div>
             <small className="muted">Puede pagarlo antes de la entrega o al recibir su pedido con:</small>
             <div className="meth">{METODOS.map((m) => <span key={m}>{m}</span>)}</div>
-            <Link className="gw-btn gw-btn-primary gw-btn-block" to="/cliente/pagos">Pagar saldo y ver recibos</Link>
+            <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/cliente/pagos?pedido=${p.id}`}>Pagar saldo y ver recibos</Link>
           </div>
 
           <div className="card stack" style={{ gap: 10 }}>

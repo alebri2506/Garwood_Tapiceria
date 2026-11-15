@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiError } from '../../../shared/api/http';
 import { MapsProvider } from '../../../shared/maps/MapsProvider';
+import { MapaUbicacion } from '../../../shared/maps/MapaUbicacion';
 import { Alert } from '../../../shared/ui/Alert';
 import { Icon } from '../../../shared/ui/Icon';
 import { StatusChip } from '../../../shared/ui/StatusChip';
@@ -14,6 +15,7 @@ import { solicitudApi, type CitaDto, type DireccionGuardada, type SolicitudClien
 import { Agendador, fechaDe, isoDe } from './Agendador';
 import { finDeTurno, type Turno } from './agenda';
 import { citasApi, type DiaLocal, type DiaVisita, type Disponibilidad, type TipoCita } from './citasApi';
+import { VisitaPorHora } from './VisitaPorHora';
 import './cita.css';
 
 type Franja = 'manana' | 'tarde';
@@ -25,8 +27,8 @@ const corto = (iso: string) => { const d = fechaDe(iso); return `${DIAS[d.getDay
 /** La solicitud aún no enviada (viene de W2) presentada como las ya guardadas, para mostrar "con lo que usted pidió". */
 function solicitudDeBorrador({ e, c }: BorradorW2): SolicitudCliente {
   return {
-    codigo: '', estado: 'En espera de cita', fecha: new Date().toISOString(), canal: 'web', tela: e.tela, telaDescripcion: e.telaBusca.trim() || null, telaConocida: null,
-    esperaFotos: false, traslado: null, direccion: null, fechaPrefRecojo: null, franjaRecojo: null, horaPrefRecojo: null, motivoDescarte: null, cita: null, inasistencias: 0,
+    codigo: '', estado: 'En espera de cita', fecha: new Date().toISOString(), canal: 'web', tela: e.tela, mismaTela: e.mismaTela, telaDescripcion: e.telaBusca.trim() || null, telaConocida: null,
+    esperaFotos: false, traslado: null, direccion: null, fechaPrefRecojo: null, horaPrefRecojo: null, motivoDescarte: null, cita: null, inasistencias: 0,
     muebles: e.muebles.map((m, i) => ({
       orden: i + 1, tipo: tipoDe(c, m).nombre, tipoCodigo: tipoDe(c, m).codigo, servicio: m.servicio, servicioNombre: nombreServicio(c, m), acabado: null,
       cantidad: m.cantidad, medidas: null, modoTela: null, telas: [],
@@ -35,8 +37,8 @@ function solicitudDeBorrador({ e, c }: BorradorW2): SolicitudCliente {
   };
 }
 
-const franjaTexto = (f: Franja, dispo?: Disponibilidad<DiaVisita>) =>
-  `${f === 'manana' ? 'mañana' : 'tarde'}, ${dispo?.dias.find((d) => d.franjas.length)?.franjas.find((x) => x.codigo === f)?.nombre.split('· ')[1] ?? (f === 'manana' ? '09:00–12:00' : '15:00–17:00')}`;
+/** Solo para visitas antiguas que guardaron la franja sin hora (antes del diseño del 13/11). */
+const franjaTexto = (f: Franja) => `${f === 'manana' ? 'mañana' : 'tarde'}, ${f === 'manana' ? '09:00–12:00' : '15:00–17:00'}`;
 
 /**
  * W3 Cita en el local y W3b Visita a domicilio (CU-C04): elegir, reprogramar o cancelar con la agenda real.
@@ -125,7 +127,14 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
   const mueble = s.muebles.map((m) => `${m.cantidad > 1 ? `${m.cantidad} × ` : ''}${m.tipo}`).join(', ');
   const fotos = s.muebles.reduce((t, m) => t + m.archivos.length, 0);
 
-  const textoEleccion = (e: Eleccion) => (e.hora ? `${capital(largo(e.fecha))} · ${e.hora}–${finDeTurno(e.hora)}` : `${capital(largo(e.fecha))} · ${franjaTexto(e.franja!, visita ?? undefined)}`);
+  const minutos = casa ? visita?.duracionMin ?? 60 : local?.duracionMin ?? 30;
+  const textoEleccion = (e: Eleccion) => (e.hora ? `${capital(largo(e.fecha))} · ${e.hora}–${finDeTurno(e.hora, minutos)}` : `${capital(largo(e.fecha))} · ${franjaTexto(e.franja!)}`);
+  // Dirección de la visita: la guardada elegida o la nueva, y su punto en el mapa (como en W2).
+  const dirGuardada = guardadas.find((d) => d.id === dir.guardadaId);
+  const dirCorta = dirGuardada ? `${dirGuardada.etiqueta ? `${dirGuardada.etiqueta} · ` : ''}${dirGuardada.direccion.split(',')[0]}` : dir.texto.trim() ? dir.texto.split(',')[0]! : 'Escriba la dirección';
+  const mapa = dirGuardada
+    ? { ubicacion: dirGuardada.latitud != null && dirGuardada.longitud != null ? { lat: dirGuardada.latitud, lng: dirGuardada.longitud } : null, etiqueta: `${dirGuardada.etiqueta ?? 'Dirección'} · ${dirGuardada.ciudad ?? ''}` }
+    : { ubicacion: dir.ubicacion, etiqueta: dir.ubicacion ? dir.texto : undefined };
   const textoCita = (c: CitaDto) => textoEleccion({ fecha: c.fecha, hora: c.hora ?? undefined, franja: c.franja ?? undefined });
 
   const confirmar = async () => {
@@ -177,7 +186,7 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
   };
 
   const que = casa ? 'visita' : 'cita';
-  const h1 = programada && !reprogramando ? `Su ${que} está programada` : noAsistio || reprogramando ? `Reprogramar su ${que}` : casa ? 'Elija el día de la visita a su casa' : 'Elija el día y la hora de su cita';
+  const h1 = programada && !reprogramando ? `Su ${que} está programada` : noAsistio || reprogramando ? `Reprogramar su ${que}` : casa ? 'Elija el día y la hora de la visita' : 'Elija el día y la hora de su cita';
   const turnoElegido: Turno | null = eleccion?.hora ? { fecha: fechaDe(eleccion.fecha), hora: eleccion.hora } : null;
 
   return (
@@ -211,13 +220,32 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
             <Alert tone="info" title="¿Por qué una cita?" compact>Eligió ver y tocar la tela en el local. Si eligió ver las telas en línea, este paso no aparece.</Alert>
           )}
           {eligiendo && casa && (
-            <Alert tone="info" title="Visita a su casa" compact>Es una cortesía del taller: no tiene costo. Llevamos los libros de telas, medimos su mueble y el espacio, y le dejamos la cotización.</Alert>
+            <Alert tone="info" title="Visita a su casa" compact>Usted elige el día y la hora, y el administrador del taller va a su casa. No tiene costo: llevamos los libros de telas, medimos su mueble y le dejamos la cotización.</Alert>
           )}
 
           {eligiendo && !casa && local && (
             <Agendador dias={local.dias} duracionMin={local.duracionMin} elegido={turnoElegido} onElegir={(t) => setEleccion({ fecha: isoDe(t.fecha), hora: t.hora })} />
           )}
-          {eligiendo && casa && visita && <ElegirVisita dias={visita.dias} eleccion={eleccion} onElegir={setEleccion} />}
+          {eligiendo && casa && visita && (
+            <section className="card stack" aria-labelledby="w3v-titulo">
+              <h2 id="w3v-titulo" className="w3-h2">{programada ? '¿Cuándo lo visitamos?' : '¿Dónde y cuándo lo visitamos?'}</h2>
+              {!programada && (
+                <div className="w3v-donde">
+                  <div className="stack" style={{ gap: 6 }}>
+                    <CampoDireccion valor={dir} onChange={setDir} guardadas={guardadas} etiqueta="Dirección de la visita" />
+                    <span className="muted" style={{ fontSize: 12.5 }}>Sus direcciones guardadas en <Link to="/cliente/perfil">Mi perfil</Link>.</span>
+                  </div>
+                  {/* Tocar el mapa llena la dirección (como dirección nueva). */}
+                  <MapaUbicacion alto={180} ubicacion={mapa.ubicacion} etiqueta={mapa.etiqueta}
+                    onElegir={(d) => setDir({ ...dir, guardadaId: null, texto: d.texto, ubicacion: d.ubicacion })} />
+                </div>
+              )}
+              <div className="stack" style={{ gap: 8, marginTop: programada ? 0 : 8 }}>
+                <span className="gw-field-label">¿Qué día y a qué hora lo visitamos?</span>
+                <VisitaPorHora dispo={visita} valor={eleccion?.hora ? { fecha: eleccion.fecha, hora: eleccion.hora } : null} onElegir={(v) => setEleccion(v)} />
+              </div>
+            </section>
+          )}
 
           {programada && !reprogramando && (
             <>
@@ -230,7 +258,7 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
                   </div>
                 </div>
               )}
-              <ResumenProgramada c={programada} casa={casa} textoHora={programada.hora ? (casa ? `${programada.hora}–${finDeTurno(programada.hora, programada.duracionMin)} · hora acordada con el taller` : `${programada.hora}–${finDeTurno(programada.hora)} · llegue 5 minutos antes`) : `Franja de la ${franjaTexto(programada.franja!, visita ?? undefined)} · llegamos dentro de ese horario`} />
+              <ResumenProgramada c={programada} casa={casa} textoHora={programada.hora ? (casa ? `${programada.hora}–${finDeTurno(programada.hora, programada.duracionMin)} · llegamos a esa hora (± 15 min por el tráfico)` : `${programada.hora}–${finDeTurno(programada.hora)} · llegue 5 minutos antes`) : `Franja de la ${franjaTexto(programada.franja!)} · llegamos dentro de ese horario`} />
             </>
           )}
         </div>
@@ -238,23 +266,18 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
         <aside className="wr" aria-label={`Su ${que}`}>
           {eligiendo && noAsistio && (
             <Alert tone="warning" title={casa ? 'No lo encontramos en casa' : 'No asistió a su cita'}>
-              Puede reprogramar{casa ? ' la visita' : 'la'} una sola vez. Elija {casa ? 'otro día y franja' : 'un turno nuevo'} a la izquierda. Si vuelve a pasar, la solicitud vence.
+              Puede reprogramar{casa ? ' la visita' : 'la'} una sola vez. Elija {casa ? 'otro día y hora' : 'un turno nuevo'} a la izquierda. Si vuelve a pasar, la solicitud vence.
             </Alert>
           )}
 
           {eligiendo && (
             <>
               <div className="card stack">
-                <span className="ov">{noAsistio || reprogramando ? (casa ? 'Nueva fecha' : 'Nuevo turno') : casa ? 'Día y franja elegidos' : 'Turno elegido'}</span>
+                <span className="ov">{noAsistio || reprogramando ? (casa ? 'Nueva fecha' : 'Nuevo turno') : casa ? 'Día y hora elegidos' : 'Turno elegido'}</span>
                 {eleccion ? <b className="w3-turno" aria-live="polite">{textoEleccion(eleccion)}</b>
-                  : <div className="empty-pick"><Icon name="calendar" size={22} /><span>{casa ? 'Elija un día y una franja libre.' : 'Elija un horario libre en el calendario.'}</span></div>}
+                  : <div className="empty-pick"><Icon name="calendar" size={22} /><span>{casa ? 'Elija un día y una hora libre en el calendario.' : 'Elija un horario libre en el calendario.'}</span></div>}
                 {!casa && <span className="muted" style={{ fontSize: 14 }}>Taller Garwood, NJ · {local?.duracionMin ?? 30} min</span>}
-                {casa && !programada && (
-                  <>
-                    <CampoDireccion valor={dir} onChange={setDir} guardadas={guardadas} etiqueta="¿Dónde lo visitamos?" />
-                    <span className="muted" style={{ fontSize: 12.5 }}>Sus direcciones guardadas en Mi perfil · visita sin costo.</span>
-                  </>
-                )}
+                {casa && <div className="kv"><span>Dirección</span><b>{programada ? programada.direccion ?? 'La que indicó' : dirCorta}</b></div>}
                 {falla && <Alert tone="danger" title="No se pudo confirmar" compact>{falla}</Alert>}
                 <button type="button" className="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" disabled={!eleccion || enviando} onClick={confirmar}>
                   {enviando ? (sinEnviar ? 'Enviando…' : 'Guardando…') : reprogramando || noAsistio ? (casa ? 'Confirmar nueva fecha' : 'Confirmar nuevo turno') : sinEnviar ? (casa ? 'Confirmar visita y enviar solicitud' : 'Confirmar cita y enviar solicitud') : casa ? 'Confirmar visita' : 'Confirmar cita'}
@@ -269,7 +292,7 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
                 <div className="kv"><span>{s.codigo ? 'Fotos enviadas' : 'Fotos'}</span><b>{fotos}</b></div>
                 <ol className="next3">
                   {casa
-                    ? <><li>Le mostramos los libros de telas en su casa y elige una.</li><li>Medimos el mueble y, si es fabricación, el espacio donde irá.</li><li>Le damos la cotización ahí mismo; también le llega por correo y a su cuenta. Si acepta, el taller agenda el recojo.</li></>
+                    ? <><li>Le mostramos los libros de telas en su casa y elige una.</li><li>Medimos el mueble y, si es fabricación, el espacio donde irá.</li><li>Le damos la cotización ahí mismo; también le llega por correo y a su cuenta. Si la acepta y se confirma su pago, usted elige el día del recojo.</li></>
                     : <><li>Le mostramos las telas y elige una.</li><li>Tomamos las medidas finales y acordamos el traslado: recojo y entrega o lo trae usted.</li><li>Registramos todo y le damos su cotización ahí mismo; también le llega por correo y a su cuenta.</li></>}
                 </ol>
               </div>
@@ -280,7 +303,7 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
             <>
               <div className="card stack">
                 <div className="between"><b>Solicitud {s.codigo}</b><StatusChip status="Programada" /></div>
-                <div className="kv"><span>{casa ? 'Día y franja' : 'Turno'}</span><b>{textoCita(programada)}</b></div>
+                <div className="kv"><span>{casa ? 'Día y hora' : 'Turno'}</span><b>{textoCita(programada)}</b></div>
                 <div className="kv"><span>Mueble</span><b>{mueble}</b></div>
                 <div className="kv"><span>Reprogramaciones</span><b>{programada.reprogramaciones ? `${programada.reprogramaciones} por inasistencia` : 'Ninguna'}</b></div>
                 <Link className="gw-btn gw-btn-primary gw-btn-block" to="/cliente/pedidos/solicitudes">Ir a Mis pedidos › Solicitudes</Link>
@@ -301,7 +324,7 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
                 <div className="card stack w3-peligro" role="alertdialog" aria-labelledby="w3-cancelar">
                   <b id="w3-cancelar">¿Cancelar la {que} del {textoCita(programada)}?</b>
                   <p className="muted" style={{ fontSize: 14 }}>
-                    {casa ? 'La franja se libera. Su solicitud queda guardada y puede agendar otra visita.' : 'El turno se libera para otro cliente. Su solicitud queda guardada y puede agendar otra cita cuando quiera.'}
+                    {casa ? 'La hora se libera. Su solicitud queda guardada y puede agendar otra visita.' : 'El turno se libera para otro cliente. Su solicitud queda guardada y puede agendar otra cita cuando quiera.'}
                   </p>
                   <div className="row">
                     <button type="button" className="gw-btn gw-btn-danger" disabled={enviando} onClick={cancelar}>Sí, cancelar</button>
@@ -321,7 +344,7 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
       {/* En el celular el panel queda abajo: esta barra fija deja confirmar sin desplazarse. */}
       {eligiendo && eleccion && (
         <div className="cbar">
-          <div><span>{casa ? 'Día y franja' : 'Turno elegido'}</span><b>{corto(eleccion.fecha)} · {eleccion.hora ?? (eleccion.franja === 'manana' ? 'mañana' : 'tarde')}</b></div>
+          <div><span>{casa ? 'Día y hora' : 'Turno elegido'}</span><b>{corto(eleccion.fecha)} · {eleccion.hora ? `${eleccion.hora}–${finDeTurno(eleccion.hora, minutos)}` : ''}</b></div>
           <button type="button" className="gw-btn gw-btn-primary" disabled={enviando} onClick={confirmar}>Confirmar</button>
         </div>
       )}
@@ -329,52 +352,13 @@ function Agenda({ tipo, titulo, s, setS, local, visita, guardadas, nueva, recarg
   );
 }
 
-/** W3b: los próximos días con atención y sus dos franjas. */
-function ElegirVisita({ dias, eleccion, onElegir }: { dias: DiaVisita[]; eleccion: Eleccion | null; onElegir(e: Eleccion): void }) {
-  const [desde, setDesde] = useState(0);
-  const abiertos = dias.filter((d) => !d.cerrado);
-  const vista = abiertos.slice(desde, desde + 8);
-  return (
-    <div className="card stack">
-      <div className="between" style={{ flexWrap: 'wrap', gap: 8 }}>
-        <h2 className="w3-h2">¿Qué día y en qué franja lo visitamos?</h2>
-        <div className="navr">
-          <button type="button" className="nb" aria-label="Días anteriores" disabled={desde === 0} onClick={() => setDesde((x) => Math.max(0, x - 8))}>‹</button>
-          <button type="button" className="nb" aria-label="Días siguientes" disabled={desde + 8 >= abiertos.length} onClick={() => setDesde((x) => x + 8)}>›</button>
-        </div>
-      </div>
-      <div className="w3b-grid">
-        {vista.map((d) => {
-          const f = fechaDe(d.fecha);
-          return (
-            <div key={d.fecha} className="w3b-dia">
-              <b>{DIAS[f.getDay()]!.slice(0, 3)}</b>
-              <span>{f.getDate()} {MESES[f.getMonth()]!.slice(0, 3)}</span>
-              {d.franjas.map((x) => {
-                const on = eleccion?.fecha === d.fecha && eleccion.franja === x.codigo;
-                return (
-                  <button key={x.codigo} type="button" className={on ? 'w3b-fr on' : 'w3b-fr'} disabled={!x.libre} aria-pressed={on}
-                    aria-label={`${DIAS[f.getDay()]} ${f.getDate()}, ${x.nombre}${x.libre ? '' : ', ocupada'}`} onClick={() => onElegir({ fecha: d.fecha, franja: x.codigo })}>
-                    {x.codigo === 'manana' ? 'Mañana' : 'Tarde'}<small>{x.libre ? x.nombre.split('· ')[1] : 'ocupada'}</small>
-                  </button>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-      <p className="muted" style={{ fontSize: 13 }}>Se elige una franja, no una hora exacta: llegamos en algún momento dentro de esa franja. La visita dura aprox. 1 hora. Lunes a sábado.</p>
-    </div>
-  );
-}
-
 function ResumenProgramada({ c, casa, textoHora }: { c: CitaDto; casa: boolean; textoHora: string }) {
   const f = fechaDe(c.fecha);
   const pasos = casa
-    ? [['Llegamos a su casa', 'Dentro de la franja elegida. La visita dura aprox. 1 hora.'], ['Elige la tela y medimos', 'Le mostramos los libros de telas; medimos el mueble y, si es a medida, el espacio.'], ['Le dejamos la cotización', 'Ahí mismo, y también le llega a Mis pedidos. Si la acepta, el taller agenda el recojo.']]
+    ? [['El administrador llega a su casa', 'A la hora elegida (puede variar unos 15 minutos por el tráfico). La visita dura aprox. 1 hora.'], ['Elige la tela y medimos', 'Le mostramos los libros de telas; medimos el mueble y, si es a medida, el espacio.'], ['Le dejamos la cotización', 'Ahí mismo, y también le llega a Mis pedidos. Si la acepta y se confirma su pago, usted elige el día del recojo.']]
     : [['Viene al taller', 'Taller Garwood, NJ. El turno dura 30 minutos y es solo para usted.'], ['Elige la tela y medimos', 'Le mostramos los libros de telas y tomamos las medidas finales.'], ['Le damos la cotización', 'Ahí mismo, y también le llega a Mis pedidos. Si la acepta, acordamos el recojo o lo trae usted.']];
   const prep = casa
-    ? ['El mueble despejado y fácil de ver por todos lados.', 'Una persona adulta en casa durante toda la franja.', 'Si es un mueble a medida: el espacio libre donde irá.', 'Fotos o ideas de telas que le gusten (opcional).']
+    ? ['El mueble despejado y fácil de ver por todos lados.', 'Una persona adulta en casa a la hora de la visita.', 'Si es un mueble a medida: el espacio libre donde irá.', 'Fotos o ideas de telas que le gusten (opcional).']
     : ['Si puede, una foto del ambiente donde va el mueble.', 'Un cojín o retazo, si quiere combinar colores.', 'Las medidas del espacio, si es un mueble a medida.', 'Llegue 5 minutos antes: el turno dura 30 min.'];
   const tags = casa ? [['Sin costo', 'g'], ['Aprox. 1 hora', ''], ['Llevamos los libros de telas', '']] : [['Sin costo', 'g'], ['30 minutos', ''], ['Libros de telas en el local', '']];
   return (

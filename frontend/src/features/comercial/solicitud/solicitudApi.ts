@@ -14,7 +14,7 @@ export interface Catalogo {
   acabados: { codigo: CodigoAcabado; nombre: string; detalle: string }[];
   telas: TelaApi[];
   franjas: { codigo: 'manana' | 'tarde'; nombre: string }[];
-  limites: { muebles: number; archivosPorMueble: number; diasRecojo: number; mbFoto: number; mbVideo: number; formatos: string[] };
+  limites: { muebles: number; archivosPorMueble: number; mbFoto: number; mbVideo: number; formatos: string[] };
 }
 
 export interface DireccionGuardada { id: number; etiqueta: string | null; direccion: string; referencia: string | null; ciudad: string | null; latitud: number | null; longitud: number | null }
@@ -31,9 +31,6 @@ export interface SolicitudEnvio {
   telaConocida?: string;
   traslado?: 'delivery' | 'propio';
   direccion?: DireccionEnvio;
-  fechaPrefRecojo?: string;
-  /** W2: hora de recojo preferida (bloque de 1 hora); la franja la deduce la API. */
-  horaPrefRecojo?: string;
   /** W3 / W3b: con cita en el local o visita, la solicitud se envía junto con el turno elegido. */
   cita?: { fecha: string; hora?: string; franja?: 'manana' | 'tarde'; direccion?: DireccionEnvio };
 }
@@ -59,13 +56,14 @@ export interface SolicitudCliente {
   fecha: string;
   canal: string;
   tela: SolicitudEnvio['tela'];
+  /** Catálogo en línea: la misma tela para todos los muebles (se guarda en el primero). */
+  mismaTela: boolean;
   telaDescripcion: string | null;
   telaConocida: string | null;
   esperaFotos: boolean;
   traslado: 'delivery' | 'propio' | null;
   direccion: string | null;
   fechaPrefRecojo: string | null;
-  franjaRecojo: 'manana' | 'tarde' | null;
   horaPrefRecojo: string | null;
   motivoDescarte: string | null;
   cita: CitaDto | null;
@@ -78,8 +76,6 @@ export interface SolicitudCliente {
   }[];
 }
 
-export interface HoraRecojo { hora: string; hasta: string; libre: boolean; motivo: string | null }
-export interface DisponibilidadRecojo { duracionMin: number; horas: string[]; semanas: number; dias: { fecha: string; cerrado: string | null; horas: HoraRecojo[] }[] }
 
 export interface SolicitudApi {
   catalogo(): Promise<Catalogo>;
@@ -88,8 +84,6 @@ export interface SolicitudApi {
   enviar(datos: SolicitudEnvio, fotos: File[][]): Promise<SolicitudCreada>;
   mias(): Promise<SolicitudCliente[]>;
   detalle(codigo: string): Promise<SolicitudCliente>;
-  /** W2 · semanas con las horas de recojo y si están libres (cruzadas con la agenda del taller). */
-  recojoDisponibilidad(): Promise<DisponibilidadRecojo>;
   subirFotos(codigo: string, fotos: File[][]): Promise<SolicitudCliente>;
 }
 
@@ -106,7 +100,6 @@ const httpSolicitudApi: SolicitudApi = {
   enviar: (datos, fotos) => apiFetch<SolicitudCreada>('/solicitudes', { method: 'POST', body: formulario(fotos, datos) }),
   mias: () => apiFetch<SolicitudCliente[]>('/solicitudes'),
   detalle: (codigo) => apiFetch<SolicitudCliente>(`/solicitudes/${encodeURIComponent(codigo)}`),
-  recojoDisponibilidad: () => apiFetch<DisponibilidadRecojo>('/solicitudes/recojo/disponibilidad'),
   subirFotos: (codigo, fotos) => apiFetch<SolicitudCliente>(`/solicitudes/${encodeURIComponent(codigo)}/fotos`, { method: 'POST', body: formulario(fotos) }),
 };
 
@@ -124,12 +117,11 @@ const PARTES: Record<string, string[]> = {
   bn: ['Asiento', 'Lados'],
   bq: ['Respaldo', 'Asiento', 'Base (frente)'],
   wn: ['Cojín del asiento', 'Frente del cojín', 'Cojines del respaldo'],
-  gen: ['Parte principal', 'Otra parte'],
 };
 const NOMBRES: [string, string][] = [
   ['s2', 'Sofá de 2 cuerpos'], ['s3', 'Sofá de 3 cuerpos'], ['sL', 'Sofá seccional (en L)'], ['sc', 'Sofá cama'], ['ar', 'Sillón'], ['ch', 'Silla de comedor'],
   ['hb', 'Cabecera de cama'], ['bed', 'Cama tapizada'], ['ot', 'Otomán o puf'], ['bn', 'Banco (bench)'], ['bq', 'Banqueta de restaurante'],
-  ['wn', 'Cojín de ventana o asiento empotrado'], ['gen', 'Otro mueble de interior'],
+  ['wn', 'Cojín de ventana o asiento empotrado'],
 ];
 let idParte = 100;
 const CATALOGO_EJEMPLO: Catalogo = {
@@ -154,14 +146,14 @@ const CATALOGO_EJEMPLO: Catalogo = {
     ['Estampado Floral', 'Estampado', '760', '2', '#9C6B5B', 'floral'],
   ] as const).map(([nombre, familia, pattern, numeroColor, colorHex, color], i) => ({ id: i + 1, nombre, familia, pattern, numeroColor, colorHex, descripcion: color })),
   franjas: [{ codigo: 'manana', nombre: 'Mañana · 9:00–12:00' }, { codigo: 'tarde', nombre: 'Tarde · 15:00–17:00' }],
-  limites: { muebles: 8, archivosPorMueble: 10, diasRecojo: 28, mbFoto: 10, mbVideo: 50, formatos: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm'] },
+  limites: { muebles: 8, archivosPorMueble: 10, mbFoto: 10, mbVideo: 50, formatos: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'video/mp4', 'video/quicktime', 'video/webm'] },
 };
 let siguienteCodigo = 88;
 /** Solicitudes de la API simulada: las de ejemplo del diseño más las que se envían en esta visita. */
 export const SOLICITUDES_SIMULADAS: SolicitudCliente[] = [];
 const base = (codigo: string, cambio: Partial<SolicitudCliente>): SolicitudCliente => ({
-  codigo, estado: 'Nueva', fecha: new Date().toISOString(), canal: 'web', tela: 'catalogo', telaDescripcion: null, telaConocida: null,
-  esperaFotos: false, traslado: 'propio', direccion: null, fechaPrefRecojo: null, franjaRecojo: null, horaPrefRecojo: null, motivoDescarte: null,
+  codigo, estado: 'Nueva', fecha: new Date().toISOString(), canal: 'web', tela: 'catalogo', mismaTela: true, telaDescripcion: null, telaConocida: null,
+  esperaFotos: false, traslado: 'propio', direccion: null, fechaPrefRecojo: null, horaPrefRecojo: null, motivoDescarte: null,
   cita: null, inasistencias: 0,
   muebles: [{ orden: 1, tipo: 'Silla de comedor', tipoCodigo: 'ch', servicio: 'retapizado', servicioNombre: 'Retapizado completo', acabado: null, cantidad: 1, medidas: null, modoTela: 'una', telas: [], archivos: [] }],
   ...cambio,
@@ -181,22 +173,6 @@ const buscar = (codigo: string) => {
 const mockSolicitudApi: SolicitudApi = {
   mias: async () => [...SOLICITUDES_SIMULADAS],
   detalle: async (codigo) => buscar(codigo),
-  recojoDisponibilidad: async () => {
-    // 4 semanas desde el lunes de esta semana, con algunas horas ocupadas de ejemplo.
-    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-    const lunes = new Date(hoy); lunes.setDate(hoy.getDate() + (hoy.getDay() === 0 ? 1 : 1 - hoy.getDay()));
-    const horas = ['09:00', '10:00', '11:00', '15:00', '16:00'];
-    const dias = Array.from({ length: 24 }, (_, i) => {
-      const d = new Date(lunes); d.setDate(lunes.getDate() + Math.floor(i / 6) * 7 + (i % 6));
-      const fecha = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const cerrado = d < hoy ? 'Fecha pasada' : null;
-      return { fecha, cerrado, horas: horas.map((hora, k) => {
-        const ocupada = !cerrado && (d.getDate() * 3 + k * 5) % 7 === 0;
-        return { hora, hasta: `${String(+hora.slice(0, 2) + 1).padStart(2, '0')}:00`, libre: !cerrado && !ocupada, motivo: ocupada ? 'Hora ocupada' : null };
-      }) };
-    });
-    return { duracionMin: 60, horas, semanas: 4, dias };
-  },
   subirFotos: async (codigo, fotos) => {
     const s = buscar(codigo);
     s.esperaFotos = false;
@@ -227,7 +203,7 @@ const mockSolicitudApi: SolicitudApi = {
     SOLICITUDES_SIMULADAS.unshift(base(creada.codigo, {
       estado: creada.estado, tela: datos.tela, telaDescripcion: datos.telaDescripcion ?? null, cita: creada.cita,
       muebles: datos.muebles.map((m, i) => ({
-        orden: i + 1, tipo: tipos.find((t) => t.id === m.tipoMuebleId)?.nombre ?? 'Mueble', tipoCodigo: tipos.find((t) => t.id === m.tipoMuebleId)?.codigo ?? 'gen',
+        orden: i + 1, tipo: tipos.find((t) => t.id === m.tipoMuebleId)?.nombre ?? 'Mueble', tipoCodigo: tipos.find((t) => t.id === m.tipoMuebleId)?.codigo ?? '',
         servicio: m.servicio, servicioNombre: CATALOGO_EJEMPLO.servicios.find((x) => x.codigo === m.servicio)!.nombre, acabado: m.acabado ?? null,
         cantidad: m.cantidad, medidas: m.medidas ?? null, modoTela: m.modoTela ?? null, telas: [],
         archivos: (fotos[i] ?? []).map((f, k) => ({ id: k, tipo: f.type.startsWith('video/') ? 'video' : 'foto', nombre: f.name, url: null })),

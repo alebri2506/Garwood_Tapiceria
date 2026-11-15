@@ -1,31 +1,36 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { API_URL } from '../../../shared/api/http';
+import { AtencionConectada, SinSolicitud } from './AtencionConectada';
 import { TopAdmin } from '../../../app/layout/AdminLayout';
-import { Icon } from '../../../shared/ui/Icon';
 import { PricePanel } from '../../../shared/ui/PricePanel';
-import { fechaCorta } from '../fechas';
-import { CITA, PASOS, SIGUIENTE } from './datos';
+import { CITA, PASOS, SIGUIENTE, TEXTOS } from './datos';
+import { textoRecojo } from './Recojo';
 import { atencionInicial, calcular, dolares, type CambioAtencion } from './estado';
 import { PasoCotizar, PasoRevisar, PasoRespuesta, PasoTelas, PasoTraslado } from './Pasos';
 import './atender.css';
 
-/** Meta del indicador "tiempo para cotizar un pedido grande" (A1 Panel). */
-const META_MIN = 15;
-
-const iniciales = (n: string) => n.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
-const hora = (d: Date) => d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: false });
-
-/** A2b Atender cita en el local: revisar, telas, traslado, cotización y respuesta en el mismo momento (CU-C05 → C08 → C09). */
+/**
+ * A2b Atender cita en el local o visita a domicilio (?lugar=domicilio): revisar, telas, traslado, cotización y respuesta en el
+ * mismo momento (CU-C05 → C08 → C09). Si acepta y se genera el pedido con delivery, al final se define el recojo
+ * (decisiones L). Solo diseño: datos de ejemplo. ?historial=con muestra un cliente con pedidos cerrados (adelanto 0 %).
+ */
 export function AtenderCitaPage() {
-  const [a, setA] = useState(atencionInicial);
+  const [params] = useSearchParams();
+  // Con backend: la cita o la visita real (?solicitud=SOL-…). Sin backend: el ejemplo del diseño.
+  if (API_URL) {
+    const codigo = params.get('solicitud');
+    return codigo ? <AtencionConectada key={codigo} codigo={codigo} /> : <SinSolicitud />;
+  }
+  return <AtenderEjemplo />;
+}
+
+function AtenderEjemplo() {
+  const [params] = useSearchParams();
+  const [a, setA] = useState(() => atencionInicial(params.get('lugar') === 'domicilio' ? 'domicilio' : 'local', params.get('historial') === 'con'));
+  const t = TEXTOS[a.lugar];
   const set = (c: CambioAtencion) => setA((x) => ({ ...x, ...c }));
   const c = calcular(a);
-
-  // Cronómetro de la atención: alimenta el indicador del tiempo para cotizar.
-  const inicio = useRef(new Date());
-  const [ahora, setAhora] = useState(() => Date.now());
-  useEffect(() => { const t = setInterval(() => setAhora(Date.now()), 15000); return () => clearInterval(t); }, []);
-  const minutos = Math.max(0, Math.floor((ahora - inicio.current.getTime()) / 60000));
 
   const titulo = useRef<HTMLHeadingElement>(null);
   const ir = (paso: number) => {
@@ -39,23 +44,9 @@ export function AtenderCitaPage() {
   return (
     <>
       <TopAdmin
-        crumb={<><Link to="/admin/agenda">Agenda</Link> › Atender cita · {CITA.cuando}</>}
-        titulo={<span ref={titulo} tabIndex={-1} style={{ outline: 'none' }}>Atender cita en el local</span>}
-      >
-        <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
-          <span className="at-live"><i aria-hidden="true" />Cliente en el local · desde {hora(inicio.current)}</span>
-          <span className={minutos < META_MIN ? 'pill at-okp' : 'pill at-warnp'} role="timer" aria-live="off"><Icon name="clock" size={15} />Atención: {minutos} min</span>
-        </div>
-      </TopAdmin>
-
-      <div className="card at-who">
-        <span className="at-av" aria-hidden="true">{iniciales(CITA.cliente)}</span>
-        <div style={{ minWidth: 0 }}>
-          <b>{CITA.cliente}</b>
-          <small>{CITA.solicitud} · {CITA.detalle} · {CITA.telefono}{CITA.clienteNueva ? ' · cliente nueva (adelanto 40 %)' : ''}</small>
-        </div>
-        <Link className="gw-btn gw-btn-ghost gw-btn-sm" to="/admin/agenda">Volver a la agenda</Link>
-      </div>
+        crumb={<><Link to="/admin/agenda">Agenda</Link> › {t.crumb}</>}
+        titulo={<span ref={titulo} tabIndex={-1} style={{ outline: 'none' }}>{t.titulo}</span>}
+      />
 
       <nav className="at-stp" aria-label="Pasos de la atención">
         {PASOS.map((l, i) => (
@@ -74,7 +65,7 @@ export function AtenderCitaPage() {
           {a.paso === 4 && <PasoRespuesta a={a} set={set} c={c} />}
           <div className="between at-foot">
             {a.paso === 0
-              ? <Link className="gw-btn gw-btn-ghost" style={{ color: 'var(--danger-ink)' }} to="/admin/agenda">No asistió</Link>
+              ? <Link className="gw-btn gw-btn-ghost" style={{ color: 'var(--danger-ink)' }} to="/admin/agenda">{t.noAsistio}</Link>
               : <button type="button" className="gw-btn gw-btn-ghost" onClick={() => ir(a.paso - 1)}>Atrás</button>}
             {a.paso < PASOS.length - 1 && <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" onClick={() => ir(a.paso + 1)}>{SIGUIENTE[a.paso]}</button>}
           </div>
@@ -106,9 +97,12 @@ export function AtenderCitaPage() {
               {c.telas.map((t) => (
                 <div key={t.tela.id} className="at-fs"><i style={{ background: t.tela.color }} aria-hidden="true" /><span>{t.tela.nombre}</span><b>{t.yardas} yd</b></div>
               ))}
-              <div className="kv"><span>Medidas</span><b>{a.medidas.ancho && a.medidas.fondo && a.medidas.alto ? `${a.medidas.ancho} × ${a.medidas.fondo} × ${a.medidas.alto} in` : 'Se toman al recibir'}</b></div>
+              <div className="kv"><span>Medidas</span><b>{a.medidas.ancho && a.medidas.fondo && a.medidas.alto ? `${a.medidas.ancho} × ${a.medidas.fondo} × ${a.medidas.alto} in` : t.medidasResumen}</b></div>
               <div className="kv"><span>Fotos</span><b>4 de la solicitud{a.fotos.length ? ` + ${a.fotos.length} de hoy` : ''}</b></div>
-              <div className="kv"><span>Traslado</span><b>{a.traslado === 'delivery' ? `Delivery · recojo ${fechaCorta(a.fecha)}` : 'Lo trae ella'}</b></div>
+              <div className="kv"><span>Traslado</span><b>{a.traslado !== 'delivery' ? 'Lo lleva ella'
+                : a.recojoHecho === 'llevado' ? 'Recogido hoy en la visita'
+                  : a.recojoHecho === 'agendado' && a.recojoElegido ? `Delivery · recojo ${textoRecojo(a.recojoElegido)}`
+                    : 'Delivery · recojo al generar el pedido'}</b></div>
               {a.paso === 4 && (
                 <>
                   <hr className="stitch" />

@@ -8,13 +8,12 @@ import { ACABADOS, SERVICIOS } from '../domain/solicitud.js';
  * `soloWeb` (el cliente): solo las telas marcadas «Mostrar al cliente en Telas en línea» (A15b); el Administrador ve todas.
  */
 export async function consultarCatalogo(soloWeb = false) {
-  const [tipos, telas, maxMuebles, maxArchivos, diasRecojo, manana, tarde] = await Promise.all([
+  const [tipos, telas, maxMuebles, maxArchivos, manana, tarde] = await Promise.all([
     prisma.tipoMueble.findMany({ where: { activo: true }, orderBy: { orden: 'asc' }, include: { partes: { orderBy: { orden: 'asc' } } } }),
     // CU-C01: solo telas activas.
     prisma.material.findMany({ where: { categoria: 'tela', activo: true, ...(soloWeb ? { enWeb: true } : {}) }, orderBy: [{ familia: 'asc' }, { nombre: 'asc' }] }),
     parametroNumero(prisma, 'solicitud.max_muebles'),
     parametroNumero(prisma, 'solicitud.max_archivos_mueble'),
-    parametroNumero(prisma, 'recojo.dias_anticipacion_max'),
     parametroTexto(prisma, 'taller.franja_manana'),
     parametroTexto(prisma, 'taller.franja_tarde'),
   ]);
@@ -30,7 +29,6 @@ export async function consultarCatalogo(soloWeb = false) {
     limites: {
       muebles: maxMuebles,
       archivosPorMueble: maxArchivos,
-      diasRecojo,
       mbFoto: LIMITE_BYTES.foto / 1024 / 1024,
       mbVideo: LIMITE_BYTES.video / 1024 / 1024,
       formatos: MIMES_ACEPTADOS,

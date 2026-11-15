@@ -48,8 +48,8 @@ export async function solicitudDto(s: SolicitudCompleta, almacen: AlmacenArchivo
     esperaFotos: s.esperaFotos,
     traslado: s.traslado,
     direccion: s.direccion?.direccion ?? null,
+    // Decisiones A.7: ya no hay fecha de recojo; se conserva la de las solicitudes anteriores solo para mostrarla.
     fechaPrefRecojo: s.fechaPrefRecojo?.toISOString().slice(0, 10) ?? null,
-    franjaRecojo: s.franjaRecojo,
     horaPrefRecojo: s.horaPrefRecojo,
     motivoDescarte: s.motivoDescarte,
     fechaDescarte: s.fechaDescarte,

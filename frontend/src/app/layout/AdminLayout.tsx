@@ -6,7 +6,8 @@ import './admin.css';
 
 type Modulo = 'panel' | 'com' | 'alm' | 'his' | 'des' | 'seg';
 
-interface Opcion { a: string; texto: string; icono: IconName; cnt?: number }
+/** `incluye`: otras rutas que son pantallas del mismo módulo (p. ej. Armar cotización dentro de Solicitudes y cotizaciones). */
+interface Opcion { a: string; texto: string; icono: IconName; cnt?: number; incluye?: string[] }
 interface Seccion { modulo: Modulo; titulo?: string; opciones: Opcion[] }
 
 /** Nombre del módulo en la etiqueta de cada pantalla (color por módulo del diseño v3). */
@@ -20,7 +21,7 @@ const MENU: Seccion[] = [
   {
     modulo: 'com', titulo: 'Comercial', opciones: [
       { a: '/admin/agenda', texto: 'Agenda de citas', icono: 'calendar' },
-      { a: '/admin/solicitudes', texto: 'Solicitudes y cotizaciones', icono: 'inbox' },
+      { a: '/admin/solicitudes', texto: 'Solicitudes y cotizaciones', icono: 'inbox', incluye: ['/admin/cotizaciones'] },
       { a: '/admin/pagos', texto: 'Pagos', icono: 'payment' },
       { a: '/admin/pedidos', texto: 'Pedidos', icono: 'kanban' },
       { a: '/admin/plantillas', texto: 'Plantillas', icono: 'clipboard' },
@@ -52,10 +53,11 @@ const MENU: Seccion[] = [
   },
 ];
 
-const moduloDe = (pathname: string): Modulo => {
-  if (pathname === '/admin' || pathname === '/admin/') return 'panel';
-  return MENU.find((s) => s.opciones.some((o) => o.a !== '/admin' && pathname.startsWith(o.a)))?.modulo ?? 'panel';
-};
+/** ¿Esta opción del menú es la pantalla actual (o una de sus pantallas internas)? */
+const esActual = (o: Opcion, pathname: string) =>
+  o.a === '/admin' ? pathname === '/admin' || pathname === '/admin/' : [o.a, ...(o.incluye ?? [])].some((r) => pathname === r || pathname.startsWith(`${r}/`));
+
+const moduloDe = (pathname: string): Modulo => MENU.find((s) => s.opciones.some((o) => esActual(o, pathname)))?.modulo ?? 'panel';
 
 const ESTRECHO = '(max-width: 900px)';
 
@@ -121,7 +123,7 @@ export function AdminLayout() {
           <Fragment key={s.modulo}>
             {s.titulo && <span className={`nav-h nh-${s.modulo}`}>{s.titulo}</span>}
             {s.opciones.map((o) => (
-              <NavLink key={o.a} to={o.a} end={o.a === '/admin'} title={o.texto} className={({ isActive }) => (isActive ? 'nav on' : 'nav')}>
+              <NavLink key={o.a} to={o.a} title={o.texto} aria-current={esActual(o, pathname) ? 'page' : undefined} className={esActual(o, pathname) ? 'nav on' : 'nav'}>
                 <Icon name={o.icono} /><span>{o.texto}</span>
                 {o.cnt != null && <span className="cnt" aria-label={`${o.cnt} pendientes`}>{o.cnt}</span>}
               </NavLink>

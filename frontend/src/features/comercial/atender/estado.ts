@@ -1,4 +1,3 @@
-import { primerDiaDisponible } from '../fechas';
 import { TELAS, TIPOS_MUEBLE } from '../solicitud/datos';
 import {
   ACTIVIDADES, ADELANTO, COSTOS, COSTO_YARDA, EXTRA_TELA_DIFICIL, FAMILIAS_DIFICILES, LLEVA_EXTRA, OBSERVACIONES,
@@ -8,7 +7,15 @@ import {
 export const PARTES = TIPOS_MUEBLE.find((t) => t.id === 'sofa3')!.partes.map((p) => p.nombre);
 
 /** Lo que se va llenando durante la atención. En el sistema se guarda en la solicitud a cada paso. */
+/** local: cita en el taller · domicilio: visita en la casa del cliente (A2b · decisiones L). */
+export type Lugar = 'local' | 'domicilio';
+/** Recojo elegido al final, con el cliente: día (aaaa-mm-dd) y hora de inicio. */
+export interface RecojoElegido { fecha: string; hora: string }
+
 export interface Atencion {
+  lugar: Lugar;
+  /** Adelanto sugerido según el historial (CU-C11): 40 % sin pedidos cerrados, 0 % con al menos uno. */
+  adelantoPct: number;
   paso: number;
   adjunto: number;
   extra: boolean;
@@ -27,30 +34,34 @@ export interface Atencion {
   ubicacionNueva: google.maps.LatLngLiteral | null;
   referencia: string;
   guardarDireccion: boolean;
-  fecha: Date;
-  franja: number;
   actividades: Actividad[];
   observaciones: string;
   /** null = sigue al sugerido mientras no se edite. */
   propuesto: number | null;
   motivoPrecio: string;
   respuesta: 0 | 1 | 2;
+  /** El cliente acepta: paga el adelanto ahora o después (desde su cuenta o en el local). */
+  pagaAhora: boolean;
   metodo: number;
-  firmo: boolean;
   motivoRechazo: number;
   resultado: null | 'pagado' | 'despues' | 'publicada' | 'rechazo';
+  /** Último paso (decisiones L): agendar el recojo con el cliente o llevárselo en la visita (solo a domicilio). */
+  recojo: 'agendar' | 'llevar';
+  recojoElegido: RecojoElegido | null;
+  recojoHecho: null | 'agendado' | 'llevado';
 }
 
 export type CambioAtencion = Partial<Atencion>;
 
-export const atencionInicial = (): Atencion => ({
+export const atencionInicial = (lugar: Lugar = 'local', conHistorial = false): Atencion => ({
+  lugar, adelantoPct: conHistorial ? 0 : ADELANTO,
   paso: 0, adjunto: 0, extra: false, medidas: { ancho: '', fondo: '', alto: '' }, fotos: [],
   modo: 'partes', parteActiva: 0, telaPorParte: [0, 3, 0, 0, 0, 0], yardasPorParte: [5, 4, 2, 2, 3, 2], telaUna: 0, yardasUna: YARDAS_UNA_TELA,
   traslado: 'delivery', direccionId: 'casa', usarDireccionNueva: false, direccionNueva: '', ubicacionNueva: null, referencia: '', guardarDireccion: true,
-  fecha: primerDiaDisponible(), franja: 0,
   actividades: ACTIVIDADES.map((a) => ({ ...a, materiales: [...a.materiales] })), observaciones: OBSERVACIONES,
   propuesto: null, motivoPrecio: '',
-  respuesta: 0, metodo: 0, firmo: true, motivoRechazo: -1, resultado: null,
+  respuesta: 0, pagaAhora: true, metodo: 0, motivoRechazo: -1, resultado: null,
+  recojo: 'agendar', recojoElegido: null, recojoHecho: null,
 });
 
 /** Telas usadas con sus yardas, horas (con el extra por tela difícil) y el precio sugerido. */
@@ -76,7 +87,7 @@ export function calcular(a: Atencion) {
 
   return {
     telas, dificiles, extraDe, horas, sugerido, propuesto, transporte, total,
-    adelanto: Math.round(total * ADELANTO),
+    adelanto: Math.round(total * a.adelantoPct),
     yardasTotal: telas.reduce((t, x) => t + x.yardas, 0),
     desglose: [
       { label: 'Margen', value: margen },

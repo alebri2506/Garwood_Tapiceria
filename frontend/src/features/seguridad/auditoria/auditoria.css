@@ -11,7 +11,6 @@
 .au-tabla { min-width: 900px; }
 .au-fecha { white-space: nowrap; }
 .au-cambio { min-width: 240px; }
-.au-paginas { flex-wrap: wrap; font-size: 13.5px; }
 
 @media (max-width: 600px) {
   .au-search { min-width: 0; }

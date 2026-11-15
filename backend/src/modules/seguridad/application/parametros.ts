@@ -5,6 +5,8 @@ import { registrarBitacora } from '../../../shared/infrastructure/bitacora.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { hoyNegocio } from '../../comercial/domain/calendario.js';
 import { enNY, instanteNY } from '../../comercial/domain/agenda.js';
+import { historialMaquinas } from './maquinas.js';
+import { historialCargas } from './cargas.js';
 import { HORARIOS_AGENDA, fueraDeRangos, leerOpciones, revisarCoherencia, validarValor, type ReglaParametro } from '../domain/parametros.js';
 
 const PROVISIONAL = 'Provisional: por confirmar con el dueño';
@@ -32,18 +34,24 @@ export async function listarParametros() {
   return { grupos };
 }
 
-/** A14 › Historial de cambios: lo último primero, con quién y cuándo. */
+/** A14 › Historial de cambios: parámetros y máquinas, lo último primero, con quién y cuándo. */
 export async function historialParametros(limite = 20) {
-  const filas = await prisma.parametroHistorial.findMany({
-    orderBy: [{ fecha: 'desc' }, { id: 'desc' }],
-    take: limite,
-    include: { parametro: true, usuario: true },
-  });
-  return filas.map((h) => ({
-    id: h.id, clave: h.parametro.clave, etiqueta: h.parametro.etiqueta ?? h.parametro.clave, unidad: h.parametro.unidad,
+  const [filas, maquinas, cargas] = await Promise.all([
+    prisma.parametroHistorial.findMany({
+      orderBy: [{ fecha: 'desc' }, { id: 'desc' }],
+      take: limite,
+      include: { parametro: true, usuario: true },
+    }),
+    historialMaquinas(limite),
+    historialCargas(limite),
+  ]);
+  const parametros = filas.map((h) => ({
+    id: `p${h.id}`, clave: h.parametro.clave, etiqueta: h.parametro.etiqueta ?? h.parametro.clave, unidad: h.parametro.unidad,
     valorAnterior: h.valorAnterior, valorNuevo: h.valorNuevo,
     usuario: h.usuario.nombre ?? h.usuario.nombreUsuario, fecha: h.fecha.toISOString(),
   }));
+  // Orden estable: por fecha y, a igual fecha, se mantiene el orden de cada lista.
+  return [...parametros, ...maquinas, ...cargas].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, limite);
 }
 
 /**

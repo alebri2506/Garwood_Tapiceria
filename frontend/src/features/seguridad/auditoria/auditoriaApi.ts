@@ -12,6 +12,7 @@ export interface FiltrosActividad {
   modulo?: string;
   q?: string;
   pagina?: number;
+  porPagina?: number;
 }
 export interface RegistroActividad {
   /** `nombre`: quién lo hizo ("Laura Méndez"); `usuario`: su correo o usuario, para distinguir a dos personas con el mismo nombre. */
@@ -38,7 +39,7 @@ export function consulta(f: FiltrosActividad) {
 
 const http: AuditoriaApi = {
   listar: (f) => apiFetch(`/admin/auditoria${consulta(f)}`),
-  exportar: ({ pagina: _, ...f }) => apiDescargar(`/admin/auditoria/exportar${consulta(f)}`, 'garweb-actividad.csv'),
+  exportar: ({ pagina: _, porPagina: __, ...f }) => apiDescargar(`/admin/auditoria/exportar${consulta(f)}`, 'garweb-actividad.csv'),
 };
 
 // ---------------------------------------------------------------- Sin API: unas filas de ejemplo.
@@ -62,7 +63,8 @@ const simulada: AuditoriaApi = {
   listar: async (f) => {
     const registros = filtrar(f);
     return {
-      desde: f.desde ?? '', hasta: f.hasta ?? '', truncado: false, total: registros.length, pagina: 1, porPagina: 50, registros,
+      desde: f.desde ?? '', hasta: f.hasta ?? '', truncado: false, total: registros.length, pagina: f.pagina ?? 1, porPagina: f.porPagina ?? 50,
+      registros: registros.slice(((f.pagina ?? 1) - 1) * (f.porPagina ?? 50), (f.pagina ?? 1) * (f.porPagina ?? 50)),
       opciones: {
         tipos: [{ codigo: 'personal', nombre: 'Personal del taller' }, { codigo: 'clientes', nombre: 'Clientes' }, { codigo: 'sistema', nombre: 'Sistema' }],
         modulos: [{ codigo: 'comercial', nombre: 'Comercial' }, { codigo: 'historial', nombre: 'Historial' }, { codigo: 'configuracion', nombre: 'Configuración' }, { codigo: 'seguridad', nombre: 'Seguridad' }],

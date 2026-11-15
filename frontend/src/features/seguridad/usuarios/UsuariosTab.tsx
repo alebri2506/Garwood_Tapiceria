@@ -3,6 +3,7 @@ import { useAuth } from '../../../app/auth/AuthProvider';
 import { ApiError } from '../../../shared/api/http';
 import { Alert } from '../../../shared/ui/Alert';
 import { Icon } from '../../../shared/ui/Icon';
+import { Paginacion, usePaginacion } from '../../../shared/ui/Paginacion';
 import { StatusChip } from '../../../shared/ui/StatusChip';
 import { TextField } from '../../../shared/ui/TextField';
 import { Toast } from '../../../shared/ui/Toast';
@@ -216,6 +217,7 @@ export function UsuariosTab({ datos, recargar }: { datos: ListaUsuarios; recarga
   const [aviso, setAviso] = useState<{ titulo: string; texto: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const actual = datos.usuarios.find((x) => x.id === editando);
+  const pagina = usePaginacion(datos.usuarios, null);
 
   const reactivar = async (u: UsuarioPersonal) => {
     setError(null);
@@ -233,11 +235,12 @@ export function UsuariosTab({ datos, recargar }: { datos: ListaUsuarios; recarga
       <div className="wide">
         {aviso && <Toast title={aviso.titulo} onClose={() => setAviso(null)}>{aviso.texto}</Toast>}
         {error && <Alert tone="danger">{error}</Alert>}
+        <div className="gw-con-pg">
         <div className="tbl-box">
           <table className="t">
             <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Dispositivo</th><th>Último acceso</th><th>Estado</th><th><span className="sr-only">Acción</span></th></tr></thead>
             <tbody>
-              {datos.usuarios.map((u) => (
+              {pagina.visibles.map((u) => (
                 <tr key={u.id} className={u.id === editando ? 'sel' : undefined}>
                   <td><b>{u.nombre}</b>{u.id === yo && <span className="muted"> (usted)</span>}</td>
                   <td>{u.email ?? <span className="us-falta">Falta el correo</span>}</td>
@@ -260,6 +263,8 @@ export function UsuariosTab({ datos, recargar }: { datos: ListaUsuarios; recarga
               ))}
             </tbody>
           </table>
+        </div>
+        <Paginacion {...pagina.props} />
         </div>
         <p className="audit">Los clientes crean su propia cuenta desde la web; el Administrador puede registrarlos por teléfono en Clientes (A17).</p>
       </div>

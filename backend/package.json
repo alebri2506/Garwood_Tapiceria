@@ -11,6 +11,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
+    "db:limpiar": "tsx prisma/limpiar-datos.ts",
     "supabase:deploy": "dotenv -e .env.supabase -- prisma migrate deploy",
     "supabase:seed": "dotenv -e .env.supabase -- tsx prisma/seed.ts"
   },

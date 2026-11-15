@@ -25,6 +25,7 @@ Abre http://localhost:5173.
 | W6a Mis pedidos · en curso (lista y ficha) | `/cliente/pedidos`, `?pedido=PED-0076` | C16, C15 |
 | W6b Mis pedidos · anteriores | `/cliente/pedidos/anteriores` | H06, H05 |
 | W6c Mis pedidos · solicitudes y cotizaciones | `/cliente/pedidos/solicitudes` | C01, C04, C09 |
+| W5 Pagos del pedido · total, pagado, saldo; pagar en línea (pasarela) o informar Zelle / cheque; recibos | `/cliente/pagos?pedido=PED-…` | C12, C13 |
 | W11 Notificaciones (y número en la campana) | `/cliente/notificaciones` | RG-05 |
 | Escritorio del administrador (menú lateral por módulos) | `/admin/*` | — |
 | A1 Panel de hoy · atención ahora, el día en números | `/admin` | C16, A09, D01 |
@@ -32,12 +33,13 @@ Abre http://localhost:5173.
 | A2 Agenda de citas · semana y día, bloqueos | `/admin/agenda` | C03, C04 |
 | A2c–A2e Agendar desde una solicitud (en espera, nueva, visita) | `/admin/agenda?agendar=SOL-…` (`&nueva=1`) | C04 |
 | A2f–A2g No asistió · reprogramar | `/admin/agenda` → cita seleccionada | C04 |
-| A2b Atender cita en el local · revisar, telas, traslado, cotización y respuesta | `/admin/agenda/atender` | C05, C07, C08, C09, C11, C14 |
+| A2b Atender cita en el local o visita a domicilio · revisar, telas, traslado, cotización, respuesta y recojo (agendarlo o llevárselo en la visita) | `/admin/agenda/atender` (`?solicitud=SOL-…`; conectada a la API · sin API, ejemplo con `?lugar=domicilio` y `&historial=con`) | C05, C07, C08, C09, C11, C14 |
 | A3 Solicitudes y cotizaciones · 4 etapas en pestañas (Cita / visita, Por cotizar, Esperando al cliente, Cerradas), ficha, descarte y nueva solicitud. Une las antiguas A3 y A4 (lista) | `/admin/solicitudes` (`?etapa=por-cotizar`, `?ver=SOL-…`); `/admin/cotizaciones` lleva a Por cotizar | C01, C02, C09 |
-| A4 Cotización · armar, recotización V2, respuesta y renovar | `/admin/cotizaciones/cotizar` | C07, C08, C09, C10 |
+| A4 Cotización · armar (uno o varios muebles; conectada a la API), recotización V2, respuesta y renovar (de ejemplo) | `/admin/cotizaciones/cotizar?solicitud=SOL-…` | C07, C08, C09, C10 |
+| A5 Pagos · por confirmar (cobros del conductor), confirmados (pasarela y manuales), saldos pendientes, registrar y anular pagos | `/admin/pagos` | C12, C13 |
 | A6 Pedidos · indicadores, filtros y pedidos agrupados por fase, con las etapas del taller y el plazo | `/admin/pedidos` | C16 |
 | A6b Ficha del pedido · línea de tiempo, versiones, pagos, producción, despacho, cambiar fecha y cancelar | `/admin/pedidos/PED-…` | C15, C16 |
-| A16 Plantillas · matriz mueble × servicio, actividades con materiales, precio sugerido, editar y crear | `/admin/plantillas` | C06 |
+| A16 Plantillas · matriz mueble × servicio, actividades con materiales, precio sugerido, editar (versión nueva) y crear | `/admin/plantillas` | C06 |
 | A15 Inventario › Stock · en el estante, reservado, disponible, mínimo, alcanza para, ficha, nuevo material | `/admin/inventario` | A01, A02, A09 |
 | A15b Inventario › Telas (muestrario) · filtros por tipo y color, nueva tela, descontinuar | `/admin/inventario/telas` | A01 |
 | A8 Inventario › Reponer · telas para encargar, cantidad sugerida por proveedor, por llegar y «Llegó» | `/admin/inventario/reponer` | A02, A03, A04 |
@@ -45,8 +47,8 @@ Abre http://localhost:5173.
 | A8p Inventario › Proveedores | `/admin/inventario/proveedores` | A03 |
 | A9 Conteo de inventario · a ciegas, diferencias con motivo | `/admin/inventario/conteo` | A10 |
 
-Conectadas a la API (sin `VITE_API_URL` usan una API simulada): W2, W3, W3b, W6c, W11, A2, A3, A14 e Inventario (A15, A15b, A8, A8c, A8p, A9). W6a/W6b, A1, A21, A2b, A4, A6, A6b y A16
-son solo diseño: usan datos de ejemplo y todavía no guardan nada. Las demás rutas (A5–A20 del menú del
+Conectadas a la API (sin `VITE_API_URL` usan una API simulada): W2, W3, W3b, W6c, W11, A2, A3, A2b Atender cita o visita, A4 › Armar cotización, A14 (con Máquinas y Tamaño de carga), A16 e Inventario (A15, A15b, A8, A8c, A8p, A9). W5, W6a/W6b, A1, A21, A4 (V2, respuesta y renovar), A5, A6 y A6b
+son solo diseño: usan datos de ejemplo y todavía no guardan nada. Las demás rutas (las demás del menú del
 administrador, `/taller`, `/conductor`, W4, W5, W7, W9, W10) son temporales.
 
 ## API

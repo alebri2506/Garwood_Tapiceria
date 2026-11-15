@@ -13,7 +13,12 @@ const TELA: Record<string, string> = { trae: 'La trae el cliente', catalogo: 'Te
 const ACCION: Record<string, string> = {
   solicitud_registrada: 'Solicitud registrada', cita_programada: 'Cita programada', cita_reprogramada: 'Cita reprogramada', cita_cancelada: 'Cita cancelada',
   cita_atendida: 'Cita atendida', cita_inasistencia: 'No asistió', solicitud_descartada: 'Descartada', fotos_recibidas: 'Llegaron las fotos',
+  solicitud_vencida: 'Vencida', traslado_definido: 'Traslado definido', solicitud_cotizada: 'Solicitud cotizada',
+  cotizacion_aceptada: 'Cotización aceptada', cotizacion_rechazada: 'Cotización rechazada', pedido_generado: 'Pedido generado',
+  cotizacion_creada: 'Cotización empezada', cotizacion_guardada: 'Cotización guardada', cotizacion_publicada: 'Cotización publicada', pago_registrado: 'Adelanto cobrado', recojo_agendado: 'Recojo agendado', recojo_en_visita: 'Mueble recogido en la visita',
 };
+/** Respaldo para una acción sin texto propio: «algo_nuevo» → «Algo nuevo». */
+const textoAccion = (a: string) => ACCION[a] ?? (a.charAt(0).toUpperCase() + a.slice(1)).replace(/_/g, ' ');
 
 const iniciales = (n: string) => n.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
 const fechaCorta = (iso: string) => { const [y, m, d] = iso.slice(0, 10).split('-').map(Number); const f = new Date(y!, m! - 1, d!); return `${DIAS[f.getDay()]!.slice(0, 3)} ${d} ${MESES[m! - 1]!.slice(0, 3)}`; };
@@ -121,7 +126,8 @@ export const FichaSolicitud = forwardRef<HTMLElement, Props>(function FichaSolic
       <div className="sl-blk">
         <span className="ov">Traslado</span>
         <b>{f.traslado === 'delivery' ? `Delivery · ${f.direccion ?? ''}` : f.traslado === 'propio' ? 'Lo lleva y lo recoge el cliente' : 'Se define en la cita'}</b>
-        {f.fechaPrefRecojo && <small>Recojo preferido: {fechaCorta(f.fechaPrefRecojo)} · {f.horaPrefRecojo ?? (f.franjaRecojo === 'manana' ? 'mañana' : 'tarde')}{f.horaPrefRecojo && ['Nueva', 'Atendida', 'Cotizada'].includes(f.estado) ? ' · reservado en la agenda' : ''}</small>}
+        {/* Decisiones A.7: el cliente elige el recojo cuando se confirma su pago; las solicitudes anteriores conservan su fecha preferida. */}
+        {f.fechaPrefRecojo && <small>Recojo preferido: {fechaCorta(f.fechaPrefRecojo)}{f.horaPrefRecojo ? ` · ${f.horaPrefRecojo}` : ''}</small>}
       </div>
 
       {cita && (
@@ -161,7 +167,7 @@ export const FichaSolicitud = forwardRef<HTMLElement, Props>(function FichaSolic
 
       <details className="sl-hist">
         <summary>Historial ({f.historial.length})</summary>
-        <ol>{f.historial.map((h, i) => <li key={i}><b>{ACCION[h.accion] ?? h.accion}</b><small>{fechaHora(h.fecha)} · {h.quien}</small></li>)}</ol>
+        <ol>{f.historial.map((h, i) => <li key={i}><b>{textoAccion(h.accion)}</b><small>{fechaHora(h.fecha)} · {h.quien}</small></li>)}</ol>
       </details>
       <p className="audit">Registrada por {f.registradaPor}. Cada cambio de estado queda con usuario, fecha y hora.</p>
     </section>
