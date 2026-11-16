@@ -2,10 +2,36 @@
 
 Estas decisiones salieron de la revisión del prototipo con el asesor y el administrador del negocio. **Prevalecen** sobre `.claude/skills/garweb-contexto/SKILL.md` cuando hay diferencias.
 
+**Orden de las secciones:** A–E y H–M son decisiones por tema (las de Alejandro, H–M, se agregaron después de E); F y G son pendientes. Cuando una sección posterior cambia una regla anterior, la anterior lo indica («actualizado el …, ver …»).
+
+## Estado del desarrollo (al 15/11)
+Rama `feature-issues`, 24 migraciones de base de datos, **208 pruebas automáticas que pasan** (18 archivos).
+
+1. **Programado de punta a punta (pantalla + servidor + base de datos):**
+   - **Solicitudes:** W2 (cliente), registro por el Administrador y bandeja por etapas A3, descartar y vencer (CU-C01, C02).
+   - **Agenda:** W3 cita y W3b visita con día y hora, A2 en modos ver, agendar, reprogramar y bloquear (con quitar
+     bloqueo), inasistencias y recojos en la misma agenda (CU-C03, C04).
+   - **Atención de la cita o visita:** A2b con telas, traslado, cotización y respuesta del cliente, generación del pedido
+     y del recojo (CU-C05, C14 parcial).
+   - **Cotización:** A4 armar con uno o varios muebles, transporte automático por calle y publicar (CU-C07, C08, C11);
+     W6c y W4 el cliente revisa, rechaza o acepta con adelanto 0 % (CU-C09 parcial).
+   - **Plantillas** A16 y **Máquinas** en A14 (CU-C06).
+   - **Inventario:** stock, telas, reponer, movimientos, proveedores y conteo (A8, A9, A15 · CU-A01 catálogo, A03 compras
+     sugeridas, A04 recepción con «Llegó», A06 retiros registrados por el Administrador, A09 stock y movimientos, A10 conteo).
+   - **Seguridad y parámetros:** A14 parámetros con historial, A20 usuarios y registro de actividad, inicio de sesión con
+     contraseña temporal, recuperación por correo (CU-S01, S02, S03, S04, S05, S06).
+   - **Cliente:** W10 Mi perfil (CU-H02, lado del cliente) y W11 Notificaciones.
+2. **Solo pantalla, con datos de ejemplo (falta el servidor):** A5 y W5 Pagos (falta la pasarela), A6 Pedidos y su ficha,
+   W6a y W6b Mis pedidos en curso y anteriores, A1 Panel y A21 Estadísticas.
+3. **Todavía sin pantalla:** W1 Inicio, A12 Historial, A17 Clientes, A13 Salidas, A18 Taller (recepciones), A19 y W9
+   Reclamos, W7 Entrega, y las aplicaciones del taller (T1–T3) y del conductor (D1–D5).
+4. **Lo que falta dentro de Comercial:** aceptar y pagar con pasarela, V2 por daño oculto, renovar una cotización vencida
+   (CU-C10), vencimiento automático, recibos y comprobante final (CU-C13) y cancelar un pedido (CU-C15).
+
 ## A. Solicitud de cotización del cliente (W2)
 
 1. **Tipo de mueble:**
-   - 13 tipos de interiores (sofá de 2 y 3 cuerpos, seccional, loveseat, sillón, silla de comedor, cabecera, puff, banca, etc.);
+   - **12 tipos** de interiores (sofá de 2 y 3 cuerpos, seccional, loveseat, sillón, silla de comedor, cabecera, puff, banca, etc.); eran 13, pero el 13/11 se dejó de ofrecer «Otro mueble de interior» (no se borró: las solicitudes antiguas lo conservan);
    - "Sillón reclinable" **se eliminó** porque es lo mismo que "Sillón";
    - el dibujo del mueble cambia según el tipo elegido.
 2. **Servicios:** retapizado completo · retapizado + espuma · solo espuma · reparación de estructura · fabricación a medida.
@@ -41,7 +67,10 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
        aunque la cotización nunca se aceptara.
      - En W2 se quitaron la reserva, el índice único y la cuadrícula de horas; la grilla vuelve en el paso posterior al pago, que
        se construye con los backends de Cotizaciones y Pagos. Las solicitudes anteriores conservan su fecha preferida solo para mostrarla.
-     - Los parámetros `recojo.duracion_min` y `recojo.dias_anticipacion_max` quedan internos (salen de A14) hasta que vuelva la grilla.
+     - *Actualizado el 15/11:* la grilla del recojo ya volvió. Se usa al generarse el pedido en la atención (A2b, ver L.2.6)
+       y cuando el cliente acepta desde su cuenta con adelanto 0 % (W4, ver M.5). El recojo **sí ocupa la agenda** del
+       Administrador: es una sola agenda sin cruces (ver L.2.9), con `recojo.duracion_min` (1 h) y hasta
+       `recojo.dias_anticipacion_max` días.
    - Con **«Lo llevo y lo recojo yo»** no se pide día ni franja.
 8. **Con "Ver en el local" o "Visita a domicilio" la solicitud tiene 3 pasos** (Mueble y fotos → Tela → Cita/Visita). No hay paso de traslado: se define en la cita.
 9. **Navegación del asistente:**
@@ -53,8 +82,10 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
 
 1. **Cita:** turnos de 30 min.
 2. **Visita · cambiado el 13/11 con el diseño W3b:** el cliente elige el **día y la hora** (ya no solo la franja).
-   - Horas de **1 hora** (`visita.duracion_min` = 60) dentro de las franjas de visita: **9:00, 10:00, 11:00, 15:00 y 16:00**
-     (`visita.franja_manana` 9:00–12:00 y `visita.franja_tarde` 15:00–17:00); de lunes a sábado, sin domingos ni feriados, desde mañana.
+   - Dura **1 hora** (`visita.duracion_min` = 60); de lunes a sábado, sin domingos ni feriados, desde mañana.
+     *Actualizado el 15/11 (ver L.2.9):* la visita **empieza cada 30 min**, en las mismas horas de la Agenda (9:30, 10:00,
+     10:30, 11:00 · 15:00, 15:30, 16:00), y solo se ofrece si la hora entera cabe antes del almuerzo o del cierre. Antes
+     empezaba solo a las 9:00, 10:00, 11:00, 15:00 y 16:00.
    - **Ligada a la agenda del administrador (A2):** la hora sale **«Ocup.»** si choca con una cita en el local, otra visita o un
      bloqueo; al confirmar, **ocupa esa hora** en la agenda. Ya no rige «una visita por franja»: puede haber varias en la mañana si
      no se cruzan.
@@ -67,7 +98,8 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
    - **No** hay "añadir al calendario" ni aviso de "salimos del taller".
 4. **Estados de la visita/cita y quién los cambia:**
    - **Programada:** la pone el cliente al confirmar.
-   - **Atendida:** el administrador, al terminar la guía A2b.
+   - **En atención** *(nuevo, 15/11 · ver L.2.10)*: el administrador, al tocar «Empezar» en A2b. La solicitud también queda «En atención».
+   - **Atendida:** cuando se registra la respuesta del cliente (se publica la cotización); la solicitud pasa a «Cotizada».
    - **No lo encontramos / No asistió:** el administrador, desde la Agenda.
    - **Cancelada:** el cliente.
 5. **Inasistencia:** el cliente puede reprogramar **una sola vez**; si falta otra vez, la solicitud **vence**.
@@ -81,7 +113,9 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
 2. **Agenda de citas:** ver `agenda.md`.
 3. **Atender cita (A2b):**
    - la misma guía sirve para el local y para la **visita a domicilio** (en la tablet);
-   - tiene el botón **«Guardar y terminar en el taller»**: la solicitud queda **Atendida · por cotizar** en **Cotizaciones › Por armar**.
+   - *Actualizado el 15/11 (ver L.2.7 y L.2.10):* ya no existe «Guardar y terminar en el taller». Si se sale antes de
+     publicar, la atención queda **«En atención»** y se retoma con **«Continuar la atención»** desde la Agenda o desde A3,
+     en el primer paso que falta (telas → traslado → cotización).
 4. **Cotización (A4):**
    - **sin pestañas**: la pantalla cambia según el estado (borrador / publicada / vencida / V2);
    - una cotización puede tener **varios muebles**, con un total por mueble y un total general;
@@ -98,7 +132,7 @@ Estas decisiones salieron de la revisión del prototipo con el asesor y el admin
    - Cada solicitud avanza por **4 etapas**, una por pestaña: **Cita / visita** (En espera de cita / de visita) → **Por cotizar** (Nueva, Atendida) → **Esperando al cliente** (Esperando respuesta, Aceptada · falta adelanto) → **Cerradas** (Aceptada → pedido, Rechazada, Vencida, Descartada).
    - Arriba: indicadores Por cotizar, Esperando al cliente y Aceptadas; filtro por **fecha de solicitud** (Todas, Hoy, Últimos 7 días, Este mes, Rango).
    - La ficha tiene **un solo botón** con lo que toca hacer (Ver cita, Ir a la cita, Ver visita, Armar cotización, Ver cotización…).
-   - La etapa no se guarda: se calcula del estado. Los estados de la cotización (Esperando respuesta, Aceptada, Rechazada) llegarán con el backend de A4; hasta entonces «Esperando al cliente» queda vacía.
+   - La etapa no se guarda: se calcula del estado. *Actualizado el 15/11:* con el backend de A4, W4 y la atención (K, L, M), las cotizaciones ya pasan por «Esperando al cliente» y por «Cerradas» (Rechazada, Aceptada → pedido). Una solicitud **En atención** se ve en la etapa «Cita / visita».
 9. **Agenda · quitar un bloqueo (11/11):** al tocar un horario bloqueado se ve en «Configurar agenda» con el botón «Quitar». El bloqueo **no se borra**: queda anulado con quién y cuándo, y el turno vuelve a estar libre.
 10. **Mis pedidos del cliente (W6c):** cada tarjeta muestra su estado y "qué le toca" al cliente. La visita a domicilio tiene sus estados (Visita programada / No lo encontramos / Preparando cotización).
 

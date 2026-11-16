@@ -130,7 +130,7 @@ export function SolicitudesAdminPage() {
           <Icon name="clock" size={18} />
           <span>
             <b>{atrasadas === 1 ? `1 solicitud nueva lleva ${bandeja.diasAtraso} días o más sin cotizar` : `${atrasadas} solicitudes nuevas llevan ${bandeja.diasAtraso} días o más sin cotizar`}</b>
-            {' '}· Ninguna solicitud se pierde: toda debe terminar cotizada, vencida o descartada con motivo (RN-C04).
+            {' '}· Ninguna solicitud se pierde: toda debe terminar cotizada, rechazada, vencida o descartada con motivo.
           </span>
           <button type="button" className="gw-btn gw-btn-sm gw-btn-secondary" onClick={() => { setPestana(2); setFechas(0); }}>Ver nuevas</button>
         </div>

@@ -30,8 +30,9 @@ model Usuario {
   nombreUsuario          String                 @unique @map("nombre_usuario") @db.VarChar(120)
   // Nombre visible del personal (A20). Los clientes usan el nombre de su ficha de cliente.
   nombre                 String?                @db.VarChar(80)
-  // Para recuperar la contraseña (CU-S02). Obligatorio para Administrador y Cliente; opcional para
-  // Producción y Conductor (decisiones D.1.2): esa regla se valida en el backend.
+  // Con él se entra y se recupera la contraseña (CU-S02). Obligatorio para todo el personal (decisiones D.1.2, 10/11):
+  // esa regla se valida en el backend. Queda opcional en la base por las cuentas antiguas sin correo, que lo completan
+  // al editarlas en A20.
   email                  String?                @unique @db.VarChar(160)
   contrasenaHash         String                 @map("contrasena_hash")
   // Computadora | Celular | Tablet (solo informativo, decisiones D.1.7).
@@ -580,13 +581,14 @@ model Cita {
   id               Int        @id @default(autoincrement())
   solicitudId      Int        @map("solicitud_id")
   tipo             String     @db.VarChar(12) // local | domicilio
-  // Cita en el local: hora exacta del turno. Visita: el día a las 00:00 y la franja aparte.
+  // Cita en el local y visita a domicilio: la hora exacta elegida (decisiones B.2 y L.2.9). Las visitas antiguas que solo
+  // guardaron la franja tienen el día a las 00:00 y la franja aparte.
   fechaHora        DateTime   @map("fecha_hora") @db.Timestamptz
   franja           String?    @db.VarChar(10) // manana | tarde (solo visitas)
   duracionMin      Int        @map("duracion_min")
   direccionId      Int?       @map("direccion_id") // dónde es la visita
   reprogramaciones Int        @default(0)
-  estado           String     @db.VarChar(20) // Programada | Atendida | No asistió | Reprogramada | Cancelada
+  estado           String     @db.VarChar(20) // Programada | En atención | Atendida | No asistió | Reprogramada | Cancelada (decisiones L.2.10)
   observaciones    String?    @db.VarChar(300)
   registradoPor    Int        @map("registrado_por")
   fechaRegistro    DateTime   @default(now()) @map("fecha_registro") @db.Timestamptz

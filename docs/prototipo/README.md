@@ -3,6 +3,15 @@
 Estas son las pantallas **aprobadas** del prototipo. Son la referencia de diseño, textos y comportamiento para programar el frontend.
 Prototipo navegable: https://garweb-garwood.netlify.app/
 
+> **Cambios al programar (actualizado el 15/11 · detalle en `docs/contexto/decisiones-recientes.md`):**
+> - **A3 + A4:** el menú tiene una sola opción, «Solicitudes y cotizaciones», con 4 etapas. La lista `A4-Cotizaciones` ya no existe; `A4-Cotizar` queda como la pantalla de una cotización (C.8).
+> - **A8 / A9 / A15:** el Inventario tiene 6 pestañas: Stock, Telas, Reponer, Movimientos, Proveedores y Conteo. Ya no hay A10 Compras ni un catálogo aparte (H.2).
+> - **A2 / A2b:** recojos y estado «En atención» en la agenda; la atención termina con la respuesta del cliente y, si nace el pedido, el recojo. Ya no existe «Guardar y terminar en el taller» (L).
+> - **W2:** sin fecha de recojo (A.7). **W3b:** visita con día y hora (B.2, L.2.9).
+> - **A14:** grupos nuevos (Seguridad, Unidades, Máquinas y Tamaño de carga), sin «Unidades de medida», «Métodos de pago» ni «Respaldo» como en el prototipo (D.3, H.3, I.5, K.7).
+> - **A20:** sin pestaña «Roles y permisos» ni campo «Usuario»; el personal entra con su correo (D.1).
+> - **W10:** nombres y apellidos en dos campos, cambio de correo con confirmación y avisos simplificados (E).
+
 ## Cómo leer un archivo `.dc.html`
 - **Arriba:** el HTML de la pantalla (los textos y la estructura).
 - **Variables:** `{{nombre}}` es un valor que calcula la lógica.
@@ -53,7 +62,7 @@ Prototipo navegable: https://garweb-garwood.netlify.app/
 | Administrador (escritorio) | `A4-Cotizaciones.dc.html` | A4 Cotizaciones · bandeja y por armar |
 | Administrador (escritorio) | `A4-Cotizar.dc.html` | A4 Cotización (cambia según su estado) |
 | Administrador (escritorio) | `A5-Pagos.dc.html` | A5 Pagos + registrar pago en el local |
-| Administrador (escritorio) | `A6-Pedidos.dc.html` | A6 Pedidos · planning y lista |
+| Administrador (escritorio) | `A6-Pedidos.dc.html` | A6 Pedidos · tarjetas con barra de 6 etapas (en el sistema, todavía con datos de ejemplo) |
 | Administrador (escritorio) | `A6b-FichaPedido.dc.html` | A6b Ficha del pedido |
 | Administrador (escritorio) | `A16-Plantillas.dc.html` | A16 Plantillas · lista, detalle y borrador |
 | Administrador (escritorio) | `A16b-NuevaPlantilla.dc.html` | A16b Nueva plantilla · definir, ajustar, activar |
