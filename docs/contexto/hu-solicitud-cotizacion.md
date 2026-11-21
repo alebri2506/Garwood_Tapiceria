@@ -15,16 +15,16 @@
 | 2 | Elige tipo de mueble (el dibujo cambia) y servicio. |
 | 3 | Sube fotos o videos (mínimo 1 foto). Medidas opcionales. |
 | 4 | Paso **2. Tela** → «La traigo yo». |
-| 5 | Paso **3. Traslado** → Delivery, dirección y **día y franja preferidos de recojo** (mañana o tarde). |
+| 5 | Paso **3. Traslado** → Delivery y **dirección de recojo y entrega**. *(Actualizado el 13/11, decisiones A.7: ya no se elige día ni hora de recojo; se agenda cuando nace el pedido.)* |
 | 6 | Paso **4. Revisar y enviar** → «Enviar solicitud». |
-| 7 | El sistema crea la solicitud **SOL-XXXX** en estado **Nueva**. Aparece en Mis pedidos (W6c) y en la bandeja del administrador (A3 / Cotizaciones › Por armar). |
+| 7 | El sistema crea la solicitud **SOL-XXXX** en estado **Nueva**. Aparece en Mis pedidos (W6c) y en la bandeja del administrador (A3 «Solicitudes y cotizaciones», etapa **Por cotizar** · decisiones C.8). |
 
 ## Flujos alternos
 
 **Según la tela:**
 - **A1 Ver telas en línea** (en la bandeja del administrador: «Telas en línea»): una tela del catálogo (Pattern/color) → Traslado → Enviar.
 - **A2 Ver en el local:** el paso 3 es la **cita** (W3). Queda "Cita programada". Son 3 pasos, sin Traslado.
-- **A3 Visita a domicilio:** el paso 3 es la **visita** (W3b): franja y dirección. Queda "Visita programada", sin costo.
+- **A3 Visita a domicilio:** el paso 3 es la **visita** (W3b): dirección, **día y hora** (1 h, empieza cada 30 min en las horas de la agenda · decisiones B.2 y L.2.9). Queda "Visita programada", sin costo.
 - **A4 No lleva tela:** solo con solo espuma o reparación de estructura; se marca sola.
 - **A5 Distintas telas por partes:** una tela por cada parte del mueble.
 
@@ -33,7 +33,7 @@
 - **A7 Fabricación a medida:** medidas obligatorias y **Acabado**. En Traslado: entrega a domicilio o retiro en el taller, sin recojo.
 
 **Según el traslado:**
-- **A8 Lo llevo y lo recojo yo:** sin costo de traslado; no se pide día ni franja de recojo.
+- **A8 Lo llevo y lo recojo yo:** sin costo de traslado.
 - **A9 Dirección nueva:** «+ Usar una dirección nueva» (puede guardarla en Mi perfil).
 
 **Otros:**
@@ -46,7 +46,7 @@
 |---|---|---|
 | E1 | Sin fotos | No deja continuar ("mínimo 1 foto"). |
 | E2 | Video > 1 min o archivo no admitido | Rechaza ese archivo y explica por qué. |
-| E3 | Domingo, feriado, día pasado, más de 4 semanas adelante o franja llena | No se puede elegir. |
+| E3 | (Cita o visita) Domingo, feriado, día pasado u hora ocupada o bloqueada | No se puede elegir. |
 | E4 | Agenda sin turnos libres | Elegir otro día o semana. |
 | E5 | Fabricación a medida sin medidas | No deja continuar. |
 | E6 | Sesión vencida | Va a G1 y vuelve sin perder lo avanzado (borrador). |
@@ -54,12 +54,12 @@
 | E8 | Dirección muy lejana para visita o delivery | *Por definir con el dueño.* |
 
 ## Reglas
-- Toda solicitud termina **cotizada, vencida o descartada con motivo**.
+- Toda solicitud termina **cotizada, vencida, rechazada o descartada con motivo**.
 - Las yardas las calcula el taller.
 - La visita a domicilio no tiene costo.
 - El acabado solo aplica a fabricación a medida.
-- Los recojos son de lunes a sábado.
-- El día y la franja de recojo son una preferencia: el taller confirma el día y la hora al planificar la salida (A13).
+- El recojo **no** se elige al pedir la cotización: se agenda cuando nace el pedido (cotización aceptada y adelanto pagado, o adelanto 0 %), de lunes a sábado, en la misma agenda del Administrador (decisiones A.7 y L.2.9).
+- Una solicitud también puede terminar **Rechazada**, si el cliente rechaza la cotización (decisiones L.2.4 y M.3).
 
 ## Criterios de aceptación
 1. Con sesión iniciada, al completar mueble, ≥1 foto, tela y traslado y enviar → se crea la solicitud en estado *Nueva*, visible en W6c y en A3.

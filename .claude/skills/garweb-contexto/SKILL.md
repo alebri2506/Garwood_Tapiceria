@@ -5,7 +5,14 @@ description: "Contexto completo de GARWEB (tesis URP, Tapicería Garwood LLC): m
 
 # GARWEB — Contexto del proyecto
 
-> **Importante:** las decisiones tomadas después del 24 oct 2026 están en `docs/contexto/decisiones-recientes.md`, `docs/contexto/agenda.md` y `docs/contexto/hu-solicitud-cotizacion.md`, y **prevalecen** sobre este documento. Ejemplos: ya no existe A10 Compras (pasó a Inventario › Qué pedir), se eliminó la muestra de tela a domicilio y la Agenda ya no crea citas sueltas. Pantallas actuales: `docs/prototipo/README.md`.
+> **Importante:** las decisiones tomadas después del 24 oct 2026 están en `docs/contexto/decisiones-recientes.md`, `docs/contexto/agenda.md` y `docs/contexto/hu-solicitud-cotizacion.md`, y **prevalecen** sobre este documento. Ejemplos: ya no existe A10 Compras (pasó a Inventario › Reponer), se eliminó la muestra de tela a domicilio y la Agenda ya no crea citas sueltas. Pantallas actuales: `docs/prototipo/README.md`.
+>
+> **Actualizado el 15/11:** qué está programado y qué falta está en `decisiones-recientes.md` › «Estado del desarrollo». Cambios importantes frente a este documento:
+> - el recojo ya no se elige en W2, sino cuando nace el pedido;
+> - recojos, citas y visitas comparten una sola agenda;
+> - hay pago en línea con pasarela, por definir (decisiones J);
+> - el personal entra con su correo y no hay pestaña «Roles y permisos» (decisiones D);
+> - el **modelo de datos real** es `backend/prisma/schema.prisma` (39 tablas), que reemplaza al diagrama CORE de la §9.
 
 
 Usa este contexto siempre que trabajes en GARWEB: código (backend, frontend, base de datos, despliegue), documentación de la tesis, diagramas o presentaciones. Responde en español, de forma directa y paso a paso, explicando el porqué de cada recomendación.
@@ -50,7 +57,7 @@ Reglas de Supabase:
 | **node-cron** (o BullMQ) | [Recomendado] | Tareas programadas: vencimiento de cotizaciones, recordatorios de cita/entrega, alertas de 7 días, respaldo |
 | **Nodemailer** / Resend | [Recomendado] | Correos (RG-05) |
 | Generación de PDF (pdfkit o Puppeteer) | [Recomendado] | Cotización, recibos, comprobante, orden de compra, orden de trabajo, hoja de ruta |
-| **Google Maps Platform**: Places (autocompletar), Distance Matrix (transporte CU-C07), Directions (orden de ruta CU-D02) | [Decidido] | Siempre detrás de un adaptador en el backend |
+| **Google Maps Platform**: Places (autocompletar), Distance Matrix (transporte CU-C07), Directions (orden de ruta CU-D02) | [Decidido] · *actualizado 15/11* | Siempre detrás de un adaptador en el backend. *Lo programado usa Google Maps solo para el **mapa y el autocompletado** de direcciones. Por costo, la dirección al tocar el mapa sale de **OpenStreetMap (Nominatim)** y el transporte (C07) de **OSRM** (millas por calle) (decisiones K.6). La ruta del conductor (D02) aún no se programa* |
 | Pino / Winston | [Recomendado] | Logs estructurados |
 | Swagger / OpenAPI | [Recomendado] | Documentar endpoints |
 
@@ -116,8 +123,8 @@ Vigencia de cotización (1 mes) · aviso antes de vencer (3 días) · % adelanto
 
 ## 6. Estados
 
-- **Solicitud:** Nueva → En espera de cita → Atendida → Cotizada · Vencida · Descartada
-- **Cita:** Programada → Atendida · No asistió · Reprogramada · Cancelada
+- **Solicitud:** Nueva → En espera de cita → En atención → Atendida → Cotizada · Rechazada · Vencida · Descartada *(actualizado 15/11: «En atención» y «Rechazada», decisiones L.2.4 y L.2.10)*
+- **Cita:** Programada → En atención → Atendida · No asistió · Reprogramada · Cancelada *(actualizado 15/11: «En atención», decisiones L.2.10)*
 - **Cotización:** Borrador → Pendiente de respuesta → Aceptada: pendiente de adelanto → Aceptada · Rechazada · Vencida · Reemplazada
 - **Pedido:** Generado → Esperando mueble / Esperando material → Listo para producir → En producción ⇄ En pausa → Terminado → En reparto / Listo para retiro → Entregado → Cerrado · Cancelado
 - **Orden de trabajo:** Emitida → En proceso ⇄ Pausada → Terminada → Cerrada
@@ -136,18 +143,18 @@ Regla de la tesis: **cada caso de uso pertenece a un solo módulo y a un solo ob
 ### Comercial (OE1: eficiente gestión de cotizaciones) — 16
 | CU | Nombre | Actor | Reglas clave |
 |---|---|---|---|
-| C01 | Registrar solicitud de cotización | Cliente / Admin | Fotos/videos, tipo mueble, servicio, medidas opc. Tela: no lleva · la trae (costo 0) · catálogo en línea (solo activas) · catálogo en local (exige cita). Logística: Delivery = recojo+entrega ida y vuelta, un solo costo, dirección obligatoria (Google Maps) + fecha/franja preferida; o "lo llevo yo" |
+| C01 | Registrar solicitud de cotización | Cliente / Admin | Fotos/videos, tipo mueble, servicio, medidas opc. Tela: no lleva · la trae (costo 0) · catálogo en línea (solo activas) · catálogo en local (exige cita). Logística: Delivery = recojo+entrega ida y vuelta, un solo costo, dirección obligatoria (Google Maps); o "lo llevo yo". *Actualizado 13/11 (decisiones A.7): la fecha de recojo ya no se pide aquí; se agenda cuando nace el pedido* |
 | C02 | Gestionar bandeja de solicitudes | Admin | Toda solicitud termina en Cotizada, Vencida o Descartada con motivo |
 | C03 | Configurar disponibilidad de la agenda | Admin | Un turno = un cliente; bloqueos con motivo (`agenda_bloqueo`) |
-| C04 | Programar/reprogramar/cancelar cita | Cliente / Admin | Solo turnos libres; citas solo para elegir tela en el local; 1 reprogramación por inasistencia, la 2.ª vence la solicitud; recordatorio |
+| C04 | Programar/reprogramar/cancelar cita | Cliente / Admin | Solo turnos libres; citas solo para elegir tela en el local; 1 reprogramación por inasistencia, la 2.ª vence la solicitud; recordatorio. *Actualizado 15/11: también visita a domicilio con día y hora (1 h, cada 30 min); citas, visitas, recojos y bloqueos comparten una sola agenda (decisiones B.2 y L.2.9)* |
 | C05 | Registrar atención de la cita | Admin | Tela, medidas, fotos; puede cotizar en el momento |
 | C06 | Gestionar plantillas de cotización | Admin | Por tipo de mueble + servicio; actividades (horas persona, máquina, horas máquina) con materiales; versionadas; incluyen insumos de proceso |
-| C07 | Calcular transporte ida y vuelta | Sistema | Google Maps + matriz; sin delivery = 0; si no ubica, Admin ingresa manual (auditado) |
-| C08 | Armar cotización y definir precio propuesto | Admin | Carga plantilla → "carrito" de actividades. **Sugerido** = materiales + mano de obra + maquinaria + costos fijos + margen (no editable, sin transporte). **Propuesto** editable libre, motivo opcional; se guardan ambos. Cantidades solo cambian si cambia el trabajo. Faltante no bloquea ("requiere compra"). Vigencia = min(parámetro, vigencia precio tela). Validar antes de publicar (logística, nada descontinuado, costos vigentes). Publica en plataforma + correo PDF. **V2 por daño oculto** = V1 + cobro adicional (siempre sube, mantiene transporte, única causa de cambio de precio tras aceptar). Guardar `minutos_elaboracion` |
+| C07 | Calcular transporte ida y vuelta | Sistema | ~~Google Maps + matriz~~ *Actualizado 14/11 (decisiones K.6–K.7): millas **por calle** desde el taller (OpenStreetMap/Nominatim para ubicar y OSRM para la ruta) × 2 viajes × `transporte.por_milla` + tarifa por **tamaño de carga** de cada mueble (Parámetros).* Sin delivery = 0; si no ubica, el Admin ingresa el monto a mano con motivo (auditado) |
+| C08 | Armar cotización y definir precio propuesto | Admin | Carga plantilla → "carrito" de actividades. **Sugerido** = materiales + mano de obra + maquinaria + costos fijos + margen (no editable, sin transporte). **Propuesto** editable libre, motivo opcional; se guardan ambos. Cantidades solo cambian si cambia el trabajo. Faltante no bloquea ("requiere compra"). Vigencia = min(parámetro, vigencia precio tela). Validar antes de publicar (logística, nada descontinuado, costos vigentes). Publica en plataforma + correo PDF. **V2 por daño oculto** = V1 + cobro adicional (siempre sube, mantiene transporte, única causa de cambio de precio tras aceptar). Guardar `minutos_elaboracion`. *Actualizado 14–15/11 (decisiones I.3 y K): sugerido = (materiales + mano de obra + maquinaria + costos fijos) × (1 + margen), redondeado al dólar; la **tela no va en la plantilla**: se agrega en la cotización con su precio real (o $0 si la trae el cliente) y el taller escribe las yardas; una cotización reúne todos los muebles de la solicitud y el transporte se cobra una sola vez; el propuesto empieza igual al sugerido* |
 | C09 | Revisar y responder cotización | Cliente / Admin | Cliente ve trabajos sin montos, precio, transporte, total, vigencia. Acepta/rechaza (motivo opc.) o pide renovar. Admin registra respuestas por teléfono con el medio. También responde la V2. Sin respuesta → Vencida; V2 sin respuesta en plazo → cancelación |
 | C10 | Recalcular cotización vencida | Sistema / Admin | Nueva versión (`cotizacion_origen_id`); revisa materiales activos y costos; avisa si hay plantilla más nueva; nunca reutiliza precio |
 | C11 | Registrar adelanto sugerido o modificado | Admin | **Todos pasan por el pago. No existe campo tipo_cliente.** Sin comprobantes (nuevo) → 40 %; con comprobantes → 0 %. Editable, se audita quién y cuándo. Sobre total con transporte. Si es 0 → genera pedido directo |
-| C12 | Informar y confirmar pagos | Cliente / Admin | Métodos: transferencia, Zelle, cheque, efectivo, tarjeta. **Sin pasarela en línea.** Cliente sube foto del comprobante (JPG/PNG/PDF ≤5 MB) → Por confirmar → Admin confirma o rechaza con motivo; cliente puede re-subir. Admin registra pagos en el local. Conductor solo registra; solo Admin confirma. Saldo = total − pagos confirmados (calculado, nunca escrito) |
+| C12 | Informar y confirmar pagos | Cliente / Admin | Métodos: transferencia, Zelle, cheque, efectivo, tarjeta. ~~Sin pasarela en línea.~~ *Actualizado 14/11 (decisiones J): **con pasarela** para tarjeta y cuenta bancaria ACH (proveedor por definir); Zelle y cheque quedan «Por confirmar».* Cliente sube foto del comprobante (JPG/PNG/PDF ≤5 MB) → Por confirmar → Admin confirma o rechaza con motivo; cliente puede re-subir. Admin registra pagos en el local. Conductor solo registra; solo Admin confirma. Saldo = total − pagos confirmados (calculado, nunca escrito) |
 | C13 | Emitir recibos y comprobante final | Sistema | Recibo por pago confirmado; comprobante final al saldo 0. **Un comprobante reúne varios pagos (pago.comprobante_id, N:1)**. Tipo según persona/empresa |
 | C14 | Generar pedido y congelar cotización | Sistema | Código PED-0000; congela versión aceptada; envía a Almacén (planificar/reservar) y Despacho (parada de recojo) |
 | C15 | Cancelar pedido con cálculo del cargo | Cliente (solicita) / Admin (confirma) | No es automática. Sin intervención → devolución total. Con intervención → horas × tarifa + materiales usados/comprados + transporte realizado. Libera reservas, recibo de devolución. Solo antes de la entrega |
@@ -159,9 +166,9 @@ Incluye el control de producción (el consumo real mueve el stock). Por material
 |---|---|---|---|
 | A01 | Gestionar catálogo de materiales y telas | Admin | Una sola unidad de medida por material. Solo la **tela** se compra bajo pedido; lo demás es de stock. Precio + fecha de precio alimentan el sugerido. Desactivar, no borrar |
 | A02 | Reservar materiales y avisar faltantes/stock mínimo | Sistema | Reserva baja disponible, no físico. Tela bajo pedido y tela del cliente no se reservan. Faltante con fecha requerida → lista de compra. Alerta de mínimo. Avisa si la compra no llega a tiempo. Listo para producir solo con materiales completos + mueble en taller |
-| A03 | Generar órdenes de compra | Admin | Lista sugerida por proveedor: (consumo prom × 2 semanas) + reservado − disponible, sin duplicados. Tela bajo pedido asignada al pedido. Compra urgente |
-| A04 | Confirmar recepción de mercadería | Admin | Verificación en papel con la guía; en sistema "Recibido conforme" o corregir líneas + foto de guía. Suma stock, actualiza costo, asigna tela, libera pedidos |
-| A05 | Planificar el pedido | Admin | Al generarse el pedido: responsable + fecha objetivo; emite OT desde la cotización congelada (OT = desglose de la cotización) |
+| A03 | Generar órdenes de compra | Admin | Lista sugerida por proveedor: (consumo prom × 2 semanas) + reservado − disponible, sin duplicados. Tela bajo pedido asignada al pedido. Compra urgente. *Actualizado 12/11 (decisiones H.2.3): es **Inventario › Reponer**; GARWEB **no emite órdenes de compra** ni le escribe al proveedor: solo anota «Marcar como pedido». Cantidad sugerida = consumo × `inventario.semanas_compra` − disponible − lo que ya viene, nunca menos de lo que falta para el mínimo* |
+| A04 | Confirmar recepción de mercadería | Admin | Verificación en papel con la guía; en sistema "Recibido conforme" o corregir líneas + foto de guía. Suma stock, actualiza costo, asigna tela, libera pedidos. *Actualizado 12/11 (decisiones H.2.3): un solo botón **«Llegó»** suma todo lo pedido; si llegó menos, se corrige en Movimientos («Llegó menos de lo pedido»). Sin foto de la guía. La tela llega asignada a su pedido y no entra al stock* |
+| A05 | Planificar el pedido | Admin | Al generarse el pedido: responsable + fecha objetivo; emite OT desde la cotización congelada (OT = desglose de la cotización). *Actualizado 12/11 (decisiones H.3.2): **sin responsable**; la fecha para terminar sale del parámetro «Plazo estándar para terminar un pedido» (14 días)* |
 | A06 | Registrar retiro de materiales | Tapicero | Por partes; baja físico al instante y libera reserva; nombre y hora; solo materiales de sus órdenes; exceso = consumo adicional → aviso al Admin; devoluciones; insumos de proceso se descuentan al cierre |
 | A07 | Registrar avance, mermas y daño oculto | Tapicero | Iniciar/pausar (motivo)/reanudar; ✓ actividades + horas reales; merma útil → retazo costo 0; merma no útil → pérdida con causa; consumo adicional e insumos de proceso NO son merma; avisa tela dañada (Admin compra urgente); daño oculto con foto → pausa + V2; terminar y devolver sobrante |
 | A08 | Cerrar y evaluar la orden | Admin / Sistema | Lista final de piezas (= lista de empaque); descuenta insumos de proceso; cotizado vs ejecutado (separar diferencia por cantidad y por precio) y margen real vs esperado; diferencia repetida → "revisar plantilla"; merma repetida → "alerta de calidad"; pedido → Terminado |
@@ -174,7 +181,7 @@ El historial **se arma solo** con lo registrado en los otros módulos.
 |---|---|---|---|
 | H01 | Registrar cliente | Cliente / Admin | Persona o empresa; sin duplicados (documento o correo); crea `usuario` rol Cliente; no se guarda nuevo/recurrente |
 | H02 | Actualizar o desactivar cliente | Cliente / Admin | Varias direcciones (una principal); expediente del cliente; desactivar, nunca borrar |
-| H03 | Adjuntar evidencias y archivar pedido | Admin | Foto mueble terminado + foto orden firmada; sin ellas no se archiva |
+| H03 | Adjuntar evidencias y archivar pedido | Admin | Foto mueble terminado + foto orden firmada; sin ellas no se archiva. *Por revisar (15/11): la «orden firmada» en papel ya no existe; la constancia de lo que aceptó el cliente llega por correo y queda en su cuenta (decisiones L.2.5). Falta definir qué reemplaza esa foto* |
 | H04 | Buscar trabajos | Admin | Una sola barra (cliente, teléfono, mueble, tela + fecha), miniaturas, **< 15 s** (usar índices / búsqueda de texto de PostgreSQL) |
 | H05 | Ver ficha y repetir trabajo | Admin / Cliente | Antes/después, tela, especificaciones, versiones; "Repetir trabajo" = nueva solicitud precargada con precios de hoy |
 | H06 | Consultar mis pedidos anteriores | Cliente | Nunca costos ni márgenes; comprobantes descargables |
@@ -197,6 +204,10 @@ Parada = una visita (recojo, entrega, recojo/entrega por reclamo). Salida = reco
 ### Seguridad y Administración (transversal) — 7
 S01 Iniciar y cerrar sesión (contraseña con bcrypt, usuarios inactivos no entran, bloqueo tras intentos fallidos) · S02 Recuperar contraseña (enlace por correo con caducidad) · S03 Gestionar usuarios (desactivar, no borrar) · S04 Asignar roles y permisos (Administrador, Tapicero, Conductor, Cliente) · S05 Configurar parámetros (con historial; aplica solo hacia adelante) · S06 Consultar auditoría (`bitacora` filtrable) · S07 Consultar panel de indicadores (calculados, nadie los digita).
 
+*Actualizado 10–15/11:*
+- **S04** queda como «asignar un rol a cada usuario»: los roles y sus permisos son fijos y no hay pestaña «Roles y permisos» (decisiones D.1.9);
+- **S07**: el asesor pidió un **panel operacional del día** (A1, «lo que pasa hoy») **sin** los indicadores de la tesis, y **Estadísticas mensuales aparte** (A21) (decisiones C.7). Los indicadores de la tesis no se muestran en pantalla.
+
 Pantallas de apoyo (no son CU): W1 Inicio (servicios, trabajos, telas, FAQ) y W11 Notificaciones.
 
 ## 8. Pantallas del prototipo
@@ -207,9 +218,17 @@ Pantallas de apoyo (no son CU): W1 Inicio (servicios, trabajos, telas, FAQ) y W1
 - Tapicero (T, PWA tablet): T1 Mis órdenes · T2 Orden de trabajo · T3 Terminar
 - Conductor (D, PWA sin conexión): D1 Hoja de ruta · D1b Mapa · D2 Carga · D2b Bloqueo · D3 Recojo · D4 Entrega · D5 Cierre
 
+*Actualizado 15/11:*
+- A10 Compras ya no existe (es Inventario › Reponer);
+- la lista de A4 Cotizaciones se unió a A3, cuyo menú se llama «Solicitudes y cotizaciones» (decisiones C.8);
+- A20 queda con Usuarios y Registro de actividad (decisiones D.1.9);
+- el Inventario tiene 6 pestañas: Stock, Telas, Reponer, Movimientos, Proveedores y Conteo (decisiones H.2).
+
 Diseño: paleta azul (primario #2563EB, navy #0A1630, acento #38BDF8, fondo #EFF6FF), Plus Jakarta Sans + Inter, iconos Lucide, chips de estado con texto e icono, áreas táctiles ≥ 56 px en tablet, contraste AA.
 
 ## 9. Modelo de datos core (PostgreSQL en Supabase, 51 tablas)
+
+> **Actualizado 15/11:** este es el diagrama CORE v1 (07/10), el modelo **planificado**. El modelo **real** del sistema es `backend/prisma/schema.prisma` (39 tablas, 24 migraciones), que ya incluye, entre otras: `cambio_correo`, `parametro_historial`, `tipo_mueble_parte`, `solicitud_mueble`, `solicitud_tela`, `pedido`, `reserva_material`, `encargo_tela`, `compra`, `compra_linea`, `maquina`, `plantilla*`, `cotizacion_mueble`, `cotizacion_tela`, `pago` y `recojo`. Para la tesis (modelamiento de datos) usar el `schema.prisma`; lo de Producción, Historial y Despacho de abajo sigue siendo diseño, porque aún no se programa.
 
 Convenciones: tablas y columnas en **snake_case** y en español (como en el diagrama); PK `id`; FK `<tabla>_id`; auditoría con `*_por` (FK a usuario) y `fecha_*` (`timestamptz`); montos `numeric(10,2)`; estados como enum o `varchar` con `CHECK`.
 
