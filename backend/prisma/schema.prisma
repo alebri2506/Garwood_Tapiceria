@@ -64,6 +64,8 @@ model Usuario {
   cotizaciones           Cotizacion[]           @relation("CotizacionCreadaPor")
   cotizacionesPublicadas Cotizacion[]           @relation("CotizacionPublicadaPor")
   pagosRegistrados       Pago[]                 @relation("PagoRegistradoPor")
+  pagosRevisados         Pago[]                 @relation("PagoRevisadoPor")
+  pagosAnulados          Pago[]                 @relation("PagoAnuladoPor")
   recojosRegistrados     Recojo[]
 
   @@map("usuario")
@@ -807,21 +809,42 @@ model CotizacionTela {
 // Por ahora solo el adelanto cobrado en la cita o en la visita (decisión de Alejandro, 14/11): el Administrador lo cobra
 // y queda confirmado al registrarlo. El módulo de Pagos (A5/W5) usará esta misma tabla. Nada se borra: se anula (RG-03).
 model Pago {
-  id            Int        @id @default(autoincrement())
-  cotizacionId  Int        @map("cotizacion_id")
-  pedidoId      Int?       @map("pedido_id")
-  concepto      String     @db.VarChar(20) // adelanto | saldo
-  monto         Decimal    @db.Decimal(10, 2)
-  metodo        String     @db.VarChar(15) // efectivo | tarjeta | zelle | cheque | transferencia
-  origen        String     @db.VarChar(15) // visita | local
-  estado        String     @default("Confirmado") @db.VarChar(15) // Por confirmar | Confirmado | Rechazado | Anulado
-  registradoPor Int        @map("registrado_por")
-  fecha         DateTime   @default(now()) @db.Timestamptz
-  cotizacion    Cotizacion @relation(fields: [cotizacionId], references: [id])
-  pedido        Pedido?    @relation(fields: [pedidoId], references: [id])
-  registrador   Usuario    @relation("PagoRegistradoPor", fields: [registradoPor], references: [id])
+  id              Int        @id @default(autoincrement())
+  cotizacionId    Int        @map("cotizacion_id")
+  pedidoId        Int?       @map("pedido_id")
+  concepto        String     @db.VarChar(20) // adelanto | saldo
+  monto           Decimal    @db.Decimal(10, 2)
+  metodo          String     @db.VarChar(15) // efectivo | tarjeta | zelle | cheque | transferencia
+  origen          String     @db.VarChar(15) // visita | local | pasarela
+  // Id del pago en la pasarela (Stripe): único, para no registrar dos veces el mismo pago.
+  referencia      String?    @unique @db.VarChar(80)
+  estado          String     @default("Confirmado") @db.VarChar(15) // Por confirmar | Confirmado | Rechazado | Anulado
+  registradoPor   Int        @map("registrado_por")
+  fecha           DateTime   @default(now()) @db.Timestamptz
+  // Módulo de Pagos (A5 · W5): n.º de cheque o código de Zelle; captura que sube el cliente; recibo REC-0000 (C13).
+  detalle         String?    @db.VarChar(120)
+  comprobanteRuta String?    @map("comprobante_ruta") @db.VarChar(200)
+  comprobanteMime String?    @map("comprobante_mime") @db.VarChar(60)
+  recibo          String?    @unique @db.VarChar(12)
+  // Confirmar o rechazar un pago «Por confirmar»; anular uno manual ya confirmado. Siempre con quién y cuándo (RG-02).
+  revisadoPor     Int?       @map("revisado_por")
+  fechaRevision   DateTime?  @map("fecha_revision") @db.Timestamptz
+  motivoRechazo   String?    @map("motivo_rechazo") @db.VarChar(200)
+  anuladoPor      Int?       @map("anulado_por")
+  fechaAnulacion  DateTime?  @map("fecha_anulacion") @db.Timestamptz
+  motivoAnulacion String?    @map("motivo_anulacion") @db.VarChar(200)
+  // El comprobante nuevo reemplaza al rechazado.
+  reemplazaId     Int?       @unique @map("reemplaza_id")
+  reemplaza       Pago?      @relation("PagoReemplazo", fields: [reemplazaId], references: [id])
+  reemplazadoPor  Pago?      @relation("PagoReemplazo")
+  cotizacion      Cotizacion @relation(fields: [cotizacionId], references: [id])
+  pedido          Pedido?    @relation(fields: [pedidoId], references: [id])
+  registrador     Usuario    @relation("PagoRegistradoPor", fields: [registradoPor], references: [id])
+  revisor         Usuario?   @relation("PagoRevisadoPor", fields: [revisadoPor], references: [id])
+  anulador        Usuario?   @relation("PagoAnuladoPor", fields: [anuladoPor], references: [id])
 
   @@index([pedidoId])
+  @@index([estado])
   @@map("pago")
 }
 

@@ -337,7 +337,7 @@ export function PasoRespuesta({ a, set, c }: Props) {
             </>
           )}
 
-          <button type="button" className="gw-btn gw-btn-primary gw-btn-lg"
+          <button type="button" className="gw-btn gw-btn-primary at-pay-cta"
             onClick={() => set({ resultado: sinAdelanto || a.pagaAhora ? 'pagado' : 'despues' })}>
             {sinAdelanto ? 'Generar orden (adelanto 0 %)'
               : a.pagaAhora ? `Generar orden y cobrar ${dolares(c.adelanto)} ${COMO_PAGA[a.metodo]}`

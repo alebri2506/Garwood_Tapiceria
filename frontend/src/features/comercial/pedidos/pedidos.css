@@ -285,3 +285,10 @@
   .w6c-res { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .w6c-dh h2 { font-size: 20px; }
 }
+
+/* W6a con datos reales: qué se hará con cada mueble y sus fotos. */
+.ph2 img { width: 100%; height: 84px; border-radius: 12px; object-fit: cover; display: block; background: var(--surface-sunken); }
+.mp-tareas { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 14px; }
+.mp-tareas ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.mp-tareas li { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-muted); font-size: 13.5px; }
+.mp-tareas li svg { color: var(--success-ink); flex: none; }

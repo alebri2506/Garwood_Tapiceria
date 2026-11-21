@@ -52,7 +52,13 @@ tr.co-old td { color: var(--ink-muted); }
 .co-ficha { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; padding: 20px; }
 .co-datos { display: flex; gap: 20px 28px; flex-wrap: wrap; margin-left: auto; font-size: 13px; }
 
-.co-acts { min-width: 760px; }
+/* table-layout fixed: el navegador respeta los anchos de cada columna. Con «auto», el selector de materiales (cuyas
+   opciones son largas) le quitaba espacio a la columna Máquina y su nombre se cortaba. */
+.co-acts { min-width: 1100px; table-layout: fixed; }
+/* Anchos fijos: la máquina se lee completa y los materiales no se comen la tabla. */
+.co-acts .co-th-maq { width: 200px; }
+.co-acts .co-th-mat { width: 380px; }
+.co-acts select.co-cell { width: 100%; text-overflow: ellipsis; }
 .co-cell { width: 100%; min-height: 38px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px/1 var(--font-sans); font-variant-numeric: tabular-nums; }
 .co-cell[type="number"] { text-align: right; padding-right: 6px; }
 .co-cell:focus { outline: none; border-color: var(--primary); box-shadow: var(--focus-ring); }
@@ -180,3 +186,22 @@ input.co-ydi { width: 72px; text-align: center; font: 700 16px/1 var(--font-sans
 .co-warn-txt { font-size: 12.5px; color: var(--warning-ink); }
 .co-adel { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid var(--line); }
 .co-errs { margin: 6px 0 0; padding-left: 18px; font-size: 13px; }
+
+/* Materiales de una actividad agregada a mano: nombre, cantidad, unidad y quitar; abajo el selector para agregar. */
+.co-mats { display: flex; flex-direction: column; gap: 6px; }
+/* Cuatro columnas fijas en todas las filas: nombre | cantidad | unidad | quitar (alineadas como una tabla). */
+.co-mat-ed { display: grid; grid-template-columns: minmax(0, 1fr) 68px 62px 24px; align-items: center; gap: 8px; font-size: 13px; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+.co-mat-nom { font-weight: 500; line-height: 17px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.co-mat-ed small { color: var(--ink-muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.co-mat-ed .co-cell { min-height: 32px; }
+.co-mats select.co-cell { min-height: 34px; color: var(--primary); font-weight: 600; }
+
+/* Yardas en la cita o la visita: se definen en el paso Telas; en la cotización solo se ven. */
+.co-ydro { justify-self: end; font-weight: 700; font-size: 15px; padding: 6px 12px; border-radius: 9999px; background: var(--surface-sunken); border: 1px solid var(--line); }
+
+/* Revisión antes de publicar: varias telas a comprar en lista (nombre a la izquierda, yardas a la derecha). */
+.co-ck-lista { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.co-ck-lista li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 10px; border-bottom: 1px dashed var(--line); color: var(--ink); }
+.co-ck-lista li:last-child { border-bottom: 0; }
+.co-ck-lista b { white-space: nowrap; }
+.co-ck-nota { display: block; margin-top: 4px; color: var(--ink-muted); font-size: 12.5px; }

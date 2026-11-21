@@ -32,7 +32,7 @@
 .ag-ap.ag-cruce span{color:#B45309;font-weight:600}
 /* En atención: empezó y todavía no se registró la respuesta del cliente. */
 .ag-ap.ag-curso{--c:#0891B2;background:color-mix(in srgb,#0891B2 8%,var(--surface))}
-.ag-ap.ag-rec{--c:#D97706;background:color-mix(in srgb,#D97706 8%,var(--surface));cursor:default}
+.ag-ap.ag-rec{--c:#D97706;background:color-mix(in srgb,#D97706 8%,var(--surface));cursor:pointer}
 .ag-ap.ag-pick{--c:var(--warning-500);background:color-mix(in srgb,var(--warning-500) 10%,var(--surface))}
 .ag-ap.ag-sel{box-shadow:0 0 0 2px var(--primary),var(--shadow-md)}
 .ag-free{width:100%;height:100%;border:0;border-radius:10px;background:transparent;color:transparent;font:600 12.5px/1 var(--font-sans);cursor:pointer;transition:background 160ms var(--ease-out,ease),color 160ms var(--ease-out,ease)}
@@ -163,3 +163,8 @@
 .ag-blk.ag-blk-on { outline: 2px solid #334155; outline-offset: -2px; }
 /* W2 · recojo preferido reservado (1 hora) */
 .ag-ap.ag-rec { --c: var(--warning-500); background: color-mix(in srgb, var(--warning-500) 10%, var(--surface)); padding-right: 28px; }
+
+/* Recojo seleccionado (solo vista): el mismo panel que una cita, con el color del recojo. */
+.ag-ap.ag-rec:disabled { cursor: default; opacity: 1; }
+.ag-det-rec { border-top: 4px solid #D97706; }
+.ag-who .ag-av.ag-av-rec { background: color-mix(in srgb, #D97706 14%, var(--surface)); color: #B45309; }

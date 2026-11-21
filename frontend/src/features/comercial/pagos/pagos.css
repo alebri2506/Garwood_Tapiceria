@@ -46,6 +46,8 @@
 .pa-rcp > span:first-child { width: 44px; height: 52px; border-radius: 8px; background: linear-gradient(160deg, #F4F8FE, #DCE8FB); border: 1px solid var(--line); display: grid; place-items: center; color: var(--primary); flex: none; }
 .pa-rcp b { display: block; font-size: 13.5px; }
 .pa-rcp small { color: var(--ink-muted); }
+button.pa-rcp { width: 100%; text-align: left; font: inherit; cursor: pointer; }
+button.pa-rcp:hover { border-color: var(--primary); }
 .pa-prev { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: var(--primary-soft); font-size: 14px; }
 .pa-prev b { font: 800 18px/1 var(--font-display); }
 .pa-acc { gap: 8px; flex-wrap: wrap; }
@@ -118,3 +120,8 @@
 .w5-bank { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-radius: 12px; border: 1.5px solid var(--line); font-size: 14px; font-weight: 600; background: var(--surface); cursor: pointer; width: 100%; font-family: inherit; color: var(--ink); }
 .w5-bank.on { border-color: var(--primary); background: var(--primary-soft); }
 @media (max-width: 640px) { .w5-grid.w5-three { grid-template-columns: 1fr 1fr; } }
+
+/* Registrar pago desde la fila de un pedido: el pedido ya viene elegido (no se muestra el desplegable). */
+.pa-fijo { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 12px; background: var(--surface-sunken); border: 1px solid var(--line); }
+.pa-fijo b { font-size: 15px; }
+.pa-fijo small { color: var(--ink-muted); font-size: 12.5px; line-height: 18px; }

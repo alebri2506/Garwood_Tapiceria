@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useSearchParams } from 'react-router-dom';
+import { API_URL } from '../../../shared/api/http';
 import { Icon } from '../../../shared/ui/Icon';
+import { PagosClienteConectada } from './PagosClienteConectada';
 import { StatusChip } from '../../../shared/ui/StatusChip';
 import { Toast } from '../../../shared/ui/Toast';
 import { UploadZone } from '../../../shared/ui/UploadZone';
@@ -38,9 +40,14 @@ function conResultado(p: PagoCliente, r: Resultado | undefined): PagoCliente {
 /**
  * W5 Pagos del pedido (CU-C12, C13 · diseño del 14/11): el total, lo pagado y el saldo; pagar en línea por la pasarela
  * (se confirma sola) o informar un pago por Zelle o cheque (el taller lo confirma); recibos y comprobante final.
- * El cliente nunca ve costos ni márgenes (RG-08). Solo diseño: datos de ejemplo, todavía no guarda nada.
+ * El cliente nunca ve costos ni márgenes (RG-08). Sin backend se ve este ejemplo del diseño; con backend,
+ * PagosClienteConectada.
  */
 export function PagosClientePage() {
+  return API_URL ? <PagosClienteConectada /> : <PagosClienteEjemplo />;
+}
+
+function PagosClienteEjemplo() {
   const [params] = useSearchParams();
   const cuenta = CUENTAS_CLIENTE.find((c) => c.pedido === params.get('pedido')) ?? CUENTAS_CLIENTE[0]!;
   const [resultados, setResultados] = useState<Record<string, Resultado>>({});

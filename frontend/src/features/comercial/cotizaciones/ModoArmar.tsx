@@ -19,7 +19,8 @@ const fechaLarga = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateStri
 /** Reglas generales que el cliente ve siempre en su cotización (no se escriben en las observaciones). */
 const CONDICIONES_FIJAS = 'La tela se pide cuando paga el adelanto. Al recibir el mueble lo revisamos antes de empezar: si encontramos algo distinto a lo cotizado, no lo tocamos y le enviamos una recotización para que usted decida.';
 
-type Revision = { tono: 'ok' | 'warn' | 'falta'; texto: string };
+/** `lista`: detalle en filas (p. ej. varias telas a comprar); `nota`: una línea debajo de la lista. */
+type Revision = { tono: 'ok' | 'warn' | 'falta'; texto: string; lista?: { l: string; v: string }[]; nota?: string };
 interface ActForm extends ActividadArmada { key: number; nueva?: boolean }
 /** Lo que el Administrador arma en cada mueble. */
 /** `propuesto` null = sigue al precio sugerido hasta que el Administrador escriba otro (RG-01). */
@@ -172,9 +173,18 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
     }
     if (!forms[i]!.actividades.some((y) => y.horasPersona > 0)) revision.push({ tono: 'falta', texto: `${pre}agregue al menos una actividad con horas` });
     if (forms[i]!.actividades.some((y) => !y.nombre.trim())) revision.push({ tono: 'falta', texto: `${pre}hay una actividad sin nombre` });
+    if (forms[i]!.actividades.some((y) => y.materiales.some((z) => !(z.cantidad > 0)))) revision.push({ tono: 'falta', texto: `${pre}hay un material sin cantidad` });
     if (propuestoDe(i) <= 0) revision.push({ tono: 'falta', texto: `${pre}indique el precio propuesto` });
   });
-  if (telasCompra.length) revision.push({ tono: 'warn', texto: `Telas a comprar: ${telasCompra.map(([n, yd]) => `${n} (${yd} yd)`).join(' y ')}. No bloquea: ${telasCompra.length > 1 ? 'se piden' : 'se pide'} al pagar el adelanto` });
+  // Una tela: en una línea. Varias: en lista (nombre y yardas), más fácil de leer.
+  if (telasCompra.length === 1) revision.push({ tono: 'warn', texto: `Tela a comprar: ${telasCompra[0]![0]} (${telasCompra[0]![1]} yd). No bloquea: se pide al pagar el adelanto` });
+  else if (telasCompra.length > 1) {
+    revision.push({
+      tono: 'warn', texto: `Telas a comprar (${telasCompra.length})`,
+      lista: telasCompra.map(([n, yd]) => ({ l: n, v: `${yd} yd` })),
+      nota: 'No bloquea: se piden al pagar el adelanto.',
+    });
+  }
   revision.push({ tono: 'ok', texto: `Vigencia: ${a.condiciones.vigenciaDias} días desde que se publica` });
   if (varios) revision.push(revisados === muebles.length ? { tono: 'ok', texto: `Precio revisado en los ${muebles.length} muebles` } : { tono: 'falta', texto: `Precio revisado en ${revisados} de ${muebles.length} muebles: revise los que faltan` });
   if (errorAdelanto) revision.push({ tono: 'falta', texto: `Adelanto: ${errorAdelanto}` });
@@ -297,7 +307,7 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
                   const totalCosto = m.tela.telas.reduce((t, tl) => t + (f.yardas[tl.materialId] ?? 0) * (tl.precio ?? 0), 0);
                   return (
                     <>
-                      <span className="muted" style={{ fontSize: 12.5 }}>{m.tela.nota.replace(/ · la pone el taller$/, '')} · {m.partes?.length ? 'distintas telas por partes' : m.tela.telas.length > 1 ? `${m.tela.telas.length} telas` : 'una tela para todo el mueble'}. Las yardas las mide el taller.</span>
+                      <span className="muted" style={{ fontSize: 12.5 }}>{m.tela.nota.replace(/ · la pone el taller$/, '')} · {m.partes?.length ? 'distintas telas por partes' : m.tela.telas.length > 1 ? `${m.tela.telas.length} telas` : 'una tela para todo el mueble'}. {enVisita ? 'Las yardas se definieron en el paso Telas.' : 'Las yardas las mide el taller.'}</span>
                       <div className="co-tl">
                         {m.tela.telas.map((tl) => {
                           const yd = f.yardas[tl.materialId] ?? 0;
@@ -307,12 +317,17 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
                                 <b>{tl.nombre}</b>
                                 <small>{enPartes(tl.materialId) || (m.tela.telas.length === 1 ? 'Todo el mueble' : '—')} · {tl.precio == null ? 'sin precio' : `$${tl.precio}/yd`}</small>
                               </div>
+                              {enVisita ? (
+                                // En la cita o la visita las yardas se definen en el paso Telas: aquí solo se ven.
+                                <span className="num co-ydro" title="Se cambian en el paso Telas">{yd} yd</span>
+                              ) : (
                               <div className="co-ydrow co-ydsm" role="group" aria-label={`Yardas de ${tl.nombre}`}>
                                 <button type="button" className="co-ydb" aria-label="Media yarda menos" disabled={yd <= 0} onClick={() => cambiarForm((x) => ({ yardas: { ...x.yardas, [tl.materialId]: Math.max(0, yd - 0.5) } }))}>−</button>
                                 <input className="co-ydi num" type="number" min={0} step={0.5} value={yd} aria-label={`Yardas de ${tl.nombre}`} onChange={(e) => cambiarForm((x) => ({ yardas: { ...x.yardas, [tl.materialId]: numero(e.target.value) } }))} />
                                 <span className="muted">yd</span>
                                 <button type="button" className="co-ydb" aria-label="Media yarda más" onClick={() => cambiarForm((x) => ({ yardas: { ...x.yardas, [tl.materialId]: yd + 0.5 } }))}>+</button>
                               </div>
+                              )}
                               <b className="num co-tlcost">{tl.precio == null ? '—' : dolares(yd * tl.precio)}</b>
                             </div>
                           );
@@ -361,7 +376,7 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
             </div>
             <div className="tbl-box" style={{ boxShadow: 'none' }}>
               <table className="t co-acts">
-                <thead><tr><th style={{ width: '30%' }}>Actividad</th><th className="r" style={{ width: 92 }}>Horas persona</th><th>Máquina</th><th className="r" style={{ width: 92 }}>Horas máq.</th><th>Materiales</th><th style={{ width: 44 }}><span className="co-sr">Quitar</span></th></tr></thead>
+                <thead><tr><th style={{ width: '24%' }}>Actividad</th><th className="r" style={{ width: 92 }}>Horas persona</th><th className="co-th-maq">Máquina</th><th className="r" style={{ width: 92 }}>Horas máq.</th><th className="co-th-mat">Materiales</th><th style={{ width: 44 }}><span className="co-sr">Quitar</span></th></tr></thead>
                 <tbody>
                   {f.actividades.length === 0 && <tr><td colSpan={6} className="muted">Sin actividades todavía.</td></tr>}
                   {f.actividades.map((x) => (
@@ -372,7 +387,7 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
                       </td>
                       <td><input className="co-cell" type="number" min={0} step={0.5} value={x.horasPersona} aria-label={`Horas persona: ${x.nombre || 'actividad nueva'}`} onChange={(e) => cambiarAct(x.key, { horasPersona: numero(e.target.value) })} /></td>
                       <td className="muted">{x.nueva
-                        ? <select className="co-cell" value={x.maquinaId ?? ''} aria-label="Máquina" onChange={(e) => {
+                        ? <select className="co-cell" value={x.maquinaId ?? ''} aria-label="Máquina" title={x.maquina ?? 'Sin máquina'} onChange={(e) => {
                             const q = a.catalogo.maquinas.find((y) => y.id === Number(e.target.value));
                             cambiarAct(x.key, q ? { maquinaId: q.id, maquina: q.nombre, tarifaMaquina: q.tarifaHora } : { maquinaId: null, maquina: null, tarifaMaquina: 0, horasMaquina: 0 });
                           }}>
@@ -386,8 +401,35 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
                         : <input className="co-cell" type="number" min={0} step={0.5} value={x.horasMaquina} aria-label={`Horas máquina: ${x.nombre}`} onChange={(e) => cambiarAct(x.key, { horasMaquina: numero(e.target.value) })} />}
                       </td>
                       <td>
-                        {x.materiales.length === 0 && <span className="muted">—</span>}
-                        {x.materiales.map((y) => <span key={y.materialId} className="co-mat">{y.nombre} · {y.cantidad} {y.unidad}</span>)}
+                        {x.nueva && editable ? (
+                          // Actividad agregada a mano: sus materiales de stock se eligen aquí (la tela va aparte, con sus yardas).
+                          // Las de la plantilla conservan los suyos: las cantidades solo cambian si cambia el trabajo (CU-C08).
+                          <div className="co-mats">
+                            {x.materiales.map((y) => (
+                              <div key={y.materialId} className="co-mat-ed">
+                                <span className="co-mat-nom" title={y.nombre}>{y.nombre}</span>
+                                <input className="co-cell" type="number" min={0} step={0.25} value={y.cantidad} aria-label={`Cantidad de ${y.nombre} (${y.unidad})`}
+                                  onChange={(e) => cambiarAct(x.key, { materiales: x.materiales.map((z) => (z.materialId === y.materialId ? { ...z, cantidad: numero(e.target.value) } : z)) })} />
+                                <small>{y.unidad}</small>
+                                <button type="button" className="co-x" aria-label={`Quitar ${y.nombre}`} onClick={() => cambiarAct(x.key, { materiales: x.materiales.filter((z) => z.materialId !== y.materialId) })}><Icon name="x" size={14} /></button>
+                              </div>
+                            ))}
+                            <select className="co-cell" value="" aria-label={`Agregar material a ${x.nombre || 'la actividad nueva'}`} onChange={(e) => {
+                              const q = a.catalogo.materiales.find((y) => y.id === Number(e.target.value));
+                              if (q) cambiarAct(x.key, { materiales: [...x.materiales, { materialId: q.id, nombre: q.nombre, unidad: q.unidad, precio: q.precio, cantidad: 1 }] });
+                            }}>
+                              <option value="">+ Agregar material</option>
+                              {a.catalogo.materiales.filter((y) => !x.materiales.some((z) => z.materialId === y.id)).map((y) => (
+                                <option key={y.id} value={y.id}>{y.nombre} · {y.unidad}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : (
+                          <>
+                            {x.materiales.length === 0 && <span className="muted">—</span>}
+                            {x.materiales.map((y) => <span key={y.materialId} className="co-mat">{y.nombre} · {y.cantidad} {y.unidad}</span>)}
+                          </>
+                        )}
                       </td>
                       <td>
                         {editable && <button type="button" className="co-x" aria-label={`Quitar actividad ${x.nombre || 'nueva'}`} onClick={() => cambiarForm((z) => ({ actividades: z.actividades.filter((y) => y.key !== x.key) }))}><Icon name="x" size={16} /></button>}
@@ -502,7 +544,14 @@ export function Armar({ armado, onRecargar, onResponder, enVisita }: { armado: A
               <span className={lista ? 'pill co-pill-ok' : 'pill co-pill-warn'}>{lista ? 'Lista' : varios && revisados < muebles.length ? 'Falta revisar' : 'Falta completar'}</span>
             </div>
             {revision.map((r) => (
-              <div key={r.texto} className={`co-ck co-ck-${r.tono}`}><Icon name={r.tono === 'ok' ? 'check' : 'alert'} size={16} /><span>{r.texto}</span></div>
+              <div key={r.texto} className={`co-ck co-ck-${r.tono}`}>
+                <Icon name={r.tono === 'ok' ? 'check' : 'alert'} size={16} />
+                <div>
+                  <span>{r.texto}</span>
+                  {r.lista && <ul className="co-ck-lista">{r.lista.map((x) => <li key={x.l}><span>{x.l}</span><b className="num">{x.v}</b></li>)}</ul>}
+                  {r.nota && <small className="co-ck-nota">{r.nota}</small>}
+                </div>
+              </div>
             ))}
           </section>
         )}

@@ -18,8 +18,19 @@ export function GrillaRecojo({ disp, elegido, onElegir }: { disp: Disponibilidad
     if (ultima && lunesDe(ultima[0]!.fecha) === lunesDe(d.fecha)) ultima.push(d); else semanas.push([d]);
   }
   const primeraLibre = Math.max(0, semanas.findIndex((w) => w.some((d) => d.horas.some((h) => h.estado === 'libre'))));
-  const sem = semanas[Math.min(semana + primeraLibre, semanas.length - 1)] ?? [];
-  const horas = [...new Set(sem.flatMap((d) => d.horas.map((h) => h.inicio)))].sort();
+  const real = semanas[Math.min(semana + primeraLibre, semanas.length - 1)] ?? [];
+  const horas = [...new Set(real.flatMap((d) => d.horas.map((h) => h.inicio)))].sort();
+  // Siempre la semana completa (lunes a sábado): los días que ya pasaron, o que quedan fuera del plazo, se ven con «—»
+  // para que la grilla no quede con una o dos columnas estiradas (p. ej. un sábado solo queda ese día).
+  const sem: Disponibilidad['dias'] = (() => {
+    if (!real.length) return real;
+    const lunes = deIso(real[0]!.fecha); lunes.setDate(lunes.getDate() - ((lunes.getDay() + 6) % 7));
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(lunes); d.setDate(lunes.getDate() + i);
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return real.find((x) => x.fecha === iso) ?? { fecha: iso, horas: horas.map((h) => ({ inicio: h, fin: h, estado: 'pasada' as const })) };
+    });
+  })();
 
   return (
     <div className="at-vmag">

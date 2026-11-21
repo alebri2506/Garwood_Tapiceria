@@ -196,6 +196,8 @@ describe('CU-C04 visita a domicilio', () => {
     const otra = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: b.body.codigo, tipo: 'domicilio', ...hora, direccion: VISITA });
     expect(otra.status).toBe(409);
 
+    // Se atiende el día de la visita (decisiones L.2.11): se lleva la visita a hoy para marcarla.
+    await prisma.cita.update({ where: { id: c.body.id }, data: { fechaHora: instanteNY(hoyNegocio(), hora.hora) } });
     const at = await request(app).post(`/api/citas/${c.body.id}/resultado`).set(auth(admin)).send({ resultado: 'atendida' });
     expect(at.body.cita).toBe('Atendida');
     expect((await prisma.solicitud.findUniqueOrThrow({ where: { codigo: a.body.codigo } })).estado).toBe('Atendida');
@@ -260,11 +262,12 @@ describe('A2 · agenda del Administrador', () => {
       const d = await request(app).get(`/api/citas/disponibilidad?tipo=local&desde=${t.fecha}&dias=1`).set(auth(cliente));
       return d.body.dias[0].turnos.find((x: { hora: string }) => x.hora === t.hora).libre as boolean;
     };
-    // El Administrador empieza la cita antes de su hora: sigue en su agenda, así que el turno no vuelve a ofrecerse.
+    // Una cita atendida antes de su hora sigue en la agenda, así que el turno no vuelve a ofrecerse. (Se marca directo:
+    // por la regla L.2.11 solo se atiende el día de la cita, y el primer turno libre puede ser otro día.)
     const s = await enEspera('local');
     const t = await primerLibre('local');
     const c = await request(app).post('/api/citas').set(auth(admin)).send({ solicitud: s.body.codigo, tipo: 'local', ...t });
-    expect((await request(app).post(`/api/citas/${c.body.id}/resultado`).set(auth(admin)).send({ resultado: 'atendida' })).body.cita).toBe('Atendida');
+    await prisma.cita.update({ where: { id: c.body.id }, data: { estado: 'Atendida' } });
     expect(await libreEn(t)).toBe(false);
 
     // Un bloqueo de 15 minutos a mitad del turno lo deja sin ofrecer (antes solo contaba la hora de inicio).

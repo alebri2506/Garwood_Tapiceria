@@ -204,8 +204,13 @@ function ResumenAtencion({ at, armado, paso, enCurso }: { at: Atencion; armado: 
 }
 
 // ---------------------------------------------------------------- Paso 1 · Recibir y revisar
+/** Hoy en New York (YYYY-MM-DD), el mismo día que usa el backend. */
+const hoyNY = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+
 function PasoRevisar({ at, lugar, onEmpezar, onNoEstaba, ocupado, aside }: { aside: ReactNode; at: Atencion; lugar: 'local' | 'domicilio'; onEmpezar(): void; onNoEstaba(): void; ocupado: boolean }) {
   const [confirmar, setConfirmar] = useState(false);
+  // Decisiones L.2.11: una cita «Programada» solo se empieza el día que le corresponde.
+  const otroDia = at.cita?.estado === 'Programada' && at.cita.fecha !== hoyNY() ? at.cita.fecha : null;
   const t = TEXTOS[lugar];
   const tela = at.solicitud.telaOpcion === 'trae' ? 'La trae el cliente' : at.solicitud.telaOpcion === 'sin' ? 'No lleva tela' : at.solicitud.telaOpcion === 'catalogo' ? 'La eligió en línea' : t.tela;
   return (
@@ -229,6 +234,13 @@ function PasoRevisar({ at, lugar, onEmpezar, onNoEstaba, ocupado, aside }: { asi
             );
           })}
         </section>
+        {otroDia && (
+          <Alert tone="info" title={otroDia > hoyNY() ? `${lugar === 'domicilio' ? 'Esta visita' : 'Esta cita'} es para otro día` : 'El día de esta cita ya pasó'}>
+            Solo se atiende el día que le corresponde. {otroDia > hoyNY()
+              ? 'Si el cliente vino hoy, vuelva a la Agenda, use «Reprogramar» y elija un turno de hoy; luego podrá atenderla.'
+              : 'Márquela como inasistencia o reprográmela para hoy desde la Agenda.'} <Link to={`/admin/agenda?cita=${at.cita!.id}&fecha=${otroDia}`}>Ir a la Agenda</Link>
+          </Alert>
+        )}
         <div className="between at-foot">
           {confirmar ? (
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
@@ -239,7 +251,7 @@ function PasoRevisar({ at, lugar, onEmpezar, onNoEstaba, ocupado, aside }: { asi
           ) : at.cita?.estado === 'Programada' ? (
             <button type="button" className="gw-btn gw-btn-ghost" style={{ color: 'var(--danger-ink)' }} onClick={() => setConfirmar(true)}>{t.noAsistio}</button>
           ) : <span />}
-          <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={ocupado} onClick={onEmpezar}>{ocupado ? 'Empezando…' : at.cita?.estado === 'En atención' || at.cita?.estado === 'Atendida' ? 'Seguir: elegir telas' : SIGUIENTE[0]}</button>
+          <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={ocupado || Boolean(otroDia)} title={otroDia ? 'Se atiende el día de la cita' : undefined} onClick={onEmpezar}>{ocupado ? 'Empezando…' : at.cita?.estado === 'En atención' || at.cita?.estado === 'Atendida' ? 'Seguir: elegir telas' : SIGUIENTE[0]}</button>
         </div>
       </div>
       <aside className="aside">{aside}</aside>
@@ -433,10 +445,21 @@ function PasoTraslado({ at, codigo, onListo, onAtras, aside }: { aside: ReactNod
           )}
           {traslado === 'delivery' && (
             <>
-              <div className="grid2" style={{ gap: 16, alignItems: 'start' }}>
-                <CampoDireccion valor={dir} onChange={setDir} guardadas={guardadas} etiqueta="Dirección de recojo y entrega" textoGuardar="Guardarla en la ficha del cliente" />
+              {/* Como W2 y W3b: la dirección a la izquierda (con la ficha de la elegida) y el mapa a la derecha. */}
+              <div className="at-tras">
+                <div className="stack" style={{ gap: 12 }}>
+                  <CampoDireccion valor={dir} onChange={setDir} guardadas={guardadas} etiqueta="Dirección de recojo y entrega" textoGuardar="Guardarla en la ficha del cliente" />
+                  {(guardada || dir.texto.trim().length >= 5) && (
+                    <dl className="at-dir" aria-label="Dirección elegida">
+                      <div><dt><Icon name="map-pin" size={15} /> {guardada ? guardada.etiqueta ?? 'Dirección guardada' : 'Dirección nueva'}</dt><dd>{guardada ? guardada.direccion : dir.texto.trim()}</dd></div>
+                      {(guardada?.referencia || (!guardada && dir.referencia.trim())) && <div><dt><Icon name="info" size={15} /> Referencia</dt><dd>{guardada ? guardada.referencia : dir.referencia.trim()}</dd></div>}
+                      {guardada?.ciudad && <div><dt><Icon name="building" size={15} /> Ciudad</dt><dd>{guardada.ciudad}</dd></div>}
+                      <div><dt><Icon name="truck" size={15} /> Traslado</dt><dd>Recojo y entrega en esta dirección</dd></div>
+                    </dl>
+                  )}
+                </div>
                 {/* Tocar el mapa llena la dirección (como dirección nueva), igual que en W2. */}
-                <MapaUbicacion alto={240} ubicacion={mapa.ubicacion} etiqueta={mapa.etiqueta}
+                <MapaUbicacion alto={280} ubicacion={mapa.ubicacion} etiqueta={mapa.etiqueta}
                   onElegir={(d) => setDir({ ...dir, guardadaId: null, texto: d.texto, ubicacion: d.ubicacion })} />
               </div>
               <div className="at-nota"><Icon name="calendar" size={18} /><span><b>El día del recojo se elige después del adelanto.</b> Si el cliente acepta y paga hoy, lo eligen juntos al final. Si paga después, lo elige desde su cuenta.</span></div>
@@ -539,7 +562,7 @@ function PasoCotizacionYRespuesta({ armado, at, codigo, paso, lugar, onPaso, onR
                       )}
                     </>
                   )}
-                  <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={enviando} onClick={enviar}>
+                  <button type="button" className="gw-btn gw-btn-primary at-pay-cta" disabled={enviando} onClick={enviar}>
                     {enviando ? 'Registrando…' : sinAdelanto ? 'Generar orden (adelanto 0 %)' : pagaAhora ? `Generar orden y cobrar ${dolares(cot.adelanto)} ${METODOS.find((x) => x.id === metodo)!.frase}` : 'Registrar la aceptación · paga después'}
                   </button>
                 </div>

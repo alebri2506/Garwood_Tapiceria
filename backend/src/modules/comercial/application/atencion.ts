@@ -15,7 +15,8 @@ import { diaCerrado, enNY, leerRango, minutosDe, sumarDias, turnoBloqueado, turn
 import { dinero } from '../domain/cotizacion.js';
 import { SERVICIOS } from '../domain/solicitud.js';
 import type { DireccionEntrada } from '../http/solicitud.schemas.js';
-import { bloqueosEntre, choca, ocupacion, reglasAgenda } from './citas.js';
+import { siguienteRecibo } from './recibos.js';
+import { bloqueosEntre, choca, exigirDiaDeCita, ocupacion, reglasAgenda } from './citas.js';
 import { idDireccion, revisarDireccion } from './direcciones.js';
 import { calcular, cargarSolicitud, prepararEscritura, publicarEn, type CotizacionEntrada } from './cotizaciones.js';
 
@@ -47,6 +48,8 @@ export async function empezarAtencion(codigo: string, q: Quien) {
   if (!cita) throw error('Esta solicitud no tiene una cita ni una visita para atender.', 409);
   if (cita.estado === 'En atención' || (cita.estado === 'Atendida' && s.estado !== 'En espera de cita')) return { cita: cita.estado, solicitud: s.estado };
   if (cita.estado !== 'Programada') throw error('Esta cita ya tiene un resultado.', 409);
+  // Solo el día de la cita. Una ya «En atención» se retoma cualquier día (arriba): empezó el día que correspondía.
+  exigirDiaDeCita(cita);
   await prisma.$transaction(async (tx) => {
     await tx.cita.update({ where: { id: cita.id }, data: { estado: 'En atención' } });
     if (s.estado === 'En espera de cita') await tx.solicitud.update({ where: { id: s.id }, data: { estado: 'En atención' } });
@@ -187,7 +190,7 @@ export async function responderEnAtencion(codigo: string, r: RespuestaEntrada, q
       // CU-C14: el mueble sigue en la casa del cliente → «Esperando mueble» hasta que el taller lo recibe.
       const nuevo = await tx.pedido.create({ data: { codigo: pedido, solicitudId: s.id, clienteId: s.clienteId, estado: 'Esperando mueble', descripcion, cotizacionId: cot.id } });
       if (c.adelanto > 0) {
-        const pago = await tx.pago.create({ data: { cotizacionId: cot.id, pedidoId: nuevo.id, concepto: 'adelanto', monto: D(c.adelanto), metodo: r.metodo!, origen, estado: 'Confirmado', registradoPor: q.usuarioId } });
+        const pago = await tx.pago.create({ data: { cotizacionId: cot.id, pedidoId: nuevo.id, concepto: 'adelanto', monto: D(c.adelanto), metodo: r.metodo!, origen, estado: 'Confirmado', recibo: await siguienteRecibo(tx), registradoPor: q.usuarioId, revisadoPor: q.usuarioId, fechaRevision: ahora } });
         await registrarBitacora(tx, {
           usuarioId: q.usuarioId, modulo: 'comercial', accion: 'pago_registrado', entidad: 'pago', entidadId: pago.id,
           valorNuevo: { pedido, concepto: 'adelanto', monto: c.adelanto, metodo: r.metodo, origen, estado: 'Confirmado' }, ip: q.ip,

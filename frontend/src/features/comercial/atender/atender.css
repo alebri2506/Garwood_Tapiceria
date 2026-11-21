@@ -130,3 +130,17 @@
 .at-pay-tot b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .at-pay-op { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 640px) { .at-pay-op { grid-template-columns: 1fr; } .at-pay-tot { align-items: flex-start; } }
+
+/* Paso 3 · Traslado con delivery: dirección (y su ficha) a la izquierda, mapa a la derecha, como W2 y W3b.
+   Dos columnas desde 640 px de ancho del paso (la columna principal de la atención es más angosta que la de W2). */
+.at-tras { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+@media (max-width: 1100px) { .at-tras { grid-template-columns: 1fr; } }
+.at-dir { margin: 0; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-sunken); }
+.at-dir div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; font-size: 13.5px; padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
+.at-dir div:last-child { border-bottom: 0; padding-bottom: 0; }
+.at-dir dt { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-muted); white-space: nowrap; }
+.at-dir dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+
+/* Botón final de «¿Qué decide el cliente?»: a la derecha y de su tamaño (antes ocupaba todo el ancho del recuadro). */
+.at-paybox > .at-pay-cta { align-self: flex-end; min-width: 260px; }
+@media (max-width: 640px) { .at-paybox > .at-pay-cta { align-self: stretch; white-space: normal; height: auto; padding: 10px 16px; } }

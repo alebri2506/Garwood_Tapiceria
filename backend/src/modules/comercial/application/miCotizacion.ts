@@ -25,7 +25,7 @@ async function clienteDe(usuarioId: number) {
 }
 
 /** La última cotización publicada de una solicitud del cliente con sesión (RG-07). El borrador del taller no se ve. */
-async function cargar(usuarioId: number, codigo: string) {
+export async function cargar(usuarioId: number, codigo: string) {
   const clienteId = await clienteDe(usuarioId);
   const s = await prisma.solicitud.findUnique({
     where: { codigo },
@@ -48,7 +48,7 @@ async function cargar(usuarioId: number, codigo: string) {
 }
 
 /** «Pendiente de respuesta» con la vigencia ya pasada se muestra (y se trata) como vencida. */
-const estadoEfectivo = (estado: string, vigencia: string | null) =>
+export const estadoEfectivo = (estado: string, vigencia: string | null) =>
   estado === 'Pendiente de respuesta' && vigencia != null && vigencia < hoyNegocio() ? 'Vencida' : estado;
 
 const diasEntre = (desde: string, hasta: string) => Math.round((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86_400_000);

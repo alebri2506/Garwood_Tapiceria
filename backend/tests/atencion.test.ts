@@ -6,9 +6,10 @@ import { crearApp } from '../src/app.js';
 import { prisma } from '../src/shared/infrastructure/prisma.js';
 import { ConsolaCorreo } from '../src/shared/infrastructure/correo.js';
 import { rutasFijas } from '../src/shared/infrastructure/rutas.js';
+import type { Pasarela, ResultadoPago } from '../src/shared/infrastructure/pasarela.js';
 import type { AlmacenArchivos } from '../src/shared/infrastructure/archivos.js';
 import { hoyNegocio } from '../src/modules/comercial/domain/calendario.js';
-import { instanteNY } from '../src/modules/comercial/domain/agenda.js';
+import { instanteNY, sumarDias } from '../src/modules/comercial/domain/agenda.js';
 
 const almacen: AlmacenArchivos = { async guardar() { return 'x'; }, async eliminar() {}, async urlTemporal(ruta) { return `/prueba/${ruta}`; } };
 const app = crearApp({ correo: new ConsolaCorreo(), almacen, rutas: rutasFijas(14) });
@@ -170,7 +171,7 @@ describe('A2b · Atender la visita a domicilio', () => {
     expect(local.find((t) => t.hora === '16:00')!.libre).toBe(true);
     // La Agenda de citas lo muestra.
     const semana = (await api('get', `/agenda?desde=${dia.fecha}`)).body;
-    expect(semana.recojos).toEqual(expect.arrayContaining([expect.objectContaining({ pedido, fecha: dia.fecha, hora: '15:00', fin: '16:00' })]));
+    expect(semana.recojos).toEqual(expect.arrayContaining([expect.objectContaining({ pedido, fecha: dia.fecha, hora: '15:00', fin: '16:00', estadoPedido: 'Esperando mueble', telefono: expect.any(String), cotizacion: expect.stringMatching(/^COT-/), agendadoPor: expect.any(String), duracionMin: 60 })]));
 
     // Al revés: una cita en el local a las 10:30 ocupa la hora de recojo de 10:00 a 11:00.
     const otro = (await recojos()).find((d) => d.fecha > hoyNegocio() && d.horas.some((h) => h.inicio === '10:00' && h.estado === 'libre'))!;
@@ -206,6 +207,25 @@ describe('A2b · Atender la visita a domicilio', () => {
     expect((await prisma.cita.findUniqueOrThrow({ where: { id: cita.id } })).estado).toBe('Atendida');
     expect((await prisma.solicitud.findUniqueOrThrow({ where: { id: s.id } })).estado).toBe('Cotizada');
     expect(await prisma.bitacora.count({ where: { entidad: 'cita', entidadId: cita.id, accion: { in: ['cita_en_atencion', 'cita_atendida'] } } })).toBe(2);
+  });
+
+  it('solo se atiende el día de la cita (decisiones L.2.11); una ya «En atención» se retoma cualquier día', async () => {
+    // Cita de otro día (mañana o ayer): ni «Empezar» ni marcarla atendida.
+    const otra = await conVisita({ tipo: 'local' });
+    await prisma.cita.update({ where: { id: otra.cita.id }, data: { fechaHora: instanteNY(sumarDias(hoyNegocio(), 1), '15:00') } });
+    const r = await api('post', `/atencion/${otra.s.codigo}/empezar`);
+    expect(r.status).toBe(409);
+    expect(r.body.mensaje).toMatch(/se atiende ese día.*reprograme la cita para hoy/);
+    expect((await request(app).post(`/api/citas/${otra.cita.id}/resultado`).set('Authorization', `Bearer ${admin}`).send({ resultado: 'atendida' })).status).toBe(409);
+    await prisma.cita.update({ where: { id: otra.cita.id }, data: { fechaHora: instanteNY(sumarDias(hoyNegocio(), -1), '15:00') } });
+    expect((await api('post', `/atencion/${otra.s.codigo}/empezar`)).body.mensaje).toMatch(/Ese día ya pasó/);
+    expect((await prisma.cita.findUniqueOrThrow({ where: { id: otra.cita.id } })).estado).toBe('Programada');
+
+    // Empezada el día que correspondía: se puede continuar después.
+    const hoy = await conVisita({ tipo: 'local' });
+    expect((await api('post', `/atencion/${hoy.s.codigo}/empezar`)).body.cita).toBe('En atención');
+    await prisma.cita.update({ where: { id: hoy.cita.id }, data: { fechaHora: instanteNY(sumarDias(hoyNegocio(), -1), '15:00') } });
+    expect((await api('post', `/atencion/${hoy.s.codigo}/empezar`)).body.cita).toBe('En atención');
   });
 
   it('en una cita en el local no se puede «llevar el mueble ahora»', async () => {
@@ -348,5 +368,104 @@ describe('W4 · el cliente revisa y responde su cotización', () => {
     expect((await cli('post', `/${s.codigo}/recojo`).send({ fecha: dia.fecha, hora })).status).toBe(200);
     expect((await cli('get', `/${s.codigo}/cotizacion`)).body.pedido.recojo).toMatchObject({ tipo: 'agendado', fecha: dia.fecha, hora });
     expect((await cli('post', `/${s.codigo}/recojo`).send({ fecha: dia.fecha, hora })).status).toBe(409);
+  });
+});
+
+describe('W4 · pagar el adelanto en línea (pasarela · decisiones J)', () => {
+  // Pasarela falsa (sin internet): guarda las sesiones y deja «cobrarlas» a mano, como haría Stripe en modo de prueba.
+  const sesiones = new Map<string, ResultadoPago>();
+  const falsa: Pasarela = {
+    async crearSesion(e) {
+      const id = `cs_test_${sesiones.size + 1}`;
+      sesiones.set(id, { sesion: id, pagado: false, referencia: null, monto: e.monto, metadata: e.metadata });
+      return e.incrustado ? { id, url: null, clientSecret: `${id}_secret_x` } : { id, url: `https://pago.prueba/${id}`, clientSecret: null };
+    },
+    async consultarSesion(id) { return sesiones.get(id)!; },
+    async leerAviso(cuerpo, firma) {
+      if (firma !== 'firma-valida') throw new Error('Firma no válida');
+      return sesiones.get(JSON.parse(cuerpo.toString()).sesion) ?? null;
+    },
+  };
+  const cobrar = (id: string) => sesiones.set(id, { ...sesiones.get(id)!, pagado: true, referencia: `pi_${id}` });
+  const conPago = crearApp({ correo: new ConsolaCorreo(), almacen, rutas: rutasFijas(14), pasarela: falsa });
+  const cli = (a: typeof app, metodo: 'get' | 'post', ruta: string) => request(a)[metodo](`/api/solicitudes${ruta}`).set('Authorization', `Bearer ${cliente}`);
+  async function publicada(adelanto: number | null = null) {
+    const { s, cita, dir } = await conVisita();
+    const { entrada } = await armarEnVisita(s.codigo!, cita.id, dir.id);
+    expect((await api('post', `/atencion/${s.codigo}/respuesta`).send({ cotizacion: { ...entrada, adelanto }, respuesta: 'pensara' })).body.estado).toBe('Pendiente de respuesta');
+    return s;
+  }
+
+  it('sin pasarela configurada no se puede pagar en línea', async () => {
+    const s = await publicada();
+    expect((await cli(app, 'post', `/${s.codigo}/cotizacion/pago`)).status).toBe(503);
+  });
+
+  it('paga con tarjeta: la cotización queda Aceptada, el pago Confirmado y nace el pedido; el mismo cobro cuenta una sola vez', async () => {
+    const s = await publicada();
+    const cot = await prisma.cotizacion.findFirstOrThrow({ where: { solicitudId: s.id } });
+    const r = await cli(conPago, 'post', `/${s.codigo}/cotizacion/pago`);
+    expect(r.status).toBe(200);
+    const id = r.body.url.split('/').pop() as string;
+    expect(sesiones.get(id)).toMatchObject({ monto: Number(cot.adelanto), metadata: { cotizacionId: String(cot.id), solicitud: s.codigo } });
+
+    // Volvió sin pagar (canceló): no cambia nada.
+    expect((await cli(conPago, 'post', `/${s.codigo}/cotizacion/pago/confirmar`).send({ sesion: id })).body).toMatchObject({ estado: 'pendiente', pedido: null });
+    expect((await prisma.cotizacion.findUniqueOrThrow({ where: { id: cot.id } })).estado).toBe('Pendiente de respuesta');
+
+    // Pagó: al volver se confirma el cobro.
+    cobrar(id);
+    const ok = await cli(conPago, 'post', `/${s.codigo}/cotizacion/pago/confirmar`).send({ sesion: id });
+    expect(ok.body).toMatchObject({ estado: 'registrado', pedido: expect.stringMatching(/^PED-\d{4}$/) });
+    expect((await prisma.cotizacion.findUniqueOrThrow({ where: { id: cot.id } })).estado).toBe('Aceptada');
+    expect(await prisma.pago.findUniqueOrThrow({ where: { referencia: `pi_${id}` } })).toMatchObject({ estado: 'Confirmado', origen: 'pasarela', metodo: 'tarjeta', concepto: 'adelanto' });
+    expect((await cli(conPago, 'get', `/${s.codigo}/cotizacion`)).body).toMatchObject({ estado: 'Aceptada', pedido: { codigo: ok.body.pedido }, eligeRecojo: true });
+
+    // Llega también el aviso de Stripe y el cliente recarga: siguen siendo un solo pago y un solo pedido.
+    expect((await request(conPago).post('/api/pagos/stripe/aviso').set('stripe-signature', 'falsa').set('Content-Type', 'application/json').send(JSON.stringify({ sesion: id }))).status).toBe(400);
+    expect((await request(conPago).post('/api/pagos/stripe/aviso').set('stripe-signature', 'firma-valida').set('Content-Type', 'application/json').send(JSON.stringify({ sesion: id }))).status).toBe(200);
+    expect((await cli(conPago, 'post', `/${s.codigo}/cotizacion/pago/confirmar`).send({ sesion: id })).body.pedido).toBe(ok.body.pedido);
+    expect(await prisma.pago.count({ where: { cotizacionId: cot.id } })).toBe(1);
+    expect(await prisma.pedido.count({ where: { solicitudId: s.id } })).toBe(1);
+    // Ya respondida: no se puede volver a pagar.
+    expect((await cli(conPago, 'post', `/${s.codigo}/cotizacion/pago`)).status).toBe(409);
+  });
+
+  it('incrustado (W4): devuelve el clientSecret para mostrar el pago dentro de GARWEB y se confirma igual al volver', async () => {
+    const s = await publicada();
+    const r = await cli(conPago, 'post', `/${s.codigo}/cotizacion/pago`).send({ incrustado: true });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ url: null, clientSecret: expect.stringMatching(/_secret_/) });
+    const id = (r.body.clientSecret as string).split('_secret_')[0]!;
+    cobrar(id);
+    expect((await cli(conPago, 'post', `/${s.codigo}/cotizacion/pago/confirmar`).send({ sesion: id })).body).toMatchObject({ estado: 'registrado', pedido: expect.stringMatching(/^PED-/) });
+  });
+
+  it('sin adelanto no hay nada que pagar en línea', async () => {
+    const s = await publicada(0);
+    expect((await cli(conPago, 'post', `/${s.codigo}/cotizacion/pago`)).status).toBe(409);
+  });
+
+  it('W6a · el pedido pagado aparece «En curso» con lo pagado y el saldo; sin costos internos y solo los suyos', async () => {
+    const s = await publicada();
+    const cot = await prisma.cotizacion.findFirstOrThrow({ where: { solicitudId: s.id } });
+    const id = (await cli(conPago, 'post', `/${s.codigo}/cotizacion/pago`)).body.url.split('/').pop() as string;
+    cobrar(id);
+    const { pedido } = (await cli(conPago, 'post', `/${s.codigo}/cotizacion/pago/confirmar`).send({ sesion: id })).body as { pedido: string };
+
+    const r = await cli(conPago, 'get', '/pedidos/en-curso');
+    expect(r.status).toBe(200);
+    const p = (r.body as { codigo: string }[]).find((x) => x.codigo === pedido) as Record<string, any>;
+    const total = Number(cot.total), adelanto = Number(cot.adelanto);
+    expect(p).toMatchObject({ estado: 'Esperando mueble', solicitud: s.codigo, cotizacion: cot.codigo, traslado: 'delivery', recojo: null });
+    expect(p.cuenta).toMatchObject({ total, pagado: adelanto, saldo: Math.round((total - adelanto) * 100) / 100 });
+    expect(p.cuenta.pagos).toEqual([expect.objectContaining({ concepto: 'adelanto', metodo: 'tarjeta', monto: adelanto })]);
+    expect(p.muebles[0].trabajos.length).toBeGreaterThan(0);
+    expect(JSON.stringify(r.body)).not.toMatch(/sugerido|manoObra|maquinaria|costosFijos|horas|margen/i);
+
+    // Cancelado o entregado ya no está «En curso»; el Administrador no entra por aquí (RG-07).
+    await prisma.pedido.update({ where: { codigo: pedido }, data: { estado: 'Cancelado' } });
+    expect(((await cli(conPago, 'get', '/pedidos/en-curso')).body as { codigo: string }[]).some((x) => x.codigo === pedido)).toBe(false);
+    expect((await request(conPago).get('/api/solicitudes/pedidos/en-curso').set('Authorization', `Bearer ${admin}`)).status).toBe(403);
   });
 });

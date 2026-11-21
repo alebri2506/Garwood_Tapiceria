@@ -3,7 +3,8 @@ import { NavLink, Outlet, useLocation, useOutletContext } from 'react-router-dom
 import { useAuth } from '../../../app/auth/AuthProvider';
 import { ApiError } from '../../../shared/api/http';
 import { solicitudApi, type SolicitudCliente } from '../solicitud/solicitudApi';
-import { PEDIDOS_ANTERIORES, PEDIDOS_EN_CURSO } from './datos';
+import { PEDIDOS_ANTERIORES, type PedidoEnCurso } from './datos';
+import { pedidosApi } from './pedidosApi';
 import './pedidos.css';
 
 interface MisPedidosContexto {
@@ -14,6 +15,8 @@ interface MisPedidosContexto {
   /** Reemplaza una solicitud tras subir las fotos pedidas. */
   actualizar(s: SolicitudCliente): void;
   recargar(): void;
+  /** W6a: sus pedidos en curso (desde la API, o los de ejemplo sin API). */
+  pedidos: { lista: PedidoEnCurso[]; cargando: boolean; error: string | null };
 }
 
 export const useMisPedidos = () => useOutletContext<MisPedidosContexto>();
@@ -27,6 +30,7 @@ export function MisPedidosLayout() {
   const [solicitudes, setSolicitudes] = useState<SolicitudCliente[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pedidos, setPedidos] = useState<MisPedidosContexto['pedidos']>({ lista: [], cargando: true, error: null });
   const pestanas = useRef<HTMLElement>(null);
   const { pathname } = useLocation();
 
@@ -39,6 +43,11 @@ export function MisPedidosLayout() {
       .finally(() => setCargando(false));
   }, []);
   useEffect(recargar, [recargar]);
+  useEffect(() => {
+    pedidosApi.enCurso()
+      .then((lista) => setPedidos({ lista, cargando: false, error: null }))
+      .catch((e) => setPedidos({ lista: [], cargando: false, error: e instanceof ApiError ? e.message : 'Intente de nuevo en unos minutos.' }));
+  }, []);
 
   // En el celular las pestañas se desplazan: la activa siempre queda a la vista.
   useEffect(() => {
@@ -54,12 +63,12 @@ export function MisPedidosLayout() {
       <div className="mp-head"><div><div className="crumb">Hola, {nombre}</div><h1>Mis pedidos</h1></div></div>
       <nav ref={pestanas} className="tabsx" aria-label="Mis pedidos">
         <NavLink to="/cliente/pedidos/solicitudes" className={pestana}>Solicitudes y cotizaciones <span>{cargando ? '…' : abiertas}</span></NavLink>
-        <NavLink to="/cliente/pedidos" end className={pestana}>En curso <span>{PEDIDOS_EN_CURSO.length}</span></NavLink>
+        <NavLink to="/cliente/pedidos" end className={pestana}>En curso <span>{pedidos.cargando ? '…' : pedidos.lista.length}</span></NavLink>
         <NavLink to="/cliente/pedidos/anteriores" className={pestana}>Anteriores <span>{PEDIDOS_ANTERIORES.length}</span></NavLink>
       </nav>
       <Outlet
         context={{
-          solicitudes, cargando, error, recargar,
+          solicitudes, cargando, error, recargar, pedidos,
           actualizar: (s: SolicitudCliente) => setSolicitudes((x) => x.map((y) => (y.codigo === s.codigo ? s : y))),
         } satisfies MisPedidosContexto}
       />

@@ -11,6 +11,7 @@ import { TELEFONO_TALLER } from '../pedidos/DetallePedido';
 import { GrillaRecojo, deIso, type HoraElegida } from '../atender/GrillaRecojo';
 import type { Disponibilidad } from '../atender/atencionApi';
 import { MOTIVOS_RECHAZO, miCotizacionApi, type MiCotizacion, type MotivoRechazo, type MuebleCotizado } from './miCotizacionApi';
+import { CLAVE_PUBLICA, PagoIncrustado } from './PagoIncrustado';
 import './micotizacion.css';
 
 /**
@@ -31,17 +32,59 @@ export function MiCotizacionPage() {
 const dolares = (v: number) => `$${v.toLocaleString('en-US', { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 })}`;
 const mensaje = (e: unknown, def: string) => (e instanceof ApiError ? e.message : def);
 const nombreMueble = (m: MuebleCotizado) => (m.cantidad > 1 ? `${m.tipo} × ${m.cantidad}` : m.tipo);
-const telaTexto = (m: MuebleCotizado) =>
-  m.telas.length ? m.telas.map((t) => [t.nombre, t.pattern && `Pattern ${t.pattern}`, t.numeroColor && `color ${t.numeroColor}`].filter(Boolean).join(' · ')).join(' + ') : m.tela;
+/** «Chenille Marfil 12 · color 1»: el pattern solo si el nombre no lo trae ya. */
+const nombreTela = (t: MuebleCotizado['telas'][number]) =>
+  [t.nombre, t.pattern && !t.nombre.includes(t.pattern) && `Pattern ${t.pattern}`, t.numeroColor && `color ${t.numeroColor}`].filter(Boolean).join(' · ');
+/** Una tela: el recuadro de su color con el nombre. Varias (por partes): la lista de muestras, cada una con su color. */
+function TelasDelMueble({ m }: { m: MuebleCotizado }) {
+  if (m.telas.length === 1) {
+    const t = m.telas[0]!;
+    return (
+      <span className="w4-ph tela" style={{ background: t.colorHex ? `linear-gradient(135deg, ${t.colorHex}, color-mix(in srgb, ${t.colorHex} 70%, #fff))` : 'var(--primary)' }}>
+        {nombreTela(t)}
+      </span>
+    );
+  }
+  return (
+    <div className="w4-ph w4-telas">
+      <span className="ov">{m.telas.length} telas · una por cada parte</span>
+      <ul>
+        {m.telas.map((t) => (
+          <li key={nombreTela(t)}><i style={{ background: t.colorHex ?? 'var(--surface-sunken)' }} aria-hidden="true" /><span>{nombreTela(t)}</span></li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 const telefono = <a href={`tel:${TELEFONO_TALLER.tel}`}>{TELEFONO_TALLER.texto}</a>;
 
+/** Lo que pasó al volver de la página de pago (Stripe). */
+type Retorno = { tipo: 'pagado'; pedido: string | null } | { tipo: 'confirmando' } | { tipo: 'cancelado' } | null;
+
 function Cotizacion({ solicitud }: { solicitud: string }) {
+  const [params, setParams] = useSearchParams();
   const [c, setC] = useState<MiCotizacion | null>(null);
   const [error, setError] = useState<{ texto: string; status: number } | null>(null);
+  const [retorno, setRetorno] = useState<Retorno>(null);
   const cargar = useCallback(() => {
     miCotizacionApi.ver(solicitud).then(setC).catch((e) => setError({ texto: mensaje(e, 'No pudimos cargar su cotización.'), status: e instanceof ApiError ? e.status : 0 }));
   }, [solicitud]);
   useEffect(cargar, [cargar]);
+
+  // Vuelve de la pasarela: se confirma el cobro sin esperar el aviso de Stripe y se limpia la dirección.
+  const pago = params.get('pago');
+  const sesion = params.get('sesion');
+  useEffect(() => {
+    if (!pago) return;
+    setParams({ solicitud }, { replace: true });
+    if (pago === 'cancelado') { setRetorno({ tipo: 'cancelado' }); return; }
+    if (pago !== 'ok' || !sesion) return;
+    setRetorno({ tipo: 'confirmando' });
+    miCotizacionApi.confirmarPago(solicitud, sesion)
+      .then((r) => setRetorno(r.estado === 'registrado' ? { tipo: 'pagado', pedido: r.pedido } : { tipo: 'confirmando' }))
+      .catch(() => setRetorno({ tipo: 'confirmando' }))
+      .finally(cargar);
+  }, [pago, sesion, solicitud, setParams, cargar]);
 
   if (error) {
     return (
@@ -51,10 +94,10 @@ function Cotizacion({ solicitud }: { solicitud: string }) {
     );
   }
   if (!c) return <p className="muted" role="status">Cargando su cotización…</p>;
-  return <Vista c={c} recargar={cargar} />;
+  return <Vista c={c} recargar={cargar} retorno={retorno} />;
 }
 
-function Vista({ c, recargar }: { c: MiCotizacion; recargar(): void }) {
+function Vista({ c, recargar, retorno }: { c: MiCotizacion; recargar(): void; retorno: Retorno }) {
   const [rechazando, setRechazando] = useState(false);
   const [motivo, setMotivo] = useState<MotivoRechazo | null>(null);
   const [detalle, setDetalle] = useState('');
@@ -62,6 +105,8 @@ function Vista({ c, recargar }: { c: MiCotizacion; recargar(): void }) {
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recienGenerado, setRecienGenerado] = useState(false);
+  /** Pago del adelanto abierto dentro de W4 (Stripe incrustado). */
+  const [checkout, setCheckout] = useState<string | null>(null);
   // El panel del rechazo queda en la columna izquierda: al abrirlo se lleva a la vista.
   useEffect(() => { if (rechazando) document.getElementById('w4-rech')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, [rechazando]);
 
@@ -74,6 +119,19 @@ function Vista({ c, recargar }: { c: MiCotizacion; recargar(): void }) {
   const publicada = c.publicada ? fechaCorta(new Date(c.publicada)) : null;
   const vence = c.vigenciaHasta ? fechaCorta(deIso(c.vigenciaHasta)) : null;
   const uno = c.muebles[0]!;
+
+  /**
+   * «Aceptar y pagar el adelanto»: con la clave pública de Stripe el pago se abre DENTRO de W4 (incrustado); sin ella,
+   * en la página segura de Stripe. En ambos casos GARWEB no ve los datos de la tarjeta.
+   */
+  const pagar = async () => {
+    setOcupado(true); setError(null);
+    try {
+      const r = await miCotizacionApi.pagar(c.solicitud, nota.trim() || undefined, Boolean(CLAVE_PUBLICA));
+      if (r.clientSecret) { setCheckout(r.clientSecret); setOcupado(false); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      if (r.url) window.location.assign(r.url);
+    } catch (e) { setError(mensaje(e, 'No pudimos abrir el pago. Intente de nuevo.')); setOcupado(false); }
+  };
 
   const responder = async (r: Parameters<typeof miCotizacionApi.responder>[1]) => {
     setOcupado(true); setError(null);
@@ -92,6 +150,21 @@ function Vista({ c, recargar }: { c: MiCotizacion; recargar(): void }) {
     ...(delivery ? [varios ? `Recojo en su casa y entrega de los ${c.muebles.length} muebles en un solo viaje` : `Recojo en su casa y entrega del ${uno.tipo.toLowerCase()} terminado`] : []),
     varios ? 'Revisión de cada mueble al recibirlo, antes de empezar' : 'Revisión del mueble al recibirlo, antes de empezar',
   ];
+
+  // Pagando: solo el panel del pago (nuestro resumen + el formulario de Stripe), sin distraer con el resto.
+  if (checkout) {
+    return (
+      <div className="stack w4-pagina" style={{ gap: 20 }}>
+        <div className="whead">
+          <div>
+            <div className="crumb"><Link to="/cliente/pedidos/solicitudes">Mis pedidos › Solicitudes</Link> › {c.codigo}</div>
+            <h1>Pagar el adelanto</h1>
+          </div>
+        </div>
+        <PagoIncrustado c={c} clientSecret={checkout} onVolver={() => setCheckout(null)} />
+      </div>
+    );
+  }
 
   return (
     <div className="stack w4-pagina" style={{ gap: 20 }}>
@@ -114,6 +187,14 @@ function Vista({ c, recargar }: { c: MiCotizacion; recargar(): void }) {
         </div>
       )}
 
+      {c.estado === 'Aceptada' && c.pedido && c.eligeRecojo && (
+        <div className="stack" style={{ gap: 12 }}>
+          {retorno?.tipo === 'pagado' && <Toast tone="success" title={`Pago aprobado · pedido ${c.pedido.codigo} generado`}>Recibimos su adelanto de {dolares(c.adelanto)} con tarjeta. El recibo le llega por correo. Ahora elija el día del recojo.</Toast>}
+          {recienGenerado && <Toast tone="success" title={`Pedido ${c.pedido.codigo} generado`}>No necesita adelanto. Ahora elija el día del recojo.</Toast>}
+          <ElegirRecojo c={c} onListo={recargar} />
+        </div>
+      )}
+
       <div className="wcols">
         <div className="wl">
           <section className="card stack">
@@ -121,11 +202,7 @@ function Vista({ c, recargar }: { c: MiCotizacion; recargar(): void }) {
             {!varios && (
               <div className="w4-fotos">
                 <span className="w4-ph">{uno.foto ? <img src={uno.foto} alt={`Foto de su ${uno.tipo.toLowerCase()}`} /> : <Icon name="image" size={28} />}</span>
-                {uno.telas[0] && (
-                  <span className="w4-ph tela" style={{ background: uno.telas[0].colorHex ? `linear-gradient(135deg, ${uno.telas[0].colorHex}, color-mix(in srgb, ${uno.telas[0].colorHex} 70%, #fff))` : 'var(--primary)' }}>
-                    {telaTexto(uno)}
-                  </span>
-                )}
+                {uno.telas.length > 0 && <TelasDelMueble m={uno} />}
               </div>
             )}
           </section>
@@ -143,7 +220,9 @@ function Vista({ c, recargar }: { c: MiCotizacion; recargar(): void }) {
                           <div style={{ minWidth: 0 }}><span className="ov">Mueble {i + 1}</span><b className="w4-mname">{nombreMueble(m)}</b></div>
                           <b className="w4-mprice">{dolares(m.precio)}</b>
                         </div>
-                        {telaTexto(m) && <span className="w4-fab"><i style={{ background: m.telas[0]?.colorHex ?? 'var(--surface-sunken)' }} />{telaTexto(m)}</span>}
+                        {m.telas.length > 0
+                          ? <div className="w4-fabs">{m.telas.map((t) => <span key={nombreTela(t)} className="w4-fab"><i style={{ background: t.colorHex ?? 'var(--surface-sunken)' }} />{nombreTela(t)}</span>)}</div>
+                          : m.tela && <span className="w4-fab"><i style={{ background: 'var(--surface-sunken)' }} />{m.tela}</span>}
                         <ul className="w4-jobs sm">{(m.trabajos.length ? m.trabajos : [m.servicio]).map((j) => <li key={j}><Icon name="check" size={16} /><span>{j}</span></li>)}</ul>
                       </div>
                     </div>
@@ -228,9 +307,10 @@ function Vista({ c, recargar }: { c: MiCotizacion; recargar(): void }) {
               {error && !rechazando && <Alert tone="danger" title="No se guardó">{error}</Alert>}
               {c.adelanto > 0 ? (
                 <>
-                  {/* La pasarela de pago todavía no existe: el botón se ve, pero no hace nada. */}
-                  <button type="button" className="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" disabled aria-describedby="w4-sinpago">Aceptar y pagar el adelanto</button>
-                  <span id="w4-sinpago" className="w4-nota">El pago en línea estará disponible pronto. Mientras tanto, para aceptar llámenos al {telefono}.</span>
+                  <button type="button" className="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" disabled={ocupado} aria-describedby="w4-pago" onClick={pagar}>
+                    {ocupado ? 'Abriendo el pago…' : `Aceptar y pagar el adelanto · ${dolares(c.adelanto)}`}
+                  </button>
+                  <span id="w4-pago" className="w4-nota"><Icon name="lock" size={13} /> {CLAVE_PUBLICA ? 'Paga aquí mismo con tarjeta de crédito o débito, en el formulario seguro de Stripe.' : 'Se abre la página segura de pago (Stripe) para pagar con tarjeta de crédito o débito.'} GARWEB nunca ve ni guarda los datos de su tarjeta.</span>
                 </>
               ) : (
                 <button type="button" className="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" disabled={ocupado} onClick={() => responder({ respuesta: 'acepta', comentario: nota.trim() || undefined })}>
@@ -241,17 +321,30 @@ function Vista({ c, recargar }: { c: MiCotizacion; recargar(): void }) {
             </>
           )}
 
-          {c.estado === 'Aceptada: pendiente de adelanto' && (
-            <Alert tone="warning" title="Falta el adelanto">
-              Aceptó la cotización. Su pedido se genera cuando pague el adelanto de {dolares(c.adelanto)}. Puede pagarlo en el taller; pronto también en línea.
+          {retorno?.tipo === 'cancelado' && abierta && (
+            <Alert tone="info" title="No se completó el pago">No se cobró nada. Puede intentarlo de nuevo cuando quiera, o llamarnos al {telefono}.</Alert>
+          )}
+          {retorno?.tipo === 'confirmando' && c.estado !== 'Aceptada' && (
+            <Alert tone="info" title="Estamos confirmando su pago">
+              La pasarela todavía no nos avisó del cobro. En unos minutos su pedido aparece aquí y le llega por correo. <button type="button" className="gw-btn gw-btn-ghost gw-btn-sm" onClick={recargar}>Actualizar</button>
             </Alert>
+          )}
+          {c.estado === 'Aceptada: pendiente de adelanto' && (
+            <>
+              <Alert tone="warning" title="Falta el adelanto">
+                Aceptó la cotización. Su pedido se genera cuando pague el adelanto de {dolares(c.adelanto)}: en línea con tarjeta o en el taller.
+              </Alert>
+              {error && <Alert tone="danger" title="No se pudo abrir el pago">{error}</Alert>}
+              <button type="button" className="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" disabled={ocupado} onClick={pagar}>{ocupado ? 'Abriendo el pago…' : `Pagar el adelanto · ${dolares(c.adelanto)}`}</button>
+            </>
           )}
 
           {c.estado === 'Aceptada' && c.pedido && (
             <>
-              {recienGenerado && <Toast tone="success" title={`Pedido ${c.pedido.codigo} generado`}>No necesita adelanto.{c.eligeRecojo ? ' Ahora elija el día del recojo.' : ''}</Toast>}
+              {!c.eligeRecojo && retorno?.tipo === 'pagado' && <Toast tone="success" title={`Pago aprobado · pedido ${c.pedido.codigo} generado`}>Recibimos su adelanto de {dolares(c.adelanto)} con tarjeta. El recibo le llega por correo.</Toast>}
+              {!c.eligeRecojo && recienGenerado && <Toast tone="success" title={`Pedido ${c.pedido.codigo} generado`}>No necesita adelanto.</Toast>}
               {c.eligeRecojo
-                ? <ElegirRecojo c={c} onListo={recargar} />
+                ? <span className="muted" style={{ fontSize: 13 }}>Falta un paso: elija arriba el día del recojo.</span>
                 : c.pedido.recojo?.tipo === 'agendado' && c.pedido.recojo.fecha
                   ? <Toast tone="success" title="Recojo agendado">Pasamos el {fechaLarga(deIso(c.pedido.recojo.fecha)).toLowerCase()} a las {c.pedido.recojo.hora}. Le recordamos un día antes por correo.</Toast>
                   : !delivery && <Alert tone="info" title="Su pedido está en marcha">Lleve su mueble al taller cuando le quede bien (lunes a sábado).</Alert>}
@@ -296,17 +389,26 @@ function ElegirRecojo({ c, onListo }: { c: MiCotizacion; onListo(): void }) {
     <section className="card stack w4-rk" aria-labelledby="w4-rk">
       <div>
         <span className="ov">Último paso</span>
-        <h2 id="w4-rk" style={{ fontSize: 18 }}>{varios ? '¿Cuándo pasamos por sus muebles?' : '¿Cuándo pasamos por su mueble?'}</h2>
-        {c.direccion && <span className="muted" style={{ fontSize: 13 }}>{c.direccion}{disp ? ` · el recojo dura unos ${disp.duracionMin} minutos` : ''}</span>}
+        <h2 id="w4-rk" style={{ fontSize: 22 }}>{varios ? '¿Cuándo pasamos por sus muebles?' : '¿Cuándo pasamos por su mueble?'}</h2>
+        <span className="muted" style={{ fontSize: 14 }}>Elija el día y la hora en que el camión pasa a recogerlo. Solo se muestran las horas libres del taller.</span>
       </div>
       {error && <Alert tone="danger" title="No se guardó">{error}</Alert>}
-      {!disp ? <p className="muted" role="status">Cargando la agenda del recojo…</p> : <GrillaRecojo disp={disp} elegido={elegido} onElegir={setElegido} />}
-      <div className="at-vsel">
-        <span><small>{elegido ? MESES[deIso(elegido.fecha).getMonth()]!.slice(0, 3) : '—'}</small>{elegido ? deIso(elegido.fecha).getDate() : '?'}</span>
-        <div><b>{elegido ? fechaLarga(deIso(elegido.fecha)) : 'Elija un día y una hora'}</b><em>{elegido ? `Recojo · de ${elegido.hora} a ${elegido.fin}` : 'En la agenda de arriba'}</em></div>
+      <div className="w4-rkg">
+        {!disp ? <p className="muted" role="status">Cargando la agenda del recojo…</p> : <GrillaRecojo disp={disp} elegido={elegido} onElegir={setElegido} />}
+        <div className="stack w4-rk-lado">
+          <div className="at-vsel">
+            <span><small>{elegido ? MESES[deIso(elegido.fecha).getMonth()]!.slice(0, 3) : '—'}</small>{elegido ? deIso(elegido.fecha).getDate() : '?'}</span>
+            <div><b>{elegido ? fechaLarga(deIso(elegido.fecha)) : 'Elija un día y una hora'}</b><em>{elegido ? `Recojo · de ${elegido.hora} a ${elegido.fin}` : 'En la agenda de la izquierda'}</em></div>
+          </div>
+          <dl className="w4-rk-datos">
+            {c.direccion && <div><dt><Icon name="map-pin" size={15} /> Dirección</dt><dd>{c.direccion}</dd></div>}
+            {disp && <div><dt><Icon name="clock" size={15} /> Duración</dt><dd>Unos {disp.duracionMin} minutos</dd></div>}
+            <div><dt><Icon name="truck" size={15} /> La entrega</dt><dd>Se agenda cuando el pedido esté terminado</dd></div>
+          </dl>
+          <button type="button" className="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" disabled={!elegido || ocupado} onClick={confirmar}>{ocupado ? 'Guardando…' : 'Confirmar día del recojo'}</button>
+          <span className="w4-nota">Le llega la confirmación por correo y la ve en su cuenta.</span>
+        </div>
       </div>
-      <button type="button" className="gw-btn gw-btn-primary gw-btn-lg gw-btn-block" disabled={!elegido || ocupado} onClick={confirmar}>{ocupado ? 'Guardando…' : 'Confirmar día del recojo'}</button>
-      <span className="w4-nota">Le llega la confirmación por correo y la ve en su cuenta.</span>
     </section>
   );
 }

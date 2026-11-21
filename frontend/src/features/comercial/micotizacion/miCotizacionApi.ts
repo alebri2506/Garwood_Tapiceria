@@ -52,6 +52,13 @@ export const miCotizacionApi = {
   ver: (solicitud: string) => apiFetch<MiCotizacion>(`${base(solicitud)}/cotizacion`),
   responder: (solicitud: string, r: RespuestaCliente) =>
     apiFetch<{ cotizacion: string; estado: string; pedido: string | null; eligeRecojo: boolean }>(`${base(solicitud)}/cotizacion/respuesta`, { method: 'POST', body: JSON.stringify(r) }),
+  /** «Aceptar y pagar el adelanto»: devuelve la página segura de la pasarela (Stripe) a la que se redirige. */
+  /** `incrustado`: devuelve el clientSecret para mostrar el pago dentro de W4; si no, la página de Stripe (`url`). */
+  pagar: (solicitud: string, comentario?: string, incrustado = false) =>
+    apiFetch<{ url: string | null; clientSecret: string | null }>(`${base(solicitud)}/cotizacion/pago`, { method: 'POST', body: JSON.stringify({ comentario, incrustado }) }),
+  /** Al volver de la pasarela: confirma el cobro (si se pagó, ya hay pedido). */
+  confirmarPago: (solicitud: string, sesion: string) =>
+    apiFetch<{ estado: 'registrado' | 'pendiente'; pedido: string | null }>(`${base(solicitud)}/cotizacion/pago/confirmar`, { method: 'POST', body: JSON.stringify({ sesion }) }),
   disponibilidad: () => apiFetch<Disponibilidad>('/solicitudes/recojos/disponibilidad'),
   recojo: (solicitud: string, fecha: string, hora: string) =>
     apiFetch<{ pedido: string; fecha: string; hora: string }>(`${base(solicitud)}/recojo`, { method: 'POST', body: JSON.stringify({ fecha, hora }) }),

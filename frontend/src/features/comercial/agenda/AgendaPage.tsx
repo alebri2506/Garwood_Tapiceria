@@ -77,6 +77,8 @@ export function AgendaPage() {
   const [bsel, setBsel] = useState<string[]>([]);
   const [blkOk, setBlkOk] = useState<{ titulo: string; texto: string } | null>(null);
   const [selBloqueo, setSelBloqueo] = useState<number | null>(null);
+  /** Recojo elegido en el calendario: se muestra su detalle (solo vista). */
+  const [selRec, setSelRec] = useState<number | null>(null);
   const [aviso, setAviso] = useState<{ titulo: string; texto: string } | null>(null);
   const [falla, setFalla] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -157,8 +159,10 @@ export function AgendaPage() {
   const hoyIdx = sem.dias.findIndex((d) => d.fecha === sem.hoy);
   const proxima = sem.citas.filter((c) => c.fecha === sem.hoy && c.estado === 'Programada' && c.hora && c.hora > sem.ahora).sort((a, b) => a.hora!.localeCompare(b.hora!))[0];
   const s = sem.citas.find((c) => c.id === sel) ?? null;
+  const r = (sem.recojos ?? []).find((x) => x.id === selRec) ?? null;
 
-  const elegirCita = (c: CitaAgenda) => { setSel(c.id); setAviso(null); setFalla(null); };
+  const elegirCita = (c: CitaAgenda) => { setSel(c.id); setSelRec(null); setAviso(null); setFalla(null); };
+  const elegirRecojo = (id: number) => { setSelRec(id); setSel(null); setCfg(false); setAviso(null); setFalla(null); };
   const salirDeAgendar = () => { setAg(null); setBk(null); setFalla(null); if (params.has('agendar')) setParams({}, { replace: true }); };
 
   // ---------------------------------------------------------------- acciones
@@ -245,12 +249,13 @@ export function AgendaPage() {
     if (rec) {
       const sigue = primerTurnoDe(rec) !== hora;
       return (
-        <div className="ag-ap ag-rec" title={`Recojo del pedido ${rec.pedido} · ${rec.hora}–${rec.fin}${rec.direccion ? ` · ${rec.direccion}` : ''}`}
-          aria-label={`Recojo del pedido ${rec.pedido} de ${rec.cliente}, ${largo(fecha)} de ${rec.hora} a ${rec.fin}`}>
+        <button type="button" className={`ag-ap ag-rec${selRec === rec.id ? ' ag-sel' : ''}`} title={`Recojo del pedido ${rec.pedido} · ${rec.hora}–${rec.fin}${rec.direccion ? ` · ${rec.direccion}` : ''} · ver detalle`}
+          aria-pressed={selRec === rec.id} disabled={Boolean(ag) || blk}
+          aria-label={`Recojo del pedido ${rec.pedido} de ${rec.cliente}, ${largo(fecha)} de ${rec.hora} a ${rec.fin}. Ver detalle`} onClick={() => elegirRecojo(rec.id)}>
           {enDia
             ? <><b>{sigue ? 'Recojo · continúa' : `Recojo · ${rec.cliente}`}</b><span>{rec.pedido} · {rec.hora}–{rec.fin}{rec.direccion ? ` · ${rec.direccion}` : ''}</span></>
             : <><b>{sigue ? 'Recojo' : rec.cliente}</b><span>{sigue ? 'continúa' : `Recojo · ${rec.hora}`}</span></>}
-        </div>
+        </button>
       );
     }
     const cierre = cerradoDe(fecha);
@@ -499,7 +504,31 @@ export function AgendaPage() {
 
           {!ag && !blk && !cfg && falla && <Alert tone="danger" title="No se pudo" compact>{falla}</Alert>}
 
-          {!ag && !blk && (s ? (
+          {!ag && !blk && r && (
+            // Recojo del delivery: solo vista. Se agenda al generar el pedido (A2b o W4) y lo gestiona Despacho.
+            <section className="ag-det ag-det-rec" aria-labelledby="ag-rec-nombre">
+              <div className="between"><span className="ov">Recojo seleccionado</span><StatusChip status="Programado" tone="warning" /></div>
+              <div className="ag-who">
+                <span className="ag-av ag-av-rec" aria-hidden="true"><Icon name="truck" size={20} /></span>
+                <div><h2 id="ag-rec-nombre">{r.cliente}</h2><small>{capital(largo(r.fecha))} · {r.hora}–{r.fin}</small></div>
+              </div>
+              <dl className="ag-facts">
+                <div><span className="ag-ic"><Icon name="truck" size={16} /></span><dt>Tipo</dt><dd>Recojo del delivery{r.duracionMin ? ` · ${r.duracionMin} min` : ''}</dd></div>
+                <div><span className="ag-ic"><Icon name="package" size={16} /></span><dt>Pedido</dt><dd>{r.pedido}{r.estadoPedido ? ` · ${r.estadoPedido}` : ''}</dd></div>
+                {r.solicitud && <div><span className="ag-ic"><Icon name="inbox" size={16} /></span><dt>Solicitud</dt><dd>{r.solicitud}{r.cotizacion ? ` · ${r.cotizacion}` : ''}</dd></div>}
+                <div><span className="ag-ic"><Icon name="sofa" size={16} /></span><dt>Mueble</dt><dd>{r.descripcion}</dd></div>
+                {r.telefono && <div><span className="ag-ic"><Icon name="user" size={16} /></span><dt>Teléfono</dt><dd><a href={`tel:${r.telefono}`}>{telefono(r.telefono)}</a></dd></div>}
+                {r.direccion && <div><span className="ag-ic"><Icon name="map-pin" size={16} /></span><dt>Dirección</dt><dd>{r.direccion}{r.referencia ? <><br /><small className="muted">{r.referencia}</small></> : null}</dd></div>}
+                {r.agendadoPor && <div><span className="ag-ic"><Icon name="history" size={16} /></span><dt>Agendado por</dt><dd>{r.agendadoPor}{r.agendadoEl ? ` · ${corto(r.agendadoEl.slice(0, 10)).w} ${corto(r.agendadoEl.slice(0, 10)).n}` : ''}</dd></div>}
+              </dl>
+              {r.direccion && <a className="gw-btn gw-btn-secondary gw-btn-block" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.direccion)}`} target="_blank" rel="noreferrer">Abrir en Google Maps</a>}
+              {r.solicitud && <Link className="gw-btn gw-btn-ghost gw-btn-block" to={`/admin/solicitudes?ver=${r.solicitud}`}>Ver la solicitud</Link>}
+              <button type="button" className="gw-btn gw-btn-ghost gw-btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setSelRec(null)}>Cerrar</button>
+              <p className="audit" style={{ margin: 0 }}>Solo vista. El recojo ocupa estos turnos de la agenda: ninguna cita se puede agendar encima.</p>
+            </section>
+          )}
+
+          {!ag && !blk && !r && (s ? (
             <section className="ag-det" aria-labelledby="ag-sel-nombre">
               {aviso && <Toast title={aviso.titulo} onClose={() => setAviso(null)}>{aviso.texto}</Toast>}
               <div className="between"><span className="ov">Cita seleccionada</span><StatusChip status={s.solicitud.estado === 'Vencida' ? 'Vencida' : s.estado} /></div>
@@ -519,9 +548,21 @@ export function AgendaPage() {
 
               {s.estado === 'Programada' && (
                 <>
-                  <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/admin/agenda/atender?solicitud=${s.solicitud.codigo}${s.tipo === 'domicilio' ? '&lugar=domicilio' : ''}`}>
-                    {s.tipo === 'domicilio' ? 'Atender la visita (en casa del cliente)' : 'Atender la cita en el local'}
-                  </Link>
+                  {/* Decisiones L.2.11: solo se atiende el día de la cita (el backend también lo valida). */}
+                  {s.fecha === sem.hoy ? (
+                    <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/admin/agenda/atender?solicitud=${s.solicitud.codigo}${s.tipo === 'domicilio' ? '&lugar=domicilio' : ''}`}>
+                      {s.tipo === 'domicilio' ? 'Atender la visita (en casa del cliente)' : 'Atender la cita en el local'}
+                    </Link>
+                  ) : (
+                    <>
+                      <button type="button" className="gw-btn gw-btn-primary gw-btn-block" disabled>{s.tipo === 'domicilio' ? 'Atender la visita (en casa del cliente)' : 'Atender la cita en el local'}</button>
+                      <Alert tone="info" title={s.fecha > sem.hoy ? `Se atiende el ${largo(s.fecha)}` : 'Ese día ya pasó'} compact>
+                        {s.fecha > sem.hoy
+                          ? 'Si el cliente vino hoy, use «Reprogramar» y elija un turno de hoy; luego podrá atenderla.'
+                          : `Márquela como «${s.tipo === 'domicilio' ? 'No lo encontramos' : 'No asistió'}» o reprográmela para hoy.`}
+                      </Alert>
+                    </>
+                  )}
                   <p className="audit" style={{ margin: 0 }}>
                     {s.tipo === 'domicilio'
                       ? 'Se abre en la tablet o el celular en casa del cliente: la misma guía de telas, medidas, cotización y respuesta. Al terminar, la solicitud pasa a Atendida.'

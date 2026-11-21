@@ -4,7 +4,7 @@ import type { ErrorRequestHandler } from 'express';
 import multer from 'multer';
 import type { z, ZodTypeAny } from 'zod';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
-import { LIMITE_BYTES, MIMES_ACEPTADOS, carpetaTemporal, descartarTemporales, type ArchivoSubido } from '../../../shared/infrastructure/archivos.js';
+import { LIMITE_BYTES, LIMITE_COMPROBANTE, MIMES_ACEPTADOS, MIMES_COMPROBANTE, carpetaTemporal, descartarTemporales, type ArchivoSubido } from '../../../shared/infrastructure/archivos.js';
 
 // Topes técnicos de la subida; los de negocio (muebles y archivos por mueble) están en `parametro`.
 const MAX_ARCHIVOS_PETICION = 100;
@@ -23,12 +23,26 @@ export function subida() {
   });
 }
 
+/** Comprobante de pago (W5): un solo archivo JPG, PNG o PDF de hasta 5 MB en el campo «comprobante». */
+export function subidaComprobante() {
+  const tmp = carpetaTemporal();
+  mkdirSync(tmp, { recursive: true });
+  return multer({
+    storage: multer.diskStorage({ destination: tmp, filename: (_req, _f, cb) => cb(null, randomUUID()) }),
+    limits: { fileSize: LIMITE_COMPROBANTE, files: 1, fields: 5, fieldSize: 16 * 1024 },
+    fileFilter: (_req, f, cb) => {
+      if (MIMES_COMPROBANTE.includes(f.mimetype)) cb(null, true);
+      else cb(new ReglaNegocioError(`«${f.originalname}» no es un JPG, PNG o PDF.`, 400, { comprobante: 'Suba un JPG, PNG o PDF de hasta 5 MB.' }));
+    },
+  });
+}
+
 /** Errores de multer en mensajes para el usuario. */
 export const erroresSubida: ErrorRequestHandler = (err, req, res, next) => {
   if (!(err instanceof multer.MulterError)) return next(err);
   descartarTemporales((req.files as ArchivoSubido[] | undefined) ?? []);
   const mensajes: Record<string, string> = {
-    LIMIT_FILE_SIZE: `Un archivo pesa más de ${LIMITE_BYTES.video / 1024 / 1024} MB.`,
+    LIMIT_FILE_SIZE: err.field === 'comprobante' ? `El comprobante pesa más de ${LIMITE_COMPROBANTE / 1024 / 1024} MB.` : `Un archivo pesa más de ${LIMITE_BYTES.video / 1024 / 1024} MB.`,
     LIMIT_FILE_COUNT: 'Envió demasiados archivos en una sola solicitud.',
     LIMIT_FIELD_VALUE: 'Los datos de la solicitud son demasiado largos.',
   };

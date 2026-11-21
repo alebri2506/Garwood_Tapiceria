@@ -58,6 +58,9 @@ export function DetallePedido({ pedido: p, volver }: { pedido: PedidoEnCurso; vo
             ? { quien: 'you', icono: 'pause', texto: 'Su pedido está en pausa mientras el taller revisa la solicitud de cancelación.' }
             : p.siguiente}
         />
+        {!enPausa && p.accion && (
+          <Link className={`gw-btn gw-btn-${p.accion.tipo}`} style={{ alignSelf: 'flex-start' }} to={p.accion.a}>{p.accion.texto}</Link>
+        )}
       </section>
 
       <div className="cols">
@@ -69,10 +72,18 @@ export function DetallePedido({ pedido: p, volver }: { pedido: PedidoEnCurso; vo
               <span className="gw-progress-fill" style={{ width: `${(p.trabajo.hechos / p.trabajo.total) * 100}%` }} />
             </div>
             <span className="muted" style={{ fontSize: 13 }}>{p.trabajo.pie}</span>
+            {p.tareas?.map((t) => (
+              <div key={t.mueble} className="mp-tareas">
+                <b>{t.mueble}</b>
+                {t.trabajos.length > 0 && <ul>{t.trabajos.map((x) => <li key={x}><Icon name="check" size={14} />{x}</li>)}</ul>}
+              </div>
+            ))}
           </div>
           <div className="card stack">
-            <h3>Su mueble en el taller</h3>
-            <div className="ph2" aria-hidden="true"><span className="thumb b" /><span className="thumb" /><span className="thumb c" /></div>
+            <h3>{p.imagenes ? 'Su mueble' : 'Su mueble en el taller'}</h3>
+            {p.imagenes?.length
+              ? <div className="ph2">{p.imagenes.slice(0, 3).map((u) => <img key={u} src={u} alt="Foto de su mueble" />)}</div>
+              : <div className="ph2" aria-hidden="true"><span className="thumb b" /><span className="thumb" /><span className="thumb c" /></div>}
             <small className="muted">{p.fotos}</small>
           </div>
           <div className="card stack">
@@ -152,14 +163,20 @@ export function DetallePedido({ pedido: p, volver }: { pedido: PedidoEnCurso; vo
                   El taller calcula el monto y lo confirma con usted.
                 </p>
               )}
-              <TextField
-                label="¿Por qué quiere cancelar?"
-                required
-                value={motivo}
-                error={errorMotivo}
-                onChange={(e) => { setMotivo(e.target.value); setErrorMotivo(''); }}
-              />
-              <button type="button" className="gw-btn gw-btn-danger gw-btn-block" onClick={enviar}>Enviar solicitud</button>
+              {p.cancelarPorTelefono ? (
+                <a className="gw-btn gw-btn-danger gw-btn-block" href={`tel:${TELEFONO_TALLER.tel}`}>Llamar para cancelar · {TELEFONO_TALLER.texto}</a>
+              ) : (
+                <>
+                  <TextField
+                    label="¿Por qué quiere cancelar?"
+                    required
+                    value={motivo}
+                    error={errorMotivo}
+                    onChange={(e) => { setMotivo(e.target.value); setErrorMotivo(''); }}
+                  />
+                  <button type="button" className="gw-btn gw-btn-danger gw-btn-block" onClick={enviar}>Enviar solicitud</button>
+                </>
+              )}
               <button type="button" className="gw-btn gw-btn-ghost gw-btn-block" onClick={() => setCancelacion('no')}>Seguir con mi pedido</button>
             </div>
           )}

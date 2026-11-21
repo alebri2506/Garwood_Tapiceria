@@ -18,6 +18,9 @@ export const AVISOS_OBLIGATORIOS = [
   'pedido_generado',
   // Recojo del mueble (decisiones L).
   'recojo_programado',
+  // Pagos (A5 · W5): un pago rechazado o anulado cambia lo que debe; tiene que enterarse.
+  'pago_rechazado',
+  'pago_anulado',
   // Cierre de la solicitud.
   'solicitud_vencida',
   'solicitud_descartada',
@@ -27,7 +30,7 @@ export const AVISOS_OBLIGATORIOS = [
 ] as const;
 
 /** Informativos: llegan por correo solo si el cliente deja encendido "Avance del pedido, cotización y pagos por correo". */
-export const AVISOS_INFORMATIVOS = ['solicitud_registrada', 'fotos_recibidas', 'cotizacion_publicada'] as const;
+export const AVISOS_INFORMATIVOS = ['solicitud_registrada', 'fotos_recibidas', 'cotizacion_publicada', 'pago_confirmado'] as const;
 
 export type TipoAvisoCliente = (typeof AVISOS_OBLIGATORIOS)[number] | (typeof AVISOS_INFORMATIVOS)[number];
 

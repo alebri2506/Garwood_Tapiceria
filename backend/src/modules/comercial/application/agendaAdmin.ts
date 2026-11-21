@@ -48,7 +48,10 @@ export async function agendaSemana(desdePedido?: string) {
   const recojos = await prisma.recojo.findMany({
     where: { tipo: 'agendado', estado: 'Programado', fecha: { gte: leerFecha(desde)!, lte: leerFecha(hasta)! } },
     orderBy: [{ fecha: 'asc' }, { hora: 'asc' }],
-    include: { direccion: true, pedido: { include: { cliente: true, solicitud: { select: { codigo: true } } } } },
+    include: {
+      direccion: true, registrador: { select: { nombre: true, nombreUsuario: true } },
+      pedido: { include: { cliente: true, solicitud: { select: { codigo: true } }, cotizacion: { select: { codigo: true } } } },
+    },
   });
   const ahora = enNY(new Date());
 
@@ -66,6 +69,11 @@ export async function agendaSemana(desdePedido?: string) {
       id: x.id, fecha: x.fecha!.toISOString().slice(0, 10), hora: x.hora!, fin: sumarMinutos(x.hora!, x.duracionMin),
       pedido: x.pedido.codigo, solicitud: x.pedido.solicitud.codigo, cliente: nombreCliente(x.pedido.cliente), descripcion: x.pedido.descripcion,
       direccion: x.direccion?.direccion ?? null,
+      // Para el detalle (solo vista) al tocar el bloque del recojo.
+      referencia: x.direccion?.referencia ?? null, ciudad: x.direccion?.ciudad ?? null, duracionMin: x.duracionMin,
+      telefono: x.pedido.cliente.telefono, email: x.pedido.cliente.email, estadoPedido: x.pedido.estado,
+      cotizacion: x.pedido.cotizacion?.codigo ?? null,
+      agendadoPor: x.registrador.nombre ?? x.registrador.nombreUsuario, agendadoEl: x.fechaRegistro.toISOString(),
     })),
     citas: citas
       .map((c) => ({ c, dto: citaDto(c) }))

@@ -271,7 +271,7 @@ Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más ad
 ## J. Pagos (A5 y W5 · diseño del 14/11 · solo frontend por ahora)
 1. **Pago en línea con pasarela** (cambia CU-C12, que decía «sin pasarela en línea»): el cliente puede pagar con **tarjeta**
    (se confirma al instante) o **cuenta bancaria ACH** (queda «En proceso» 2 a 3 días hábiles y se confirma sola). GARWEB nunca
-   ve ni guarda datos de tarjetas ni cuentas: los maneja la pasarela. La pasarela (proveedor, comisiones) está **por definir**.
+   ve ni guarda datos de tarjetas ni cuentas: los maneja la pasarela. Pasarela: **Stripe** (21/11, ver J.5).
 2. **Otras formas:** Zelle (sube la captura; obligatoria), cheque (foto opcional) y efectivo (solo en persona). Zelle y cheque
    quedan «Por confirmar» hasta que el taller los revise.
 3. **A5 Pagos** tiene 3 pestañas: **Por confirmar** (cobros que el conductor registró en la entrega; el Administrador confirma
@@ -280,8 +280,16 @@ Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más ad
    se repite aquí).
 4. **Registrar pago manual** (efectivo, cheque, Zelle, transferencia, tarjeta con el terminal): queda confirmado al guardar y
    emite el recibo. El monto no puede pasar de lo que debe el pedido.
-5. **Por aclarar con Jesús / el dueño:** en el diseño de A5, «Por confirmar» solo muestra los cobros del conductor; los pagos por
-   Zelle o cheque que el cliente informa en W5 no aparecen en ninguna pestaña de A5. Se implementó tal cual el diseño.
+5. ~~Por aclarar: los pagos por Zelle o cheque que el cliente informa en W5 no aparecen en A5.~~ Resuelto el 21/11 (O.2):
+   van a **A5 · Por confirmar**, junto con los cobros del conductor.
+
+5. **Pago del adelanto en línea con Stripe (21/11 · implementado en W4, modo de prueba):** «Aceptar y pagar el adelanto»
+   abre **Stripe Checkout** (página segura de Stripe; GARWEB no ve ni guarda datos de tarjeta) por el adelanto de la
+   cotización. Al aprobarse el cobro (al volver el cliente, que consulta la sesión, o por el aviso firmado de Stripe en
+   `/api/pagos/stripe/aviso`, lo que llegue primero) la cotización queda **Aceptada**, se registra el pago **Confirmado**
+   (`origen = pasarela`, `metodo = tarjeta`, `referencia` = id del cobro, única: nunca se registra dos veces) y se genera
+   el pedido; luego el cliente elige el recojo. Solo tarjeta por ahora (ACH y el saldo en W5, después). Claves solo en
+   `backend/.env` (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`); las pruebas usan una pasarela falsa.
 
 ## K. Armar cotización con uno o varios muebles (A4 · diseño del 14/11 · backend del 14/11)
 1. Una cotización reúne **todos los muebles de la solicitud**. Cada mueble tiene su plantilla, su tela y yardas, sus fotos,
@@ -390,8 +398,13 @@ Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más ad
     Agenda se ve en otro color con «Continuar la atención»; en A3 está en la etapa «Cita / visita»; el cliente (W6c) ve
     «Cita en curso». Migración `en_atencion` (CHECK de cita y solicitud). Las atenciones a medias de antes de este
     cambio quedaron «Atendida» y se siguen retomando igual.
-11. Pendiente para Pagos y Despacho: pantallas A5/W5 sobre la tabla `pago`; reservar materiales al nacer el pedido; salidas
-   que usen la tabla `recojo`.
+11. **Solo se atiende el día de la cita (21/11 · decisión de Alejandro):** una cita o visita «Programada» se empieza (o se
+    marca «Atendida») únicamente el día que le corresponde, a cualquier hora de ese día (hora de New York). Si el cliente
+    vino otro día, primero se **reprograma la cita para hoy** desde la Agenda y luego se atiende; si el día ya pasó, se
+    marca la inasistencia o se reprograma. Una cita ya «En atención» se retoma cualquier día. Lo valida el backend
+    (`exigirDiaDeCita`); en la Agenda y en la atención el botón queda deshabilitado con la explicación.
+12. Pendiente para Pagos y Despacho: reservar materiales al nacer el pedido; salidas que usen la tabla `recojo`.
+    (Las pantallas A5/W5 ya están: ver O.)
 
 ## M. El cliente revisa y responde su cotización (W4 · 15/11 · decisiones de Alejandro)
 1. **W6c** muestra en la tarjeta de cada solicitud su última cotización publicada: total («incluye traslado ida y vuelta»
@@ -411,6 +424,41 @@ Solo el lado del cliente; la ficha que ve el Administrador (A17) se hace más ad
    tarea que la venza sola). Como la renovación (C10) no existe, en vez de «Pedir que la renueven» se indica llamar.
 7. No se muestran todavía: la tarjeta de muestra de tela (ese flujo no existe), «Tiempo estimado» (no hay parámetro) y
    la orden de servicio en PDF.
+
+## N. Mis pedidos · En curso con datos reales (W6a · CU-C16 · 21/11)
+1. **En curso** = pedidos del cliente que no están Entregado, Cerrado ni Cancelado (`GET /api/solicitudes/pedidos/en-curso`,
+   solo rol Cliente y solo los suyos: RG-07). Primero los que necesitan algo de él.
+2. Etapas: Pedido confirmado → Recojo (con delivery) o «Lo trae al taller» → En el taller → Listo → Entrega (o Retiro).
+   Generado / Esperando mueble = Recojo (o «En el taller» si el mueble se llevó en la visita o el recojo figura Realizado);
+   Esperando material, Listo para producir, En producción y En pausa = En el taller; Terminado = Listo; En reparto /
+   Listo para retiro = Entrega.
+3. **Le toca al cliente:** elegir el día del recojo (botón a W4, la misma agenda del camión), traer el mueble al taller
+   si no tiene delivery, o retirarlo cuando esté listo. Si el recojo ya pasó y el taller no registró que recibió el
+   mueble, se le dice que lo verá en cuanto se registre o que llame si no pasamos.
+4. **Su cuenta:** total de la cotización aceptada, pagos **Confirmados** (método y fecha) y saldo = total − confirmados,
+   calculado al vuelo (CU-C12). Sin costos internos (RG-08).
+5. «Qué estamos haciendo» lista lo que se hará con cada mueble (nombres de las actividades); el avance real llegará con
+   las órdenes de trabajo (A05–A07). Las fotos son las de la solicitud hasta que existan las del recojo.
+6. Mientras no exista la solicitud de cancelación en línea (CU-C15), «Solicitar cancelación» explica la regla del cargo
+   y lleva a **llamar al taller**. La fecha de entrega se muestra «Aún no disponible» hasta que exista Despacho.
+
+## O. Backend del módulo de Pagos (A5 · W5 · CU-C12, C13 · 21/11 · decisiones de Alejandro)
+1. **Saldo** = total de la cotización aceptada − pagos **Confirmados** (se calcula, no se guarda). Un pago nuevo no puede
+   pasar de lo que se debe **menos lo que ya espera confirmación**. Mientras no se complete el adelanto, el pago es
+   «adelanto»; después, «saldo».
+2. **Zelle o cheque informados por el cliente (W5):** Zelle exige la captura; el cheque, foto opcional (JPG, PNG o PDF de
+   hasta 5 MB). Quedan «Por confirmar» (`origen = cliente`) y aparecen en **A5 · Por confirmar** con un aviso al taller. El
+   Administrador confirma (recibo y aviso al cliente) o rechaza con motivo (aviso obligatorio); el cliente sube otro que
+   **reemplaza** al rechazado (`reemplaza_id`; el rechazado se conserva).
+3. **Pago manual (A5):** confirmado al guardar, con recibo. Si la cotización está «Aceptada: pendiente de adelanto», el
+   pago debe **cubrir el adelanto completo** y con él nace el pedido (CU-C14).
+4. **Anular:** solo pagos manuales confirmados, con motivo (p. ej. cheque devuelto); el saldo vuelve a subir y se avisa
+   al cliente. Los de la pasarela no se anulan en GARWEB (la devolución se hace en Stripe).
+5. **En línea (W5):** solo **tarjeta** con Stripe Checkout, por lo que debe; misma idempotencia que el adelanto (J.5).
+   La cuenta bancaria (ACH) queda para después.
+6. **Recibos (C13):** cada pago confirmado lleva su código **REC-0000** (los ya confirmados se numeraron en la migración).
+   El **PDF** del recibo y el comprobante final quedan para después.
+7. Pedidos «Cancelado» o «Cerrado» no reciben pagos. Los cobros del conductor (`origen = conductor`) esperan Despacho.
 
 ## F. Pendientes por confirmar con el dueño (vía Alejandro)
 - Duración real de la cita para ver telas (prototipo: 30 min).

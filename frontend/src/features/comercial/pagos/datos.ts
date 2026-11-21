@@ -1,4 +1,5 @@
-// Datos de ejemplo de A5 y W5 Pagos (diseño del 14/11). Solo diseño: todavía no hay backend de Pagos.
+// Datos de ejemplo de A5 y W5 Pagos (diseño del 14/11): se ven solo sin backend (VITE_API_URL vacío).
+// Con backend las pantallas usan pagosApi.ts; de aquí se reutilizan los textos de los métodos y los datos de Zelle.
 
 /** Saldo = total − pagos confirmados: siempre calculado, nunca escrito (C12). */
 export const dinero = (v: number) => `$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;

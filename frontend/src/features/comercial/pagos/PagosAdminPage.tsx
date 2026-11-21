@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { TopAdmin } from '../../../app/layout/AdminLayout';
+import { API_URL } from '../../../shared/api/http';
+import { PagosAdminConectada } from './PagosAdminConectada';
 import { Icon, type IconName } from '../../../shared/ui/Icon';
 import { POR_PAGINA, Paginacion } from '../../../shared/ui/Paginacion';
 import { StatusChip } from '../../../shared/ui/StatusChip';
@@ -30,9 +32,13 @@ interface Fila {
 /**
  * A5 Pagos (CU-C12 · diseño del 14/11): cobros del conductor por confirmar, pagos confirmados (pasarela y manuales) y
  * saldos pendientes. El Administrador registra los pagos manuales, que quedan confirmados al guardar.
- * Solo diseño: datos de ejemplo, todavía no guarda nada.
+ * Sin backend (VITE_API_URL vacío) se ve este ejemplo del diseño; con backend, PagosAdminConectada.
  */
 export function PagosAdminPage() {
+  return API_URL ? <PagosAdminConectada /> : <PagosAdminEjemplo />;
+}
+
+function PagosAdminEjemplo() {
   const [tab, setTab] = useState(0);
   const [sel, setSel] = useState(0);
   const [filtro, setFiltro] = useState(0);

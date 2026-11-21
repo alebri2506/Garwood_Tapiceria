@@ -12,7 +12,12 @@ export interface CitaAgenda extends CitaDto {
   };
 }
 /** Recojo del delivery agendado (una sola agenda sin cruces: ocupa los turnos que toca). */
-export interface RecojoAgenda { id: number; fecha: string; hora: string; fin: string; pedido: string; solicitud: string | null; cliente: string; descripcion: string; direccion: string | null }
+export interface RecojoAgenda {
+  id: number; fecha: string; hora: string; fin: string; pedido: string; solicitud: string | null; cliente: string; descripcion: string; direccion: string | null;
+  /** Detalle del recojo (solo vista). Pueden faltar en los datos de ejemplo. */
+  referencia?: string | null; ciudad?: string | null; duracionMin?: number; telefono?: string | null; email?: string | null;
+  estadoPedido?: string; cotizacion?: string | null; agendadoPor?: string; agendadoEl?: string;
+}
 export interface BloqueoAgenda { id: number; fecha: string; horaInicio: string | null; horaFin: string | null; motivo: string }
 export interface Semana {
   desde: string; hasta: string; hoy: string; ahora: string;

@@ -396,10 +396,28 @@ export async function cancelarCita(quien: Quien, citaId: number, correo: Correo)
  * `cita.reprogramaciones_inasistencia` veces. Si vuelve a faltar, por regla la solicitud vence, pero lo decide el
  * Administrador (A2f): darla por vencida u ofrecerle un último turno.
  */
+const DIAS_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+/**
+ * Decisiones L.2.11 (21/11): una cita o visita se atiende solo el día que le corresponde (hora de New York), a cualquier
+ * hora de ese día. Si el cliente vino otro día, primero se reprograma la cita para hoy y luego se atiende.
+ */
+export function exigirDiaDeCita(c: { fechaHora: Date; tipo: string }) {
+  const dia = enNY(c.fechaHora).fecha;
+  const hoy = hoyNegocio();
+  if (dia === hoy) return;
+  const [y, m, d] = dia.split('-').map(Number) as [number, number, number];
+  const f = new Date(Date.UTC(y, m - 1, d));
+  const que = c.tipo === 'domicilio' ? 'La visita' : 'La cita';
+  throw error(`${que} es para el ${DIAS_ES[f.getUTCDay()]} ${d} de ${MESES_ES[m - 1]}: se atiende ese día. ${dia > hoy ? 'Si el cliente vino hoy, reprograme la cita para hoy desde la Agenda y luego atiéndala.' : 'Ese día ya pasó: márquela como «No asistió» o reprográmela para hoy desde la Agenda.'}`, 409);
+}
+
 export async function registrarResultado(quien: Quien, citaId: number, resultado: 'atendida' | 'no_asistio', correo: Correo) {
   const c = await prisma.cita.findUnique({ where: { id: citaId }, include: { solicitud: true } });
   if (!c) throw error('No encontramos esa cita.', 404);
   if (c.estado !== 'Programada') throw error('Esta cita ya tiene un resultado.');
+  if (resultado === 'atendida') exigirDiaDeCita(c);
   const { maxInasistencias } = await reglasAgenda();
   const faltas = (await prisma.cita.count({ where: { solicitudId: c.solicitudId, estado: 'No asistió' } })) + (resultado === 'no_asistio' ? 1 : 0);
   const sinReprogramacion = resultado === 'no_asistio' && faltas > maxInasistencias;
