@@ -151,6 +151,14 @@ describe('CU-S06 API del registro de actividad', () => {
     expect((await actividad('?modulo=otro')).body.mensaje).toBe('Elija un módulo de la lista');
   });
 
+  it('se elige cuántas filas por página: 10, 25, 50 (por omisión) o 100', async () => {
+    expect((await actividad('')).body.porPagina).toBe(50);
+    const diez = (await actividad('?porPagina=10&pagina=1')).body;
+    expect(diez.porPagina).toBe(10);
+    expect(diez.registros.length).toBeLessThanOrEqual(10);
+    expect((await actividad('?porPagina=7')).body.mensaje).toBe('Elija 10, 25, 50 o 100 por página');
+  });
+
   it('exporta a CSV con los mismos filtros y deja constancia de quién exportó (D.2.1)', async () => {
     const r = await request(app).get('/api/admin/auditoria/exportar?modulo=seguridad').set(auth(admin)).buffer(true);
     expect(r.status).toBe(200);

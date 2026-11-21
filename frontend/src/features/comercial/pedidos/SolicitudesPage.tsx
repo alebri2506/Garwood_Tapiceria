@@ -10,7 +10,8 @@ import { UploadZone } from '../../../shared/ui/UploadZone';
 import { solicitudApi, type SolicitudCliente } from '../solicitud/solicitudApi';
 import { useMisPedidos } from './MisPedidosLayout';
 import { AvisoSiguiente, Pasos } from './TarjetaPedido';
-import { tarjetaDe, type Grupo } from './tarjetasSolicitud';
+import { nombreMueble, tarjetaDe, type Grupo } from './tarjetasSolicitud';
+import { DetalleSolicitud } from './DetalleSolicitud';
 
 const GRUPOS: { id: Grupo; t: string; sub: string }[] = [
   { id: 'accion', t: 'Necesitan su acción', sub: '' },
@@ -53,23 +54,56 @@ export function SolicitudesPage() {
   );
 }
 
+const FONDOS = ['thumb', 'thumb b', 'thumb c'];
+const fotoDe = (m: SolicitudCliente['muebles'][number]) => m.archivos.find((a) => a.tipo === 'foto' && a.url)?.url ?? null;
+
+/** Varios muebles: mosaico con la foto de cada uno (hasta 3) y «N muebles» encima (diseño W6c del 13/11). */
+function Mosaico({ s }: { s: SolicitudCliente }) {
+  const n = s.muebles.length;
+  return (
+    <div className="w6c-mos" role="img" aria-label={`${n} muebles`}>
+      {s.muebles.slice(0, 3).map((m, i) => {
+        const url = fotoDe(m);
+        return (
+          <span key={m.orden} className={`${FONDOS[i % 3]}${n === 2 || i === 0 ? ' r2' : ''}`}>
+            {url ? <img className="w6c-img" src={url} alt="" /> : <Icon name="sofa" size={18} />}
+          </span>
+        );
+      })}
+      <em>{n} muebles</em>
+    </div>
+  );
+}
+
 function Tarjeta({ s, t, actualizar, avisar }: { s: SolicitudCliente; t: ReturnType<typeof tarjetaDe>; actualizar(s: SolicitudCliente): void; avisar(m: string): void }) {
-  const foto = s.muebles.flatMap((m) => m.archivos).find((a) => a.tipo === 'foto' && a.url);
+  const [detalle, setDetalle] = useState(false);
+  const varios = s.muebles.length > 1;
+  const foto = s.muebles.map(fotoDe).find(Boolean);
   return (
     <article className={t.grupo === 'accion' ? 'oc act' : 'oc'}>
-      <span className={`thumb ${t.grupo === 'accion' ? '' : 'b'} ph`}>{foto ? <img className="w6c-img" src={foto.url!} alt="" /> : <Icon name={t.icono} size={30} />}</span>
+      {varios
+        ? <Mosaico s={s} />
+        : <span className={`thumb ${t.grupo === 'accion' ? '' : 'b'} ph`}>{foto ? <img className="w6c-img" src={foto} alt="" /> : <Icon name={t.icono} size={30} />}</span>}
       <div className="bd">
         <div className="between" style={{ flexWrap: 'wrap', gap: 8 }}>
           <div><h2>{t.titulo}</h2><span className="code">{t.linea}</span></div>
           <StatusChip status={t.estado} tone={t.tono} />
         </div>
+        {varios && (
+          <div className="w6c-mch" aria-label="Muebles de la solicitud">
+            {s.muebles.map((m, i) => <span key={m.orden}><b>{i + 1}</b>{nombreMueble(m)}</span>)}
+          </div>
+        )}
         <Pasos pasos={t.pasos} actual={t.actual} />
         <AvisoSiguiente aviso={t.aviso} />
         {t.extra === 'fotos' && <SubirFotos s={s} actualizar={actualizar} avisar={avisar} />}
       </div>
       <div className="oside">
+        {t.monto && <div className="amt"><b>{t.monto.valor}</b><small>{t.monto.nota}</small></div>}
         {t.accion && <Link className={`gw-btn gw-btn-${t.accion.tipo} gw-btn-block`} to={t.accion.a}>{t.accion.texto}</Link>}
+        <button type="button" className="gw-btn gw-btn-ghost gw-btn-block" onClick={() => setDetalle(true)}>Ver solicitud</button>
       </div>
+      {detalle && <DetalleSolicitud s={s} t={t} onClose={() => setDetalle(false)} />}
     </article>
   );
 }

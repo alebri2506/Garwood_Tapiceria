@@ -24,6 +24,10 @@ const esquema = z.object({
   // Clave secreta (sb_secret_…) solo en el servidor; nunca en el frontend.
   SUPABASE_SECRET_KEY: z.string().optional(),
   STORAGE_BUCKET: z.string().default('garweb-archivos'),
+  // Pasarela de pago (Stripe · decisiones J): solo en el servidor. Sin STRIPE_SECRET_KEY el pago en línea queda apagado.
+  // En desarrollo, claves de prueba (sk_test_…); el webhook (whsec_…) lo da `stripe listen` o el panel de Stripe.
+  STRIPE_SECRET_KEY: z.string().regex(/^(sk|rk)_(test|live)_/, 'STRIPE_SECRET_KEY debe empezar con sk_test_ o sk_live_').optional().or(z.literal('').transform(() => undefined)),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export const env = esquema.parse(process.env);

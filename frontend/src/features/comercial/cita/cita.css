@@ -124,3 +124,36 @@
 /* W3 / W3b como último paso de W2 (diseño v4) */
 .w3-atras { align-self: flex-start; font-size: 14px; font-weight: 600; color: var(--primary); text-decoration: none; }
 .w3-atras:hover { text-decoration: underline; }
+
+/* W3b · visita a domicilio por día y hora (diseño del 13/11) */
+.w3v-pick { display: grid; grid-template-columns: minmax(0, 440px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.w3v-mag { padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow-sm); }
+.w3v-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.w3v-hd b { font: 700 14.5px/1 var(--font-display); }
+.w3v-hd button { width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 16px; color: var(--ink); }
+.w3v-hd button:disabled { opacity: .35; cursor: default; }
+.w3v-mg { display: grid; grid-template-columns: 44px repeat(6, minmax(0, 1fr)); gap: 4px; }
+.w3v-dh { display: flex; flex-direction: column; align-items: center; font: 700 13px/1.1 var(--font-display); color: var(--ink); padding-bottom: 4px; }
+.w3v-dh small { font: 600 10.5px/1.2 var(--font-sans); color: var(--ink-muted); text-transform: uppercase; letter-spacing: .04em; }
+.w3v-dh.x { opacity: .45; }
+.w3v-hr { font-size: 11.5px; color: var(--ink-muted); display: flex; align-items: center; justify-content: flex-end; padding-right: 4px; font-variant-numeric: tabular-nums; }
+.w3v-lun { grid-column: 1 / -1; font-size: 11px; font-weight: 600; color: var(--ink-muted); text-align: center; padding: 3px 0; border-radius: 6px; background: var(--surface-sunken); }
+.w3v-sl { height: 30px; border-radius: 8px; border: 1.5px solid #BFDBFE; background: var(--surface); cursor: pointer; font: 600 11.5px/1 var(--font-sans); color: var(--primary); padding: 0; }
+.w3v-sl:hover:not(:disabled):not(.on) { background: var(--primary-soft); }
+.w3v-sl.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.w3v-sl.busy { background: var(--surface-sunken); border-color: transparent; color: var(--ink-muted); cursor: not-allowed; font-weight: 500; }
+.w3v-sl.no { background: transparent; border-color: transparent; cursor: default; }
+.w3v-sl:focus-visible, .w3v-hd button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.w3v-lg { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: 11.5px; color: var(--ink-muted); }
+.w3v-lg i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.w3v-sel { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 14px; background: var(--surface-sunken); border: 1px solid var(--line); }
+.w3v-big { display: flex; align-items: center; gap: 12px; }
+.w3v-big > span { width: 52px; height: 56px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; font: 800 22px/1 var(--font-display); color: var(--primary); flex: none; }
+.w3v-big > span > small { font: 700 10.5px/1 var(--font-sans); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); margin-bottom: 3px; }
+.w3v-big > div > b { display: block; font-size: 15px; }
+.w3v-big > div > em { display: block; font-style: normal; font-size: 12.5px; color: var(--ink-muted); }
+@media (max-width: 900px) {
+  .w3v-pick { grid-template-columns: 1fr; }
+  .w3v-mg { grid-template-columns: 38px repeat(6, minmax(0, 1fr)); gap: 3px; }
+  .w3v-sl { height: 28px; }
+}

@@ -3,23 +3,24 @@ import { Alert } from '../../../shared/ui/Alert';
 import { Icon } from '../../../shared/ui/Icon';
 import { StatusChip } from '../../../shared/ui/StatusChip';
 import { TextField } from '../../../shared/ui/TextField';
-import { UploadZone } from '../../../shared/ui/UploadZone';
 import { MapsProvider } from '../../../shared/maps/MapsProvider';
 import { MapaUbicacion } from '../../../shared/maps/MapaUbicacion';
 import { DireccionAutocompletar } from '../../../shared/maps/DireccionAutocompletar';
 import { mapsHabilitado } from '../../../shared/maps/config';
-import { CalendarioRecojo } from '../solicitud/CalendarioRecojo';
 import { Contador } from '../solicitud/Contador';
 import { DibujoMueble } from '../solicitud/DibujoMueble';
-import { DIRECCIONES_GUARDADAS, FRANJAS, TELAS, UNIDAD, fondoTela } from '../solicitud/datos';
-import { MESES, fechaCorta, fechaLarga } from '../fechas';
+import { DIRECCIONES_GUARDADAS, TELAS, UNIDAD, fondoTela } from '../solicitud/datos';
 import {
-  ACTIVIDADES, ADELANTO, ADJUNTOS, CITA, COSTO_YARDA, METODOS_ADELANTO, MOTIVOS_RECHAZO, PEDIDO_SOLICITUD, PLANTILLA, PLAZO_ADELANTO,
-  TRANSPORTE, VIGENCIA, YARDAS_UNA_TELA,
+  ACTIVIDADES, ADJUNTOS, CITA, COSTO_YARDA, METODOS_ADELANTO, MOTIVOS_RECHAZO, PEDIDO_SOLICITUD, PLANTILLA, PLAZO_ADELANTO,
+  TEXTOS, TRANSPORTE, VIGENCIA, YARDAS_UNA_TELA,
 } from './datos';
+import { PasoRecojo, textoRecojo } from './Recojo';
 import { PARTES, dolares, type Atencion, type Calculo, type CambioAtencion } from './estado';
 
 interface Props { a: Atencion; set(c: CambioAtencion): void; c: Calculo }
+
+/** Cómo se lee cada medio de pago dentro de una frase (mismo orden que METODOS_ADELANTO). */
+const COMO_PAGA = ['en efectivo', 'con tarjeta', 'por Zelle', 'con cheque'];
 
 const fondoAdjunto = (color: string) => `linear-gradient(135deg,${color},#0B1B3A)`;
 
@@ -30,7 +31,7 @@ export function PasoRevisar({ a, set }: Omit<Props, 'c'>) {
     <section className="card stack" aria-labelledby="at-p1">
       <h2 id="at-p1" style={{ fontSize: 20 }}>Lo que pidió la clienta</h2>
       <p className="muted" style={{ fontSize: 14 }}>Revíselo con ella antes de empezar. Esto llegó con su solicitud del {CITA.enviada}.</p>
-      <dl className="at-facts">{PEDIDO_SOLICITUD.map((f) => <div key={f.l}><dt>{f.l}</dt><dd>{f.v}</dd></div>)}</dl>
+      <dl className="at-facts">{PEDIDO_SOLICITUD.map((f) => <div key={f.l}><dt>{f.l}</dt><dd>{f.l === 'Tela' ? TEXTOS[a.lugar].tela : f.v}</dd></div>)}</dl>
       <span className="gw-field-label" id="at-adj">Fotos y video que envió · toque para ver en grande</span>
       <div className="at-cg">
         <div className="at-big" style={{ background: fondoAdjunto(sel.color) }} role="img" aria-label={`${sel.nombre}, ${a.adjunto + 1} de ${ADJUNTOS.length}`}>
@@ -47,24 +48,6 @@ export function PasoRevisar({ a, set }: Omit<Props, 'c'>) {
           ))}
         </div>
       </div>
-      {a.extra ? (
-        <div className="at-xbox">
-          <div className="between"><b style={{ fontSize: 14 }}>Datos extra que trae la clienta</b><button type="button" className="gw-btn gw-btn-ghost gw-btn-sm" onClick={() => set({ extra: false })}>Quitar</button></div>
-          <div className="grid3" style={{ gap: 12 }}>
-            {(['ancho', 'fondo', 'alto'] as const).map((k) => (
-              <TextField key={k} label={k[0]!.toUpperCase() + k.slice(1)} optional inputMode="decimal" placeholder="—" suffix={<span className="muted">in</span>}
-                value={a.medidas[k]} onChange={(e) => set({ medidas: { ...a.medidas, [k]: e.target.value } })} />
-            ))}
-          </div>
-          <UploadZone title="Fotos que muestra en su celular" hint="Se suman a las de la solicitud" accept="image/*" files={a.fotos} onChange={(fotos) => set({ fotos })} />
-        </div>
-      ) : (
-        <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => set({ extra: true })}>
-          + La clienta trae medidas o más fotos (opcional)
-        </button>
-      )}
-      <p className="audit">El sofá suele quedarse en casa: las medidas exactas y la revisión del mueble se hacen cuando llega al taller.</p>
-      <Alert tone="info" title="Plantilla sugerida" compact>{PLANTILLA}. Se usa para armar la cotización en el paso 4.</Alert>
     </section>
   );
 }
@@ -79,7 +62,7 @@ export function PasoTelas({ a, set }: Omit<Props, 'c'>) {
   return (
     <section className="card stack" aria-labelledby="at-p2">
       <div className="between" style={{ flexWrap: 'wrap' }}>
-        <h2 id="at-p2" style={{ fontSize: 20 }}>Telas que elige en el local</h2>
+        <h2 id="at-p2" style={{ fontSize: 20 }}>{TEXTOS[a.lugar].telasTitulo}</h2>
         <div className="at-pvw" role="group" aria-label="Cómo se usa la tela">
           <button type="button" aria-pressed={!porPartes} onClick={() => set({ modo: 'una' })}>Una tela para todo</button>
           <button type="button" aria-pressed={porPartes} onClick={() => set({ modo: 'partes' })}>Por partes</button>
@@ -124,7 +107,7 @@ export function PasoTelas({ a, set }: Omit<Props, 'c'>) {
   );
 }
 
-/** Paso 3 · Traslado: delivery ida y vuelta (dirección + fecha preferida) o lo lleva ella. */
+/** Paso 3 · Traslado: delivery ida y vuelta (solo la dirección: el día del recojo se elige después del adelanto) o lo lleva ella. */
 export function PasoTraslado(props: Omit<Props, 'c'>) {
   return <MapsProvider><Traslado {...props} /></MapsProvider>;
 }
@@ -134,7 +117,6 @@ function Traslado({ a, set }: Omit<Props, 'c'>) {
   const mapa = a.usarDireccionNueva
     ? (a.ubicacionNueva ? { ubicacion: a.ubicacionNueva, etiqueta: a.direccionNueva } : { ubicacion: null })
     : { ubicacion: guardada?.ubicacion ?? null, etiqueta: guardada ? `${guardada.ciudad} · ${TRANSPORTE.millas} mi del taller` : undefined };
-  const f = a.fecha;
   return (
     <section className="card stack" aria-labelledby="at-p3">
       <h2 id="at-p3" style={{ fontSize: 20 }}>¿Cómo llega el sofá al taller?</h2>
@@ -183,26 +165,9 @@ function Traslado({ a, set }: Omit<Props, 'c'>) {
             {/* La distancia y el costo de transporte los calcula el backend con Google Maps (CU-C07). */}
             <MapaUbicacion alto={220} {...mapa} />
           </div>
-          <div className="stack" style={{ gap: 8, marginTop: 8 }}>
-            <span className="gw-field-label">¿Cuándo prefiere la clienta que pasemos a recogerlo?</span>
-            <div className="pick2">
-              <CalendarioRecojo value={f} onChange={(fecha) => set({ fecha })} />
-              <div className="selday">
-                <div className="big">
-                  <span><small>{MESES[f.getMonth()]!.slice(0, 3)}</small>{f.getDate()}</span>
-                  <div><b>{fechaLarga(f)}</b><em>Fecha preferida de recojo</em></div>
-                </div>
-                <span className="gw-field-label" id="at-franja">Franja horaria</span>
-                <div className="row" style={{ flexWrap: 'wrap', gap: 8 }} role="radiogroup" aria-labelledby="at-franja">
-                  {FRANJAS.map((l, i) => (
-                    <button key={l} type="button" role="radio" aria-checked={a.franja === i} className={a.franja === i ? 'pslot on' : 'pslot'} onClick={() => set({ franja: i })}>{l}</button>
-                  ))}
-                </div>
-                <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.45 }}>
-                  Es una preferencia: el taller confirma el día exacto al planificar la salida y le avisa a la clienta por correo y en su cuenta.
-                </span>
-              </div>
-            </div>
+          <div className="at-nota" style={{ marginTop: 8 }}>
+            <Icon name="calendar" size={18} />
+            <span><b>El día del recojo se elige después del pago del adelanto.</b> Si la clienta acepta y paga hoy, lo eligen juntos al final. Si paga después, lo elige ella desde su cuenta.</span>
           </div>
         </>
       )}
@@ -290,7 +255,7 @@ export function PasoCotizar({ a, set, c }: Props) {
         <section className="card stack" style={{ padding: 18 }} aria-label="Condiciones">
           <div className="between"><h3 style={{ fontSize: 16 }}>Condiciones</h3><StatusChip status="Parámetros" tone="info" /></div>
           <div className="kv"><span>Vigencia</span><b>{VIGENCIA}</b></div>
-          <div className="kv"><span>Adelanto sugerido</span><b>{ADELANTO * 100} % · sin pedidos cerrados</b></div>
+          <div className="kv"><span>Adelanto sugerido</span><b>{a.adelantoPct > 0 ? `${Math.round(a.adelantoPct * 100)} % · sin pedidos cerrados` : '0 % · con pedidos cerrados'}</b></div>
           <div className="kv"><span>Telas del proveedor</span><b>{c.yardasTotal} yd · se piden al aceptar</b></div>
         </section>
         <section className="card stack" style={{ padding: 18 }} aria-label="Observaciones para la clienta">
@@ -307,14 +272,18 @@ export function PasoCotizar({ a, set, c }: Props) {
 
 /** Paso 5 · Respuesta de la clienta: acepta (orden + adelanto), lo pensará (se publica) o no acepta (motivo). CU-C09, C11, C14. */
 export function PasoRespuesta({ a, set, c }: Props) {
-  const recojo = a.traslado === 'delivery' ? `${fechaCorta(a.fecha)} por la ${a.franja === 0 ? 'mañana' : 'tarde'}` : null;
   const listo = a.resultado != null;
+  const sinAdelanto = a.adelantoPct === 0;
+  const pct = Math.round(a.adelantoPct * 100);
+  // Con delivery, el pedido recién generado necesita su recojo (decisiones L); si lo lleva ella, no hay recojo.
+  const pideRecojo = a.resultado === 'pagado' && a.traslado === 'delivery';
+  const fin = a.resultado === 'despues' || (a.resultado === 'pagado' && (!pideRecojo || a.recojoHecho != null));
   return (
     <section className="card stack" aria-labelledby="at-p5">
       <h2 id="at-p5" style={{ fontSize: 20 }}>¿Qué decide la clienta?</h2>
       <div className="at-opts3" role="radiogroup" aria-label="Respuesta de la clienta">
         {([
-          ['Acepta ahora', 'Se genera la orden y paga el adelanto aquí', 'check'],
+          ['Acepta ahora', sinAdelanto ? 'Se genera la orden y el pedido aquí (adelanto 0 %)' : 'Se genera la orden; el adelanto lo paga ahora o después', 'check'],
           ['Lo pensará', 'Se publica en su cuenta con vigencia de 1 mes', 'clock'],
           ['No acepta', 'Con motivo obligatorio', 'x'],
         ] as const).map(([titulo, sub, icono], i) => (
@@ -327,19 +296,53 @@ export function PasoRespuesta({ a, set, c }: Props) {
 
       {a.respuesta === 0 && !listo && (
         <div className="at-paybox">
-          <div className="between"><b>Adelanto en el local · {ADELANTO * 100} %</b><b className="at-bigv">{dolares(c.adelanto)}</b></div>
-          <div className="at-chips" role="radiogroup" aria-label="Método de pago del adelanto">
-            {METODOS_ADELANTO.map((m, i) => (
-              <button key={m} type="button" role="radio" aria-checked={a.metodo === i} className="at-chip" onClick={() => set({ metodo: i })}>{m}</button>
-            ))}
+          <div className="at-pay-hd">
+            <div>
+              <span className="ov">{TEXTOS[a.lugar].adelanto} · {pct} %</span>
+              <b className="at-bigv">{dolares(c.adelanto)}</b>
+            </div>
+            <div className="at-pay-tot">
+              <span>Total <b>{dolares(c.total)}</b></span>
+              <span>Saldo al entregar <b>{dolares(c.total - c.adelanto)}</b></span>
+            </div>
           </div>
-          <label className="row" style={{ gap: 8, fontSize: 14 }}>
-            <input type="checkbox" checked={a.firmo} onChange={(e) => set({ firmo: e.target.checked })} style={{ width: 18, height: 18, accentColor: 'var(--primary)' }} />
-            La clienta firmó la orden de servicio en la tablet
-          </label>
-          <button type="button" className="gw-btn gw-btn-primary gw-btn-lg" disabled={!a.firmo} onClick={() => set({ resultado: 'pagado' })}>Generar orden y registrar el adelanto</button>
-          <button type="button" className="gw-btn gw-btn-ghost" disabled={!a.firmo} onClick={() => set({ resultado: 'despues' })}>Acepta, pero paga el adelanto después</button>
-          {!a.firmo && <p className="audit">Sin la firma de la orden no se genera el pedido.</p>}
+
+          {sinAdelanto ? (
+            <div className="at-nota"><Icon name="info" size={18} /><span>Cliente con pedidos cerrados: <b>adelanto 0 %</b>. El pedido se genera ahora, sin cobrar nada.</span></div>
+          ) : (
+            <>
+              <span className="gw-field-label" id="at-cuando">¿Cuándo paga el adelanto?</span>
+              <div className="at-pay-op" role="radiogroup" aria-labelledby="at-cuando">
+                <button type="button" role="radio" aria-checked={a.pagaAhora} className={a.pagaAhora ? 'opt on' : 'opt'} onClick={() => set({ pagaAhora: true })}>
+                  <span className="ic"><Icon name="payment" /></span>
+                  <span><b>Paga ahora</b><small>Se genera el pedido{a.traslado === 'delivery' ? ' y definen el recojo' : ''} en este momento</small></span>
+                </button>
+                <button type="button" role="radio" aria-checked={!a.pagaAhora} className={!a.pagaAhora ? 'opt on' : 'opt'} onClick={() => set({ pagaAhora: false })}>
+                  <span className="ic"><Icon name="clock" /></span>
+                  <span><b>Paga después</b><small>Lo paga luego desde su cuenta; el pedido se genera al confirmarse</small></span>
+                </button>
+              </div>
+              {a.pagaAhora ? (
+                <>
+                  <span className="gw-field-label" id="at-medio">Medio de pago</span>
+                  <div className="at-chips" role="radiogroup" aria-labelledby="at-medio">
+                    {METODOS_ADELANTO.map((m, i) => (
+                      <button key={m} type="button" role="radio" aria-checked={a.metodo === i} className="at-chip" onClick={() => set({ metodo: i })}>{m}</button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="at-nota"><Icon name="info" size={18} /><span>Cuando pague el adelanto <b>se genera su pedido</b>{a.traslado === 'delivery' ? ' y ella elige desde su cuenta el día del recojo.' : '.'}</span></div>
+              )}
+            </>
+          )}
+
+          <button type="button" className="gw-btn gw-btn-primary at-pay-cta"
+            onClick={() => set({ resultado: sinAdelanto || a.pagaAhora ? 'pagado' : 'despues' })}>
+            {sinAdelanto ? 'Generar orden (adelanto 0 %)'
+              : a.pagaAhora ? `Generar orden y cobrar ${dolares(c.adelanto)} ${COMO_PAGA[a.metodo]}`
+                : 'Registrar la aceptación · paga después'}
+          </button>
         </div>
       )}
       {a.respuesta === 0 && listo && (
@@ -347,19 +350,32 @@ export function PasoRespuesta({ a, set, c }: Props) {
           <div className="at-okbox" role="status">
             <Icon name="check" size={22} />
             <div>
-              <b>{a.resultado === 'pagado' ? `Orden ${CITA.orden} firmada y pedido ${CITA.pedido} generado` : `Orden ${CITA.orden} firmada · adelanto pendiente`}</b>
+              <b>{a.resultado === 'pagado' ? `Orden ${CITA.orden} y pedido ${CITA.pedido} generados${sinAdelanto ? ' · adelanto 0 %' : ''}` : `Cotización aceptada · adelanto pendiente`}</b>
               <small>
                 {a.resultado === 'pagado'
-                  ? `Adelanto ${dolares(c.adelanto)} en ${METODOS_ADELANTO[a.metodo]!.toLowerCase()} registrado.${recojo ? ` El recojo queda pedido para el ${recojo}` : ''}, y el pedido aparece en el Planning para planificar.`
-                  : `Tiene ${PLAZO_ADELANTO} para pagar el ${dolares(c.adelanto)} desde su cuenta o en el local. El pedido se programa cuando el pago se confirme.`}
+                  ? `${sinAdelanto ? 'Sin adelanto: la clienta tiene pedidos cerrados.' : `Adelanto ${dolares(c.adelanto)} ${COMO_PAGA[a.metodo]} registrado.`} ${pideRecojo ? 'Ahora definan juntos el recojo.' : 'Ella lleva el sofá al taller: no hay recojo que agendar.'}`
+                  : `Tiene ${PLAZO_ADELANTO} para pagar el ${dolares(c.adelanto)} desde su cuenta o en el local. ${a.traslado === 'delivery' ? 'Cuando pague, elige el día del recojo desde su cuenta.' : 'Cuando pague, lleva el sofá al taller.'}`}
               </small>
             </div>
           </div>
+          {pideRecojo && !a.recojoHecho && <PasoRecojo a={a} set={set} />}
+          {pideRecojo && a.recojoHecho && (
+            <div className="at-okbox" role="status">
+              <Icon name="truck" size={22} />
+              <div>
+                <b>{a.recojoHecho === 'llevado' ? 'Sofá recogido en la visita' : 'Recojo agendado'}</b>
+                <small>{a.recojoHecho === 'llevado'
+                  ? `Recojo hecho en la visita. El pedido ${CITA.pedido} sigue «Esperando mueble» hasta que el taller lo recibe.`
+                  : `Pasamos el ${textoRecojo(a.recojoElegido!)}. La clienta recibe la confirmación por correo y en su cuenta.`}</small>
+              </div>
+            </div>
+          )}
+          {fin && (
           <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
             <Link className="gw-btn gw-btn-primary" to="/admin/pedidos">Ver en el Planning</Link>
-            <button type="button" className="gw-btn gw-btn-secondary" disabled title="El PDF de la orden lo genera el backend">Imprimir orden {CITA.orden}</button>
             <Link className="gw-btn gw-btn-ghost" to="/admin/agenda">Volver a la agenda</Link>
           </div>
+          )}
         </>
       )}
 

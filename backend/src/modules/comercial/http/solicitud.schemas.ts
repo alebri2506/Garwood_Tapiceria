@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CODIGOS_ACABADO, CODIGOS_SERVICIO, FRANJAS, OPCIONES_TELA, TRASLADOS, hayRecojo, necesitaCita, sinTelaPermitido } from '../domain/solicitud.js';
+import { CODIGOS_ACABADO, CODIGOS_SERVICIO, OPCIONES_TELA, TRASLADOS, necesitaCita, sinTelaPermitido } from '../domain/solicitud.js';
 
 // Mismas reglas que el asistente W2 del frontend (frontend/src/features/comercial/solicitud/validacion.ts).
 
@@ -49,9 +49,6 @@ export const solicitudSchema = z
     telaConocida: opcional(80, 'El pattern y color son muy largos'),
     traslado: z.enum(TRASLADOS).optional(),
     direccion: direccionSchema.optional(),
-    fechaPrefRecojo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha de recojo no es válida').optional(),
-    franjaRecojo: z.enum(FRANJAS).optional(),
-    horaPrefRecojo: z.string().regex(/^\d{2}:\d{2}$/, 'La hora de recojo no es válida').optional(),
     cita: citaSolicitudSchema.optional(),
   })
   .superRefine((d, ctx) => {
@@ -81,7 +78,8 @@ export const solicitudSchema = z
       if (!necesitaCita(d.tela)) falta(['cita'], 'La cita solo se agenda para ver las telas en el local o en su casa');
       else if (d.tela === 'local' && !d.cita.hora) falta(['cita', 'hora'], 'Elija la hora de su cita');
       else if (d.tela === 'domicilio') {
-        if (!d.cita.franja) falta(['cita', 'franja'], 'Elija la franja de la visita: mañana o tarde');
+        // Diseño W3b del 13/11: la visita se elige por día y hora (ya no por franja).
+        if (!d.cita.hora) falta(['cita', 'hora'], 'Elija el día y la hora de la visita');
         if (!d.cita.direccion) falta(['cita', 'direccion'], 'Indique dónde lo visitamos');
       }
     }
@@ -91,10 +89,6 @@ export const solicitudSchema = z
     if (!d.traslado) return falta(['traslado'], 'Elija cómo llega el mueble');
     if (d.traslado !== 'delivery') return;
     if (!d.direccion) falta(['direccion'], 'Indique la dirección de recojo y entrega');
-    if (hayRecojo(d.muebles.map((m) => m.servicio))) {
-      if (!d.fechaPrefRecojo) falta(['fechaPrefRecojo'], 'Elija el día que prefiere para el recojo');
-      if (!d.horaPrefRecojo) falta(['horaPrefRecojo'], 'Elija la hora que prefiere para el recojo');
-    }
   });
 
 export type SolicitudEntrada = z.infer<typeof solicitudSchema>;

@@ -30,10 +30,12 @@ import { NotificacionesPage } from '../features/notificaciones/NotificacionesPag
 import { ParametrosPage } from '../features/seguridad/parametros/ParametrosPage';
 import { UsuariosPage } from '../features/seguridad/usuarios/UsuariosPage';
 import { PerfilPage } from '../features/historial/perfil/PerfilPage';
+import { PagosAdminPage } from '../features/comercial/pagos/PagosAdminPage';
+import { MiCotizacionPage } from '../features/comercial/micotizacion/MiCotizacionPage';
+import { PagosClientePage } from '../features/comercial/pagos/PagosClientePage';
 
 // Pantallas A del diseño que aún no se implementan (ruta del menú lateral → pantalla).
 const PANTALLAS_ADMIN: [string, string][] = [
-  ['pagos', 'A5 Pagos'],
   ['historial', 'A12 Historial'], ['clientes', 'A17 Clientes y expediente'], ['salidas', 'A13 Planificar salidas'],
   ['taller', 'A18 Taller: recepciones y retiros'], ['reclamos', 'A19 Reclamos e incidencias'],
 
@@ -80,8 +82,8 @@ export const router = createBrowserRouter([
         { path: 'solicitud', element: <SolicitudPage /> },
         { path: 'cita', element: <CitaPage tipo="local" /> },
         { path: 'visita', element: <CitaPage tipo="domicilio" /> },
-        { path: 'cotizacion', element: <PendientePage titulo="W4 Mi cotización" /> },
-        { path: 'pagos', element: <PendientePage titulo="W5 Mis pagos" /> },
+        { path: 'cotizacion', element: <MiCotizacionPage /> },
+        { path: 'pagos', element: <PagosClientePage /> },
         { path: 'entrega', element: <PendientePage titulo="W7 Aviso de entrega" /> },
         { path: 'reclamos', element: <PendientePage titulo="W9 Reclamos" /> },
         { path: 'notificaciones', element: <NotificacionesPage /> },
@@ -102,6 +104,7 @@ export const router = createBrowserRouter([
         { path: 'solicitudes', element: <SolicitudesAdminPage /> },
         { path: 'cotizaciones', element: <Navigate to="/admin/solicitudes?etapa=por-cotizar" replace /> },
         { path: 'cotizaciones/cotizar', element: <CotizarPage /> },
+        { path: 'pagos', element: <PagosAdminPage /> },
         { path: 'pedidos', element: <PedidosPage /> },
         { path: 'pedidos/:codigo', element: <FichaPedidoPage /> },
         { path: 'plantillas', element: <PlantillasPage /> },

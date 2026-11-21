@@ -14,6 +14,7 @@ const filtrosSchema = z.object({
   tipo: z.enum(TIPOS_ACTOR.map((t) => t.codigo) as ['personal', 'clientes', 'sistema'], { errorMap: () => ({ message: 'Elija quién de la lista' }) }).optional(),
   q: z.string().trim().max(100, 'La búsqueda es muy larga').optional(),
   pagina: z.coerce.number().int().min(1).max(1000).default(1),
+  porPagina: z.coerce.number().refine((n) => [10, 25, 50, 100].includes(n), 'Elija 10, 25, 50 o 100 por página').default(50),
 });
 
 /** Filtros de la URL (?desde=&hasta=&usuarioId=&modulo=&q=&pagina=); los vacíos se ignoran. */
@@ -30,12 +31,12 @@ export function auditoriaRoutes() {
   r.use(autenticar, exigirRol('Administrador'));
 
   r.get('/', async (req, res) => {
-    const { pagina, ...filtros } = leerFiltros(req);
-    res.json(await listarActividad(filtros, pagina));
+    const { pagina, porPagina, ...filtros } = leerFiltros(req);
+    res.json(await listarActividad(filtros, pagina, porPagina));
   });
 
   r.get('/exportar', async (req, res) => {
-    const { pagina: _, ...filtros } = leerFiltros(req);
+    const { pagina: _, porPagina: __, ...filtros } = leerFiltros(req);
     const { csv, nombre, truncado } = await exportarActividad(req.usuario!.id, filtros, req.ip);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`);

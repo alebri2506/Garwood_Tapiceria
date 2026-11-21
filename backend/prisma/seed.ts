@@ -7,6 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import { sembrarCatalogoSolicitud } from './seed-solicitud.js';
 import { sembrarParametros } from './seed-parametros.js';
 import { sembrarInventario } from './seed-inventario.js';
+import { sembrarMaquinas, sembrarPlantillasEjemplo } from './seed-plantillas.js';
 
 const prisma = new PrismaClient();
 
@@ -51,8 +52,14 @@ async function main() {
     });
   }
   await sembrarCatalogoSolicitud(prisma);
-  await sembrarInventario(prisma);
-  console.log('Seed completo: roles, parámetros, usuarios de prueba, tipos de mueble, telas e inventario de prueba.');
+  // SEED_DATOS_EJEMPLO=no: no carga los pedidos, proveedores y materiales de ejemplo del inventario.
+  // A16: las máquinas del taller (configuración) van siempre.
+  await sembrarMaquinas(prisma);
+  if (process.env.SEED_DATOS_EJEMPLO !== 'no') {
+    await sembrarInventario(prisma);
+    await sembrarPlantillasEjemplo(prisma);
+  }
+  console.log(`Seed completo: roles, parámetros, usuarios de prueba, tipos de mueble, telas y máquinas${process.env.SEED_DATOS_EJEMPLO === 'no' ? '' : ', inventario y plantillas de ejemplo'}.`);
 }
 
 main()

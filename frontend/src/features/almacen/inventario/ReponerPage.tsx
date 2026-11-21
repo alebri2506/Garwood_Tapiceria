@@ -17,7 +17,9 @@ export function ReponerPage() {
 
   const cargar = useCallback(() => inventarioApi.reponer().then((r) => {
     setDatos(r);
-    setCantidades(Object.fromEntries(r.porProveedor.flatMap((p) => p.lineas.map((l) => [l.materialId, l.sugerido]))));
+    // RG-01: se conserva lo que el Administrador ya ajustó en las líneas que siguen en la lista (al marcar un proveedor
+    // como pedido, los demás no vuelven a la sugerida). Solo las líneas nuevas parten de la cantidad sugerida.
+    setCantidades((antes) => Object.fromEntries(r.porProveedor.flatMap((p) => p.lineas.map((l) => [l.materialId, antes[l.materialId] ?? l.sugerido]))));
   }).catch((e) => setError(e instanceof ApiError ? e.message : 'No pudimos cargar la lista de reposición.')), []);
   useEffect(() => { cargar(); }, [cargar]);
 

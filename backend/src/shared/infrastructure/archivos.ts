@@ -29,6 +29,27 @@ const FORMATOS: { mime: string; tipo: TipoArchivo; ext: string; firma: (b: Buffe
 export const MIMES_ACEPTADOS = FORMATOS.map((f) => f.mime);
 export const formatoDe = (mime: string) => FORMATOS.find((f) => f.mime === mime);
 
+// Comprobantes de pago (W5 · Zelle o cheque): JPG, PNG o PDF de hasta 5 MB. Solo para pagos: una solicitud no acepta PDF.
+const PDF = { mime: 'application/pdf', ext: 'pdf', firma: (b: Buffer) => b.toString('latin1', 0, 5) === '%PDF-' };
+export const MIMES_COMPROBANTE = ['image/jpeg', 'image/png', PDF.mime];
+export const LIMITE_COMPROBANTE = 5 * 1024 * 1024;
+const extDe = (mime: string) => formatoDe(mime)?.ext ?? (mime === PDF.mime ? PDF.ext : 'bin');
+/** Tipos que acepta el bucket privado: los de las solicitudes y los de los comprobantes. */
+const MIMES_BUCKET = [...new Set([...MIMES_ACEPTADOS, ...MIMES_COMPROBANTE])];
+
+/** El comprobante es de verdad un JPG, PNG o PDF (se revisan sus primeros bytes). */
+export async function comprobanteValido(a: ArchivoSubido) {
+  if (!MIMES_COMPROBANTE.includes(a.mimetype) || a.size > LIMITE_COMPROBANTE) return false;
+  if (a.mimetype !== PDF.mime) return firmaValida(a);
+  const f = await open(a.path, 'r');
+  try {
+    const { buffer } = await f.read(Buffer.alloc(8), 0, 8, 0);
+    return PDF.firma(buffer);
+  } finally {
+    await f.close();
+  }
+}
+
 /** Tamaño máximo por tipo de archivo (constante técnica, no de negocio). */
 export const LIMITE_BYTES: Record<TipoArchivo, number> = { foto: 10 * 1024 * 1024, video: 50 * 1024 * 1024 };
 
@@ -81,7 +102,7 @@ export function rutaEnDisco(ruta: string) {
 
 export const almacenEnDisco: AlmacenArchivos = {
   async guardar(a, carpeta) {
-    const ext = formatoDe(a.mimetype)?.ext ?? 'bin';
+    const ext = extDe(a.mimetype);
     const ruta = `${carpeta}/${randomUUID()}.${ext}`;
     const destino = path.resolve(env.UPLOADS_DIR, ruta);
     await mkdir(path.dirname(destino), { recursive: true });
@@ -107,11 +128,24 @@ export function crearAlmacenSupabase(url: string, clave: string, bucket: string)
   /** Crea el bucket privado la primera vez (con los mismos límites de tamaño y tipo que la API). */
   const asegurarBucket = () => (bucketListo ??= (async () => {
     const r = await fetch(`${base}/bucket/${bucket}`, { headers: cabeceras });
-    if (r.ok) return;
+    if (r.ok) {
+      // Un bucket creado antes de los comprobantes no acepta PDF: se le agregan los tipos que falten.
+      const actual = (await r.json().catch(() => ({}))) as { allowed_mime_types?: string[] | null };
+      const tipos = actual.allowed_mime_types;
+      if (tipos && MIMES_BUCKET.some((m) => !tipos.includes(m))) {
+        const u = await fetch(`${base}/bucket/${bucket}`, {
+          method: 'PUT',
+          headers: { ...cabeceras, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ public: false, file_size_limit: LIMITE_BYTES.video, allowed_mime_types: MIMES_BUCKET }),
+        });
+        if (!u.ok) { bucketListo = null; throw new Error(`Supabase Storage: no se pudieron actualizar los tipos del bucket (${u.status})`); }
+      }
+      return;
+    }
     const c = await fetch(`${base}/bucket`, {
       method: 'POST',
       headers: { ...cabeceras, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: bucket, name: bucket, public: false, file_size_limit: LIMITE_BYTES.video, allowed_mime_types: MIMES_ACEPTADOS }),
+      body: JSON.stringify({ id: bucket, name: bucket, public: false, file_size_limit: LIMITE_BYTES.video, allowed_mime_types: MIMES_BUCKET }),
     });
     if (!c.ok && c.status !== 409) {
       bucketListo = null;
@@ -124,7 +158,7 @@ export function crearAlmacenSupabase(url: string, clave: string, bucket: string)
   return {
     async guardar(a, carpeta) {
       await asegurarBucket();
-      const nombre = `${carpeta}/${randomUUID()}.${formatoDe(a.mimetype)?.ext ?? 'bin'}`;
+      const nombre = `${carpeta}/${randomUUID()}.${extDe(a.mimetype)}`;
       const contenido = await readFile(a.path);
       const r = await fetch(`${base}/object/${bucket}/${ruta(nombre)}`, {
         method: 'POST',

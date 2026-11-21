@@ -33,12 +33,17 @@ interface Props {
   motivo: string;
   onMotivo(v: string): void;
   transporte: number;
+  /**
+   * Cotización con varios muebles: el panel muestra el precio de ESTE mueble y el total de toda la cotización; el
+   * transporte va una sola vez en ese total (decisiones K), no en cada mueble.
+   */
+  varios?: { mueble: string; transporte: number; total: number };
   sugerencia?: ReactNode;
   children?: ReactNode;
 }
 
 /** Precio sugerido (calculado, no editable) y precio propuesto (editable, con motivo opcional): CU-C08, PricePanel del sistema GARWEB. */
-export function PricePanel({ desglose, propuesto, onPropuesto, motivo, onMotivo, transporte, sugerencia, children }: Props) {
+export function PricePanel({ desglose, propuesto, onPropuesto, motivo, onMotivo, transporte, varios, sugerencia, children }: Props) {
   const id = useId();
   const sugerido = desglose.reduce((a, p) => a + p.value, 0);
   const dif = sugerido ? ((propuesto - sugerido) / sugerido) * 100 : 0;
@@ -77,11 +82,21 @@ export function PricePanel({ desglose, propuesto, onPropuesto, motivo, onMotivo,
         <label className="gw-field-label" htmlFor={`${id}-m`}>Motivo del cambio <span className="gw-optional">(opcional)</span></label>
         <input id={`${id}-m`} className="gw-input" value={motivo} placeholder="Ej.: retazo disponible" onChange={(e) => onMotivo(e.target.value)} />
       </div>
-      <dl className="gw-price-sum">
-        <div><dt>Servicio</dt><dd>{dolares(propuesto)}</dd></div>
-        <div><dt>Transporte ida y vuelta</dt><dd>{dolares(transporte)}</dd></div>
-        <div className="gw-price-total"><dt>Total para el cliente</dt><dd>{dolares(propuesto + transporte)}</dd></div>
-      </dl>
+      {varios ? (
+        <>
+          <dl className="gw-price-sum">
+            <div><dt>Precio de {varios.mueble}</dt><dd>{dolares(propuesto)}</dd></div>
+            <div className="gw-price-total"><dt>Total de la cotización</dt><dd>{dolares(varios.total)}</dd></div>
+          </dl>
+          <p className="gw-price-nota">Incluye todos los muebles y el transporte ida y vuelta ({dolares(varios.transporte)}), que se cobra una sola vez.</p>
+        </>
+      ) : (
+        <dl className="gw-price-sum">
+          <div><dt>Servicio</dt><dd>{dolares(propuesto)}</dd></div>
+          <div><dt>Transporte ida y vuelta</dt><dd>{dolares(transporte)}</dd></div>
+          <div className="gw-price-total"><dt>Total para el cliente</dt><dd>{dolares(propuesto + transporte)}</dd></div>
+        </dl>
+      )}
       {sugerencia && <Alert tone="info" title="Sugerencia del sistema" compact>{sugerencia}</Alert>}
       {children}
     </aside>

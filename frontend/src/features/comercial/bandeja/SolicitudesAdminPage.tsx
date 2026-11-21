@@ -6,11 +6,12 @@ import { normalizar } from '../../../shared/texto';
 import { Alert } from '../../../shared/ui/Alert';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { Icon } from '../../../shared/ui/Icon';
+import { Paginacion, usePaginacion } from '../../../shared/ui/Paginacion';
 import { StatusChip } from '../../../shared/ui/StatusChip';
 import { Tabs } from '../../../shared/ui/Tabs';
 import { Toast } from '../../../shared/ui/Toast';
 import { DIAS, MESES } from '../fechas';
-import { ETAPAS, adminSolicitudesApi, type Bandeja, type Etapa, type FichaAdmin, type FilaBandeja } from './adminApi';
+import { ETAPAS, adminSolicitudesApi, type Bandeja, type Etapa, type FichaAdmin, type FilaBandeja, esAceptada, tonoEstadoVisible } from './adminApi';
 import { FichaSolicitud } from './FichaSolicitud';
 import { NuevaSolicitudAdmin } from './NuevaSolicitudAdmin';
 import './bandeja.css';
@@ -27,10 +28,6 @@ const AYUDA = [
   'Cotización enviada: falta la respuesta del cliente o su adelanto.',
   'Aceptadas (ya son pedido), rechazadas, vencidas o descartadas.',
 ];
-const TONO: Record<string, 'info' | 'success' | 'progress' | 'danger' | 'neutral'> = {
-  'Nueva': 'info', 'En espera de cita': 'info', 'En espera de visita': 'info', 'Atendida': 'success', 'Esperando respuesta': 'progress',
-  'Aceptada': 'success', 'Rechazada': 'danger', 'Vencida': 'neutral', 'Descartada': 'danger',
-};
 const FECHAS = ['Todas', 'Hoy', 'Últimos 7 días', 'Este mes', 'Rango'] as const;
 
 const isoDe = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -71,6 +68,9 @@ export function SolicitudesAdminPage() {
   const [bandeja, setBandeja] = useState<Bandeja | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pestana, setPestana] = useState(SLUG[params.get('etapa') ?? ''] ?? 0);
+  // El indicador «Aceptadas» filtra solo las aceptadas (con pedido o falta el adelanto), estén en la etapa que estén.
+  const [soloAceptadas, setSoloAceptadas] = useState(false);
+  const verEtapa = (i: number) => { setPestana(i); setSoloAceptadas(false); };
   const [busca, setBusca] = useState('');
   const [fechas, setFechas] = useState(0);
   const [d1, setD1] = useState('');
@@ -94,9 +94,11 @@ export function SolicitudesAdminPage() {
   const texto = normalizar(busca.trim());
   const todas = (bandeja?.solicitudes ?? []).filter((s) => !texto || normalizar(`${s.codigo} ${s.cliente} ${s.muebles.join(' ')}`).includes(texto));
   const etapa: Etapa | null = pestana === 0 ? null : ETAPAS[pestana - 1]!;
-  const filas = todas.filter((s) => !etapa || s.etapa === etapa);
+  const filas = todas.filter((s) => (!etapa || s.etapa === etapa) && (!soloAceptadas || esAceptada(s.estadoVisible)));
   const cuenta = (e: Etapa) => todas.filter((s) => s.etapa === e).length;
   const atrasadas = todas.filter((s) => s.atrasada).length;
+  // Vuelve a la página 1 al cambiar de pestaña, de búsqueda o de fechas.
+  const pagina = usePaginacion(filas, [pestana, soloAceptadas, texto, fechas, d1, d2]);
 
   const elegir = (codigo: string) => {
     setSel(codigo);
@@ -128,7 +130,7 @@ export function SolicitudesAdminPage() {
           <Icon name="clock" size={18} />
           <span>
             <b>{atrasadas === 1 ? `1 solicitud nueva lleva ${bandeja.diasAtraso} días o más sin cotizar` : `${atrasadas} solicitudes nuevas llevan ${bandeja.diasAtraso} días o más sin cotizar`}</b>
-            {' '}· Ninguna solicitud se pierde: toda debe terminar cotizada, vencida o descartada con motivo (RN-C04).
+            {' '}· Ninguna solicitud se pierde: toda debe terminar cotizada, rechazada, vencida o descartada con motivo.
           </span>
           <button type="button" className="gw-btn gw-btn-sm gw-btn-secondary" onClick={() => { setPestana(2); setFechas(0); }}>Ver nuevas</button>
         </div>
@@ -148,14 +150,14 @@ export function SolicitudesAdminPage() {
       {!creando && bandeja && (
         <>
           <div className="sl-kp">
-            <button type="button" className="sl-k sl-warn" onClick={() => setPestana(2)}><span className="ov">Por cotizar</span><b>{cuenta('Por cotizar')}</b><small>Listas para armar la cotización</small></button>
-            <button type="button" className="sl-k" onClick={() => setPestana(3)}><span className="ov">Esperando al cliente</span><b>{cuenta('Esperando al cliente')}</b><small>Cotización enviada, falta su respuesta</small></button>
-            <button type="button" className="sl-k sl-ok" onClick={() => setPestana(4)}><span className="ov">Aceptadas</span><b>{todas.filter((s) => s.estado === 'Aceptada').length}</b><small>Ya son pedido o falta el adelanto</small></button>
+            <button type="button" className="sl-k sl-warn" onClick={() => verEtapa(2)}><span className="ov">Por cotizar</span><b>{cuenta('Por cotizar')}</b><small>Listas para armar la cotización</small></button>
+            <button type="button" className="sl-k" onClick={() => verEtapa(3)}><span className="ov">Esperando al cliente</span><b>{cuenta('Esperando al cliente')}</b><small>Cotización enviada, falta su respuesta</small></button>
+            <button type="button" className={soloAceptadas ? 'sl-k sl-ok sl-k-on' : 'sl-k sl-ok'} aria-pressed={soloAceptadas} onClick={() => { setPestana(0); setSoloAceptadas(true); }}><span className="ov">Aceptadas</span><b>{todas.filter((s) => esAceptada(s.estadoVisible)).length}</b><small>Ya son pedido o falta el adelanto</small></button>
           </div>
           <Tabs
             label="Filtrar por etapa"
             active={pestana}
-            onChange={setPestana}
+            onChange={verEtapa}
             items={PESTANAS.map((p, i) => ({ label: p, count: i === 0 ? todas.length : cuenta(p as Etapa) }))}
           />
           <div className="sl-dfr">
@@ -171,23 +173,26 @@ export function SolicitudesAdminPage() {
             )}
             <span className="muted sl-dfinfo">{todas.length} {todas.length === 1 ? 'solicitud' : 'solicitudes'}</span>
           </div>
-          <p className="muted sl-hint">{AYUDA[pestana]}</p>
+          {soloAceptadas
+            ? <p className="muted sl-hint">Solo las aceptadas: ya son pedido o les falta el adelanto. <button type="button" className="sl-lk" onClick={() => setSoloAceptadas(false)}>Ver todas</button></p>
+            : <p className="muted sl-hint">{AYUDA[pestana]}</p>}
 
           <div className="split sl-split">
             <div className="wide">
               {filas.length > 0 ? (
+                <div className="gw-con-pg">
                 <div className="tbl-box">
                   <table className="t sl-t">
                     <thead><tr><th>Código</th><th>Cliente</th><th>Mueble y tela</th><th>Etapa y estado</th><th>Fecha de solicitud</th></tr></thead>
                     <tbody>
-                      {filas.map((s) => (
+                      {pagina.visibles.map((s) => (
                         <tr key={s.codigo} className={sel === s.codigo ? 'sel' : undefined} style={{ cursor: 'pointer' }} onClick={() => elegir(s.codigo)}>
                           <td className="sl-nw"><button type="button" className="sl-cod" aria-pressed={sel === s.codigo}>{s.codigo}</button></td>
                           <td><b className="sl-nw">{s.cliente}</b><div className="muted sl-s">{s.ciudad ?? '—'}</div></td>
                           <td><b style={{ fontWeight: 600 }}>{s.muebles.join(', ')}</b><div className="muted sl-s">{TELA[s.tela]}</div></td>
                           <td>
                             <span className="sl-etapa">{s.etapa}</span>
-                            <StatusChip status={s.estadoVisible} tone={TONO[s.estadoVisible]} />
+                            <StatusChip status={s.estadoVisible} tone={tonoEstadoVisible(s.estadoVisible)} />
                             <div className="muted sl-s" style={{ marginTop: 4 }}>{detalle(s)}</div>
                           </td>
                           <td className="sl-nw">
@@ -199,6 +204,8 @@ export function SolicitudesAdminPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+                <Paginacion {...pagina.props} />
                 </div>
               ) : texto ? (
                 <EmptyState icon="search" title="Sin resultados">No hay solicitudes con «{busca.trim()}» en esta etapa.</EmptyState>

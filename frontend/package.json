@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "3.9.1",
+    "@stripe/react-stripe-js": "^7.1.0",
+    "@stripe/stripe-js": "^10.3.0",
     "@vis.gl/react-google-maps": "1.9.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",

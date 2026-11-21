@@ -5,8 +5,6 @@ import { UploadZone } from '../../../shared/ui/UploadZone';
 import { DireccionAutocompletar } from '../../../shared/maps/DireccionAutocompletar';
 import { MapaUbicacion } from '../../../shared/maps/MapaUbicacion';
 import { mapsHabilitado } from '../../../shared/maps/config';
-import { MESES, fechaLarga } from '../fechas';
-import { RecojoPorHora } from './RecojoPorHora';
 import { Contador } from './Contador';
 import { DibujoMueble } from './DibujoMueble';
 import { fondoDe } from './datos';
@@ -406,7 +404,6 @@ export function PasoTrasladoW2(p: PropsPaso) {
   const mapa = guardada
     ? { ubicacion: guardada.latitud != null && guardada.longitud != null ? { lat: guardada.latitud, lng: guardada.longitud } : null, etiqueta: `${guardada.etiqueta ?? 'Dirección'} · ${guardada.ciudad ?? ''}` }
     : { ubicacion: e.dir.ubicacion, etiqueta: e.dir.ubicacion ? e.dir.texto : undefined };
-  const f = e.recojo ? (() => { const [y, m, d] = e.recojo.fecha.split('-').map(Number); return new Date(y!, m! - 1, d!); })() : null;
 
   return (
     <section className="card stack" aria-labelledby="w2-tras">
@@ -433,26 +430,12 @@ export function PasoTrasladoW2(p: PropsPaso) {
               onElegir={(d) => set({ dir: { ...e.dir, guardadaId: null, texto: d.texto, ubicacion: d.ubicacion } })} />
           </div>
           {hayRecojo(e) ? (
-            <div className="stack" style={{ gap: 8, marginTop: 8 }}>
-              <span className="gw-field-label">¿Cuándo prefiere que pasemos a recogerlo?</span>
-              <div className="pick2 ag2">
-                <RecojoPorHora valor={e.recojo} onChange={(recojo) => set({ recojo })} />
-                <div className="selday">
-                  {f ? (
-                    <div className="big">
-                      <span><small>{MESES[f.getMonth()]!.slice(0, 3)}</small>{f.getDate()}</span>
-                      <div><b>{fechaLarga(f)}</b><em>Recojo preferido · {e.recojo!.hora} a {e.recojo!.hasta}</em></div>
-                    </div>
-                  ) : (
-                    <div className="big"><span><small>—</small>?</span><div><b>Elija un día y una hora</b><em>Recojo preferido</em></div></div>
-                  )}
-                  <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.45 }}>
-                    {p.admin ? 'Elija con el cliente la hora en que prefiere que pasemos.' : 'Elija la hora en que prefiere que pasemos.'} Es una preferencia: el recojo se hace después de que {p.admin ? 'el cliente acepte' : 'acepte'} la cotización; el taller la confirma al planificar la salida y {p.admin ? 'le avisa al cliente' : 'le avisa'} por correo y aquí.
-                  </span>
-                </div>
-              </div>
-              <ErrorCampo texto={errores.horaPrefRecojo ?? errores.fechaPrefRecojo} />
-            </div>
+            // Decisiones A.7: el día y la hora del recojo se eligen cuando se confirma el pago, no al pedir la cotización.
+            <Alert tone="info" title="El día del recojo lo elige después" compact>
+              {p.admin
+                ? 'Cuando el cliente acepte la cotización y se confirme su pago, le pediremos que elija el día y la hora del recojo según los horarios libres del taller.'
+                : 'Cuando acepte la cotización y se confirme su pago, le pediremos que elija el día y la hora del recojo según los horarios libres del taller.'}
+            </Alert>
           ) : (
             <p className="muted" style={{ fontSize: 13 }}>Como es un mueble nuevo, no hay nada que recoger. Cuando esté terminado le avisamos y coordinamos el día de la entrega.</p>
           )}

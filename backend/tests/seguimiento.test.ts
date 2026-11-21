@@ -50,12 +50,12 @@ const VISITA = { tipo: 'nueva', texto: '48 Elm St, Montclair, NJ', guardar: fals
 const enEspera = (tela: 'local' | 'domicilio') =>
   enviar({ cliente: { id: clienteId }, canal: 'telefono', esperaFotos: false, avisar: false, solicitud: conCita(tela) }, admin, true, '/api/admin/solicitudes');
 
-/** Primer turno libre (local) o franja libre (domicilio) según la API. */
+/** Primer turno libre (local) u hora de visita libre (domicilio) según la API. */
 async function primerLibre(tipo: 'local' | 'domicilio') {
   const r = await request(app).get(`/api/citas/disponibilidad?tipo=${tipo}&dias=30`).set(auth(cliente));
   for (const d of r.body.dias) {
     if (tipo === 'local') { const t = d.turnos.find((x: { libre: boolean }) => x.libre); if (t) return { fecha: d.fecha, hora: t.hora }; }
-    else { const f = d.franjas.find((x: { libre: boolean }) => x.libre); if (f) return { fecha: d.fecha, franja: f.codigo }; }
+    else { const h = d.horas.find((x: { libre: boolean }) => x.libre); if (h) return { fecha: d.fecha, hora: h.hora }; }
   }
   throw new Error('sin turnos libres');
 }
@@ -121,7 +121,7 @@ describe('CU-C04 cita en el local', () => {
     const a = await enEspera('local');
     const turno = await primerLibre('local');
     expect((await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'local', fecha: turno.fecha, hora: '13:00' })).body.mensaje).toMatch(/turnos de la agenda/);
-    expect((await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', fecha: turno.fecha, franja: 'manana' })).body.mensaje).toMatch(/ver las telas en el local/);
+    expect((await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', fecha: turno.fecha, hora: '10:00' })).body.mensaje).toMatch(/ver las telas en el local/);
 
     const otro = await request(app).post('/api/auth/registro').send({ tipoPersona: 'persona', nombres: 'Otra', apellidos: 'Clienta', email: `otra${Date.now()}@prueba.test`, telefono: '+19735550111', contrasena: 'Clave2026', avisosCorreo: true });
     const ajena = await request(app).post('/api/citas').set(auth(otro.body.token)).send({ solicitud: a.body.codigo, tipo: 'local', ...turno });
@@ -162,16 +162,42 @@ describe('CU-C04 cita en el local', () => {
 });
 
 describe('CU-C04 visita a domicilio', () => {
-  it('agenda por franja con la dirección de la visita y marca atendida', async () => {
+  it('ofrece visitas de 1 hora que empiezan cada 30 min como la Agenda, desde mañana y sin domingos', async () => {
+    const r = await request(app).get('/api/citas/disponibilidad?tipo=domicilio&dias=14').set(auth(cliente));
+    expect(r.status).toBe(200);
+    expect(r.body.horas).toEqual(['09:30', '10:00', '10:30', '11:00', '15:00', '15:30', '16:00']);
+    expect(r.body.duracionMin).toBe(60);
+    expect(r.body.dias[0].fecha > hoyNegocio()).toBe(true);
+    const mas1h = (h: string) => { const t = +h.slice(0, 2) * 60 + +h.slice(3) + 60; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; };
+    for (const d of r.body.dias) {
+      if (new Date(`${d.fecha}T00:00:00Z`).getUTCDay() === 0) expect(d.cerrado).toBeTruthy();
+      for (const h of d.horas) expect(h.hasta).toBe(mas1h(h.hora));
+    }
+  });
+
+  it('el cliente agenda por día y hora con la dirección; la hora queda ocupada para otros y marca atendida', async () => {
     const a = await enEspera('domicilio');
-    const franja = await primerLibre('domicilio');
-    const sinDir = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', ...franja });
+    const hora = await primerLibre('domicilio');
+    const sinDir = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', ...hora });
     expect(sinDir.body.mensaje).toMatch(/dónde lo visitamos/);
+    const sinHora = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', fecha: hora.fecha, franja: 'manana', direccion: VISITA });
+    expect(sinHora.body.mensaje).toMatch(/día y la hora de la visita/);
+    const fuera = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', fecha: hora.fecha, hora: '11:30', direccion: VISITA });
+    expect(fuera.body.mensaje).toMatch(/horario de visitas/);
 
-    const c = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', ...franja, direccion: { tipo: 'nueva', texto: '48 Elm St, Montclair, NJ', guardar: false } });
+    const c = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: a.body.codigo, tipo: 'domicilio', ...hora, direccion: { tipo: 'nueva', texto: '48 Elm St, Montclair, NJ', guardar: false } });
     expect(c.status).toBe(201);
-    expect(c.body).toMatchObject({ tipo: 'domicilio', franja: franja.franja, hora: null });
+    expect(c.body).toMatchObject({ tipo: 'domicilio', hora: hora.hora, franja: hora.hora < '12:00' ? 'manana' : 'tarde', duracionMin: 60 });
 
+    // La misma hora ya no está libre para otra visita.
+    const dispo = await request(app).get(`/api/citas/disponibilidad?tipo=domicilio&desde=${hora.fecha}&dias=1`).set(auth(cliente));
+    expect(dispo.body.dias[0].horas.find((x: { hora: string }) => x.hora === hora.hora)).toMatchObject({ libre: false, motivo: 'Hora ocupada' });
+    const b = await enEspera('domicilio');
+    const otra = await request(app).post('/api/citas').set(auth(cliente)).send({ solicitud: b.body.codigo, tipo: 'domicilio', ...hora, direccion: VISITA });
+    expect(otra.status).toBe(409);
+
+    // Se atiende el día de la visita (decisiones L.2.11): se lleva la visita a hoy para marcarla.
+    await prisma.cita.update({ where: { id: c.body.id }, data: { fechaHora: instanteNY(hoyNegocio(), hora.hora) } });
     const at = await request(app).post(`/api/citas/${c.body.id}/resultado`).set(auth(admin)).send({ resultado: 'atendida' });
     expect(at.body.cita).toBe('Atendida');
     expect((await prisma.solicitud.findUniqueOrThrow({ where: { codigo: a.body.codigo } })).estado).toBe('Atendida');
@@ -224,6 +250,36 @@ describe('A2 · agenda del Administrador', () => {
     expect((await request(app).post('/api/admin/agenda/bloqueos').set(auth(admin)).send({ bloques: [t2] })).body.mensaje).toMatch(/tiene una cita/);
   });
 
+  it('W3b: la visita empieza cada 30 min como la Agenda (dura 1 h: solo donde la hora entera cabe)', async () => {
+    const r = await request(app).get('/api/citas/disponibilidad?tipo=domicilio&dias=3').set(auth(cliente));
+    expect(r.body.horas).toEqual(['09:30', '10:00', '10:30', '11:00', '15:00', '15:30', '16:00']);
+    expect(r.body.horario).toBe('09:30–12:00 y 15:00–17:00');
+    expect(r.body.dias[0].horas.map((h: { hora: string; hasta: string }) => `${h.hora}-${h.hasta}`)).toContain('10:30-11:30');
+  });
+
+  it('W3 ve la misma agenda que A2: una cita atendida antes de su hora y un bloqueo que toca parte del turno no se ofrecen', async () => {
+    const libreEn = async (t: { fecha: string; hora: string }) => {
+      const d = await request(app).get(`/api/citas/disponibilidad?tipo=local&desde=${t.fecha}&dias=1`).set(auth(cliente));
+      return d.body.dias[0].turnos.find((x: { hora: string }) => x.hora === t.hora).libre as boolean;
+    };
+    // Una cita atendida antes de su hora sigue en la agenda, así que el turno no vuelve a ofrecerse. (Se marca directo:
+    // por la regla L.2.11 solo se atiende el día de la cita, y el primer turno libre puede ser otro día.)
+    const s = await enEspera('local');
+    const t = await primerLibre('local');
+    const c = await request(app).post('/api/citas').set(auth(admin)).send({ solicitud: s.body.codigo, tipo: 'local', ...t });
+    await prisma.cita.update({ where: { id: c.body.id }, data: { estado: 'Atendida' } });
+    expect(await libreEn(t)).toBe(false);
+
+    // Un bloqueo de 15 minutos a mitad del turno lo deja sin ofrecer (antes solo contaba la hora de inicio).
+    const t2 = await primerLibre('local');
+    const [h, m] = t2.hora.split(':').map(Number) as [number, number];
+    const mitad = `${String(h).padStart(2, '0')}:${String(m + 15).padStart(2, '0')}`;
+    const fin = `${String(h + (m + 30 >= 60 ? 1 : 0)).padStart(2, '0')}:${String((m + 30) % 60).padStart(2, '0')}`;
+    const b = await prisma.agendaBloqueo.create({ data: { fecha: new Date(`${t2.fecha}T00:00:00Z`), horaInicio: mitad, horaFin: fin, motivo: 'Proveedor' } });
+    expect(await libreEn(t2)).toBe(false);
+    await prisma.agendaBloqueo.update({ where: { id: b.id }, data: { activo: false } });
+  });
+
   it('quitar un bloqueo lo anula sin borrarlo y el turno vuelve a estar libre', async () => {
     const t = await primerLibre('local');
     await request(app).post('/api/admin/agenda/bloqueos').set(auth(admin)).send({ bloques: [t], motivo: 'Reunión' });
@@ -266,16 +322,18 @@ describe('W2 + W3/W3b · la solicitud se envía junto con la cita', () => {
     expect(await prisma.solicitud.count()).toBe(antes);
   });
 
-  it('visita a domicilio: exige qué tela busca, la franja y la dirección', async () => {
-    const franja = await primerLibre('domicilio');
-    const sinTexto = await enviar({ ...conCita('domicilio'), telaDescripcion: '', cita: { ...franja, direccion: VISITA } });
+  it('visita a domicilio: exige qué tela busca, el día y la hora, y la dirección', async () => {
+    const hora = await primerLibre('domicilio');
+    const sinTexto = await enviar({ ...conCita('domicilio'), telaDescripcion: '', cita: { ...hora, direccion: VISITA } });
     expect(sinTexto.body.errores?.telaDescripcion).toMatch(/qué tela busca/);
-    const sinDir = await enviar({ ...conCita('domicilio'), cita: franja });
+    const sinDir = await enviar({ ...conCita('domicilio'), cita: hora });
     expect(sinDir.body.errores?.['cita.direccion']).toMatch(/dónde lo visitamos/);
+    const sinHora = await enviar({ ...conCita('domicilio'), cita: { fecha: hora.fecha, franja: 'manana', direccion: VISITA } });
+    expect(sinHora.body.errores?.['cita.hora']).toMatch(/día y la hora de la visita/);
 
-    const ok = await enviar({ ...conCita('domicilio'), cita: { ...franja, direccion: VISITA } });
+    const ok = await enviar({ ...conCita('domicilio'), cita: { ...hora, direccion: VISITA } });
     expect(ok.status).toBe(201);
-    expect(ok.body.cita).toMatchObject({ tipo: 'domicilio', franja: franja.franja, hora: null });
+    expect(ok.body.cita).toMatchObject({ tipo: 'domicilio', hora: hora.hora, duracionMin: 60 });
     const d = await request(app).get(`/api/solicitudes/${ok.body.codigo}`).set(auth(cliente));
     expect(d.body).toMatchObject({ telaDescripcion: 'Azul marino, suave', cita: { direccion: '48 Elm St, Montclair, NJ' } });
   });

@@ -41,17 +41,3 @@ export function leerFecha(texto: string): Date | null {
   const d = utc(+m[1]!, +m[2]! - 1, +m[3]!);
   return d.getUTCMonth() === +m[2]! - 1 && d.getUTCDate() === +m[3]! ? d : null;
 }
-
-/** Motivo por el que no se puede pedir el recojo ese día, o null si se puede. */
-export function motivoSinRecojo(texto: string, diasMaximos: number, hoy = hoyNegocio()): string | null {
-  const d = leerFecha(texto);
-  if (!d) return 'La fecha de recojo no es válida.';
-  const desde = leerFecha(hoy)!;
-  if (d < desde) return 'La fecha de recojo ya pasó. Elija otro día.';
-  const limite = new Date(desde);
-  limite.setUTCDate(limite.getUTCDate() + diasMaximos);
-  if (d > limite) return `Elija una fecha de recojo dentro de los próximos ${diasMaximos} días.`;
-  if (d.getUTCDay() === 0) return 'Los domingos no hay recojos. Elija otro día.';
-  const feriado = feriados(d.getUTCFullYear()).find((f) => f.fecha.getTime() === d.getTime());
-  return feriado ? `${feriado.nombre} no hay recojos. Elija otro día.` : null;
-}

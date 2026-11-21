@@ -73,6 +73,9 @@
 .sl-k { display: flex; flex-direction: column; gap: 5px; padding: 14px 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-sm); text-align: left; cursor: pointer; font-family: var(--font-sans); color: var(--ink); }
 .sl-k b { font: 800 26px/1 var(--font-display); font-variant-numeric: tabular-nums; }
 .sl-k small { font-size: 12.5px; color: var(--ink-muted); }
+/* Indicador usado como filtro (Aceptadas): queda marcado mientras filtra. */
+.sl-k.sl-k-on { border-color: var(--success-500); box-shadow: 0 0 0 3px color-mix(in srgb, var(--success-500) 20%, transparent); }
+.sl-lk { border: 0; background: none; padding: 0; color: var(--primary); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; }
 .sl-k.sl-warn { border-color: color-mix(in srgb, var(--warning-500) 50%, var(--line)); background: color-mix(in srgb, var(--warning-500) 6%, var(--surface)); }
 .sl-k.sl-ok b { color: var(--success-ink); }
 .sl-k:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

@@ -16,16 +16,22 @@ Casos de uso: **C03** Configurar disponibilidad · **C04** Programar, reprograma
   | Cuadro | Color / estilo |
   |---|---|
   | Cita en el local | Azul |
-  | Visita a domicilio | Morado, **2 turnos = 1 h** |
+  | Visita a domicilio | Morado, **2 turnos = 1 h**; empieza cada 30 min (decisiones L.2.9) |
   | Retiro en taller | Ámbar |
+  | **En atención** *(15/11)* | Otro color, con «Continuar la atención» (decisiones L.2.10) |
+  | **Recojo** *(15/11)* | Naranja, «Recojo · cliente» con el pedido y la dirección; **1 h**; no se puede elegir ni bloquear |
   | Atendida | Verde |
   | No asistió / No lo encontramos | Rojo |
   | Bloqueado | Gris rayado con candado |
   | Libre | Vacío |
 
 - **Filtros:** Todas · Visitas al local · Retiros.
-- **Recojos preferidos (11/11):** la hora de recojo que eligió el cliente en W2 aparece como un bloque de 1 hora en ámbar («Recojo preferido») y ocupa esos turnos mientras la solicitud espera. Al tocarlo se ven el cliente, la solicitud y la dirección.
-- **No muestra** las entregas ni los recojos ya planificados: los hace el conductor y están en **Salidas (A13)**.
+- **Recojos · actualizado el 15/11 (decisiones L.2.9):** el cliente ya **no** elige el recojo en W2. El recojo se agenda
+  cuando nace el pedido: en la atención (A2b) o cuando el cliente acepta desde su cuenta (W4). **Una sola agenda sin
+  cruces:** recojos, citas, visitas y bloqueos nunca se cruzan, porque a veces el Administrador va al recojo. Un recojo
+  ocupa 1 h (`recojo.duracion_min`), empieza en las mismas horas de la agenda (cada 30 min) y hay **un recojo a la vez**
+  (un camión).
+- **No muestra** las entregas: esas las planifica el conductor en **Salidas (A13)**, aún sin construir.
 - **Panel derecho:** el detalle de lo que se toque.
 
 ## 3. Modos
@@ -44,14 +50,16 @@ El turno queda libre al instante.
 
 ## 4. Estados y reglas
 ```
-Programada ──Atender──► Atendida → cotización (o «Guardar y terminar en el taller» → Cotizaciones › Por armar)
+Programada ──Empezar──► En atención ──respuesta del cliente──► Atendida (la solicitud pasa a Cotizada)
+    │                         └─ si se sale a medias: sigue En atención → «Continuar la atención» (decisiones L.2.7 y L.2.10)
     ├─ No asistió / No lo encontramos (1.ª vez) → «Reprogramar con el cliente», o el cliente reprograma desde su cuenta
     ├─ No asistió (2.ª vez) → «Dar por vencida» (regla) u «Ofrecer último turno» (excepción)
     ├─ Reprogramar → Programada en el nuevo turno (máximo 1 reprogramación)
     └─ El cliente cancela en la web (hasta el día anterior) → Cancelada
 ```
 - Un turno = un cliente.
-- La visita ocupa 2 turnos seguidos.
+- La visita y el recojo ocupan 2 turnos seguidos (1 h).
+- Una cita **En atención** sigue ocupando la agenda y no admite «No asistió».
 - Al confirmar, reprogramar o marcar una inasistencia, se avisa al cliente (correo y su cuenta).
 - Todo queda en la bitácora: quién bloqueó, desbloqueó, agendó o reprogramó, y cuándo.
 

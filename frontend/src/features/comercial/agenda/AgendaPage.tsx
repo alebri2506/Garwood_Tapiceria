@@ -10,7 +10,7 @@ import { Toast } from '../../../shared/ui/Toast';
 import { adminSolicitudesApi, type FichaAdmin } from '../bandeja/adminApi';
 import { citasApi } from '../cita/citasApi';
 import { DIAS, MESES } from '../fechas';
-import { agendaApi, type CitaAgenda, type RecojoAgenda, type Semana } from './agendaApi';
+import { agendaApi, type CitaAgenda, type Semana } from './agendaApi';
 import './agenda.css';
 
 // ---------------------------------------------------------------- utilidades de fecha y hora
@@ -77,7 +77,8 @@ export function AgendaPage() {
   const [bsel, setBsel] = useState<string[]>([]);
   const [blkOk, setBlkOk] = useState<{ titulo: string; texto: string } | null>(null);
   const [selBloqueo, setSelBloqueo] = useState<number | null>(null);
-  const [selRecojo, setSelRecojo] = useState<string | null>(null);
+  /** Recojo elegido en el calendario: se muestra su detalle (solo vista). */
+  const [selRec, setSelRec] = useState<number | null>(null);
   const [aviso, setAviso] = useState<{ titulo: string; texto: string } | null>(null);
   const [falla, setFalla] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -132,22 +133,20 @@ export function AgendaPage() {
       if (c.tipo === 'domicilio') for (let m = sem.duracionMin; m < c.duracionMin; m += sem.duracionMin) poner(`${c.fecha}|${sumar(c.hora, m)}`, { c, cont: true });
     }
     const sinHora = sem.citas.filter((c) => !c.hora);
-    // W2: los recojos reservados ocupan cada turno que tocan (bloque de 1 hora).
-    const recojoEn = new Map<string, { r: RecojoAgenda; cont: boolean }>();
-    for (const r of sem.recojos) {
-      sem.turnos.filter((h) => h >= r.hora && h < r.hasta).forEach((h, k) => recojoEn.set(`${r.fecha}|${h}`, { r, cont: k > 0 }));
-    }
-    return { porTurno, sinHora, recojoEn };
+    return { porTurno, sinHora };
   }, [sem]);
 
   if (error) return <Alert tone="danger" title="No pudimos cargar la agenda">{error} <button type="button" className="gw-btn gw-btn-secondary gw-btn-sm" onClick={recargar}>Reintentar</button></Alert>;
   if (!sem || !datos) return <p className="muted" role="status">Cargando la agenda…</p>;
 
-  const { porTurno, sinHora, recojoEn } = datos;
+  const { porTurno, sinHora } = datos;
   const cerradoDe = (fecha: string) => sem.dias.find((d) => d.fecha === fecha)?.cerrado ?? null;
   const bloqueo = (fecha: string, hora: string) => sem.bloqueos.find((b) => b.fecha === fecha && hora >= b.horaInicio && hora < b.horaFin);
   const pasado = (fecha: string, hora: string) => fecha < sem.hoy || (fecha === sem.hoy && hora <= sem.ahora);
-  const libre = (fecha: string, hora: string) => sem.turnos.includes(hora) && !porTurno.has(`${fecha}|${hora}`) && !recojoEn.has(`${fecha}|${hora}`) && !bloqueo(fecha, hora) && !cerradoDe(fecha) && !pasado(fecha, hora);
+  // Una sola agenda sin cruces: el recojo ocupa los turnos que toca (a veces va el Administrador con el delivery).
+  const recojoEn = (fecha: string, hora: string) => (sem.recojos ?? []).find((r) => r.fecha === fecha && minutos(r.hora) < minutos(hora) + sem.duracionMin && minutos(r.fin) > minutos(hora));
+  const primerTurnoDe = (r: { fecha: string; hora: string; fin: string }) => sem.turnos.find((t) => minutos(r.hora) < minutos(t) + sem.duracionMin && minutos(r.fin) > minutos(t));
+  const libre = (fecha: string, hora: string) => sem.turnos.includes(hora) && !porTurno.has(`${fecha}|${hora}`) && !recojoEn(fecha, hora) && !bloqueo(fecha, hora) && !cerradoDe(fecha) && !pasado(fecha, hora);
   const nTurnosVisita = Math.max(1, Math.ceil(sem.visitaDuracionMin / sem.duracionMin));
   const horasDe = (hora: string, casa: boolean) => Array.from({ length: casa ? nTurnosVisita : 1 }, (_, k) => sumar(hora, k * sem.duracionMin));
   const cabe = (fecha: string, hora: string, casa: boolean) => horasDe(hora, casa).every((h) => libre(fecha, h));
@@ -160,9 +159,10 @@ export function AgendaPage() {
   const hoyIdx = sem.dias.findIndex((d) => d.fecha === sem.hoy);
   const proxima = sem.citas.filter((c) => c.fecha === sem.hoy && c.estado === 'Programada' && c.hora && c.hora > sem.ahora).sort((a, b) => a.hora!.localeCompare(b.hora!))[0];
   const s = sem.citas.find((c) => c.id === sel) ?? null;
-  const recojoSel = selRecojo ? sem.recojos.find((r) => r.solicitud === selRecojo) ?? null : null;
+  const r = (sem.recojos ?? []).find((x) => x.id === selRec) ?? null;
 
-  const elegirCita = (c: CitaAgenda) => { setSel(c.id); setSelRecojo(null); setAviso(null); setFalla(null); };
+  const elegirCita = (c: CitaAgenda) => { setSel(c.id); setSelRec(null); setAviso(null); setFalla(null); };
+  const elegirRecojo = (id: number) => { setSelRec(id); setSel(null); setCfg(false); setAviso(null); setFalla(null); };
   const salirDeAgendar = () => { setAg(null); setBk(null); setFalla(null); if (params.has('agendar')) setParams({}, { replace: true }); };
 
   // ---------------------------------------------------------------- acciones
@@ -231,26 +231,30 @@ export function AgendaPage() {
     const x = porTurno.get(k);
     if (x) {
       const c = x.c;
-      const clase = c.estado === 'Atendida' ? 'ag-done' : c.estado === 'No asistió' ? 'ag-miss' : 'ag-appt';
+      const clase = c.estado === 'Atendida' ? 'ag-done' : c.estado === 'En atención' ? 'ag-curso' : c.estado === 'No asistió' ? 'ag-miss' : 'ag-appt';
       const detalle = x.cont ? `${c.solicitud.mueble} · continúa (1 hora)` : `${c.solicitud.mueble}${c.tipo === 'domicilio' ? ' · visita a domicilio' : ' · ver telas en el local'}`;
+      // Cruce agendado antes de «una sola agenda» (15/11): se avisa para reprogramar uno de los dos.
+      const cruce = c.estado === 'Programada' || c.estado === 'Atendida' ? recojoEn(fecha, hora) : undefined;
       return (
-        <button type="button" className={`ag-ap ${clase}${c.tipo === 'domicilio' ? ' ag-home' : ''}${sel === c.id ? ' ag-sel' : ''}${atenuada(c) ? ' ag-dim' : ''}`}
+        <button type="button" className={`ag-ap ${clase}${c.tipo === 'domicilio' ? ' ag-home' : ''}${sel === c.id ? ' ag-sel' : ''}${atenuada(c) ? ' ag-dim' : ''}${cruce ? ' ag-cruce' : ''}`}
+          title={cruce ? `Se cruza con el recojo del pedido ${cruce.pedido} (${cruce.hora}–${cruce.fin}): reprograme uno de los dos` : undefined}
           aria-pressed={sel === c.id} aria-label={`${c.solicitud.cliente}, ${largo(fecha)} a las ${hora}, ${c.estado}`} onClick={() => elegirCita(c)}>
           {enDia
-            ? <><div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}><b>{c.solicitud.cliente}</b><span>{detalle}</span></div><StatusChip status={c.estado} /></>
-            : <><b>{c.solicitud.cliente}</b><span>{x.cont ? 'continúa' : c.solicitud.mueble}</span></>}
+            ? <><div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}><b>{c.solicitud.cliente}</b><span>{cruce ? `⚠ Se cruza con el recojo ${cruce.pedido} (${cruce.hora}–${cruce.fin})` : detalle}</span></div><StatusChip status={c.estado} /></>
+            : <><b>{c.solicitud.cliente}</b><span>{cruce ? `⚠ recojo ${cruce.hora}` : x.cont ? 'continúa' : c.solicitud.mueble}</span></>}
         </button>
       );
     }
-    const rec = recojoEn.get(k);
+    const rec = recojoEn(fecha, hora);
     if (rec) {
+      const sigue = primerTurnoDe(rec) !== hora;
       return (
-        <button type="button" className={`ag-ap ag-rec${selRecojo === rec.r.solicitud ? ' ag-sel' : ''}${filtro === 1 ? ' ag-dim' : ''}`}
-          aria-pressed={selRecojo === rec.r.solicitud} aria-label={`Recojo preferido de ${rec.r.cliente}, ${largo(fecha)} de ${rec.r.hora} a ${rec.r.hasta}`}
-          onClick={() => { setSelRecojo(rec.r.solicitud); setSel(null); setAviso(null); }}>
+        <button type="button" className={`ag-ap ag-rec${selRec === rec.id ? ' ag-sel' : ''}`} title={`Recojo del pedido ${rec.pedido} · ${rec.hora}–${rec.fin}${rec.direccion ? ` · ${rec.direccion}` : ''} · ver detalle`}
+          aria-pressed={selRec === rec.id} disabled={Boolean(ag) || blk}
+          aria-label={`Recojo del pedido ${rec.pedido} de ${rec.cliente}, ${largo(fecha)} de ${rec.hora} a ${rec.fin}. Ver detalle`} onClick={() => elegirRecojo(rec.id)}>
           {enDia
-            ? <><div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}><b>{rec.r.cliente}</b><span>Recojo preferido · {rec.r.mueble}{rec.cont ? ' · continúa (1 hora)' : ''}</span></div><StatusChip status="Recojo" tone="warning" /></>
-            : <><span className="ag-ty"><Icon name="truck" size={14} /></span><b>{rec.r.cliente}</b><span>{rec.cont ? 'continúa' : 'Recojo preferido'}</span></>}
+            ? <><b>{sigue ? 'Recojo · continúa' : `Recojo · ${rec.cliente}`}</b><span>{rec.pedido} · {rec.hora}–{rec.fin}{rec.direccion ? ` · ${rec.direccion}` : ''}</span></>
+            : <><b>{sigue ? 'Recojo' : rec.cliente}</b><span>{sigue ? 'continúa' : `Recojo · ${rec.hora}`}</span></>}
         </button>
       );
     }
@@ -349,18 +353,6 @@ export function AgendaPage() {
         </div>
       </TopAdmin>
 
-      {ag && !blk && (
-        <div className="ag-bar" role="status">
-          <span className="ag-bari"><Icon name="calendar" size={20} /></span>
-          <div>
-            <b>{ag.mover ? `Reprogramando la ${W} de ${ag.nombre}` : `Agendando ${ag.casa ? 'visita a domicilio' : 'cita en el local'} para ${ag.nombre}`}</b>
-            <small>{ag.nueva ? `Solicitud ${ag.codigo} registrada · ${ag.mueble} · toque el turno que acordó con el cliente` : `${ag.codigo} · ${ag.mueble} · toque un turno libre del calendario`}{ag.casa ? ' (la visita ocupa 1 hora)' : ''}</small>
-          </div>
-          {ag.mover || ag.desdeFalta
-            ? <button type="button" className="gw-btn gw-btn-sm" onClick={salirDeAgendar}>Cancelar</button>
-            : <Link className="gw-btn gw-btn-sm" to="/admin/solicitudes" onClick={salirDeAgendar}>{ag.nueva ? 'Agendar después' : 'Cancelar y volver a Solicitudes'}</Link>}
-        </div>
-      )}
       {blk && (
         <div className="ag-bar ag-gray" role="status">
           <span className="ag-bari"><Icon name="lock" size={20} /></span>
@@ -383,7 +375,7 @@ export function AgendaPage() {
               </div>
             </div>
             {visitasSinHora(vista === 'dia' ? diaSel.fecha : undefined).length > 0 && (
-              <div className="ag-vshs"><span className="ov">Visitas a domicilio por franja (las eligió el cliente)</span>{visitasSinHora(vista === 'dia' ? diaSel.fecha : undefined).map(chipVisita)}</div>
+              <div className="ag-vshs"><span className="ov">Visitas solo con franja (solicitudes anteriores al 13/11)</span>{visitasSinHora(vista === 'dia' ? diaSel.fecha : undefined).map(chipVisita)}</div>
             )}
             {vista === 'semana' ? (
               <div className="ag-scroll">
@@ -391,7 +383,7 @@ export function AgendaPage() {
                   <span className="ag-corner" />
                   {sem.dias.map((d, i) => (
                     <button key={d.fecha} type="button" className={d.fecha === sem.hoy ? 'ag-h ag-today' : 'ag-h'} aria-label={`Ver el día ${corto(d.fecha).w} ${corto(d.fecha).n}`} onClick={() => { setDia(i); setVista('dia'); }}>
-                      <small>{corto(d.fecha).w}</small><b>{corto(d.fecha).n}</b><em>{d.cerrado ? 'cerrado' : citasTexto(porDia[i]!)}</em>
+                      <small>{corto(d.fecha).w}</small><b>{corto(d.fecha).n}</b><em>{d.cerrado ? 'cerrado' : citasTexto(porDia[i]!)}{(() => { const n = (sem.recojos ?? []).filter((r) => r.fecha === d.fecha).length; return n && !d.cerrado ? ` · ${n} ${n === 1 ? 'recojo' : 'recojos'}` : ''; })()}</em>
                     </button>
                   ))}
                   {sem.turnos.map(fila)}
@@ -412,10 +404,11 @@ export function AgendaPage() {
             )}
             <div className="ag-lgf">
               <span><i style={{ background: 'var(--primary)' }} />Programada</span>
+              <span><i style={{ background: '#0891B2' }} />En atención</span>
               <span><i style={{ background: 'var(--success-500)' }} />Atendida</span>
               <span><i style={{ background: 'var(--error-500)' }} />No asistió</span>
               <span><i style={{ background: '#7C3AED' }} />Visita a domicilio</span>
-              <span><i style={{ background: 'var(--warning-500)' }} />Recojo preferido / retiro</span>
+              <span><i style={{ background: '#D97706' }} />Recojo del delivery</span>
               <span><i style={{ background: 'repeating-linear-gradient(135deg,var(--line-strong) 0 2px,transparent 2px 4px)' }} />Bloqueado</span>
               <span>Las citas se agendan desde la solicitud (Solicitudes › Agendar cita); aquí se elige el turno</span>
             </div>
@@ -496,8 +489,13 @@ export function AgendaPage() {
               <button type="button" className="gw-btn gw-btn-primary gw-btn-block" disabled={!bk || ocupado} onClick={confirmar}>
                 {!bk ? 'Elija un turno' : `${ag.mover ? 'Confirmar nuevo turno' : ag.casa ? 'Confirmar visita' : 'Confirmar cita'} · ${corto(bk.fecha).w} ${corto(bk.fecha).n}, ${bk.hora}`}
               </button>
+              {/* Sin «Agendar después»: la solicitud recién registrada se agenda en el momento. Reprogramar o agendar desde
+                  Solicitudes sí se puede cancelar (antes estaba en la barra azul de arriba, que se quitó). */}
+              {ag.mover || ag.desdeFalta
+                ? <button type="button" className="gw-btn gw-btn-ghost gw-btn-block" onClick={salirDeAgendar}>Cancelar</button>
+                : !ag.nueva && <Link className="gw-btn gw-btn-ghost gw-btn-block" to="/admin/solicitudes" onClick={salirDeAgendar}>Cancelar y volver a Solicitudes</Link>}
               <p className="audit" style={{ margin: 0 }}>
-                {ag.desdeFalta ? 'El turno en que faltó queda en el historial como «No asistió». Cuenta como su reprogramación.'
+                {ag.desdeFalta ?'El turno en que faltó queda en el historial como «No asistió». Cuenta como su reprogramación.'
                   : ag.mover ? 'El turno anterior se libera y queda en el historial como «Reprogramada».'
                     : `La ${W} queda ligada a la solicitud ${ag.codigo}. No se crean citas sin solicitud.`}
               </p>
@@ -506,26 +504,31 @@ export function AgendaPage() {
 
           {!ag && !blk && !cfg && falla && <Alert tone="danger" title="No se pudo" compact>{falla}</Alert>}
 
-          {!ag && !blk && recojoSel && (
-            <section className="ag-det" aria-labelledby="ag-rec-nombre">
-              <div className="between"><span className="ov">Recojo preferido</span><StatusChip status={recojoSel.estado} /></div>
+          {!ag && !blk && r && (
+            // Recojo del delivery: solo vista. Se agenda al generar el pedido (A2b o W4) y lo gestiona Despacho.
+            <section className="ag-det ag-det-rec" aria-labelledby="ag-rec-nombre">
+              <div className="between"><span className="ov">Recojo seleccionado</span><StatusChip status="Programado" tone="warning" /></div>
               <div className="ag-who">
-                <span className="ag-av" aria-hidden="true">{iniciales(recojoSel.cliente)}</span>
-                <div><h2 id="ag-rec-nombre">{recojoSel.cliente}</h2><small>{capital(largo(recojoSel.fecha))} · {recojoSel.hora}–{recojoSel.hasta}</small></div>
+                <span className="ag-av ag-av-rec" aria-hidden="true"><Icon name="truck" size={20} /></span>
+                <div><h2 id="ag-rec-nombre">{r.cliente}</h2><small>{capital(largo(r.fecha))} · {r.hora}–{r.fin}</small></div>
               </div>
               <dl className="ag-facts">
-                <div><span className="ag-ic"><Icon name="truck" size={16} /></span><dt>Tipo</dt><dd>Recojo a domicilio</dd></div>
-                <div><span className="ag-ic"><Icon name="inbox" size={16} /></span><dt>Solicitud</dt><dd>{recojoSel.solicitud}</dd></div>
-                <div><span className="ag-ic"><Icon name="sofa" size={16} /></span><dt>Mueble</dt><dd>{recojoSel.mueble}</dd></div>
-                <div><span className="ag-ic"><Icon name="user" size={16} /></span><dt>Teléfono</dt><dd><a href={`tel:${recojoSel.telefono}`}>{telefono(recojoSel.telefono)}</a></dd></div>
-                {recojoSel.direccion && <div><span className="ag-ic"><Icon name="map-pin" size={16} /></span><dt>Dirección</dt><dd>{recojoSel.direccion}</dd></div>}
+                <div><span className="ag-ic"><Icon name="truck" size={16} /></span><dt>Tipo</dt><dd>Recojo del delivery{r.duracionMin ? ` · ${r.duracionMin} min` : ''}</dd></div>
+                <div><span className="ag-ic"><Icon name="package" size={16} /></span><dt>Pedido</dt><dd>{r.pedido}{r.estadoPedido ? ` · ${r.estadoPedido}` : ''}</dd></div>
+                {r.solicitud && <div><span className="ag-ic"><Icon name="inbox" size={16} /></span><dt>Solicitud</dt><dd>{r.solicitud}{r.cotizacion ? ` · ${r.cotizacion}` : ''}</dd></div>}
+                <div><span className="ag-ic"><Icon name="sofa" size={16} /></span><dt>Mueble</dt><dd>{r.descripcion}</dd></div>
+                {r.telefono && <div><span className="ag-ic"><Icon name="user" size={16} /></span><dt>Teléfono</dt><dd><a href={`tel:${r.telefono}`}>{telefono(r.telefono)}</a></dd></div>}
+                {r.direccion && <div><span className="ag-ic"><Icon name="map-pin" size={16} /></span><dt>Dirección</dt><dd>{r.direccion}{r.referencia ? <><br /><small className="muted">{r.referencia}</small></> : null}</dd></div>}
+                {r.agendadoPor && <div><span className="ag-ic"><Icon name="history" size={16} /></span><dt>Agendado por</dt><dd>{r.agendadoPor}{r.agendadoEl ? ` · ${corto(r.agendadoEl.slice(0, 10)).w} ${corto(r.agendadoEl.slice(0, 10)).n}` : ''}</dd></div>}
               </dl>
-              <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/admin/solicitudes?ver=${recojoSel.solicitud}`}>Ver la solicitud</Link>
-              <p className="audit" style={{ margin: 0 }}>Es la hora que el cliente prefiere para que pasemos. Queda reservada en la agenda mientras la solicitud espera; el recojo se confirma al planificar la salida, después de que acepte la cotización.</p>
+              {r.direccion && <a className="gw-btn gw-btn-secondary gw-btn-block" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.direccion)}`} target="_blank" rel="noreferrer">Abrir en Google Maps</a>}
+              {r.solicitud && <Link className="gw-btn gw-btn-ghost gw-btn-block" to={`/admin/solicitudes?ver=${r.solicitud}`}>Ver la solicitud</Link>}
+              <button type="button" className="gw-btn gw-btn-ghost gw-btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setSelRec(null)}>Cerrar</button>
+              <p className="audit" style={{ margin: 0 }}>Solo vista. El recojo ocupa estos turnos de la agenda: ninguna cita se puede agendar encima.</p>
             </section>
           )}
 
-          {!ag && !blk && !recojoSel && (s ? (
+          {!ag && !blk && !r && (s ? (
             <section className="ag-det" aria-labelledby="ag-sel-nombre">
               {aviso && <Toast title={aviso.titulo} onClose={() => setAviso(null)}>{aviso.texto}</Toast>}
               <div className="between"><span className="ov">Cita seleccionada</span><StatusChip status={s.solicitud.estado === 'Vencida' ? 'Vencida' : s.estado} /></div>
@@ -545,9 +548,21 @@ export function AgendaPage() {
 
               {s.estado === 'Programada' && (
                 <>
-                  <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/admin/agenda/atender?solicitud=${s.solicitud.codigo}${s.tipo === 'domicilio' ? '&lugar=domicilio' : ''}`}>
-                    {s.tipo === 'domicilio' ? 'Atender la visita (en casa del cliente)' : 'Atender la cita en el local'}
-                  </Link>
+                  {/* Decisiones L.2.11: solo se atiende el día de la cita (el backend también lo valida). */}
+                  {s.fecha === sem.hoy ? (
+                    <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/admin/agenda/atender?solicitud=${s.solicitud.codigo}${s.tipo === 'domicilio' ? '&lugar=domicilio' : ''}`}>
+                      {s.tipo === 'domicilio' ? 'Atender la visita (en casa del cliente)' : 'Atender la cita en el local'}
+                    </Link>
+                  ) : (
+                    <>
+                      <button type="button" className="gw-btn gw-btn-primary gw-btn-block" disabled>{s.tipo === 'domicilio' ? 'Atender la visita (en casa del cliente)' : 'Atender la cita en el local'}</button>
+                      <Alert tone="info" title={s.fecha > sem.hoy ? `Se atiende el ${largo(s.fecha)}` : 'Ese día ya pasó'} compact>
+                        {s.fecha > sem.hoy
+                          ? 'Si el cliente vino hoy, use «Reprogramar» y elija un turno de hoy; luego podrá atenderla.'
+                          : `Márquela como «${s.tipo === 'domicilio' ? 'No lo encontramos' : 'No asistió'}» o reprográmela para hoy.`}
+                      </Alert>
+                    </>
+                  )}
                   <p className="audit" style={{ margin: 0 }}>
                     {s.tipo === 'domicilio'
                       ? 'Se abre en la tablet o el celular en casa del cliente: la misma guía de telas, medidas, cotización y respuesta. Al terminar, la solicitud pasa a Atendida.'
@@ -567,12 +582,21 @@ export function AgendaPage() {
                   </p>
                 </>
               )}
-              {s.estado === 'Atendida' && (
+              {(s.estado === 'En atención' || s.estado === 'Atendida') && (s.estado === 'En atención' || s.solicitud.estado === 'Atendida' ? (
+                // Empezó la atención pero todavía no se publicó la cotización: se retoma donde quedó (telas, traslado o cotización).
+                <>
+                  <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/admin/agenda/atender?solicitud=${s.solicitud.codigo}${s.tipo === 'domicilio' ? '&lugar=domicilio' : ''}`}>
+                    {s.tipo === 'domicilio' ? 'Continuar la atención de la visita' : 'Continuar la atención de la cita'}
+                  </Link>
+                  <Link className="gw-btn gw-btn-ghost gw-btn-block" to={`/admin/solicitudes?ver=${s.solicitud.codigo}`}>Ver la solicitud</Link>
+                  <p className="audit">La atención empezó pero falta terminarla (telas, traslado o la cotización). Se retoma en el paso donde quedó.</p>
+                </>
+              ) : (
                 <>
                   <Link className="gw-btn gw-btn-primary gw-btn-block" to={`/admin/solicitudes?ver=${s.solicitud.codigo}`}>Ver la solicitud</Link>
-                  <p className="audit">Cita atendida: la solicitud queda en Solicitudes y cotizaciones › Por cotizar. El cliente recibe la cotización en su cuenta (W4).</p>
+                  <p className="audit">Cita atendida y cotización enviada: la solicitud sigue en Solicitudes y cotizaciones.</p>
                 </>
-              )}
+              ))}
               {s.estado === 'No asistió' && (s.solicitud.estado === 'Vencida' ? (
                 <Alert tone="info" title="Solicitud vencida" compact>Se le avisó al cliente. Si más adelante quiere el servicio, envía una nueva solicitud.</Alert>
               ) : s.solicitud.tieneProgramada ? (

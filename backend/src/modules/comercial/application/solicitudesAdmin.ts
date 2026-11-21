@@ -19,7 +19,7 @@ const error = (m: string, status = 400) => new ReglaNegocioError(m, status);
 
 export const MOTIVOS_DESCARTE = ['El cliente no respondió', 'Trabajo que no hacemos', 'Solicitud duplicada', 'El cliente desistió', 'Otro motivo'] as const;
 /** CU-C02: solo estas se descartan; las demás ya terminaron o tienen cotización. */
-const DESCARTABLES = ['Nueva', 'En espera de cita', 'Atendida'];
+const DESCARTABLES = ['Nueva', 'En espera de cita', 'En atención', 'Atendida'];
 
 const nombreCliente = (c: { tipoPersona: string; razonSocial: string | null; nombres: string; apellidos: string }) =>
   c.tipoPersona === 'empresa' && c.razonSocial ? c.razonSocial : `${c.nombres} ${c.apellidos}`.trim();
@@ -55,7 +55,7 @@ export async function bandeja(filtro: { estado?: string; q?: string; desde?: str
   const [lista, porEstado, diasAtraso] = await Promise.all([
     prisma.solicitud.findMany({
       where, orderBy: { fechaSolicitud: 'desc' }, take: 300,
-      include: { cliente: true, direccion: true, muebles: { orderBy: { orden: 'asc' }, include: { tipoMueble: true, _count: { select: { adjuntos: true } } } }, citas: { where: { estado: 'Programada' } }, pedidos: { select: { codigo: true }, take: 1 } },
+      include: { cliente: true, direccion: true, muebles: { orderBy: { orden: 'asc' }, include: { tipoMueble: true, _count: { select: { adjuntos: true } } } }, citas: { where: { estado: 'Programada' } }, pedidos: { select: { codigo: true }, take: 1 }, cotizaciones: { select: { estado: true }, orderBy: { version: 'desc' }, take: 1 } },
     }),
     prisma.solicitud.groupBy({ by: ['estado'], _count: { _all: true } }),
     parametroNumero(prisma, 'solicitud.dias_atraso'),
@@ -67,7 +67,7 @@ export async function bandeja(filtro: { estado?: string; q?: string; desde?: str
       const dias = diasDesde(s.fechaSolicitud);
       const cita = s.citas[0] ? citaDto(s.citas[0]) : null;
       return {
-        codigo: s.codigo!, estado: s.estado, estadoVisible: estadoVisible(s.estado, s.telaOpcion, s.pedidos[0]?.codigo), etapa: etapaDe(s.estado, s.pedidos[0]?.codigo),
+        codigo: s.codigo!, estado: s.estado, estadoVisible: estadoVisible(s.estado, s.telaOpcion, s.pedidos[0]?.codigo, s.cotizaciones[0]?.estado), etapa: etapaDe(s.estado, s.pedidos[0]?.codigo),
         canal: s.canal, fecha: s.fechaSolicitud, hora: enNY(s.fechaSolicitud).hora, dias,
         cita: cita ? { id: cita.id, fecha: cita.fecha, hora: cita.hora, franja: cita.franja, tipo: cita.tipo } : null,
         atrasada: s.estado === 'Nueva' && dias >= diasAtraso,
@@ -84,15 +84,29 @@ export async function bandeja(filtro: { estado?: string; q?: string; desde?: str
 
 /** A3 · ficha completa, con el contacto del cliente y los enlaces a sus fotos y videos. */
 export async function fichaAdmin(codigo: string, almacen: AlmacenArchivos) {
-  const s = await prisma.solicitud.findUnique({ where: { codigo }, include: { ...incluirSolicitud, registrador: { include: { rol: true } }, pedidos: { select: { codigo: true }, take: 1 } } });
+  const s = await prisma.solicitud.findUnique({ where: { codigo }, include: { ...incluirSolicitud, registrador: { include: { rol: true } }, pedidos: { select: { codigo: true }, take: 1 }, cotizaciones: { select: { estado: true }, orderBy: { version: 'desc' }, take: 1 } } });
   if (!s) throw error('No encontramos esa solicitud.', 404);
+  // Historial completo: la solicitud, sus citas y lo que nació de ella (cotizaciones, adelantos, pedido y recojo).
+  const [cots, peds] = await Promise.all([
+    prisma.cotizacion.findMany({ where: { solicitudId: s.id }, select: { id: true } }),
+    prisma.pedido.findMany({ where: { solicitudId: s.id }, select: { id: true } }),
+  ]);
+  const [pagos, recojos] = await Promise.all([
+    prisma.pago.findMany({ where: { cotizacionId: { in: cots.map((c) => c.id) } }, select: { id: true } }),
+    prisma.recojo.findMany({ where: { pedidoId: { in: peds.map((p) => p.id) } }, select: { id: true } }),
+  ]);
+  const ids = (xs: { id: number }[]) => ({ in: xs.map((x) => x.id) });
   const historial = await prisma.bitacora.findMany({
-    where: { OR: [{ entidad: 'solicitud', entidadId: s.id }, { entidad: 'cita', entidadId: { in: s.citas.map((c) => c.id) } }] },
+    where: { OR: [
+      { entidad: 'solicitud', entidadId: s.id }, { entidad: 'cita', entidadId: { in: s.citas.map((c) => c.id) } },
+      { entidad: 'cotizacion', entidadId: ids(cots) }, { entidad: 'pago', entidadId: ids(pagos) },
+      { entidad: 'pedido', entidadId: ids(peds) }, { entidad: 'recojo', entidadId: ids(recojos) },
+    ] },
     orderBy: { fecha: 'asc' }, include: { usuario: { include: { rol: true } } },
   });
   return {
     ...(await solicitudDto(s, almacen)),
-    estadoVisible: estadoVisible(s.estado, s.telaOpcion, s.pedidos[0]?.codigo), etapa: etapaDe(s.estado, s.pedidos[0]?.codigo),
+    estadoVisible: estadoVisible(s.estado, s.telaOpcion, s.pedidos[0]?.codigo, s.cotizaciones[0]?.estado), etapa: etapaDe(s.estado, s.pedidos[0]?.codigo),
     pedido: s.pedidos[0]?.codigo ?? null,
     cliente: {
       id: s.cliente.id, nombre: nombreCliente(s.cliente), tipoPersona: s.cliente.tipoPersona,
@@ -112,7 +126,8 @@ export async function descartarSolicitud(usuarioId: number, codigo: string, moti
   let avisos: Aviso[] = [];
   await prisma.$transaction(async (tx) => {
     await tx.solicitud.update({ where: { id: s.id }, data: { estado: 'Descartada', motivoDescarte: motivo, descartadaPor: usuarioId, fechaDescarte: new Date() } });
-    await tx.cita.updateMany({ where: { solicitudId: s.id, estado: 'Programada' }, data: { estado: 'Cancelada' } });
+    // La cita programada o la que quedó «En atención» a medias se cancela (no se borra · RG-03).
+    await tx.cita.updateMany({ where: { solicitudId: s.id, estado: { in: ['Programada', 'En atención'] } }, data: { estado: 'Cancelada' } });
     await registrarBitacora(tx, { usuarioId, modulo: 'comercial', accion: 'solicitud_descartada', entidad: 'solicitud', entidadId: s.id, valorAnterior: { estado: s.estado }, valorNuevo: { estado: 'Descartada', motivo }, ip });
     avisos = await avisoAlCliente(tx, s.clienteId,
       { solicitudId: s.id, tipo: 'solicitud_descartada', titulo: `Cerramos su solicitud ${codigo}`, mensaje: `Motivo: ${motivo.toLowerCase()}. Si quiere retomarla, envíe una nueva o llámenos.`, enlace: '/cliente/pedidos/solicitudes' },

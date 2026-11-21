@@ -50,6 +50,12 @@ export interface PedidoEnCurso extends Tarjeta {
   datos: { l: string; v: string; a?: string; ok?: boolean }[];
   cuenta: { total: string; pagos: { l: string; v: string }[]; saldo: string };
   entrega: { asignada: boolean; texto: string; pasos?: string[]; accion?: Accion };
+  /** Qué se hará con cada mueble (sin horas ni costos, RG-08). */
+  tareas?: { mueble: string; trabajos: string[] }[];
+  /** Fotos reales del mueble (las de la solicitud mientras no haya fotos del recojo). */
+  imagenes?: string[];
+  /** La solicitud de cancelación en línea (CU-C15) aún no existe: se pide llamando al taller. */
+  cancelarPorTelefono?: boolean;
   /** Desglose del cargo si cancela ahora (CU-C15). Sin desglose, el taller lo calcula. */
   cancelacion?: { explicacion: string; lineas: { l: string; v: string }[]; cargo: string; adelanto: string; resultado: { l: string; v: string } };
 }

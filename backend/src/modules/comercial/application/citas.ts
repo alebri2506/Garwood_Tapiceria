@@ -6,8 +6,7 @@ import { avisoAlCliente, avisosAlTaller, enviarCorreos, guardarAvisos, type Avis
 import type { Correo } from '../../../shared/infrastructure/correo.js';
 import { ReglaNegocioError } from '../../../shared/domain/errores.js';
 import { hoyNegocio, leerFecha } from '../domain/calendario.js';
-import { diaCerrado, enNY, franjaBloqueada, instanteNY, minutosDe, sumarDias, sumarMinutos, turnoBloqueado, turnosDe, type Bloqueo } from '../domain/agenda.js';
-import { RESERVAN_RECOJO } from '../domain/solicitud.js';
+import { diaCerrado, enNY, instanteNY, leerRango, minutosDe, sumarDias, sumarMinutos, turnoBloqueado, turnosDe, type Bloqueo } from '../domain/agenda.js';
 import type { NombreRol } from '../../seguridad/application/tokens.js';
 import type { DireccionEntrada } from '../http/solicitud.schemas.js';
 import { idDireccion, revisarDireccion } from './direcciones.js';
@@ -62,31 +61,41 @@ const horaDe = (c: { tipo: string; fechaHora: Date }) => {
 export interface Tramo { desde: number; hasta: number }
 
 /**
- * Lo que ocupa la agenda cada día ("AAAA-MM-DD" → tramos): citas en el local, visitas con hora (los turnos seguidos
- * que dura) y horas de recojo preferidas de solicitudes que aún esperan (`recojo.duracion_min`, W2).
+ * Estados de cita que siguen ocupando su lugar en la agenda del Administrador (A2). Una cita «Atendida» antes de su
+ * hora (el Administrador la empezó antes) sigue mostrándose en A2: su turno no puede volver a ofrecerse al cliente (W3).
  */
-export async function ocupacion(desde: string, hasta: string, ignorar: { citaId?: number; solicitudId?: number } = {}) {
-  const [citas, recojos, duracionRecojo] = await Promise.all([
+const OCUPAN_AGENDA = ['Programada', 'En atención', 'Atendida'];
+
+/**
+ * Lo que ocupa la agenda cada día ("AAAA-MM-DD" → tramos): citas en el local, visitas con hora (los turnos seguidos
+ * que dura), los **recojos agendados** (su bloque de `recojo.duracion_min`) y, si se pasa `franjas`, las visitas
+ * antiguas que solo tienen franja (ocupan toda su franja).
+ * Una sola agenda sin cruces (decisiones L.2 · 15/11): a veces el Administrador acompaña al delivery a recoger, así que
+ * un recojo y una cita o visita nunca comparten hora.
+ */
+export async function ocupacion(desde: string, hasta: string, ignorar: { citaId?: number; recojoId?: number } = {}, franjas?: Record<Franja, string>) {
+  const [citas, recojos] = await Promise.all([
     prisma.cita.findMany({
-      where: { estado: 'Programada', fechaHora: { gte: instanteNY(desde), lt: instanteNY(sumarDias(hasta, 1)) }, NOT: ignorar.citaId ? { id: ignorar.citaId } : undefined },
-      select: { tipo: true, fechaHora: true, duracionMin: true },
+      where: { estado: { in: OCUPAN_AGENDA }, fechaHora: { gte: instanteNY(desde), lt: instanteNY(sumarDias(hasta, 1)) }, NOT: ignorar.citaId ? { id: ignorar.citaId } : undefined },
+      select: { tipo: true, fechaHora: true, duracionMin: true, franja: true },
     }),
-    prisma.solicitud.findMany({
-      where: { horaPrefRecojo: { not: null }, estado: { in: RESERVAN_RECOJO }, fechaPrefRecojo: { gte: leerFecha(desde)!, lte: leerFecha(hasta)! }, NOT: ignorar.solicitudId ? { id: ignorar.solicitudId } : undefined },
-      select: { fechaPrefRecojo: true, horaPrefRecojo: true },
+    prisma.recojo.findMany({
+      where: { tipo: 'agendado', estado: 'Programado', fecha: { gte: leerFecha(desde)!, lte: leerFecha(hasta)! }, NOT: ignorar.recojoId ? { id: ignorar.recojoId } : undefined },
+      select: { fecha: true, hora: true, duracionMin: true },
     }),
-    parametroNumero(prisma, 'recojo.duracion_min'),
   ]);
   const porDia = new Map<string, Tramo[]>();
-  const poner = (fecha: string, hora: string, minutos: number) => {
-    const desdeMin = minutosDe(hora);
-    porDia.set(fecha, [...(porDia.get(fecha) ?? []), { desde: desdeMin, hasta: desdeMin + minutos }]);
-  };
+  const poner = (fecha: string, tramo: Tramo) => porDia.set(fecha, [...(porDia.get(fecha) ?? []), tramo]);
   for (const c of citas) {
     const hora = horaDe(c);
-    if (hora) poner(enNY(c.fechaHora).fecha, hora, c.duracionMin);
+    const { fecha } = enNY(c.fechaHora);
+    if (hora) poner(fecha, { desde: minutosDe(hora), hasta: minutosDe(hora) + c.duracionMin });
+    else if (franjas && c.franja) poner(fecha, leerRango(franjas[c.franja as Franja]));
   }
-  for (const s of recojos) poner(s.fechaPrefRecojo!.toISOString().slice(0, 10), s.horaPrefRecojo!, duracionRecojo);
+  for (const x of recojos) {
+    if (!x.fecha || !x.hora) continue;
+    poner(x.fecha.toISOString().slice(0, 10), { desde: minutosDe(x.hora), hasta: minutosDe(x.hora) + x.duracionMin });
+  }
   return porDia;
 }
 
@@ -94,8 +103,9 @@ export async function ocupacion(desde: string, hasta: string, ignorar: { citaId?
 export const choca = (tramos: Tramo[] | undefined, desde: number, hasta: number) => Boolean(tramos?.some((x) => x.desde < hasta && x.hasta > desde));
 
 /** Turnos del local ocupados por día ("AAAA-MM-DD" → horas): los que chocan con cualquier tramo ocupado. */
-export async function turnosOcupados(desde: string, hasta: string, r: { turnos: string[]; duracion: number }, ignorarCitaId?: number) {
-  const porDia = await ocupacion(desde, hasta, { citaId: ignorarCitaId });
+export async function turnosOcupados(desde: string, hasta: string, r: { turnos: string[]; duracion: number; franjas: Record<Franja, string> }, ignorarCitaId?: number) {
+  // Una visita agendada solo por franja deja al Administrador fuera del local toda esa franja.
+  const porDia = await ocupacion(desde, hasta, { citaId: ignorarCitaId }, r.franjas);
   const turnos = new Map<string, Set<string>>();
   for (const [fecha, tramos] of porDia) {
     turnos.set(fecha, new Set(r.turnos.filter((h) => choca(tramos, minutosDe(h), minutosDe(h) + r.duracion))));
@@ -104,13 +114,63 @@ export async function turnosOcupados(desde: string, hasta: string, r: { turnos: 
 }
 
 /** Ya hay una visita programada en esa franja de ese día (con o sin hora). */
-async function visitaEnFranja(fecha: string, franja: Franja, ignorarCitaId?: number) {
-  return prisma.cita.findFirst({
-    where: { tipo: 'domicilio', estado: 'Programada', franja, fechaHora: { gte: instanteNY(fecha), lt: instanteNY(sumarDias(fecha, 1)) }, NOT: ignorarCitaId ? { id: ignorarCitaId } : undefined },
-  });
+const hhmm = (min: number) => `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
+
+/** W3b (diseño del 13/11): horas de la visita, bloques de `visita.duracion_min` dentro de cada franja de visita (9:00, 10:00…). */
+/**
+ * W3b · horas de inicio de la visita: las mismas de la Agenda (turnos de `cita.duracion_min`, 30 min, en
+ * `agenda.turnos_*`), porque es una sola agenda (decisiones L.2.9). La visita dura `visita.duracion_min` (1 h): solo
+ * se ofrecen los inicios donde esa hora entera cabe en el horario de la agenda y en su franja de visita
+ * (9:30, 10:00, 10:30, 11:00 · 15:00, 15:30, 16:00).
+ */
+export function horasVisita(r: { duracion: number; rangoManana: string; rangoTarde: string; visitaDuracion: number; franjas: Record<Franja, string> }) {
+  const horas: string[] = [];
+  for (const rango of [r.rangoManana, r.rangoTarde]) {
+    const { desde, hasta } = leerRango(rango);
+    for (let t = desde; t + r.visitaDuracion <= hasta; t += r.duracion) {
+      if (franjaDeVisita(r, hhmm(t))) horas.push(hhmm(t));
+    }
+  }
+  return horas;
 }
 
-/** CU-C04: días con turnos (local) o franjas (domicilio) libres entre `desde` y `desde + dias`. */
+/** La franja de visita que contiene el tramo [hora, hora + duración), o null si no entra completo en ninguna. */
+function franjaDeVisita(r: { visitaDuracion: number; franjas: Record<Franja, string> }, hora: string): Franja | null {
+  const desde = minutosDe(hora), hasta = desde + r.visitaDuracion;
+  for (const f of ['manana', 'tarde'] as Franja[]) {
+    const rango = leerRango(r.franjas[f]);
+    if (desde >= rango.desde && hasta <= rango.hasta) return f;
+  }
+  return null;
+}
+
+/**
+ * Lo que impide una visita ese día, como tramos: la agenda ocupada (citas y visitas con hora), los bloqueos por horas y
+ * las visitas antiguas que solo tenían franja (ocupan toda su franja).
+ */
+async function tramosVisita(desde: string, hasta: string, r: { franjas: Record<Franja, string> }, ignorarCitaId?: number) {
+  const [porDia, bloqueos] = await Promise.all([
+    ocupacion(desde, hasta, { citaId: ignorarCitaId }, r.franjas),
+    bloqueosEntre(desde, hasta),
+  ]);
+  const bloqueosPorDia = new Map<string, Tramo[]>();
+  for (const b of bloqueos) {
+    if (!b.horaInicio || !b.horaFin) continue;
+    bloqueosPorDia.set(b.fecha, [...(bloqueosPorDia.get(b.fecha) ?? []), { desde: minutosDe(b.horaInicio), hasta: minutosDe(b.horaFin) }]);
+  }
+  return { porDia, bloqueos, bloqueosPorDia };
+}
+
+/** Por qué no se puede esa hora de visita (o null si está libre). */
+function motivoHoraVisita(fecha: string, hora: string, duracion: number, tramos: Tramo[] | undefined, bloqueos: Tramo[] | undefined, ahora: { fecha: string; hora: string }) {
+  if (fecha < ahora.fecha || (fecha === ahora.fecha && hora <= ahora.hora)) return 'Hora pasada';
+  const desde = minutosDe(hora), hasta = desde + duracion;
+  if (choca(bloqueos, desde, hasta)) return 'Hora bloqueada';
+  if (choca(tramos, desde, hasta)) return 'Hora ocupada';
+  return null;
+}
+
+/** CU-C04: días con turnos (local) u horas de visita (domicilio) libres entre `desde` y `desde + dias`. */
 export async function disponibilidad(tipo: TipoCita, desdePedido: string, diasPedidos: number) {
   const r = await reglasAgenda();
   const hoy = hoyNegocio();
@@ -120,15 +180,12 @@ export async function disponibilidad(tipo: TipoCita, desdePedido: string, diasPe
   const limite = sumarDias(hoy, r.dias);
   const hasta = [sumarDias(desde, Math.min(Math.max(diasPedidos, 1), 100) - 1), limite].sort()[0]!;
 
-  const [bloqueos, visitas, porDia] = await Promise.all([
+  const [bloqueos, porDia, visita] = await Promise.all([
     bloqueosEntre(desde, hasta),
-    prisma.cita.findMany({
-      where: { tipo: 'domicilio', estado: 'Programada', fechaHora: { gte: instanteNY(desde), lt: instanteNY(sumarDias(hasta, 1)) } },
-      select: { fechaHora: true, franja: true },
-    }),
     turnosOcupados(desde, hasta, r),
+    tipo === 'domicilio' ? tramosVisita(desde, hasta, r) : Promise.resolve(null),
   ]);
-  const ocupados = new Set(visitas.map((c) => `${enNY(c.fechaHora).fecha}|${c.franja}`));
+  const horas = horasVisita(r);
   const ahora = enNY(new Date());
 
   const dias = [];
@@ -139,23 +196,26 @@ export async function disponibilidad(tipo: TipoCita, desdePedido: string, diasPe
         fecha: f, cerrado,
         turnos: r.turnos.map((hora) => ({
           hora,
-          libre: !cerrado && !turnoBloqueado(f, hora, bloqueos) && !porDia.get(f)?.has(hora) && !(f === ahora.fecha && hora <= ahora.hora),
+          libre: !cerrado && !turnoBloqueado(f, hora, bloqueos, r.duracion) && !porDia.get(f)?.has(hora) && !(f === ahora.fecha && hora <= ahora.hora),
         })),
       });
     } else {
+      // W3b: cada hora de visita ocupa `visita.duracion_min` de la misma agenda del administrador (A2).
       dias.push({
         fecha: f, cerrado,
-        franjas: (['manana', 'tarde'] as Franja[]).map((codigo) => ({
-          codigo, nombre: `${codigo === 'manana' ? 'Mañana' : 'Tarde'} · ${textoFranja(r.franjas[codigo])}`,
-          libre: !cerrado && !franjaBloqueada(f, r.franjas[codigo], bloqueos) && !ocupados.has(`${f}|${codigo}`),
-        })),
+        horas: horas.map((hora) => {
+          const motivo = cerrado ? null : motivoHoraVisita(f, hora, r.visitaDuracion, visita!.porDia.get(f), visita!.bloqueosPorDia.get(f), ahora);
+          return { hora, hasta: sumarMinutos(hora, r.visitaDuracion), libre: !cerrado && !motivo, motivo };
+        }),
       });
     }
   }
   return {
     tipo, desde, hasta, limite,
     duracionMin: tipo === 'local' ? r.duracion : r.visitaDuracion,
-    horario: tipo === 'local' ? `${textoFranja(r.rangoManana)} y ${textoFranja(r.rangoTarde)}` : `${textoFranja(r.franjas.manana)} y ${textoFranja(r.franjas.tarde)}`,
+    // Una sola agenda: la visita usa el mismo horario que las citas (los inicios cada 30 min).
+    horario: `${textoFranja(r.rangoManana)} y ${textoFranja(r.rangoTarde)}`,
+    ...(tipo === 'domicilio' ? { horas } : {}),
     dias,
   };
 }
@@ -173,32 +233,28 @@ export async function revisarTurno(tipo: TipoCita, t: TurnoEntrada, ignorarCitaI
   const bloqueos = await bloqueosEntre(t.fecha, t.fecha);
   if (diaCerrado(t.fecha, bloqueos)) throw error('El taller no atiende ese día. Elija otro.');
 
-  // Cita en el local (un turno) o visita con hora fijada por el Administrador (los turnos seguidos que dura).
-  if (tipo === 'local' || t.hora) {
+  const ahora = enNY(new Date());
+  // Cita en el local: un turno de la agenda.
+  if (tipo === 'local') {
     if (!t.hora || !r.turnos.includes(t.hora)) throw error('Elija uno de los turnos de la agenda.');
-    const n = tipo === 'local' ? 1 : Math.max(1, Math.ceil(r.visitaDuracion / r.duracion));
-    const horas = Array.from({ length: n }, (_, k) => sumarMinutos(t.hora!, k * r.duracion));
-    if (!horas.every((h) => r.turnos.includes(h))) throw error(`La visita necesita ${r.visitaDuracion} minutos seguidos dentro del horario. Elija otro turno.`);
-    if (horas.some((h) => turnoBloqueado(t.fecha, h, bloqueos))) throw error('Ese turno no está disponible. Elija otro.');
-    const ahora = enNY(new Date());
+    if (turnoBloqueado(t.fecha, t.hora, bloqueos, r.duracion)) throw error('Ese turno no está disponible. Elija otro.');
     if (t.fecha === ahora.fecha && t.hora <= ahora.hora) throw error('Ese turno ya pasó. Elija otro.');
     const ocupadas = (await turnosOcupados(t.fecha, t.fecha, r, ignorarCitaId)).get(t.fecha);
-    if (horas.some((h) => ocupadas?.has(h))) throw error('Ese turno se acaba de ocupar. Elija otro.', 409);
-    const fechaHora = instanteNY(t.fecha, t.hora);
-    if (tipo === 'local') return { fechaHora, franja: null, duracion: r.duracion, texto: `${fechaLarga(t.fecha)}, ${t.hora}` };
-    const franja: Franja = t.hora < '12:00' ? 'manana' : 'tarde';
-    if (await visitaEnFranja(t.fecha, franja, ignorarCitaId)) throw error('Ya hay una visita a domicilio en esa franja. Elija otro horario.', 409);
-    return { fechaHora, franja, duracion: r.visitaDuracion, texto: `${fechaLarga(t.fecha)}, ${t.hora}–${sumarMinutos(t.hora, r.visitaDuracion)}` };
+    if (ocupadas?.has(t.hora)) throw error('Ese turno se acaba de ocupar. Elija otro.', 409);
+    return { fechaHora: instanteNY(t.fecha, t.hora), franja: null, duracion: r.duracion, texto: `${fechaLarga(t.fecha)}, ${t.hora}` };
   }
-  if (!t.franja || !(t.franja in r.franjas)) throw error('Elija la franja de la visita: mañana o tarde.');
-  if (franjaBloqueada(t.fecha, r.franjas[t.franja], bloqueos)) throw error('Esa franja no está disponible. Elija otra.');
-  if (await visitaEnFranja(t.fecha, t.franja, ignorarCitaId)) throw error('Esa franja se acaba de ocupar. Elija otra.', 409);
-  return { fechaHora: instanteNY(t.fecha), franja: t.franja, duracion: r.visitaDuracion, texto: `${fechaLarga(t.fecha)}, por la ${t.franja === 'manana' ? 'mañana' : 'tarde'} (${textoFranja(r.franjas[t.franja])})` };
+  // Visita a domicilio (diseño W3b del 13/11): el cliente elige el día y la hora; dura `visita.duracion_min` y ocupa
+  // esa parte de la agenda del administrador. El administrador también puede fijarla a cualquier hora que entre completa.
+  if (!t.hora || !/^\d{2}:\d{2}$/.test(t.hora)) throw error('Elija el día y la hora de la visita.');
+  const franja = franjaDeVisita(r, t.hora);
+  if (!franja) throw error(`La visita dura ${r.visitaDuracion} minutos y debe entrar en el horario de visitas (${textoFranja(r.franjas.manana)} o ${textoFranja(r.franjas.tarde)}). Elija otra hora.`);
+  const { porDia, bloqueosPorDia } = await tramosVisita(t.fecha, t.fecha, r, ignorarCitaId);
+  const motivo = motivoHoraVisita(t.fecha, t.hora, r.visitaDuracion, porDia.get(t.fecha), bloqueosPorDia.get(t.fecha), ahora);
+  if (motivo === 'Hora pasada') throw error('Esa hora ya pasó. Elija otra.');
+  if (motivo === 'Hora bloqueada') throw error('Esa hora no está disponible. Elija otra.');
+  if (motivo) throw error('Esa hora se acaba de ocupar. Elija otra.', 409);
+  return { fechaHora: instanteNY(t.fecha, t.hora), franja, duracion: r.visitaDuracion, texto: `${fechaLarga(t.fecha)}, ${t.hora}–${sumarMinutos(t.hora, r.visitaDuracion)}` };
 }
-
-/** Solo el Administrador fija la hora de una visita; el cliente elige la franja. */
-const turnoSegunRol = (quien: Quien, tipo: TipoCita, t: TurnoEntrada): TurnoEntrada =>
-  tipo === 'domicilio' && quien.rol !== 'Administrador' ? { fecha: t.fecha, franja: t.franja } : t;
 
 /** El cliente solo maneja las citas de sus solicitudes (RG-07); el Administrador, todas. */
 async function solicitudDe(quien: Quien, codigo: string) {
@@ -238,7 +294,7 @@ export async function agendarCita(quien: Quien, e: AgendarEntrada, correo: Corre
   if (quien.rol !== 'Administrador' && inasistencias > maxInasistencias) {
     throw error('Ya usó su reprogramación por inasistencia: comuníquese con el taller.');
   }
-  const turno = await revisarTurno(e.tipo, turnoSegunRol(quien, e.tipo, e));
+  const turno = await revisarTurno(e.tipo, e);
 
   let avisos: Aviso[] = [];
   try {
@@ -288,7 +344,7 @@ async function citaPropia(quien: Quien, citaId: number) {
 /** CU-C04 Reprogramar: la cita anterior queda "Reprogramada" y se crea la nueva (nada se borra). */
 export async function reprogramarCita(quien: Quien, citaId: number, t: TurnoEntrada, correo: Correo) {
   const anterior = await citaPropia(quien, citaId);
-  const turno = await revisarTurno(anterior.tipo as TipoCita, turnoSegunRol(quien, anterior.tipo as TipoCita, t), anterior.id);
+  const turno = await revisarTurno(anterior.tipo as TipoCita, t, anterior.id);
   let avisos: Aviso[] = [];
   try {
     const nueva = await prisma.$transaction(async (tx) => {
@@ -340,10 +396,28 @@ export async function cancelarCita(quien: Quien, citaId: number, correo: Correo)
  * `cita.reprogramaciones_inasistencia` veces. Si vuelve a faltar, por regla la solicitud vence, pero lo decide el
  * Administrador (A2f): darla por vencida u ofrecerle un último turno.
  */
+const DIAS_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+/**
+ * Decisiones L.2.11 (21/11): una cita o visita se atiende solo el día que le corresponde (hora de New York), a cualquier
+ * hora de ese día. Si el cliente vino otro día, primero se reprograma la cita para hoy y luego se atiende.
+ */
+export function exigirDiaDeCita(c: { fechaHora: Date; tipo: string }) {
+  const dia = enNY(c.fechaHora).fecha;
+  const hoy = hoyNegocio();
+  if (dia === hoy) return;
+  const [y, m, d] = dia.split('-').map(Number) as [number, number, number];
+  const f = new Date(Date.UTC(y, m - 1, d));
+  const que = c.tipo === 'domicilio' ? 'La visita' : 'La cita';
+  throw error(`${que} es para el ${DIAS_ES[f.getUTCDay()]} ${d} de ${MESES_ES[m - 1]}: se atiende ese día. ${dia > hoy ? 'Si el cliente vino hoy, reprograme la cita para hoy desde la Agenda y luego atiéndala.' : 'Ese día ya pasó: márquela como «No asistió» o reprográmela para hoy desde la Agenda.'}`, 409);
+}
+
 export async function registrarResultado(quien: Quien, citaId: number, resultado: 'atendida' | 'no_asistio', correo: Correo) {
   const c = await prisma.cita.findUnique({ where: { id: citaId }, include: { solicitud: true } });
   if (!c) throw error('No encontramos esa cita.', 404);
   if (c.estado !== 'Programada') throw error('Esta cita ya tiene un resultado.');
+  if (resultado === 'atendida') exigirDiaDeCita(c);
   const { maxInasistencias } = await reglasAgenda();
   const faltas = (await prisma.cita.count({ where: { solicitudId: c.solicitudId, estado: 'No asistió' } })) + (resultado === 'no_asistio' ? 1 : 0);
   const sinReprogramacion = resultado === 'no_asistio' && faltas > maxInasistencias;

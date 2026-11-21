@@ -1,14 +1,18 @@
 import { Link, useSearchParams } from 'react-router-dom';
+import { Alert } from '../../../shared/ui/Alert';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { DetallePedido } from './DetallePedido';
-import { PEDIDOS_EN_CURSO } from './datos';
+import { useMisPedidos } from './MisPedidosLayout';
 import { TarjetaPedido } from './TarjetaPedido';
 
 /** W6a Mis pedidos · en curso (CU-C16). Primero los que necesitan algo del cliente. */
 export function EnCursoPage() {
   const [params, setParams] = useSearchParams();
-  const pedidos = PEDIDOS_EN_CURSO;
+  const { pedidos: { lista: pedidos, cargando, error } } = useMisPedidos();
   const elegido = pedidos.find((p) => p.id === params.get('pedido'));
+
+  if (cargando) return <p className="muted" role="status">Cargando sus pedidos…</p>;
+  if (error) return <Alert tone="danger" title="No pudimos cargar sus pedidos">{error}</Alert>;
 
   if (pedidos.length === 0) {
     return (

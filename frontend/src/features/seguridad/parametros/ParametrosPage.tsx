@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TopAdmin } from '../../../app/layout/AdminLayout';
 import { ApiError } from '../../../shared/api/http';
@@ -7,6 +7,8 @@ import { Icon } from '../../../shared/ui/Icon';
 import { TextField } from '../../../shared/ui/TextField';
 import { Toast } from '../../../shared/ui/Toast';
 import { MESES, fechaCorta } from '../../comercial/fechas';
+import { MaquinasCard } from './MaquinasCard';
+import { CargasCard } from './CargasCard';
 import { parametrosApi, type CambioHistorial, type Guardado, type GrupoParametros, type Parametro } from './parametrosApi';
 import './parametros.css';
 
@@ -117,6 +119,9 @@ export function ParametrosPage() {
   };
 
   const fuera = guardado?.avisos.citasFueraDeHorario ?? [];
+  // A14 › Máquinas: se guardan fila por fila; al cambiar una se recarga el historial.
+  const recargarHistorial = () => { parametrosApi.historial().then(setHistorial).catch(() => undefined); };
+  const maquinas = <><MaquinasCard alCambiar={recargarHistorial} /><CargasCard alCambiar={recargarHistorial} /></>;
 
   return (
     <>
@@ -197,7 +202,8 @@ export function ParametrosPage() {
                 </div>
               </section>
             ) : (
-              <section key={g.nombre} className="card stack" aria-labelledby={`grp-${g.nombre}`}>
+              <Fragment key={g.nombre}>
+              <section className="card stack" aria-labelledby={`grp-${g.nombre}`}>
                 <h2 id={`grp-${g.nombre}`} style={{ fontSize: 18 }}>{g.nombre}</h2>
                 <div className="grid2 pr-grid">
                   {g.parametros.map((p) => {
@@ -222,7 +228,11 @@ export function ParametrosPage() {
                   })}
                 </div>
               </section>
+              {/* Las máquinas van junto a las demás tarifas. */}
+              {g.nombre === 'Tarifas' && maquinas}
+              </Fragment>
             ))}
+            {!grupos.some((g) => g.nombre === 'Tarifas') && maquinas}
           </div>
 
           <aside className="aside">
@@ -234,7 +244,7 @@ export function ParametrosPage() {
                 <ul className="pr-hist">
                   {historial.map((h) => (
                     <li key={h.id}>
-                      <b>{h.etiqueta}: {legible(h.valorAnterior, h.unidad)} → {legible(h.valorNuevo, h.unidad)}</b>
+                      <b>{h.texto ?? `${h.etiqueta}: ${legible(h.valorAnterior, h.unidad)} → ${legible(h.valorNuevo, h.unidad)}`}</b>
                       <p className="audit">{h.usuario} · {cuando(h.fecha)}</p>
                     </li>
                   ))}

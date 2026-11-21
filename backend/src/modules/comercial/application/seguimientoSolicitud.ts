@@ -48,8 +48,8 @@ export async function solicitudDto(s: SolicitudCompleta, almacen: AlmacenArchivo
     esperaFotos: s.esperaFotos,
     traslado: s.traslado,
     direccion: s.direccion?.direccion ?? null,
+    // Decisiones A.7: ya no hay fecha de recojo; se conserva la de las solicitudes anteriores solo para mostrarla.
     fechaPrefRecojo: s.fechaPrefRecojo?.toISOString().slice(0, 10) ?? null,
-    franjaRecojo: s.franjaRecojo,
     horaPrefRecojo: s.horaPrefRecojo,
     motivoDescarte: s.motivoDescarte,
     fechaDescarte: s.fechaDescarte,
@@ -87,16 +87,39 @@ async function propia(usuarioId: number, codigo: string) {
   return s;
 }
 
+/**
+ * W6c: lo que el cliente ve de su última cotización publicada (el borrador del taller no se muestra). Solo el total, el
+ * adelanto, la vigencia y el pedido: nunca el sugerido ni el desglose de costos (RG-08).
+ */
+async function cotizacionesCliente(solicitudIds: number[]) {
+  const cots = await prisma.cotizacion.findMany({
+    where: { solicitudId: { in: solicitudIds }, estado: { not: 'Borrador' } },
+    orderBy: { version: 'desc' }, include: { pedido: { select: { codigo: true } } },
+  });
+  const porSolicitud = new Map<number, (typeof cots)[number]>();
+  for (const c of cots) if (!porSolicitud.has(c.solicitudId)) porSolicitud.set(c.solicitudId, c);
+  return (id: number) => {
+    const c = porSolicitud.get(id);
+    return c ? {
+      codigo: c.codigo, estado: c.estado, total: Number(c.total), adelanto: Number(c.adelanto), conTraslado: Number(c.transporte) > 0,
+      vigenciaHasta: c.vigenciaHasta?.toISOString().slice(0, 10) ?? null, pedido: c.pedido?.codigo ?? null,
+    } : null;
+  };
+}
+
 /** W6c: las solicitudes del cliente, de la más reciente a la más antigua. */
 export async function misSolicitudes(usuarioId: number, almacen: AlmacenArchivos) {
   const clienteId = await clienteDe(usuarioId).catch(() => null);
   if (!clienteId) return [];
   const lista = await prisma.solicitud.findMany({ where: { clienteId }, orderBy: { fechaSolicitud: 'desc' }, include: incluirSolicitud });
-  return Promise.all(lista.map((s) => solicitudDto(s, almacen)));
+  const cotizacion = await cotizacionesCliente(lista.map((s) => s.id));
+  return Promise.all(lista.map(async (s) => ({ ...(await solicitudDto(s, almacen)), cotizacion: cotizacion(s.id) })));
 }
 
 export async function miSolicitud(usuarioId: number, codigo: string, almacen: AlmacenArchivos) {
-  return solicitudDto(await propia(usuarioId, codigo), almacen);
+  const s = await propia(usuarioId, codigo);
+  const cotizacion = await cotizacionesCliente([s.id]);
+  return { ...(await solicitudDto(s, almacen)), cotizacion: cotizacion(s.id) };
 }
 
 /** El cliente sube las fotos que le pidió el taller por enlace. */
